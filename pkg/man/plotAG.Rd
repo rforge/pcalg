@@ -37,7 +37,9 @@ edL[[2]] <- list(edges=3,weights=c(1))
 edL[[3]] <- list(edges=5,weights=c(1))
 edL[[4]] <- list(edges=5,weights=c(1))
 g <- new("graphNEL", nodes=V, edgeL=edL,edgemode="directed")
+if (require(Rgraphviz)) {
 plot(g)
+}
 
 ## define the latent variable
 L <- 1
@@ -58,11 +60,13 @@ rules <- rep(TRUE,10)
 resP <- udag2pag(resD, rules=rules, verbose=1)
 colnames(resP) <- rownames(resP) <- nodes(g)[-L]
 
+if (require(Rgraphviz)) {
 ## plot the original DAG and the PAG
 op <- par(mfrow=c(1,2))
 plot(g, main="original (random) DAG")
 plotAG(resP)
 par(op)
+}
 }
 \keyword{multivariate}
 \keyword{models}

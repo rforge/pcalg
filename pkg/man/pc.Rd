@@ -157,8 +157,10 @@ p <- 8
 set.seed(45)
 myDAG <- randomDAG(p, prob = 0.3)
 
+if (require(Rgraphviz)) {
 ## plot the DAG
 plot(myDAG, main = "randomDAG(10, prob = 0.2)")
+}
 
 ##################################################
 ## Using Gaussian Data
@@ -174,10 +176,11 @@ suffStat <- list(C = cor(d.mat), n = n)
 ## estimate CPDAG
 alpha <- 0.01
 pc.fit <- pc(suffStat, indepTest, p, alpha)
+if (require(Rgraphviz)) {
 ## show estimated CPDAG
 plot(pc.fit, main = "Estimated CPDAG")
 x11(); plot(myDAG)
-
+}
 ##################################################
 ## Using d-separation oracle
 ##################################################
@@ -188,9 +191,10 @@ suffStat <- list(g = myDAG, jp = johnson.all.pairs.sp(myDAG))
 ## estimate CPDAG
 alpha <- 0.01 ## value is irrelevant as dsepTest returns either 0 or 1
 fit <- pc(suffStat, indepTest, p, alpha)
+if (require(Rgraphviz)) {
 ## show estimated CPDAG
 plot(fit, main = "Estimated CPDAG")
-
+}
 ##################################################
 ## Using discrete data
 ##################################################
@@ -203,9 +207,11 @@ suffStat <- list(dm = dat, nlev = c(3,2,3,4,2), adaptDF = FALSE)
 ## estimate CPDAG
 alpha <- 0.01 
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
+if (require(Rgraphviz)) {
 ## show estimated CPDAG
 plot(pc.fit, main = "Estimated CPDAG")
 rm(dat)
+}
 
 ##################################################
 ## Using binary data
@@ -219,9 +225,11 @@ suffStat <- list(dm = dat, adaptDF = FALSE)
 ## estimate CPDAG
 alpha <- 0.01 
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
+if (require(Rgraphviz)) {
 ## show estimated CPDAG
 plot(pc.fit, main = "Estimated CPDAG")
 rm(dat)
+}
 }
 \keyword{multivariate}
 \keyword{models}

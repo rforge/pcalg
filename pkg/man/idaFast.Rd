@@ -61,7 +61,9 @@ indepTest <- gaussCItest
 suffStat <- list(C = cor(dat), n = n)
 pc.fit <- pc(suffStat, indepTest, p, alpha)
 
+if (require(Rgraphviz)) {
 plot(myDAG)
+}
 
 (eff.est1 <- ida(2,5,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
 (eff.est2 <- ida(2,6,cov(dat),pc.fit@graph,method="local",verbose=FALSE))

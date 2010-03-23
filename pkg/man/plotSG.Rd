@@ -30,6 +30,7 @@ plotSG( graphObj, y, dist, amat = NA, directed = TRUE )
   Daniel Stekhoven (\email{hoven@stat.math.ethz.ch})
 }
 \examples{
+if (require(Rgraphviz)) {
 ## generate a random DAG:
 p <- 10
 set.seed(45)
@@ -54,5 +55,6 @@ plotSG(myDAG, 8, 3, directed = FALSE)
 
 ## Note that the layout of the subgraph might be different than in the
 ## orignial graph, but the graph structure is identical
+}
 }
 \keyword{graphs}

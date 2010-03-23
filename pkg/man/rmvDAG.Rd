@@ -64,8 +64,10 @@ rmvDAG(n, dag,
 p <- 20
 rDAG <- randomDAG(p, prob = 0.2, lB=0.1, uB=1)
 
+if (require(Rgraphviz)) {
 ## plot the DAG
 plot(rDAG, main = "randomDAG(20, prob = 0.2, ..)")
+}
 
 ## generate 1000 samples of DAG using standard normal error distribution
 n <- 1000

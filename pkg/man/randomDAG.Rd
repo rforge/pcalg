@@ -39,9 +39,11 @@ randomDAG(n, prob, lB = 0.1, uB = 1)
   Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Martin Maechler
 }
 \examples{
+if (require(Rgraphviz)) {
 set.seed(101)
 myDAG <- randomDAG(n = 20, prob= 0.2, lB = 0.1, uB = 1)
 plot(myDAG)
+}
 }
 \keyword{graphs}
 \keyword{datagen}

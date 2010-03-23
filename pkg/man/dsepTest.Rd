@@ -50,8 +50,10 @@ p <- 8
 set.seed(45)
 myDAG <- randomDAG(p, prob = 0.3)
 
+if (require(Rgraphviz)) {
 ## plot the DAG
 plot(myDAG, main = "randomDAG(10, prob = 0.2)")
+}
 
 ## define sufficient statistics (d-separation oracle)
 suffStat <- list(g = myDAG, jp = johnson.all.pairs.sp(myDAG))

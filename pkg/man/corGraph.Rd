@@ -30,6 +30,7 @@ x1 <- rnorm(100)
 x2 <- rnorm(100)
 mat <- cbind(x1,x2, x3 = x1+x2)
 
+if (require(Rgraphviz)) {
 ## ``analyze the data''
 (g <- corGraph(mat)) # a 'graphNEL' graph, undirected
 plot(g) # ==> (1) and (2) are each linked to (3)
@@ -37,6 +38,7 @@ plot(g) # ==> (1) and (2) are each linked to (3)
 ## use different significance level and different method
 (g2 <- corGraph(mat, alpha=0.01, Cmethod="kendall"))
 plot(g2) ## same edges as 'g'
+}
 }
 \keyword{graphs}
 \keyword{models}

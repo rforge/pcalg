@@ -53,8 +53,9 @@ p <- 10
 ## generate and draw random DAG :
 set.seed(101)
 myDAG <- randomDAG(p, prob = 0.2)
+if (require(Rgraphviz)) {
 plot(myDAG, main = "randomDAG(10, prob = 0.2)")
-
+}
 ## generate 1000 samples of DAG using standard normal error distribution
 n <- 1000
 d.mat <- rmvDAG(n, myDAG, errDist = "normal")
@@ -75,7 +76,9 @@ pcSelect(d.mat[,10],d.mat[,-10],alpha=0.05)
 ## The result should be the same when using pcAlgo
 resU <- pcAlgo(d.mat, alpha = 0.05, corMethod = "standard",directed=TRUE)
 resU
+if (require(Rgraphviz)) {
 plot(resU,zvalue.lwd=TRUE)
+}
 ## as can be seen, the pcAlgo function also finds 4,5,6 as the important
 ## variables
 ## Again, variable 6 seems to be very evident from the data

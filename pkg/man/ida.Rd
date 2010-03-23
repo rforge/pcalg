@@ -144,10 +144,12 @@ indepTest <- gaussCItest
 suffStat <- list(C = cor(dat), n = n)
 pc.fit <- pc(suffStat, indepTest, p, alpha)
 
+if (require(Rgraphviz)) {
 ## plot the true and estimated graphs
 par(mfrow = c(1,2))
 plot(myDAG, main = "True DAG")
 plot(pc.fit, main = "Estimated CPDAG")
+}
 
 ## Supppose that we know the true CPDAG and covariance matrix
 ida(2,5,trueCov(myDAG),myCPDAG,method = "local")

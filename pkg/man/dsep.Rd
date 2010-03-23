@@ -43,7 +43,9 @@ dsep(a, b, S, g, john.pairs = NA)
 p <- 8
 set.seed(45)
 myDAG <- randomDAG(p, prob = 0.3)
+if (require(Rgraphviz)) {
 plot(myDAG)
+}
 
 ## Examples for d-separation
 dsep("1","7",NULL,myDAG)
