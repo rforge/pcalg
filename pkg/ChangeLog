@@ -1,0 +1,17 @@
+2010-03-23  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* DESCRIPTION (Version): 1.0-1
+
+	* R/pcalg.R (plot-methods, plotSG): need Rgraphviz::plot() now that Rgraphviz is
+	not imported *before* method definition.
+
+	* R/AllClasses.R: move class definitions here (at least).
+
+	* pcalg.R (plotSG): add 'main' argument; do *return* the subgraph,
+	clean up code.
+	* man/plotSG.Rd: document 'main', use markup (\code{..}) properly.
+
+2010-03-22  Markus Kalisch  <kalisch@stat.math.ethz.ch>
+
+	* NAMESPACE: no longer import (from) Rgraphviz
+	* DESCRIPTION: ditto
