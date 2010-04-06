@@ -4366,15 +4366,15 @@ ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
     ## Main Input: mcov, graphEst
 ##############################
     ## find unique parents of x
-    wgt.est <- wgtMatrix(graphEst)
+    wgt.est <- (wgtMatrix(graphEst)!=0)
+    if (y.notparent) {
+      ## Direct edge btw. x.pos and y.pos towards y.pos
+      wgt.est[x.pos, y.pos] <- FALSE
+    }
     tmp <- wgt.est-t(wgt.est)
     tmp[which(tmp<0)] <- 0
     wgt.unique <- tmp
     pa1 <- which(wgt.unique[x.pos,]!=0)
-    if (y.notparent) {
-      ## remove y.pos as parent node
-      pa1 <- setdiff(pa1, y.pos)
-    }
     if (y.pos %in% pa1) {
       ## x is parent of y -> zero effect
       beta.hat <- 0
@@ -4411,19 +4411,17 @@ ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
         for (i2 in 1:length(pa2)) {
           pa2.f <- pa2[-i2]
           pa2.t <- pa2[i2]
-          if (!y.notparent | (y.notparent & !(y.pos %in% pa2.t)) ) {
-            tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
-            if (!tmpColl) {
-              ii <-  ii+1
-              if (y.pos %in% pa2.t) {
-                beta.hat[ii] <- 0
-              } else {
-                beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1,pa2[i2]))
-                if (verbose) cat("Fit - y:",y.pos,"x:",c(x.pos,pa1,pa2[i2]),
-                                 "|b.hat=",beta.hat[ii],"\n")
-              } ## if (y.pos %in% pa2.t)
-            } ## if (!tmpColl)
-          } ## if (!y.notparent | (y.notparent & !(y.pos %in% pa2.t)) )
+          tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
+          if (!tmpColl) {
+            ii <-  ii+1
+            if (y.pos %in% pa2.t) {
+              beta.hat[ii] <- 0
+            } else {
+              beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1,pa2[i2]))
+              if (verbose) cat("Fit - y:",y.pos,"x:",c(x.pos,pa1,pa2[i2]),
+                               "|b.hat=",beta.hat[ii],"\n")
+            } ## if (y.pos %in% pa2.t)
+          } ## if (!tmpColl)
         } ## for (i2 in 1:length(pa2))
 
         ## higher order subsets of pa2
@@ -4434,21 +4432,19 @@ ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
             for (j in 1:n.comb) {
               pa2.f <- setdiff(pa2,pa.tmp[,j])
               pa2.t <- pa.tmp[,j]
-              if (!y.notparent | (y.notparent & !(y.pos %in% pa2.t)) ) {
-                tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
-                if (!tmpColl) {
-                  ii <- ii+1
-                  if (y.pos %in% pa2.t) {
-                    beta.hat[ii] <- 0
-                  } else {
-                    beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1,pa.tmp[,j]))
-                    if (verbose) {
-                      cat("Fit - y:",y.pos,"x:",c(x.pos,pa1,pa.tmp[,j]),
-                          "|b.hat=",beta.hat[ii],"\n")
-                    } ## if (verbose)
-                  } ## if (y.pos %in% pa2.t)
-                } ## if (!tmpColl)
-              } ## if (!y.notparent | (y.notparent & !(y.pos %in% pa2.t)) )
+              tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
+              if (!tmpColl) {
+                ii <- ii+1
+                if (y.pos %in% pa2.t) {
+                  beta.hat[ii] <- 0
+                } else {
+                  beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1,pa.tmp[,j]))
+                  if (verbose) {
+                    cat("Fit - y:",y.pos,"x:",c(x.pos,pa1,pa.tmp[,j]),
+                        "|b.hat=",beta.hat[ii],"\n")
+                  } ## if (verbose)
+                } ## if (y.pos %in% pa2.t)
+              } ## if (!tmpColl)
             } ## for (j in 1:n.comb)
           } ## for (i in 2:length(pa2))
         } ## if (length(pa2)>1)
@@ -4463,6 +4459,11 @@ ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
     p <- numNodes(graphEst)
     am.pdag <- wgtMatrix(graphEst)
     am.pdag[am.pdag!=0] <- 1
+    if (y.notparent) {
+      ## Direct edge btw. x.pos and y.pos towards y.pos
+      am.pdag[x.pos, y.pos] <- 0
+    }
+
     ## find all DAGs if not provided externally
     if (is.na(all.dags)) {
       ad <- allDags(am.pdag,am.pdag,NULL)
@@ -4491,15 +4492,13 @@ ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
       ## There is a path from x to y
       wgt.unique <- t(matrix(ad[i,],p,p)) ## wgt.est is wgtMatrix of DAG
       pa1 <- which(wgt.unique[x.pos,]!=0)
-      if (!y.notparent | (y.notparent & !(y.pos %in% pa1)) ) {
-        if (y.pos %in% pa1) {
-          beta.hat[i] <- 0
-        } else {
-          beta.hat[i] <- lm.cov(mcov,y.pos,c(x.pos,pa1))
-          if (verbose) cat("Fit - y:",y.pos,"x:",c(x.pos,pa1),
-                           "|b.hat=",beta.hat[i],"\n")
-        } ## if (y.pos %in% pa1)
-      } ## if (!y.notparent | (y.notparent & !(y.pos %in% pa1)) )
+      if (y.pos %in% pa1) {
+        beta.hat[i] <- 0
+      } else {
+        beta.hat[i] <- lm.cov(mcov,y.pos,c(x.pos,pa1))
+        if (verbose) cat("Fit - y:",y.pos,"x:",c(x.pos,pa1),
+                         "|b.hat=",beta.hat[i],"\n")
+      } ## if (y.pos %in% pa1)
       ##  } ## if length(pth)
       ## } ## if rev.pth
     } ## for n.dags

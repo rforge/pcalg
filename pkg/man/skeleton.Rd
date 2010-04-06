@@ -98,7 +98,7 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf)
   P. Spirtes, C. Glymour and R. Scheines (2000)
   \emph{Causation, Prediction, and Search}, 2nd edition, MIT Press.
 
-  M. Kalisch and P. B\"uhlmann (2007)
+  M. Kalisch and P. Buehlmann (2007)
   \emph{Estimating high-dimensional
     directed acyclic graphs with the PC-algorithm},
     JMLR \bold{8} 613-636.
@@ -140,8 +140,9 @@ alpha <- 0.01
 skel.fit <- skeleton(suffStat, indepTest, p, alpha)
 if (require(Rgraphviz)) {
 ## show estimated skeleton
+par(mfrow = c(1,2))
 plot(skel.fit, main = "Estimated Skeleton")
-x11(); plot(myDAG)
+plot(myDAG, main = "True DAG")
 }
 
 ##################################################

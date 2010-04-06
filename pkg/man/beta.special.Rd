@@ -5,9 +5,11 @@
 \description{
   This function is DEPRECATED! Use \code{\link{ida}} instead.
 }
-\usage{
-beta.special(dat=NA, x.pos, y.pos, verbose=0, a=0.01, myDAG=NA, myplot=FALSE, perfect=FALSE, method="local", collTest=TRUE, pcObj=NA, all.dags=NA, u2pd="rand")
-}
+
+\usage{ beta.special(dat=NA, x.pos, y.pos, verbose=0, a=0.01, myDAG=NA,
+myplot=FALSE, perfect=FALSE, method="local", collTest=TRUE, pcObj=NA,
+all.dags=NA, u2pd="rand") }
+
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 \item{dat}{data matrix}
@@ -32,14 +34,7 @@ beta.special(dat=NA, x.pos, y.pos, verbose=0, a=0.01, myDAG=NA, myplot=FALSE, pe
 \value{
   estimates of intervention effects
 }
-\references{
-  M.H. Maathuis, M. Kalisch, P. B\"uhlmann (2009), \emph{Estimating
-    high-dimensional intervention effects from observational data};
-  Annals of Statistics, 2009.
-}
 \author{Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
-\seealso{\code{\link{pcAlgo}},\code{\link{dag2cpdag}},\code{\link{beta.special.pcObj}}}
-
 \keyword{multivariate}
 \keyword{models}
 \keyword{graphs}

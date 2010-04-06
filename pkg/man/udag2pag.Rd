@@ -33,13 +33,13 @@ udag2pag(gInput, rules, verbose)
   != 0: i *-o j; M[i,j]=2, M[j,i]!=0: i*->j; M[i,j]=3, M[j,i]!=0: i*-j. 
 }
 \references{
-  J. Zhang (2008), On the completeness of orientation rules for causal
-  discovery in the presence of latent confounders and selection bias,
-  Artificial Intelligence 172, pp. 1873-1896
+  J. Zhang (2008). On the completeness of orientation rules for causal
+  discovery in the presence of latent confounders and selection bias.
+  \emph{Artificial Intelligence} \bold{172} 1873-1896.
 }
 \author{Diego Colombo (\email{colombo@stat.math.ethz.ch})}
 
-\seealso{\code{\link{pcAlgo}}}
+\seealso{\code{\link{pc}}}
 
 \examples{
 ## generate and draw random DAG

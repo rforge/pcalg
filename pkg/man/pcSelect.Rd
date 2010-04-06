@@ -1,27 +1,28 @@
 \name{pcSelect}
 \alias{pcSelect}
 \title{PC-Select: Estimate subgraph around a response variable}
-\description{
-  This function is intended for feature selection: If you have a
-  response variable \eqn{y} and a data matrix \eqn{dm}, which columns
-  are "strongly influential" on \eqn{y}. The type of influence is the
-  same as in the PC-Algorithm, i.e., \eqn{y} and \eqn{x} (a column of
-  \eqn{dm}) are associated if they are correlated even when conditioning
-  on any subset of the remaining columns in \eqn{dm}. Therefore, only
-  very strong relations will be found and the result is typically a
-  subset of other feature selection techniques. Note that there are also
-  robust correlation methods available which render this method robust.
-}
+
+\description{ This function is intended for feature selection: If you
+  have a response variable \eqn{y} and a data matrix \eqn{dm}, we want
+  to know which variables are "strongly influential" on \eqn{y}. The
+  type of influence is the same as in the PC-Algorithm, i.e., \eqn{y}
+  and \eqn{x} (a column of \eqn{dm}) are associated if they are
+  correlated even when conditioning on any subset of the remaining
+  columns in \eqn{dm}. Therefore, only very strong relations will be
+  found and the result is typically a subset of other feature selection
+  techniques. Note that there are also robust correlation methods
+  available which render this method robust.  }
+
 \usage{
 pcSelect(y,dm, alpha, corMethod = "standard", verbose = 0, directed=FALSE)
 }
 \arguments{
   \item{y}{Response Vector (length(y)=nrow(dm))}
-  \item{dm}{Data matrix (rows: samples, cols: nodes)}
+  \item{dm}{Data matrix (rows: samples, cols: variables)}
   \item{alpha}{Significance level of individual partial correlation tests}
   \item{corMethod}{"standard" or "Qn" for standard or robust correlation
   estimation}
-  \item{verbose}{0-no output, 1-small output, 2-details (using 1 and 2
+  \item{verbose}{0: no output, 1: small output, 2: details (using 1 and 2
   makes the function very much slower)}
   \item{directed}{Boolean; should the output graph be directed?}
 }
@@ -33,17 +34,20 @@ pcSelect(y,dm, alpha, corMethod = "standard", verbose = 0, directed=FALSE)
   the more consistent is the edge with the data.}
 }
 \details{
-  This function basically applies \code{\link{pcAlgo}} on the data
+  This function basically applies \code{\link{pc}} on the data
   matrix obtained by joining \code{y} and \code{dm}. Since the output is
   not concerned with the edges found within the columns of \code{dm},
   the algorithm is adapted accordingly. Therefore, the runtime and the
-  ability to deal with large datasets is typically increased quite a lot.
+  ability to deal with large datasets is typically increased
+  substantially. 
 }
-\references{
-  P. Spirtes, C. Glymour and R. Scheines (2000)
-  \emph{Causation, Prediction, and Search}, 2nd edition, The MIT Press.
-}
-\seealso{\code{\link{pcAlgo}} which is the more general version of this function.
+
+\references{ Buehlmann, P., Kalisch, M. and Maathuis,
+  M.H. (2009). Variable selection for high-dimensional linear models:
+  partially faithful distributions and the PC-simple algorithm. \emph{To
+  appear in Biometrika}.  }
+
+\seealso{\code{\link{pc}} which is the more general version of this function.
 }
 \author{
   Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Martin Maechler.

@@ -1,6 +1,6 @@
 \name{plotSG}
 \alias{plotSG}
-\title{Plot the Neighbourhood of a Specific Node in a Graph Object}
+\title{Plot the subgraph around a Specific Node in a Graph Object}
 \description{
   Plots a subgraph for a specified starting node and a given graph.  The
   subgraph consists of those nodes that can be reached from the starting

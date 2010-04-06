@@ -4,16 +4,16 @@
 \description{
   Computes the correlation graph. This is the graph in which an edge is
   drawn between node i and node j, if the null hypothesis \dQuote{\emph{Correlation
-      between \eqn{X_i} and \eqn{X_j} is zero}} can be rejected on a
+      between \eqn{X_i} and \eqn{X_j} is zero}} can be rejected at the
   given significance level \eqn{\alpha (alpha)}{alpha}.
 }
 \usage{
 corGraph(dm, alpha=0.05, Cmethod="pearson")
 }
 \arguments{
-  \item{dm}{numeric matrix with rows as samples and columns as variables.}
-  \item{alpha}{significance level for correlation test (numeric)}
-  \item{Cmethod}{a character string indicating which correlation coefficient
+  \item{dm}{Numeric matrix with rows as samples and columns as variables.}
+  \item{alpha}{Significance level for correlation test (numeric)}
+  \item{Cmethod}{A character string indicating which correlation coefficient
         is to be used for the test.  One of "pearson","kendall", or
 	"spearman", can be abbreviated. (string)}
 }

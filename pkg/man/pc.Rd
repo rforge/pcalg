@@ -1,6 +1,6 @@
 \name{pc}
 \alias{pc}
-\title{Estimate the equivalence class of a DAG (CPDAG) 
+\title{Estimate the equivalence class of a DAG
   using the PC algorithm}
 \description{
   Estimate the equivalence class of a directed acyclic
@@ -134,13 +134,12 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "rand")
   edges are equivalent.
 }
 \references{
-  P. Spirtes, C. Glymour and R. Scheines (2000)
-  \emph{Causation, Prediction, and Search}, 2nd edition, The MIT Press.
+  P. Spirtes, C. Glymour and R. Scheines (2000).
+  \emph{Causation, Prediction, and Search}, 2nd edition. The MIT Press.
 
-  M. Kalisch and P. B\"uhlmann (2007)
-  \emph{Estimating high-dimensional
-    directed acyclic graphs with the PC-algorithm},
-    JMLR \bold{8} 613-636.
+  M. Kalisch and P. Buehlmann (2007). 
+  Estimating high-dimensional directed acyclic graphs with the PC-algorithm.
+  \emph{JMLR} \bold{8} 613-636.
 }
 \seealso{\code{\link{skeleton}} for estimating a skeleton of a DAG; 
   \code{\link{udag2pdag}} for converting the
@@ -178,8 +177,9 @@ alpha <- 0.01
 pc.fit <- pc(suffStat, indepTest, p, alpha)
 if (require(Rgraphviz)) {
 ## show estimated CPDAG
+par(mfrow=c(1,2))
 plot(pc.fit, main = "Estimated CPDAG")
-x11(); plot(myDAG)
+plot(myDAG, main = "True DAG")
 }
 ##################################################
 ## Using d-separation oracle

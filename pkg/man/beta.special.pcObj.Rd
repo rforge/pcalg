@@ -3,7 +3,8 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Compute set of intervention effects in a fast way}
 \description{
-  This function is DEPRECATED! Use \code{\link{ida}} instead.
+  This function is DEPRECATED! Use \code{\link{ida}} or
+  \code{\link{idaFast}} instead.
 }
 \usage{
 beta.special.pcObj(x.pos, y.pos, pcObj, mcov=NA, amat=NA, amatSkel=NA, t.amat=NA)

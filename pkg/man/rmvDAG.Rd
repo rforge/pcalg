@@ -53,7 +53,8 @@ rmvDAG(n, dag,
   \eqn{X_i = e_i}.
 }
 \seealso{\code{\link{randomDAG}} for generating a random DAG;
-  \code{\link{pcAlgo}} for estimating the skeleton of a DAG that
+  \code{\link{skeleton}} and \code{\link{pc}} for estimating the
+  skeleton and the CPDAG of a DAG that
   corresponds to the data.
 }
 \author{

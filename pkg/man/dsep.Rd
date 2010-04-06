@@ -8,9 +8,9 @@
 dsep(a, b, S, g, john.pairs = NA)
 }
 \arguments{
-  \item{a}{Label of node A}
-  \item{b}{Label of node B}
-  \item{S}{Labels of set of nodes on which is conditioned}
+  \item{a}{Label (sic!) of node A}
+  \item{b}{Label (sic!) of node B}
+  \item{S}{Labels (sic!) of set of nodes on which is conditioned}
   \item{g}{Element "g" containing
     the Directed Acyclic Graph (object of \code{\link{class}}
     "graph", see \code{\link[graph]{graph-class}} from the
@@ -23,11 +23,11 @@ dsep(a, b, S, g, john.pairs = NA)
 }
 
 \details{This function checks separation in the moralized graph as
-  explained in Lauritzen.}
+  explained in Lauritzen (2004).}
 
 \references{
-  S.L. Lauritzen (2004)
-  \emph{Graphical Models}, Oxford University Press, Chapter 3.2.2
+  S.L. Lauritzen (2004),
+  Graphical Models, \emph{Oxford University Press}, Chapter 3.2.2
 }
 
 \seealso{\code{\link{dsepTest}} for a wrapper of this function that can
