@@ -99,13 +99,9 @@ now analyse. First, we load the data set.
 
 
 <<exIntro1>>=
-library(pcalg)
+library(pcalg, lib.loc = "/u/kalisch/research/packages/pcalg.Rcheck")
 ## load data
-set.seed(45)
-p <- 8
-myDAG <- randomDAG(p, prob = 0.3)
-n <- 5000
-dat <- rmvDAG(n, myDAG, errDist = "normal")
+data(gaussianData)
 @
 
 In the next step, we use the function \code{pc} to produce an estimate of
@@ -159,20 +155,20 @@ p-value to control the sampling error).
 If we would like to know the effect of a unit increase in variable 1 on
 variables 3, 5 and 6, we could simply call \code{ida} three times. However,
 a faster way is to call the function \code{idaFast}, which was taylored for
-such situations. Each row shows the set of effects on the corresponding
-target variable.
+such situations. Each row shows the set of effects on the target variable
+indicated by the row names.
 
 <<exIntro3>>=
 idaFast(1, c(3,5,6), cov(dat), pc.fit@graph)
 @ 
-The true values for the causal effects are 0.441, 0, 0.296 for variables 3, 5 and
-6, respectively. The first row of the output, corresponding to variable 3
-is uninformative. Although one entry comes close to the true value, the
-other estimate is 0. Thus, we cannot be sure if there is a causal effect at
-all. The second row quite accurately indicates a causal effect that is very
-close to zero. The third row corresponds to variable 6 and was thus already
-discussed in the previous section on \code{ida}.
-!! Change package to give rownames !!
+The true values for the causal effects are 0.441, 0, 0.296 for variables
+3, 5 and 6, respectively. The first row of the output, corresponding to
+variable 3, is uninformative. Although one entry comes close to the true
+value, the other estimate is 0. Thus, we cannot be sure if there is a
+causal effect at all. The second row, corresponding to variable 5, quite
+accurately indicates a causal effect that is very close to zero. The third
+row, corresponding to variable 6, was already discussed in the
+previous section on \code{ida}.
 
 \section{Methodological background}
 Our proposed method consists of two major steps. In the first step, the

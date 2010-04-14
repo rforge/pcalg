@@ -56,43 +56,36 @@ trueCov <- function(g) {
   xcov
 }
 
-randomDAG <- function(n, prob, lB = 0.1, uB = 1) {
-  ## Purpose: Randomly generate a DAG (graph object as in graph-package).
-  ## The resulting graph is topologically ordered from low to high node
-  ## numbers.
-  ## ----------------------------------------------------------------------
-  ## Arguments:
-  ## - n: Number of nodes
-  ## - prob: Probability of connecting a node to another node with higher
-  ##         topological ordering
-  ## - lB, uB: Lower and upper limit of weights between connected nodes
-  ##   (chosen uniformly at random)
-  ## ----------------------------------------------------------------------
-  ## Author: Markus Kalisch, Date: 26 Jan 2006, 15:59
-
-  stopifnot(n >= 2,
-            is.numeric(prob), length(prob) == 1, 0 <= prob, prob <= 1,
-            is.numeric(lB), is.numeric(uB), lB <= uB)
-  ## create DAG
-  V <- as.character(1:n)
-  edL <- as.list(V)
-  names(edL) <- V
-  for (i in seq(length = n-2)) {
-    listSize <- rbinom(1, n-i, prob)
-    edgeList <- sample(seq(i+1,n), size = listSize)
-    ## print(list(i=i,eseq=seq(i+1,n),listSize=listSize,elist=edgeList))
-    weightList <- runif(length(edgeList), min = lB, max = uB)
-    edL[[i]] <- list(edges = edgeList, weights = weightList)
-  }
-  if (rbinom(1,1, prob) == 1) {## then generate a last edge
-    edL[[n-1]] <- list(edges = n,
-                       weights = runif(1, min = lB, max = uB))
-  } else {
-    edL[[n-1]] <- list(edges = integer(0), weights = numeric(0))
-  }
-  edL[[n]] <- list(edges = integer(0), weights = numeric(0))
-
-  new("graphNEL", nodes = V, edgeL = edL, edgemode = "directed")
+randomDAG <- function (n, prob, lB = 0.1, uB = 1) 
+{
+    stopifnot(n >= 2, is.numeric(prob), length(prob) == 1, 0 <= 
+        prob, prob <= 1, is.numeric(lB), is.numeric(uB), lB <= 
+        uB)
+    V <- as.character(1:n)
+    edL <- as.list(V)
+    names(edL) <- V
+    nmbEdges <- 0
+    for (i in seq(length = n - 2)) {
+        listSize <- rbinom(1, n - i, prob)
+        nmbEdges <- nmbEdges + listSize
+        edgeList <- sample(seq(i + 1, n), size = listSize)
+        weightList <- runif(length(edgeList), min = lB, max = uB)
+        edL[[i]] <- list(edges = edgeList, weights = weightList)
+    }
+    if (rbinom(1, 1, prob) == 1) {
+        edL[[n - 1]] <- list(edges = n, weights = runif(1, min = lB, 
+            max = uB))
+    }
+    else {
+        edL[[n - 1]] <- list(edges = integer(0), weights = numeric(0))
+    }
+    edL[[n]] <- list(edges = integer(0), weights = numeric(0))
+    if (nmbEdges > 0) {
+      res <- new("graphNEL", nodes = V, edgeL = edL, edgemode = "directed")
+    } else {
+      res <- new("graphNEL", nodes = V, edgemode = "directed")
+    }
+    res
 }
 
 ## A version of this is also in	/u/maechler/R/MM/Pkg-ex/graph/weightmatrix.R
@@ -4589,7 +4582,7 @@ idaFast <- function(x.pos,y.pos.set,mcov,graphEst)
       } ## for (i in 2:length(pa2))
     } ## if (length(pa2)>1)
   } ## if (length(pa2) == 0)
-
+  if (nrow(beta.hat)>0) rownames(beta.hat) <- as.character(y.pos.set)
   beta.hat
 }
 

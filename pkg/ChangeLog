@@ -1,3 +1,14 @@
+2010-04-14  Markus Kalisch  <kalisch@stat.math.ethz.ch>
+
+	* R/pcalg.R (randomDAG): Bug fix (Empty graph could not be
+	transformed into adj matrix with as(G,"matrix"). Although it worked
+	with wgtMatrix, it was still worth fixing.
+
+2010-04-06  Markus Kalisch  <kalisch@stat.math.ethz.ch>
+
+	* R/pcalg.R (idaFast): Included rownames indicating the element of
+	y.pos.set, to which the line corresponds
+
 2010-03-26  Markus Kalisch  <kalisch@stat.math.ethz.ch>
 
 	* man/skeleton.Rd (fixedEdges): removed x11() and added split window
