@@ -69,6 +69,8 @@
 %% Note that you should use the \pkg{}, \proglang{} and \code{} commands.
 
 \section{Introduction}
+THIS DOCUMENTATION IS STILL UNDER CONSTRUCTION! \\
+
 Understanding cause-effect relationships between variables is of primary
 interest in many fields of science. Usually, experimental intervention is
 used to find these relationships. In many settings, however, experiments
@@ -96,13 +98,12 @@ To fix ideas, we have simulated an examle data set with $p = 8$ continuous
 variables with gaussian noise and $n = 5000$ observations, which we will
 now analyse. First, we load the data set.
 
-
-
-<<exIntro1>>=
-library(pcalg, lib.loc = "/u/kalisch/research/packages/pcalg.Rcheck")
-## load data
-data(gaussianData)
-@
+%%- 
+%%- <<exIntro1>>=
+%%- library(pcalg, lib.loc = "/u/kalisch/research/packages/pcalg.Rcheck")
+%%- ## load data
+%%- data(gaussianData)
+%%- @
 
 In the next step, we use the function \code{pc} to produce an estimate of
 the underlying causal structure. Since this function is based on
@@ -115,19 +116,20 @@ of the data (sufficient statistic) on which the conditional independence
 function can work. Each conditional independence test can be performed at a
 certain significance level \texttt{alpha}. This can be treated as a tuning
 parameter.
-<<exIntro2>>=
-## use predefined test for conditional independence on gaussian data
-indepTest <- gaussCItest 
-## the functin gaussCItest needs as input the correlation matrix C and 
-## the sample size n
-suffStat <- list(C = cor(dat), n = 5000)
-## estimate the causal structure
-pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
-@ 
-<<exIntroPlot>>=
-## plot the resulting causal structure
-plot(pc.fit)
-@ 
+%%- 
+%%- <<exIntro2>>=
+%%- ## use predefined test for conditional independence on gaussian data
+%%- indepTest <- gaussCItest 
+%%- ## the functin gaussCItest needs as input the correlation matrix C and 
+%%- ## the sample size n
+%%- suffStat <- list(C = cor(dat), n = 5000)
+%%- ## estimate the causal structure
+%%- pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
+%%- @ 
+%%- <<exIntroPlot>>=
+%%- ## plot the resulting causal structure
+%%- plot(pc.fit)
+%%- @ 
 
 As can be seen in the plot, there are directed and bidirected edges in the
 estimated causal structure. The directed edges show the presence and
@@ -143,9 +145,11 @@ one unit, how much would variable 6 increase? Since the causal structure
 was not identified perfectly, we cannot expect to get a unique
 number. Instead, we will get a set of possible causal effects. This set can
 be computed by using the function \code{ida}.
-<<exIntro2>>=
-ida(1, 6, cov(dat), pc.fit@graph)
-@ 
+%%- 
+%%- <<exIntro2>>=
+%%- ida(1, 6, cov(dat), pc.fit@graph)
+%%- @ 
+
 Since we simulated the data, we know that the true value of the causal
 effect is 0.296. Thus, one of the two estimates is indeed close to the true
 value. Since both values are larger than zero, we can conclude, that
@@ -157,10 +161,11 @@ variables 3, 5 and 6, we could simply call \code{ida} three times. However,
 a faster way is to call the function \code{idaFast}, which was taylored for
 such situations. Each row shows the set of effects on the target variable
 indicated by the row names.
+%%- 
+%%- <<exIntro3>>=
+%%- idaFast(1, c(3,5,6), cov(dat), pc.fit@graph)
+%%- @ 
 
-<<exIntro3>>=
-idaFast(1, c(3,5,6), cov(dat), pc.fit@graph)
-@ 
 The true values for the causal effects are 0.441, 0, 0.296 for variables
 3, 5 and 6, respectively. The first row of the output, corresponding to
 variable 3, is uninformative. Although one entry comes close to the true
@@ -244,10 +249,6 @@ Explain options.
 Explain options.
 \subsection{fci}
 Explain options.
-
-\section{Examples}
-This is a Sweave example:
-%% MM: do *label* the chunks; it's helpful once you have many
 
 \subsection{Estimating graphical models}
 Running example for gaussian data.
