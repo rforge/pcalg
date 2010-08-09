@@ -5,8 +5,8 @@
 
 %%\VignetteIndexEntry{Causal Inference: The pcalg R package}
 %%\VignetteDepends{}
-\SweaveOpts{engine=R,eps=FALSE,pdf=TRUE,width=7,height=4}
-\SweaveOpts{keep.source=TRUE,strip.white=TRUE}
+
+
 %           ^^^^^^^^^^^^^^^^ preserve comments (and all) in R chunks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -101,11 +101,13 @@ To fix ideas, we have simulated an example data set with $p = 8$ continuous
 variables with gaussian noise and $n = 5000$ observations, which we will
 now analyse. First, we load the package \pkg{pcalg} and the data set.
 
-<<exIntro1>>=
- library(pcalg)
- ## load data matrix "dat"
- data(gaussianData)
-@
+\begin{Schunk}
+\begin{Sinput}
+>  library(pcalg)
+>  ## load data matrix "dat"
+>  data(gaussianData)
+\end{Sinput}
+\end{Schunk}
 
 In the next step, we use the function \code{pc} to produce an estimate of
 the underlying causal structure. Since this function is based on
@@ -119,24 +121,23 @@ can work. Each conditional independence test can be performed at a certain
 significance level \texttt{alpha}. This can be treated as a tuning
 parameter.
 
-<<exIntroPlot>>=
-## use predefined test for conditional independence tests on gaussian data
-indepTest <- gaussCItest 
-## the function gaussCItest needs as input the correlation matrix C and 
-## the sample size n (see ?gaussCItest)
-suffStat <- list(C = cor(dat), n = 5000)
-## estimate the causal structure
-pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
-## plot the resulting causal structure
-plot(pc.fit, main = "")
-@ 
+\begin{Schunk}
+\begin{Sinput}
+> ## use predefined test for conditional independence tests on gaussian data
+> indepTest <- gaussCItest 
+> ## the function gaussCItest needs as input the correlation matrix C and 
+> ## the sample size n (see ?gaussCItest)
+> suffStat <- list(C = cor(dat), n = 5000)
+> ## estimate the causal structure
+> pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
+> ## plot the resulting causal structure
+> plot(pc.fit, main = "")
+\end{Sinput}
+\end{Schunk}
 
 \begin{figure}
   \begin{center}
-<<exIntroPlot, echo = FALSE, fig = TRUE>>=
-## plot the resulting causal structure
-plot(pc.fit, main = "")
-@ 
+\includegraphics{pcalgDoc-exIntroPlot}
 \caption{Estimated causal structure}
 \label{fig:intro1}
 \end{center}
@@ -159,9 +160,14 @@ be computed by using the function \code{ida}. To provide full quantitative
 information, we need to pass the covariance matrix in addition to the
 estimated causal structure.
 
-<<exIntro2>>=
-ida(1, 6, cov(dat), pc.fit@graph)
-@ 
+\begin{Schunk}
+\begin{Sinput}
+> ida(1, 6, cov(dat), pc.fit@graph)
+\end{Sinput}
+\begin{Soutput}
+[1] 0.3037948 0.2081007
+\end{Soutput}
+\end{Schunk}
 
 Since we simulated the data, we know that the true value of the causal
 effect is 0.296. Thus, one of the two estimates is indeed close to the true
@@ -175,9 +181,17 @@ times. However, a faster way is to call the function \code{idaFast}, which
 was taylored for such situations. Each row shows the set of effects on the
 target variable indicated by the row names.
 
-<<exIntro3>>=
-idaFast(1, c(3,5,6), cov(dat), pc.fit@graph)
-@ 
+\begin{Schunk}
+\begin{Sinput}
+> idaFast(1, c(3,5,6), cov(dat), pc.fit@graph)
+\end{Sinput}
+\begin{Soutput}
+    beta.tmp   beta.tmp
+3 0.45481080 0.00000000
+5 0.01623214 0.01927009
+6 0.30379485 0.20810068
+\end{Soutput}
+\end{Schunk}
 
 The true values for the causal effects are 0.441, 0, 0.296 for variables
 $V3$, $V5$ and $V6$, respectively. The first row of the output,
@@ -441,26 +455,25 @@ matrix and the sample size of the data. Thus, the skeleton on the example
 data set \code{gaussianData} (which consists of $p=8$ variables and
 $n=5000$ samples) can be fitted in the following way.
 
-<<skelExpl1>>=
-require(pcalg)
-## load data matrix "dat"
-data(gaussianData)
-## use predefined test for conditional independence on gaussian data
-indepTest <- gaussCItest 
-## the functin gaussCItest needs as input a list with
-## the correlation matrix C and the sample size n
-suffStat <- list(C = cor(dat), n = 5000)
-## estimate the skeleton
-pc.fit <- skeleton(suffStat, indepTest, p = 8, alpha = 0.01)
-## plot the resulting skeleton
-plot(pc.fit, main = "")
-@ 
+\begin{Schunk}
+\begin{Sinput}
+> require(pcalg)
+> ## load data matrix "dat"
+> data(gaussianData)
+> ## use predefined test for conditional independence on gaussian data
+> indepTest <- gaussCItest 
+> ## the functin gaussCItest needs as input a list with
+> ## the correlation matrix C and the sample size n
+> suffStat <- list(C = cor(dat), n = 5000)
+> ## estimate the skeleton
+> pc.fit <- skeleton(suffStat, indepTest, p = 8, alpha = 0.01)
+> ## plot the resulting skeleton
+> plot(pc.fit, main = "")
+\end{Sinput}
+\end{Schunk}
 \begin{figure}
   \begin{center}
-<<skelExpl1Plot, fig = TRUE, echo = FALSE>>=
-## plot the resulting skeleton
-plot(pc.fit, main = "")
-@ 
+\includegraphics{pcalgDoc-skelExpl1Plot}
 \caption{Estimated skeleton fitted on the gaussian data set provided by the
   package using the function \code{skeleton}.}
 \label{fig:skelExpl}
@@ -475,29 +488,28 @@ containing the data matrix, a vector specifying the number of levels for
 each variable and and option which indicates whether to lower the degrees
 of freedom by one for each zero count.
 
-<<skelExp2>>=
-## load data matrix "dat"
-data(discreteData)
-p <- ncol(dat)
-## use predefined test for discrete variables
-indepTest <- disCItest
-## the function disCItest needs as input a list containing
-## the data matrix, the number of levels for each variable and 
-## a boolean variable indicating whether to adapt the degrees of freedom
-## for zero counts
-suffStat <- list(dm = dat, nlev = c(3,2,3,4,2), adaptDF = FALSE)
-## estimate skeleton 
-alpha <- 0.01 
-skel.fit <- skeleton(suffStat, indepTest, p, alpha)
-## show estimated skeleton
-plot(skel.fit, main = "")
-@ 
+\begin{Schunk}
+\begin{Sinput}
+> ## load data matrix "dat"
+> data(discreteData)
+> p <- ncol(dat)
+> ## use predefined test for discrete variables
+> indepTest <- disCItest
+> ## the function disCItest needs as input a list containing
+> ## the data matrix, the number of levels for each variable and 
+> ## a boolean variable indicating whether to adapt the degrees of freedom
+> ## for zero counts
+> suffStat <- list(dm = dat, nlev = c(3,2,3,4,2), adaptDF = FALSE)
+> ## estimate skeleton 
+> alpha <- 0.01 
+> skel.fit <- skeleton(suffStat, indepTest, p, alpha)
+> ## show estimated skeleton
+> plot(skel.fit, main = "")
+\end{Sinput}
+\end{Schunk}
 \begin{figure}
   \begin{center}
-<<skelExp2Plot, fig = TRUE, echo = FALSE>>=
-## show estimated skeleton
-plot(skel.fit, main = "")
-@ 
+\includegraphics{pcalgDoc-skelExp2Plot}
 \caption{Estimated skeleton fitted on the discrete data set provided by the
   package using the function \code{skeleton}.}
 \label{fig:skel2}
@@ -569,25 +581,24 @@ equivalent.
 As an example, we estimate a CPDAG of the gaussian data used in the example
 for the skeleton.
 
-<<pcExpl>>=
-## load data matrix "dat"
-data(gaussianData)
-## use predefined test for conditional independence on gaussian data
-indepTest <- gaussCItest 
-## the functin gaussCItest needs as input a list with
-## the correlation matrix C and the sample size n
-suffStat <- list(C = cor(dat), n = 5000)
-## estimate the skeleton
-pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
-## plot the resulting skeleton
-plot(pc.fit, main = "")
-@ 
+\begin{Schunk}
+\begin{Sinput}
+> ## load data matrix "dat"
+> data(gaussianData)
+> ## use predefined test for conditional independence on gaussian data
+> indepTest <- gaussCItest 
+> ## the functin gaussCItest needs as input a list with
+> ## the correlation matrix C and the sample size n
+> suffStat <- list(C = cor(dat), n = 5000)
+> ## estimate the skeleton
+> pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
+> ## plot the resulting skeleton
+> plot(pc.fit, main = "")
+\end{Sinput}
+\end{Schunk}
 \begin{figure}
   \begin{center}
-<<fig = TRUE, echo = FALSE>>=
-## plot the resulting skeleton
-plot(pc.fit, main = "")
-@ 
+\includegraphics{pcalgDoc-011}
 \caption{Estimated CPDAG fitted on the gaussian data set provided by the
   package using the function \code{pc}.}
 \label{fig:pcFit1}
@@ -660,24 +671,21 @@ Glymour and Scheines (2000, page ...).
      
 As an example, we estimate the PAG of a graph with five nodes one of which
 is latent.
-<<fciExpl>>=
-## data(latentVarGraph)
-load("/u/kalisch/research/packages/pcalg/data/latentVarGraph.rda")
-
-## Information on node one is latent
-## Data matrix "dat" contains data on remaining four nodes
-suffStat1 <- list(C = cor(dat), n = nrow(dat))
-indepTest1 <- gaussCItest 
-pag.est <- fci(suffStat1, indepTest1, ncol(dat), alpha = 0.01, verbose=FALSE)
-@
+\begin{Schunk}
+\begin{Sinput}
+> ## data(latentVarGraph)
+> load("/u/kalisch/research/packages/pcalg/data/latentVarGraph.rda")
+> ## Information on node one is latent
+> ## Data matrix "dat" contains data on remaining four nodes
+> suffStat1 <- list(C = cor(dat), n = nrow(dat))
+> indepTest1 <- gaussCItest 
+> pag.est <- fci(suffStat1, indepTest1, ncol(dat), alpha = 0.01, verbose=FALSE)
+\end{Sinput}
+\end{Schunk}
 
 \begin{figure}
   \begin{center}
-<<fig = TRUE, echo = FALSE>>=
-par(mfrow = c(1,2))
-plot(g1)
-plot(pag.est)
-@ 
+\includegraphics{pcalgDoc-013}
 \caption{True data generating DAG and estimated PAG. Variable 1 of the data
 generating DAG is latent. One can see, that the PAG was estimated correctly
 (EXPLAIN MORE).}
@@ -706,16 +714,18 @@ on $V5$. First, we estimate the equivalence class of DAGs that describe the
 conditional independence relationships in the data, using the function
 \code{pc} (see section \ref{sec:pc}).
 
-<<idaExpl1>>=
-## load data matrix "dat"
-load("/u/kalisch/research/packages/pcalg/data/idaData.rda")
-## data(idaData)
-
-## estimate CPDAG (see the help-file of the function "pc")
-indepTest <- gaussCItest 
-suffStat <- list(C = cor(dat), n = nrow(dat))
-pc.fit <- pc(suffStat, indepTest, p = ncol(dat), alpha = 0.01)
-@ 
+\begin{Schunk}
+\begin{Sinput}
+> ## load data matrix "dat"
+> load("/u/kalisch/research/packages/pcalg/data/idaData.rda")
+> ## data(idaData)
+> 
+> ## estimate CPDAG (see the help-file of the function "pc")
+> indepTest <- gaussCItest 
+> suffStat <- list(C = cor(dat), n = nrow(dat))
+> pc.fit <- pc(suffStat, indepTest, p = ncol(dat), alpha = 0.01)
+\end{Sinput}
+\end{Schunk}
 
 Comparing the true DAG with the CPDAG in Fig. \ref{fig:ida}, we see that
 the CPDAG and the true DAG have the same skeleton. Moreover, the directed
@@ -724,12 +734,7 @@ edges in the CPDAG are bidirected. Recall that undirected and bidirected
 edges bear the same meaning, so they can be used interchangeably.
 \begin{figure}
   \begin{center}
-<<idaExpl2, fig = TRUE, echo = FALSE>>=
-## plot the true and estimated graphs
-par(mfrow = c(1,2))
-plot(myDAG, main = "True DAG")
-plot(pc.fit, main = "Estimated CPDAG")
-@ 
+\includegraphics{pcalgDoc-idaExpl2}
 \caption{True DAG and estimated CPDAG for illustrating the function \code{ida}}
 \label{fig:ida}
 \end{center}
@@ -751,20 +756,9 @@ cycle) and form the equivalence class represented by the CPDAG. In
 Fig. \ref{fig:allDags}, all DAGs in the equivalence class are shown. DAG 4
 is the true DAG. 
 
-<<idaExpl3, echo = FALSE>>=
-am.pdag <- wgtMatrix(pc.fit@graph)
-ad <- allDags(am.pdag, am.pdag, NULL)
-gDag <- vector("list", nrow(ad))
-for (i in 1:nrow(ad)) gDag[[i]] <- as(matrix(ad[i, ], 7, 7), "graphNEL")
-par(mfrow = c(3,2))
-for (i in 1:6) plot(gDag[[i]], main = paste("DAG",i))
-@ 
 \begin{figure}
   \begin{center}
-<<fig = TRUE, echo = FALSE>>=
-par(mfrow = c(3,2))
-for (i in 1:6) plot(gDag[[i]], main = paste("DAG",i))
-@ 
+\includegraphics{pcalgDoc-017}
 \caption{[XXX Einzelne plots; auf ganze Seite.] All DAGs belonging to the
   equivalence class represented by the CPDAG shown in Fig. \ref{fig:ida}}
 \label{fig:allDags}
@@ -789,11 +783,17 @@ In our example, there are six DAGs in the equivalence class. Therefore, the
 function \code{ida} will produce six possible values of causal effects (one
 for each DAG). 
 
-<<idaExpl4>>=
-## Estimate the causal effect of 2 on 5
-## True Effekt of 2 on 5: 0.5529
-     ida(2, 5, cov(dat), pc.fit@graph, method = "global", verbose = FALSE)
-@ 
+\begin{Schunk}
+\begin{Sinput}
+> ## Estimate the causal effect of 2 on 5
+> ## True Effekt of 2 on 5: 0.5529
+>      ida(2, 5, cov(dat), pc.fit@graph, method = "global", verbose = FALSE)
+\end{Sinput}
+\begin{Soutput}
+[1] -0.004901204 -0.004901204  0.542135970 -0.004901204 -0.004901204
+[6]  0.542135970
+\end{Soutput}
+\end{Schunk}
 
 Among these six values, there are only two unique values: $-0.0049$ and
 $0.5421$. This is because we compute \texttt{lm(V5 ~ V2 + pa(V2))} ($Vi$
@@ -847,11 +847,16 @@ result two unique values with multiplicities two and four yielding six
 numbers in total.  Applying the local method, we obtain the same unique
 values, but the multiplicities are 1 for both values (they need not always
 be one) and are thus different from the global method.
-<<idaExpl5>>=
-## Estimate the causal effect of 2 on 5
-## True Effekt of 2 on 5: 0.5529
-ida(2,5,cov(dat),pc.fit@graph,method = "local")
-@ 
+\begin{Schunk}
+\begin{Sinput}
+> ## Estimate the causal effect of 2 on 5
+> ## True Effekt of 2 on 5: 0.5529
+> ida(2,5,cov(dat),pc.fit@graph,method = "local")
+\end{Sinput}
+\begin{Soutput}
+[1]  0.542135970 -0.004901204
+\end{Soutput}
+\end{Schunk}
 
 One can take summary measures of the multiset. For example, the minimum
 absolute value provides a lower bound on the size of the true causal
@@ -906,30 +911,50 @@ clear how to do that efficiently without orienting all edges away from
 Consider the example from section \ref{sec:ida}, where we computed the
 causal effect of $V2$ on $V5$. Now, we want to compute the effect of
 $V2$ on $V5$, $V6$ and $V7$ using \code{idaFast}.
-<<>>=
-## Simulate the true DAG
-set.seed(123)
-p <- 7
-myDAG <- randomDAG(p, prob = 0.2) ## true DAG
-myCPDAG <- dag2cpdag(myDAG) ## true CPDAG
-covTrue <- trueCov(myDAG) ## true covariance matrix
-
-## simulate data from the true DAG
-n <- 10000
-dat <- rmvDAG(n, myDAG)
-
-## estimate CPDAG (see help on the function "pc")
-alpha <- 0.01
-indepTest <- gaussCItest 
-suffStat <- list(C = cor(dat), n = n)
-pc.fit <- pc(suffStat, indepTest, p, alpha)
-
-(eff.est1 <- ida(2,5,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
-(eff.est2 <- ida(2,6,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
-(eff.est3 <- ida(2,7,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
-## These three computations can be combinded in an efficient way by using idaFast
-(eff.estF <- idaFast(2,c(5,6,7),cov(dat),pc.fit@graph))
-@ 
+\begin{Schunk}
+\begin{Sinput}
+> ## Simulate the true DAG
+> set.seed(123)
+> p <- 7
+> myDAG <- randomDAG(p, prob = 0.2) ## true DAG
+> myCPDAG <- dag2cpdag(myDAG) ## true CPDAG
+> covTrue <- trueCov(myDAG) ## true covariance matrix
+> ## simulate data from the true DAG
+> n <- 10000
+> dat <- rmvDAG(n, myDAG)
+> ## estimate CPDAG (see help on the function "pc")
+> alpha <- 0.01
+> indepTest <- gaussCItest 
+> suffStat <- list(C = cor(dat), n = n)
+> pc.fit <- pc(suffStat, indepTest, p, alpha)
+> (eff.est1 <- ida(2,5,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
+\end{Sinput}
+\begin{Soutput}
+[1]  0.542135970 -0.004901204
+\end{Soutput}
+\begin{Sinput}
+> (eff.est2 <- ida(2,6,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
+\end{Sinput}
+\begin{Soutput}
+[1] -0.005853153 -0.006231005
+\end{Soutput}
+\begin{Sinput}
+> (eff.est3 <- ida(2,7,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
+\end{Sinput}
+\begin{Soutput}
+[1] 1.0086138 0.8970766
+\end{Soutput}
+\begin{Sinput}
+> ## These three computations can be combinded in an efficient way by using idaFast
+> (eff.estF <- idaFast(2,c(5,6,7),cov(dat),pc.fit@graph))
+\end{Sinput}
+\begin{Soutput}
+      beta.tmp     beta.tmp
+5  0.542135970 -0.004901204
+6 -0.005853153 -0.006231005
+7  1.008613785  0.897076593
+\end{Soutput}
+\end{Schunk}
 
 \subsection{Using a user specific conditional independence test}
 In some cases it might be desirable to use a user specific conditional
@@ -961,53 +986,41 @@ used before partial correlations are computed. Oftentimes, however, it will
 suffice to just pass the complete data set in \texttt{suffStat}. We will
 choose this simple way in our example. An implementation of the function
 \code{myCItest} could look like this.
-<<>>=
-myCItest <- function(x,y,S, suffStat) {
-  if (length(S) == 0) {
-    ## marginal case
-    res <- cor.test(suffStat[,x],suffStat[,y])$p.value
-  } else {
-    ## conditional case
-    resx <- resid(lm(suffStat[,x] ~ suffStat[,S]))
-    resy <- resid(lm(suffStat[,y] ~ suffStat[,S]))
-    res <- cor.test(resx, resy)$p.value
-  }
-  res
-}
-@ 
+\begin{Schunk}
+\begin{Sinput}
+> myCItest <- function(x,y,S, suffStat) {
++   if (length(S) == 0) {
++     ## marginal case
++     res <- cor.test(suffStat[,x],suffStat[,y])$p.value
++   } else {
++     ## conditional case
++     resx <- resid(lm(suffStat[,x] ~ suffStat[,S]))
++     resy <- resid(lm(suffStat[,y] ~ suffStat[,S]))
++     res <- cor.test(resx, resy)$p.value
++   }
++   res
++ }
+\end{Sinput}
+\end{Schunk}
 We can now use this function together with the \code{pc} function.
-<<echo = FALSE>>=
-## just re-execute this so that right pc.fit is active
-data(gaussianData)
-indepTest <- gaussCItest 
-## the functin gaussCItest needs as input the correlation matrix C and 
-## the sample size n
-suffStat <- list(C = cor(dat), n = 5000)
-## estimate the causal structure
-pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
-@ 
 
-<<>>=
-data(gaussianData) ## contains data matrix dat
-indepTest <- myCItest 
-suffStat <- dat
-pc.myfit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
-## plot the resulting causal structure
-par(mfrow = c(1,2))
-## result using gaussCItest
-plot(pc.fit, main = "gaussCItest")
-plot(pc.myfit, main = "myCItest")
-@ 
+\begin{Schunk}
+\begin{Sinput}
+> data(gaussianData) ## contains data matrix dat
+> indepTest <- myCItest 
+> suffStat <- dat
+> pc.myfit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
+> ## plot the resulting causal structure
+> par(mfrow = c(1,2))
+> ## result using gaussCItest
+> plot(pc.fit, main = "gaussCItest")
+> plot(pc.myfit, main = "myCItest")
+\end{Sinput}
+\end{Schunk}
 
 \begin{figure}
   \begin{center}
-<<fig = TRUE, echo = FALSE>>=
-## plot the resulting causal structure
-par(mfrow = c(1,2))
-## result using gaussCItest
-plot(pc.fit, main = "gaussCItest")
-plot(pc.myfit, main = "myCItest")
-@ 
+\includegraphics{pcalgDoc-024}
 \caption{The estimated CPDAGs using the predefined and the user specified
   conditional independence test are identical.}
 \label{fig:userSpec}

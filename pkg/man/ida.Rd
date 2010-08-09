@@ -79,7 +79,7 @@ is suitable for small graphs (say, up to 10 nodes).
 
 If method="local", we do not determine all DAGs in the equivalence class of 
 the CPDAG. Instead, we only consider the local neighborhood of \code{x} in 
-the CPDAg. In particular, we consider all possible directions of 
+the CPDAG. In particular, we consider all possible directions of 
 undirected edges that have \code{x} as endpoint, such that no new v-structure 
 is created. For each such configuration, 
 we estimate the total causal effect of \code{x} on \code{y} as above, using 

@@ -88,7 +88,7 @@ doPdsep = TRUE)
   the edgemark is an arrowhead. Information on the interpretation of edges
   in a MAG can be found in the references given below. 
 
-  The first part of the PC algorithm is analogous to the PC algorithm. It 
+  The first part of the FCI algorithm is analogous to the PC algorithm. It 
   starts with a complete undirected graph and estimates an initial skeleton 
   using the function \code{\link{skeleton}}. All edges of this skeleton are of 
   the form o-o. Due to the presence of hidden variables, it is no longer 
