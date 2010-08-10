@@ -8,7 +8,8 @@
 }
 \usage{
 pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "rand")
+fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "rand",
+conservative = FALSE)
 }
 \arguments{
   \item{suffStat}{Sufficient statistics: List containing all necessary
@@ -43,6 +44,10 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "rand")
     conditional independence tests.}
   \item{u2pd}{Method for dealing with conflicting information when
     trying to orient edges (see details below).}
+  \item{conservative}{If TRUE, the conservative PC is done. In this
+    case, only option \code{u2pd = relaxed} is supported. Note, that
+    therefore the resulting object might not be extendable to a DAG. See details
+    for more information.}
 }
 \value{An object of \code{\link{class}} \code{"pcAlgo"} (see
   \code{\linkS4class{pcAlgo}}) containing an estimate of the equivalence 
@@ -127,15 +132,33 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "rand")
   combination that results in a valid CPDAG is chosen. If no valid combination
   is found, an arbitrary DAG is generated on the skeleton 
   as in the option "rand".
-  
-  Notes: (1) Throughout, the algorithm works with the column positions of 
-  the variables in the adjacency matrix, and not with the names of 
-  the variables. (2) When plotting the object, undirected and bidirected 
-  edges are equivalent.
-}
-\references{
-  P. Spirtes, C. Glymour and R. Scheines (2000).
-  \emph{Causation, Prediction, and Search}, 2nd edition. The MIT Press.
+
+  The conservative PC algorithm (\code{"conservative = TRUE"}) is a
+  slight variation of the PC algorithm. After the skeleton is computed,
+  all potential v-structures a-b-c are checked in the following way. We
+  test whether a and c are independent conditioning on any subset of the
+  neighbors of a or any subset of the neighbors of c. If b is in no such
+  conditioning set (and not in the original sepset - ???DIEGO: 2nd
+  argument, version 2) or in all such
+  conditioning sets (and in the original sepset), no further action
+  is taken and the usual PC is continued. If, however, b is in only some
+  conditioning sets, the triple a-b-c is marked 'unfaithful'. Moreover,
+  if in the conservative step there is no subset among the neighbors
+  that makes a and c independent, the triple is marked 'unfaithful'
+  (???DIEGO: 1st argument, version 2). An
+  unfaithful triple is not oriented as a v-structure. Furthermore, no
+  later orientation rule that needs to know whether a-b-c is a
+  v-structure or not is applied. (The internal function
+  \code{pc.cons.internal} will be called with \code{version.unf = c(2,2)}.)
+
+  Notes: (1) Throughout, the algorithm works with the column positions
+  of the variables in the adjacency matrix, and not with the names of
+  the variables. (2) When plotting the object, undirected and bidirected
+  edges are equivalent.  }
+
+\references{ P. Spirtes, C. Glymour and
+  R. Scheines (2000).  \emph{Causation, Prediction, and Search}, 2nd
+  edition. The MIT Press.
 
   M. Kalisch and P. Buehlmann (2007). 
   Estimating high-dimensional directed acyclic graphs with the PC-algorithm.

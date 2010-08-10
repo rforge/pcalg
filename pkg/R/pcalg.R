@@ -1,5 +1,3 @@
-## include DESC: robustbase, mnormt, sfsmisc
-## include NAMES: robustbase (in 2. Zeile)
 trueCov <- function(g) {
   if (class(g)=="graphNEL") {
     w <- wgtMatrix(g)
@@ -1590,7 +1588,7 @@ udag2pdagSpecial <- function(gInput,verbose=0,n.max=100) {
   return(list(pcObj=res,evisit=evisit,xtbl=xtbl,xtbl.orig=xtbl.orig,amat0=amat0,amat1=amat1,status=status,counter=counter))
 }
 
-udag2pdagRelaxed <- function(gInput,verbose=0) {
+udag2pdagRelaxed <- function(gInput,verbose=0, unfVect=NULL) {
   ## Purpose: Transform the Skeleton of a pcAlgo-object to a PDAG using
   ## the rules of Pearl. The output is again a pcAlgo-object. There is
   ## NO CHECK whether the resulting PDAG is really extendable.
@@ -1602,8 +1600,9 @@ udag2pdagRelaxed <- function(gInput,verbose=0) {
   ## Author: Markus Kalisch, Date: Sep 2006, 15:03
 
   res <- gInput
-  if (numEdges(gInput@graph)>0) {
-    g <- as(gInput@graph,"matrix") ## g_ij if i->j
+  if (numEdges(gInput@graph) > 0) {
+    ## collider
+    g <- as(gInput@graph, "matrix")
     p <- dim(g)[1]
     pdag <- g
     ind <- which(g==1,arr.ind=TRUE)
@@ -1619,115 +1618,149 @@ udag2pdagRelaxed <- function(gInput,verbose=0) {
           z <- allZ[j]
           if ((g[x,z]==0) & !((y %in% gInput@sepset[[x]][[z]]) |
                   (y %in% gInput@sepset[[z]][[x]]))) {
-            if (verbose==1) {
-              cat("\n",x,"->",y,"<-",z,"\n")
-              cat("Sxz=",gInput@sepset[[z]][[x]],"Szx=",gInput@sepset[[x]][[z]])
+            ##normal version
+            if (length(unfVect)==0) {
+              if (verbose) {
+                cat("\n", x, "->", y, "<-", z, "\n")
+                cat("Sxz=", gInput@sepset[[z]][[x]], "Szx=", 
+                    gInput@sepset[[x]][[z]])
+              }
+              pdag[x, y] <- pdag[z, y] <- 1
+              pdag[y, x] <- pdag[y, z] <- 0
             }
-            pdag[x,y] <- pdag[z,y] <- 1
-            pdag[y,x] <- pdag[y,z] <- 0
+            ##conservative version
+            else {
+              ##check if x-y-z is faithful
+              if (!any(unfVect==triple2numb(p,x,y,z)) & !any(unfVect==triple2numb(p,z,y,x))) {
+                ## faithful -> as usual; otherwise do nothing
+                if (verbose) {
+                  cat("\n", x, "->", y, "<-", z, "\n")
+                  cat("Sxz=", gInput@sepset[[z]][[x]], "Szx=", 
+                      gInput@sepset[[x]][[z]])
+                }
+                pdag[x, y] <- pdag[z, y] <- 1
+                pdag[y, x] <- pdag[y, z] <- 0
+              }
+            }
           }
         }
       }
     }
 
-    ## Test whether this pdag allows a consistent extension
-    ## res2 <- pdag2dag(as(pdag,"graphNEL"))
-
-    ## Convert to complete pattern: use rules by Pearl
-    old_pdag <- matrix(rep(0,p^2),nrow=p,ncol=p)
-    while (sum(!(old_pdag==pdag))>0) {
+    ## Rule 1
+    old_pdag <- matrix(rep(0, p^2), nrow = p, ncol = p)
+    while (sum(!(old_pdag == pdag)) > 0) {
       old_pdag <- pdag
-      ## rule 1
-      ind <- which((pdag==1 & t(pdag)==0), arr.ind=TRUE) ## a -> b
-      if (length(ind)>0) {
+      ind <- which((pdag == 1 & t(pdag) == 0), arr.ind = TRUE)
+      if (length(ind) > 0) {
         for (i in 1:dim(ind)[1]) {
-          a <- ind[i,1]
-          b <- ind[i,2]
-          indC <- which( (pdag[b,]==1 & pdag[,b]==1) & (pdag[a,]==0 & pdag[,a]==0))
-          if (length(indC)>0) {
-            pdag[b,indC] <- 1
-            pdag[indC,b] <- 0
-            if (verbose==1) cat("\nRule 1:",a,"->",b," und ",b,"-",indC," wobei ",a," und ",indC," nicht verbunden: ",b,"->",indC,"\n")
-          }
-        }
-        ## x11()
-        ## plot(as(pdag,"graphNEL"), main="After Rule1")
-      }
-
-      ## rule 2
-      ind <- which((pdag==1 & t(pdag)==1), arr.ind=TRUE) ## a -> b
-      if (length(ind)>0) {
-        for (i in 1:dim(ind)[1]) {
-          a <- ind[i,1]
-          b <- ind[i,2]
-          indC <- which( (pdag[a,]==1 & pdag[,a]==0) & (pdag[,b]==1 & pdag[b,]==0))
-          if (length(indC)>0) {
-            pdag[a,b] <- 1
-            pdag[b,a] <- 0
-            if (verbose==1) cat("\nRule 2: Kette ",a,"->",indC,"->",
-                  b,":",a,"->",b,"\n")
-          }
-        }
-      }
-      ## x11()
-      ## plot(as(pdag,"graphNEL"), main="After Rule2")
-
-      ## rule 3
-      ind <- which((pdag==1 & t(pdag)==1), arr.ind=TRUE) ## a - b
-      if (length(ind)>0) {
-        for (i in 1:dim(ind)[1]) {
-          a <- ind[i,1]
-          b <- ind[i,2]
-          indC <- which( (pdag[a,]==1 & pdag[,a]==1) & (pdag[,b]==1 & pdag[b,]==0))
-          if (length(indC)>=2) {
-            ## cat("R3: indC = ",indC,"\n")
-            g2 <- pdag[indC,indC]
-            ## print(g2)
-            if (length(g2)<=1) {
-              g2 <- 0
-            } else {
-              diag(g2) <- rep(1,length(indC)) ## no self reference
+          a <- ind[i, 1]
+          b <- ind[i, 2]
+          indC <- which((pdag[b, ] == 1 & pdag[, b] == 
+                         1) & (pdag[a, ] == 0 & pdag[, a] == 0))
+          if (length(indC) > 0) {
+            ##normal version
+            if (length(unfVect)==0) {
+              pdag[b, indC] <- 1
+              pdag[indC, b] <- 0
+              if (verbose) 
+                cat("\nRule 1:", a, "->", b, " and ", b, 
+                    "-", indC, " where ", a, " and ", indC, 
+                    " not connected: ", b, "->", indC, 
+                    "\n")
             }
-            if (any(g2==0)) { ## if two nodes in g2 are not connected
-              pdag[a,b] <- 1
-              pdag[b,a] <- 0
-              if (verbose==1) cat("\nRule 3:",a,"->",b,"\n")
+            ##conservative version
+            else {
+              for (j in 1:length(indC)) {
+                c <- indC[j]
+                ##check that a-b-c not unfaithful
+                if (!any(unfVect==triple2numb(p,a,b,c)) & !any(unfVect==triple2numb(p,c,b,a))) {
+                  pdag[b, c] <- 1
+                  pdag[c, b] <- 0
+                  if (verbose) 
+                    cat("\nRule 1':", a, "->", b, " and ", b, 
+                        "-", c, " where ", a, " and ", c, 
+                        " not connected and ", a, b, c," faithful triple: ", b, "->", c, 
+                        "\n")
+                }
+              }
             }
           }
         }
       }
-      ## x11()
-      ## plot(as(pdag,"graphNEL"), main="After Rule3")
+      
+      ## Rule 2
+      ##normal version = conservative version
+      ind <- which((pdag == 1 & t(pdag) == 1), arr.ind = TRUE)
+      if (length(ind) > 0) {
+        for (i in 1:dim(ind)[1]) {
+          a <- ind[i, 1]
+          b <- ind[i, 2]
+          indC <- which((pdag[a, ] == 1 & pdag[, a] == 
+                         0) & (pdag[, b] == 1 & pdag[b, ] == 0))
+          if (length(indC) > 0) {
+            pdag[a, b] <- 1
+            pdag[b, a] <- 0
+            if (verbose) 
+              cat("\nRule 2: Chain ", a, "->", indC, 
+                  "->", b, ":", a, "->", b, "\n")
+          }
+        }
+      }
 
-      ## rule 4
-      ##-         ind <- which((pdag==1 & t(pdag)==1), arr.ind=TRUE) ## a - b
-      ##-         if (length(ind)>0) {
-      ##-           for (i in 1:dim(ind)[1]) {
-      ##-             a <- ind[i,1]
-      ##-             b <- ind[i,2]
-      ##-             indC <- which( (pdag[a,]==1 & pdag[,a]==1) & (pdag[,b]==0 & pdag[b,]==0))
-      ##-             l.indC <- length(indC)
-      ##-             if (l.indC>0) {
-      ##-               found <- FALSE
-      ##-               ic <- 0
-      ##-               while(!found & (ic < l.indC)) {
-      ##-                 ic <- ic + 1
-      ##-                 c <- indC[ic]
-      ##-                 indD <- which( (pdag[c,]==1 & pdag[,c]==0) & (pdag[,b]==1 & pdag[b,]==0))
-      ##-                 if (length(indD)>0) {
-      ##-                   found <- TRUE
-      ##-                   pdag[b,a] = 0
-      ##-                   if (verbose==1) cat("Rule 4 applied \n")
-      ##-                 }
-      ##-               }
-      ##-             }
-      ##-           }
-      ##-         }
-
+      ## Rule 3
+      ind <- which((pdag == 1 & t(pdag) == 1), arr.ind = TRUE)
+      if (length(ind) > 0) {
+        for (i in 1:dim(ind)[1]) {
+          a <- ind[i, 1]
+          b <- ind[i, 2]
+          indC <- which((pdag[a, ] == 1 & pdag[, a] == 
+                         1) & (pdag[, b] == 1 & pdag[b, ] == 0))
+          if (length(indC) >= 2) {
+            ##normal version
+            if (length(unfVect)==0) {
+              g2 <- pdag[indC, indC]
+              if (length(g2) <= 1) {
+                g2 <- 0
+              }
+              else {
+                diag(g2) <- rep(1, length(indC))
+              }
+              if (any(g2 == 0)) {
+                pdag[a, b] <- 1
+                pdag[b, a] <- 0
+                if (verbose) 
+                  cat("\nRule 3:", a, "->", b, "\n")
+              }
+            }
+            ##conservative version
+            else {
+              comb.indC <- combn(indC,2)
+              ## for (j in 1:dim(comb.indC)[2]) {
+              found <- FALSE
+              j <- 0
+              while (!found & (j < dim(comb.indC)[2])) {
+                j <- j + 1
+                c1 <- comb.indC[1,j]
+                c2 <- comb.indC[2,j]
+                if (pdag[c1,c2]==0 & pdag[c2,c1]==0 & c1!=c2) {
+                  if (!any(unfVect==triple2numb(p,c1,a,c2)) & !any(unfVect==triple2numb(p,c2,a,c1))) {
+                    ## if faithful triple found
+                    found <- TRUE
+                    pdag[a, b] <- 1
+                    pdag[b, a] <- 0
+                    if (verbose) 
+                      cat("\nRule 3':", a, c1, c2, "faithful triple: ", a, "->", b, "\n")
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
-    res@graph <- as(pdag,"graphNEL")
-
-  }
+    res@graph <- as(pdag, "graphNEL")
+  } 
   return(res)
 }
 
@@ -2445,304 +2478,7 @@ reach <- function(a,b,c,adjacency)
   return(unique(unlist(labeled)))
 }
 
-##Useful for R 4
-
-discr.path <- function(path=NA, n=NA, pag=NA ,gInput=NA ,verb=NA)
-{
-  ## Purpose: find a discriminating path and if it exists orient
-  ## the edge like in Rule 4. We start with a, b and c like
-  ## in R4 and we go recursively to the left up to we find a d,
-  ## such that there is a discriminating path between d and c for b
-  ## ----------------------------------------------------------------------
-  ## Arguments:
-  ## - path: path[1]=c=gamma, path[2]=b=beta, path[3]=a=alpha: like in R 4
-  ## - n: length of path
-  ## - pag: adjacencies matrix
-  ## - gInput: pc object (same input as FCI)
-  ## - verb: 0 no comments, 1 detailed decription
-  ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date:  6 Mar 2009, 11:10
-
-  if (n<=dim(pag)[1]){
-    res <- pag
-    c <- path[1]
-    b <- path[2]
-    a <- path[3]
-    first.pos <- path[n]
-    del.pos <- path[n-1]
-    ##all d with d *--> first.pos
-    indD <- which (res[first.pos,]!=0 & res[,first.pos]==2)
-    ##delete del.pos from indD
-    indD <- setdiff(indD,del.pos)
-    if (length(indD)>0){
-      for (k in 1:length(indD)){
-        d <- indD[k]
-        ##check if we have already oriented the edge b o--* c
-        ##res[c,b]==1 means that we have made no orientation, but if
-        ##res[c,b]!=1 means that we have oriented and we don't look
-        ##at other possible paths
-        if ((res[c,b]==1) & !(d %in% path)){
-          ##check if c and d are adjacent
-          ##if no there exists a discr. path
-          if (res[c,d]==0 & res[d,c]==0){
-            ##check whether b is in Sepset(c,d)
-            if ((b %in% gInput@sepset[[c]][[d]]) |
-                (b %in% gInput@sepset[[d]][[c]])){
-              if(verb==1){
-                cat("Rule 4: There is a discriminating path between:",d,"and",c,"for",b,"and",b, "is in Sepset of",c,"and",d,":",b,"->",c,"\n")
-              }
-              ##b --> c
-              res[b,c] <- 2
-              res[c,b] <- 3
-            }
-            else {
-              if(verb==1){
-                cat("Rule 4: There is a discriminating path between:",d,"and",c,"for",b,"and",b, "is not in Sepset of",c,"and",d,":",a,"<->",b,"<->",c,"\n")
-              }
-              ##a <--> b <--> c
-              res[a,b] <- res[b,c] <- res[c,b] <- 2
-              ##res[b,a]==2 from definition of a and b
-            }
-          }
-          ##else if d and c are adjacent
-          else {
-            ##if d is a collider on the path
-            ##and a parent of c
-            if (res[first.pos,d]==2 & res[d,c]==2 & res[c,d]==3){
-              new.path <- c(path,d)
-              m <- length(new.path)
-              res <- discr.path(path=new.path, n=m, pag=res, gInput=gInput, verb=verb)
-            }
-            ##else there exists no discr. path for this d
-            else {
-              res <- res
-            }
-          }## else
-        }## if
-      }## for k
-    }## if length(indTheta)
-  }## if
-  return(res)
-}
-
-
-
-##Useful for R 5
-ucp <- function(path=NA, pag=NA, n=NA, verb=NA)
-{
-  ## Purpose: find recursively if there exists an uncovered circle path
-  ## and if TRUE orient the graph like in R5
-  ## ----------------------------------------------------------------------
-  ## Arguments:
-  ## - path:a subgraph of pag for which we will find an ucp
-  ## - pag: matrix representing the connections between tha whole graph
-  ## - n: number of elements in path
-  ## - verb: 0 no comments, 1 detailed decription
-  ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date:  9 Feb 2009, 10:09
-
-
-  if (n<=dim(pag)[1]){
-    res <- pag
-    ##all x with path[n-2] o-o x
-    indX <- which((res[path[n-2],]==1 & res[,path[n-2]]==1))
-    if (length(indX)>0){
-      for (k in 1:length(indX)){
-        x <- indX[k]
-        ##res[path[1],path[n]]!=3 control to check if we have
-        ##already directed this path
-        if (!(x %in% path) & res[path[1],path[n]]!=3){
-          new.path <- c(path[c(1:(n-2))],x,path[n-1],path[n])
-          if (res[x,path[n-1]]==1 & res[path[n-1],x]==1){
-            ##check uncovered feature
-            check.uncov <- 0
-            for (l in 1:(n-1)){
-              if (res[new.path[l],new.path[l+2]]==0 & res[new.path[l+2],new.path[l]]==0){
-                check.uncov <- check.uncov
-              }
-              else {
-                check.uncov <- check.uncov + 1
-              }
-            }
-            if (check.uncov==0){
-              ##there exists an uncovered circle path
-              res[new.path[1],new.path[n+1]] <- res[new.path[n+1],new.path[1]] <- 3  ##a -- b
-              for (j in 1:n){
-                res[new.path[j],new.path[j+1]] <- res[new.path[j+1],new.path[j]] <- 3 ##each edge on the path --
-              }
-              if(verb==1) {
-                cat("Rule 5: There exists an uncovered circle path between",new.path[1],"and",new.path[n+1],":",new.path[1],"-", new.path[n+1],"and for each edge on the path",new.path,"\n")
-              }
-            }
-            else {
-              ##recursion
-              ##check that alpha and new.path[3] are not connected
-              if (res[new.path[1],new.path[3]]==0 & res[new.path[3],new.path[1]]==0){
-                res <- ucp(path=new.path, pag=res, n=length(new.path), verb=verb)
-              }
-            }
-          }
-          else {
-            res <- ucp(path=new.path, pag=res, n=length(new.path), verb=verb)
-          }
-        }##if delta %in% path
-      }##for k
-    }## if length(indDelta)
-  }##if
-  return(res)
-}
-
-
-
-##Useful for R 9
-upd <- function(path=NA, pag=NA, n=NA, verb=NA)
-{
-  ## Purpose:find recursively an uncovered potentially directed path
-  ## in pag and orient the edge like in R9
-  ## ----------------------------------------------------------------------
-  ## Arguments:
-  ## - path: a subgraph of pag for which we will find an upd, like in R 9
-  ## - pag: matrix representing the connections between tha whole graph
-  ## - n: number of elements in path
-  ## - verb: 0 no comments, 1 detailed decription
-  ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date:  9 Feb 2009, 11:33
-
-  if (n<=dim(pag)[1]){
-    res <- pag
-    c <- path[1]
-    a <- path[2]
-    b <- path[n-1]
-    d <- path[n]
-    ##find all x such that d @--@ x (@== potentially directed)
-    ##and not adjacent to b
-    indX <- which((res[d,]==2 | res[d,]==1) & (res[,d]==1 | res[,d]==3) & (res[b,]==0 & res[,b]==0))
-    if (length(indX)>0){
-      for (j in 1:length(indX)){
-        x <- indX[j]
-        ##res[c,a]!=3 control to see if we have already directed
-        ##the path a *--> c
-        ##and check that x @--@ c
-        if ((!(x %in% path)) & (res[c,a]!=3)){
-          new.path <- c(path[c(2:n)],x,path[1])
-          if ((res[x,c]==1 | res[x,c]==2) & (res[c,x]==1 | res[c,x]==3)){
-            ##check uncovered feature
-            check.uncov <- 0
-            for (l in 1:(n-1)){
-              if (res[new.path[l],new.path[l+2]]==0 & res[new.path[l+2],new.path[l]]==0){
-                check.uncov <- check.uncov
-              }
-              else {
-                check.uncov <- check.uncov + 1
-              }
-            }
-            if (check.uncov==0){
-              res[c,a] <- 3
-              if (verb==1) {
-                cat("Rule 9: There exists an upd between",new.path,":",a,"->",c,"\n")
-              }
-            }
-            else {
-              rec.path <- c(path,x)
-              res <- upd(path=rec.path, pag=res, n=length(rec.path), verb=verb)
-            }
-          }## if
-          else {
-            rec.path <- c(path,x)
-            res <- upd(path=rec.path, pag=res, n=length(rec.path), verb=verb)
-          }
-        }## if
-      }## for j
-    }## if length(indDelta)
-  }## if
-  return(res)
-}
-
-
-
-
-##Useful for R 10
-find.upd <- function(path=NA, a=NA, n=NA, pag=NA, verb=NA)
-{
-  ## Purpose: find if there exists an uncovered potentially
-  ## directed path between the first and the last element in path
-  ## ----------------------------------------------------------------------
-  ## Arguments:
-  ## - path: like in R 10, that is first element adjacent to alpha and
-  ##   last element beta or theta
-  ## - a: alpha
-  ## - n: length of pag
-  ## - pag: adjacencies matrix
-  ## - verb: 0 no comments, 1 detailed decription
-  ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date:  9 Feb 2009, 14:00
-
-  if (n<=dim(pag)[1]){
-    final <- path[n]
-    mittle <- path[n-1]
-    uncov.path <- NA
-    res <- FALSE
-    if (n==2){
-      if(path[1]==path[n]){
-        uncov.path <- path
-        res <- TRUE
-      }
-      else {
-        if ((pag[path[1],path[2]]==1 | pag[path[1],path[2]]==2) & (pag[path[2],path[1]]==1 | pag[path[2],path[1]]==3)){
-          uncov.path <- path
-          res <- TRUE
-        }
-      }
-    }
-    else {
-      ##find all b s.t. mittle @-@ b (@ potentially directed)
-      indB <- which((pag[mittle,]==1 | pag[mittle,]==2) & (pag[,mittle]==1 | pag[,mittle]==3))
-      indB <- setdiff(indB,a)
-      if (length(indB)>0){
-        counter <- 0
-        while ((!res) & (counter < length(indB))){
-          counter <- counter + 1
-          b <- indB[counter]
-          if (!(b %in% path)){
-            new.path <- c(path[1:(n-1)],b,path[n])
-            check.uncov <- 0
-            for (l in 1:(n-1)){
-              if (pag[new.path[l],new.path[l+2]]==0 & pag[new.path[l+2],new.path[l]]==0){
-                check.uncov <- check.uncov
-              }
-              else {
-                check.uncov <- check.uncov + 1
-              }
-            }
-            if (check.uncov==0){
-              ##check if b @-@ final
-              if ((pag[b,final]==1 | pag[b,final]==2) & (pag[final,b]==1 | pag[final,b]==3)){
-                uncov.path <- new.path
-                res <- TRUE
-              }
-              else {
-                tmp <- find.upd(path=new.path, n=length(new.path), pag=pag, verb=verb)
-                uncov.path <- tmp[[2]]
-                res <- tmp[[1]]
-              }
-            }
-            else {
-              tmp <- find.upd(path=new.path, n=length(new.path), pag=pag, verb=verb)
-              uncov.path <- tmp[[2]]
-              res <- tmp[[1]]
-            }
-          }##if
-        }##while
-      }##if
-    }##else
-  }##if
-  return(list(res=res,uncov.path=uncov.path))
-}
-
-
-
-
-udag2pag <- function(gInput, rules=rep(TRUE,10), verbose=TRUE) {
+udag2pag <- function(gInput, rules=rep(TRUE,10), verbose=TRUE, unfVect=NULL) {
   ## Purpose:Transform the Skeleton of a pcAlgo-object to a PAG using
   ## the rules of Zhang. The output is an adjacency matrix.
   ## ----------------------------------------------------------------------
@@ -2752,6 +2488,7 @@ udag2pag <- function(gInput, rules=rep(TRUE,10), verbose=TRUE) {
   ##          to each rule. TRUE means the rule will be applied.
   ##          If rules==FALSE only R0 (minimal pattern) will be used
   ## - verbose: 0 - no output, 1 - detailed output
+  ## - unfVect: Vector with unfaithful triples (coded as number using triple2numb)
   ## ----------------------------------------------------------------------
   ## Author: Diego Colombo, Date:  6 Mar 2009, 11:27
 
@@ -2766,390 +2503,476 @@ udag2pag <- function(gInput, rules=rep(TRUE,10), verbose=TRUE) {
   ## b=beta
   ## c=gamma
   ## d=theta
-
-  ##counter <- 0
-  ##res <- gInput
-  ##status <- 0
-  ##xtbl <- xtbl.orig <- TRUE
-  if (numEdges(gInput@graph)>0) {
-    g <- as(gInput@graph,"matrix") ## g_ij==1 if i *-o j
+  if (numEdges(gInput@graph) > 0) {
+    g <- as(gInput@graph, "matrix")
     p <- dim(g)[1]
-    evisit <- amat0 <- amat1 <- matrix(0,p,p)
+    evisit <- amat0 <- amat1 <- matrix(0, p, p)
     pag <- g
-    ind <- which(g==1, arr.ind=TRUE)
-    ## ind <- unique(t(apply(ind,1,sort)))
-
-
-    ## Create minimal pattern
-    ## rule 0
+    ind <- which(g == 1, arr.ind = TRUE)
     for (i in 1:dim(ind)[1]) {
-      x <- ind[i,1]
-      y <- ind[i,2]
-      allZ <- setdiff(which(g[y,]==1),x) ## x-y-z
-
-      if (length(allZ)>0) {
+      x <- ind[i, 1]
+      y <- ind[i, 2]
+      allZ <- setdiff(which(g[y, ] == 1), x)
+      if (length(allZ) > 0) {
         for (j in 1:length(allZ)) {
           z <- allZ[j]
-          if ((g[x,z]==0) & !((y %in% gInput@sepset[[x]][[z]]) |
+          if ((g[x, z] == 0) & !((y %in% gInput@sepset[[x]][[z]]) | 
                   (y %in% gInput@sepset[[z]][[x]]))) {
-            if (verbose==1) {
-              cat("\n",x,"*->",y,"<-*",z,"\n")
-              cat("Sxz=",gInput@sepset[[z]][[x]],"and","Szx=",gInput@sepset[[x]][[z]],"\n")
+            ##normal version
+            if (length(unfVect)==0) {
+              if (verbose) {
+                cat("\n", x, "*->", y, "<-*", z, "\n")
+                cat("Sxz=", gInput@sepset[[z]][[x]], "and", 
+                    "Szx=", gInput@sepset[[x]][[z]], "\n")
+              }
+              pag[x, y] <- pag[z, y] <- 2 
             }
-
-            ##x o-> y <-o z
-            pag[x,y] <- pag[z,y] <- 2
-
-          } ## if
-        } ## for
-      } ## if
-    } ## for
-
-
-    ## first while for R1-R4
-    old_pag1 <- matrix(rep(0,p^2),nrow=p,ncol=p)
-    while (sum(!(old_pag1==pag))>0) {
+            ##conservative version
+            else {
+              ##check if x-y-z is faithful
+              if (!any(unfVect==triple2numb(p,x,y,z)) & !any(unfVect==triple2numb(p,z,y,x))) {
+                if (verbose) {
+                  cat("\n", x, "*->", y, "<-*", z, "\n")
+                  cat("Sxz=", gInput@sepset[[z]][[x]], "and", 
+                      "Szx=", gInput@sepset[[x]][[z]], "\n")
+                }
+                pag[x, y] <- pag[z, y] <- 2
+              }
+            }
+          }
+        }
+      }
+    }
+    old_pag1 <- matrix(rep(0, p^2), nrow = p, ncol = p)
+    while (sum(!(old_pag1 == pag)) > 0) {
       old_pag1 <- pag
-
-
-      ## rule 1
-      if (rules[1]){
-        ind <- which((pag==2 & t(pag)!=0), arr.ind=TRUE) ## a *--> b
-        if (length(ind)>0) {
+      if (rules[1]) {
+        ind <- which((pag == 2 & t(pag) != 0), arr.ind = TRUE)
+        if (length(ind) > 0) {
           for (i in 1:dim(ind)[1]) {
-            a <- ind[i,1]
-            b <- ind[i,2]
-            ##all c with b o--* c und a not adjacent to c
-            indC <- which((pag[b,]!=0 & pag[,b]==1) & (pag[a,]==0 & pag[,a]==0))
-            indC <- setdiff(indC,a)
-            if (length(indC)>0) {
-              pag[b,indC] <- 2
-              pag[indC,b] <- 3
-              if (verbose==1) {
-                cat("Rule 1:",a,"*->",b,"o-*",indC,
-                    " where ",a," and ",indC," not connected: ",b,"->",indC,"\n")
+            a <- ind[i, 1]
+            b <- ind[i, 2]
+            indC <- which((pag[b, ] != 0 & pag[, b] == 
+                           1) & (pag[a, ] == 0 & pag[, a] == 0))
+            indC <- setdiff(indC, a)
+            if (length(indC) > 0) {
+              if (length(unfVect)==0) {
+                pag[b, indC] <- 2
+                pag[indC, b] <- 3
+                if (verbose) {
+                  cat("\nRule 1:", a, "*->", b, "o-*", indC, 
+                      " where ", a, " and ", indC, " not connected: ", b, "->", indC, "\n")
+                }
               }
-            }## if
-          }## for
-        }## if
-      }
-
-
-
-      ## rule 2
-      if (rules[2]){
-        ind <- which((pag==1 & t(pag)!=0), arr.ind=TRUE) ## a *--o c
-        if (length(ind)>0) {
-          for (i in 1:dim(ind)[1]) {
-            a <- ind[i,1]
-            c <- ind[i,2]
-            ##all b with a --> b *--> c or a *--> b --> c
-            indB <- which( ((pag[a,]==2 & pag[,a]==3) & (pag[c,]!=0 & pag[,c]==2)) | ((pag[a,]==2 & pag[,a]!=0) & (pag[c,]==3 & pag[,c]==2)))
-            if (length(indB)>0) {
-              pag[a,c] <- 2
-              if (verbose==1) {
-                cat("Rule 2:",a,"->",indB,"*->",
-                    c,"or",a,"*->",indB,"->",c,"and",a,"*-o",c,":",a,"*->",c,"\n")
-              }
-            }## if
-          }## for
-        }## if
-      }
-
-
-
-      ## rule 3
-      if (rules[3]){
-        ind <- which((pag!=0 & t(pag)==1), arr.ind=TRUE) ## b o--* d
-        if (length(ind)>0) {
-          for (i in 1:dim(ind)[1]) {
-            b <- ind[i,1]
-            d <- ind[i,2]
-            ##all a and c with a *--> b and a *--o d, c *--> b and c *--o d
-            indAC <- which( (pag[b,]!=0 & pag[,b]==2) & (pag[,d]==1 & pag[d,]!=0))
-            ##check if there are a and c which are not adjacent
-            if (length(indAC)>=2){
-              counter <- 0
-              while ((counter<(length(indAC)-1)) & (pag[d,b]!=2)){
-                counter <- counter + 1
-                ii <- counter
-                while ((ii<length(indAC)) & (pag[d,b]!=2)){
-                  ii <- ii + 1
-                  if (pag[indAC[counter],indAC[ii]]==0 & pag[indAC[ii],indAC[counter]]==0){
-                    pag[d,b] <- 2
-                    if (verbose==1){
-                      cat("Rule 3:",d,"*->",b,"\n")
+              else {
+                for (j in 1:length(indC)) {
+                  c <- indC[j]
+                  ##check that a-b-c faithful
+                  if (!any(unfVect==triple2numb(p,a,b,c)) & !any(unfVect==triple2numb(p,c,b,a))) {
+                    pag[b, c] <- 2
+                    pag[c, b] <- 3
+                    if (verbose) {
+                      cat("\nRule 1':", a, "*->", b, "o-*", c, 
+                          " where ", a, " and ", c, " not connected: ",a, b, c, "faithful triple", b, "->", c, "\n")
                     }
                   }
                 }
               }
             }
-            ## if (length(indAC)>1){
-            ## for(j in 1:(length(indAC)-1)){
-            ## for(k in (j+1):(length(indAC))){
-            ## if(pag[indAC[j],indAC[k]]==0 & pag[indAC[k],indAC[j]]==0){
-            ## pag[d,b] <- 2
-            ## if (verbose==1) {
-            ## cat("Rule 3:",d,"*->",b,"\n")
-            ## }
-            ## }## if
-            ##}## for
-            ##}## for
-            ##}## if
-          }## for
-        }## if
+          }
+        }
       }
-
-
-      ## rule 4
-      if (rules[4]){
-        ind <- which((pag!=0 & t(pag)==1), arr.ind=TRUE) ## b o--* c
-        if (length(ind)>0){
-          for (i in 1:dim(ind)[1]){
-            b <- ind[i,1]
-            c <- ind[i,2]
-            ##all a with a <--* b o--* c and a --> c
-            indA <- which( (pag[b,]==2 & pag[,b]!=0) & (pag[c,]==3 & pag[,c]==2))
-            if (length(indA)>0){
-              for (j in 1:length(indA)){
+      if (rules[2]) {
+        ind <- which((pag == 1 & t(pag) != 0), arr.ind = TRUE)
+        if (length(ind) > 0) {
+          for (i in 1:dim(ind)[1]) {
+            a <- ind[i, 1]
+            c <- ind[i, 2]
+            indB <- which(((pag[a, ] == 2 & pag[, a] == 
+                            3) & (pag[c, ] != 0 & pag[, c] == 2)) | 
+                          ((pag[a, ] == 2 & pag[, a] != 0) & (pag[c, 
+                                                 ] == 3 & pag[, c] == 2)))
+            if (length(indB) > 0) {
+              pag[a, c] <- 2
+              if (verbose) {
+                cat("\nRule 2:", a, "->", indB, "*->", 
+                    c, "or", a, "*->", indB, "->", c, "and", 
+                    a, "*-o", c, ":", a, "*->", c, "\n")
+              }
+            }
+          }
+        }
+      }
+      if (rules[3]) {
+        ind <- which((pag != 0 & t(pag) == 1), arr.ind = TRUE)
+        if (length(ind) > 0) {
+          for (i in 1:dim(ind)[1]) {
+            b <- ind[i, 1]
+            d <- ind[i, 2]
+            indAC <- which((pag[b, ] != 0 & pag[, b] == 
+                            2) & (pag[, d] == 1 & pag[d, ] != 0))
+            if (length(indAC) >= 2) {
+              ##normal version
+              if (length(unfVect)==0) {
+                counter <- 0
+                while ((counter < (length(indAC) - 1)) & 
+                       (pag[d, b] != 2)) {
+                  counter <- counter + 1
+                  ii <- counter
+                  while ((ii < length(indAC)) & (pag[d, 
+                                                     b] != 2)) {
+                    ii <- ii + 1
+                    if (pag[indAC[counter], indAC[ii]] == 
+                        0 & pag[indAC[ii], indAC[counter]] == 
+                        0) {
+                      pag[d, b] <- 2
+                      if (verbose) {
+                        cat("\nRule 3:", d, "*->", b, "\n")
+                      }
+                    }
+                  }
+                }
+              }
+              ##conservative version
+              else {
+                comb.indAC <- combn(indAC,2)
+                for (j in 1:dim(comb.indAC)[2]) {
+                  a <- comb.indAC[1,j]
+                  c <- comb.indAC[2,j]
+                  if (pag[a,c]==0 & pag[c,a]==0 & c!=a) {
+                    ##check fatihfulness a-d-c
+                    if (!any(unfVect==triple2numb(p,a,d,c)) & !any(unfVect==triple2numb(p,c,d,a))) {
+                      pag[d, b] <- 2
+                      if (verbose) {
+                        cat("\nRule 3':", a, d, c, "faithful",  d, "*->", b, "\n")
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      if (rules[4]) {
+        ind <- which((pag != 0 & t(pag) == 1), arr.ind = TRUE)
+        if (length(ind) > 0) {
+          for (i in 1:dim(ind)[1]) {
+            b <- ind[i, 1]
+            c <- ind[i, 2]
+            indA <- which((pag[b, ] == 2 & pag[, b] != 
+                           0) & (pag[c, ] == 3 & pag[, c] == 2))
+            if (length(indA) > 0) {
+              for (j in 1:length(indA)) {
                 a <- indA[j]
-                path <- c(c,b,a)
+                path <- c(c, b, a)
                 n <- length(path)
-                pag <- discr.path(path=path, n=n , pag=pag, gInput=gInput, verb=verbose)
-              }## for j
-            }## if length(indA)
-          }## for i
-        }## if length(ind)
+                pag <- discr.path(path = path, n = n, 
+                                  pag = pag, gInput = gInput, verbose = verbose)
+              }
+            }
+          }
+        }
       }
-    }## while
-
-
-
-    ## second while for R5-R10
-    old_pag2 <- matrix(rep(0,p^2),nrow=p,ncol=p)
-    while (sum(!(old_pag2==pag))>0) {
+    }
+    old_pag2 <- matrix(rep(0, p^2), nrow = p, ncol = p)
+    while (sum(!(old_pag2 == pag)) > 0) {
       old_pag2 <- pag
-
-
-      ##rule 5
-      if (rules[5]){
-        ind <- which((pag==1 & t(pag)==1), arr.ind=TRUE) ## a o--o b
-        if (length(ind)>0){
-          for (i in 1:dim(ind)[1]){
-            a <- ind[i,1]
-            b <- ind[i,2]
-            ##all c s.t. a o--o c and c not adjacent to b
-            indC <- which((pag[a,]==1 & pag[,a]==1) & (pag[b,]==0 & pag[,b]==0))
-            ##delete b from indC
-            indC <- setdiff(indC,b)
-            ##all d s.t. d o--o b and d not adjacent to a
-            indD <- which((pag[b,]==1 & pag[,b]==1) & (pag[a,]==0 & pag[,a]==0))
-            ##delete a from indD
-            indD <- setdiff(indD,a)
-            if (length(indC)>0 & length(indD)>0){
-              for (j in 1:length(indC)){
+      if (rules[5]) {
+        ind <- which((pag == 1 & t(pag) == 1), arr.ind = TRUE)
+        if (length(ind) > 0) {
+          for (i in 1:dim(ind)[1]) {
+            a <- ind[i, 1]
+            b <- ind[i, 2]
+            indC <- which((pag[a, ] == 1 & pag[, a] == 
+                           1) & (pag[b, ] == 0 & pag[, b] == 0))
+            indC <- setdiff(indC, b)
+            indD <- which((pag[b, ] == 1 & pag[, b] == 
+                           1) & (pag[a, ] == 0 & pag[, a] == 0))
+            indD <- setdiff(indD, a)
+            if (length(indC) > 0 & length(indD) > 0) {
+              for (j in 1:length(indC)) {
                 c <- indC[j]
-                for (l in 1:length(indD)){
+                for (l in 1:length(indD)) {
                   d <- indD[l]
-                  if (pag[c,d]==1 & pag[d,c]==1){
-                    pag[a,b] <- pag[b,a] <- 3
-                    pag[a,c] <- pag[c,a] <- 3
-                    pag[c,d] <- pag[d,c] <- 3
-                    pag[d,b] <- pag[b,d] <- 3
-                    if (verbose==1) {
-                      cat("Rule 5: There exists an uncovered circle path between",a,"and",b,":",a,"-", b,"and",a,"-",c,"-",d,"-",b, "\n")
-                    }
-                  }
-                  else {
-                    path <- c(a,c,d,b)
-                    pag <- ucp(path=path, pag=pag, n=length(path), verb=verbose)
-                  }
-                }##for l
-              }##for j
-            }##if
-          }##for i
-        }##if
-      }
-
-
-
-      ## rule 6
-      if (rules[6]){
-        ind <- which((pag!=0 & t(pag)==1), arr.ind=TRUE) ## b o--* c
-        if (length(ind)>0){
-          for (i in 1:dim(ind)[1]){
-            b <- ind[i,1]
-            c <- ind[i,2]
-            ##all a with a -- b o--* c
-            indA <- which(pag[b,]==3 & pag[,b]==3)
-            if (length(indA)>0){
-              pag[c,b] <- 3
-              if (verbose==1) {
-                cat("Rule 6:",a,"-",b,"o-*",c,":",b,"-*",c,"\n")
-              }
-            }
-          }## for i
-        }## if length(ind)
-      }
-
-
-
-      ## rule 7
-      if (rules[7]){
-        ind <- which((pag!=0 & t(pag)==1), arr.ind=TRUE) ## b o--* c
-        if (length(ind)>0){
-          for (i in 1:dim(ind)[1]){
-            b <- ind[i,1]
-            c <- ind[i,2]
-            ##all a with a --o b and a,c not adjacent
-            indA <- which((pag[b,]==3 & pag[,b]==1) & (pag[c,]==0 & pag[,c]==0))
-            indA <- setdiff(indA,c)
-            if (length(indA)>0){
-              pag[c,b] <- 3
-              if (verbose==1) {
-                cat("Rule 7:",indA,"-o",b,"o-*",c,"and", indA," and", c," are not adjacent:",b,"-*",c,"\n")
-              }
-            }
-          }## for i
-        }## if length(ind)
-      }
-
-
-      ## rule 8
-      if (rules[8]){
-        ind <- which((pag==2 & t(pag)==1), arr.ind=TRUE) ## a o--> c
-        if (length(ind)>0){
-          for (i in 1:dim(ind)[1]){
-            a <- ind[i,1]
-            c <- ind[i,2]
-            ##all b with a --> b --> c or a --o b --> c
-            indB <- which(((pag[a,]==2 & pag[,a]==3) | (pag[a,]==1 & pag[,a]==3)) & (pag[c,]==3 & pag[,c]==2))
-            if (length(indB)>0){
-              pag[c,a] <- 3
-              if (verbose==1) {
-                cat("Rule 8:",a,"->",indB,"->",c,"or",a,"-o",indB,"->",c,"and",a,"o->",c,":",a,"->",c,"\n")
-              }
-            }
-          }## for i
-        }## if length(ind)
-      }
-
-
-
-      ##rule 9
-      if (rules[9]){
-        ind <- which((pag==2 & t(pag)==1), arr.ind=TRUE) ## a o--> c
-        if (length(ind)>0){
-          for (i in 1:dim(ind)[1]){
-            a <- ind[i,1]
-            c <- ind[i,2]
-            ##find all beta s.t. a @--@ b is potentially directed
-            ##and beta is not connected to c
-            indB <- which((pag[a,]==2 | pag[a,]==1) & (pag[,a]==1 | pag[,a]==3) & (pag[c,]==0 & pag[,c]==0))
-            indB <- setdiff(indB,c)
-            if (length(indB)>0){
-              for (k in 1:length(indB)){
-                b <- indB[k]
-                ##find all d such that c <--o a @-@ b @-@ d and d and a not adjacent
-                indD <- which((pag[b,]==2 | pag[b,]==1) & (pag[,b]==1 | pag[,b]==3) & (pag[a,]==0 & pag[,a]==0))
-                indD <- setdiff(indD,a)
-                if (length(indD)>0){
-                  for (l in 1:length(indD)){
-                    d <- indD[l]
-                    ##pag[c,a]!=3 check if we have already oriented this edge
-                    if (pag[c,a]!=3){
-                      if ((pag[c,d]==1 | pag[c,d]==3) & (pag[d,c]==1 | pag[d,c]==2)){
-                        pag[c,a] <- 3
-                        if (verbose==1){
-                          cat("Rule 9, There exists an upd between",a,"and",c,":",a," ->", c, "\n")
-                        }
-                      }
-                      else {
-                        path <- c(c,a,b,d)
-                        pag <- upd(path=path, pag=pag, n=length(path), verb=verbose)
-                      }
-                    }
-                  }##for l
-                }## if lenth(indD)
-              }##for k
-            }##if lenfth(indB)
-          }##for i
-        }## if length(ind)
-      }
-
-
-      ##rule 10
-      if (rules[10]){
-        ind <- which((pag==2 & t(pag)==1), arr.ind=TRUE) ## a o--> c
-        if (length(ind)>0){
-          for (i in 1:dim(ind)[1]){
-            a <- ind[i,1]
-            c <- ind[i,2]
-            ##find all b s.t. b --> c
-            indB <- which((pag[c,]==3 & pag[,c]==2))
-            if (length(indB)>=2){
-              for (j in 1:length(indB)){
-                b <- indB[j]
-                ##chose a d s.t. d --> c
-                indD <- setdiff(indB,b)
-                if (length(indD)>0 & pag[c,a]!=3){
-                  for (k in 1:length(indD)){
-                    d <- indD[k]
-                    ##case where mu=b and omega=theta and mu and omega not adj
-                    if ((pag[a,b]==1 | pag[a,b]==2) & (pag[b,a]==1 | pag[b,a]==3) & (pag[a,d]==1 | pag[a,d]==2) & (pag[d,a]==1 | pag[d,a]==3) & (pag[d,b]==0 & pag[b,d]==0)){
-                      pag[c,a] <- 3
-                      if (verbose==1){
-                        cat("Rule 10 with mu = beta = ",b,"and omega = theta =",d,":",a,"->",c,"\n")
+                  if (pag[c, d] == 1 & pag[d, c] == 1) {
+                    if (length(unfVect)==0) {
+                      pag[a, b] <- pag[b, a] <- 3
+                      pag[a, c] <- pag[c, a] <- 3
+                      pag[c, d] <- pag[d, c] <- 3
+                      pag[d, b] <- pag[b, d] <- 3
+                      if (verbose) {
+                        cat("\nRule 5: There exists an uncovered circle path between", 
+                            a, "and", b, ":", a, "-", b, 
+                            "and", a, "-", c, "-", d, "-", 
+                            b, "\n")
                       }
                     }
                     else {
-                      indA <- which((pag[a,]==1 | pag[a,]==2) & (pag[,a]==1 | pag[,a]==3), arr.ind=TRUE)
-                      indA <- setdiff(indA,c)
-                      if (length(indA>=2)){
-                        for (l in 1:length(indA)){
+                      ##check that every triple on the circle is faithful
+                      path2check <- c(a,c,d,b)
+                      faithres <- faith.check(path2check, unfVect, p)
+                      if (faithres==0) {
+                        pag[a, b] <- pag[b, a] <- 3
+                        pag[a, c] <- pag[c, a] <- 3
+                        pag[c, d] <- pag[d, c] <- 3
+                        pag[d, b] <- pag[b, d] <- 3
+                        if (verbose) {
+                          cat("\nRule 5': There exists a faithful uncovered circle path between", 
+                              a, "and", b, ":", a, "-", b, 
+                              "and", a, "-", c, "-", d, "-", 
+                              b, "\n")
+                        }
+                      }
+                    }
+                  }
+                  else {
+                    path <- c(a, c, d, b)
+                    pag <- ucp(path = path, pag = pag, 
+                               n = length(path), verbose = verbose, unfVect=unfVect, p=p)
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      if (rules[6]) {
+        ind <- which((pag != 0 & t(pag) == 1), arr.ind = TRUE)
+        if (length(ind) > 0) {
+          for (i in 1:dim(ind)[1]) {
+            b <- ind[i, 1]
+            c <- ind[i, 2]
+            indA <- which(pag[b, ] == 3 & pag[, b] == 
+                          3)
+            if (length(indA) > 0) {
+              pag[c, b] <- 3
+              if (verbose) {
+                cat("\nRule 6:", a, "-", b, "o-*", c, ":", 
+                    b, "-*", c, "\n")
+              }
+            }
+          }
+        }
+      }
+      if (rules[7]) {
+        ind <- which((pag != 0 & t(pag) == 1), arr.ind = TRUE)
+        if (length(ind) > 0) {
+          for (i in 1:dim(ind)[1]) {
+            b <- ind[i, 1]
+            c <- ind[i, 2]
+            indA <- which((pag[b, ] == 3 & pag[, b] == 
+                           1) & (pag[c, ] == 0 & pag[, c] == 0))
+            indA <- setdiff(indA, c)
+            if (length(indA) > 0) {
+              if (length(unfVect)==0) {
+                pag[c, b] <- 3
+                if (verbose) {
+                  cat("\nRule 7:", indA, "-o", b, "o-*", 
+                      c, "and", indA, " and", c, " are not adjacent:", 
+                      b, "-*", c, "\n")
+                }
+              }
+              else {
+                for (j in 1:length(indA)) {
+                  a <- indA[j]
+                  ##check fatihfulness of a-b-c
+                  if (!any(unfVect==triple2numb(p,a,b,c)) & !any(unfVect==triple2numb(p,c,b,a))) {
+                    pag[c, b] <- 3
+                    if (verbose) {
+                      cat("\nRule 7':", a, "-o", b, "o-*", 
+                          c, "and", a, " and", c, " are not adjacent and", a,b,c, "faithful:",  
+                          b, "-*", c, "\n")
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      if (rules[8]) {
+        ind <- which((pag == 2 & t(pag) == 1), arr.ind = TRUE)
+        if (length(ind) > 0) {
+          for (i in 1:dim(ind)[1]) {
+            a <- ind[i, 1]
+            c <- ind[i, 2]
+            indB <- which(((pag[a, ] == 2 & pag[, a] == 
+                            3) | (pag[a, ] == 1 & pag[, a] == 3)) & 
+                          (pag[c, ] == 3 & pag[, c] == 2))
+            if (length(indB) > 0) {
+              pag[c, a] <- 3
+              if (verbose) {
+                cat("\nRule 8:", a, "->", indB, "->", c, 
+                    "or", a, "-o", indB, "->", c, "and", 
+                    a, "o->", c, ":", a, "->", c, "\n")
+              }
+            }
+          }
+        }
+      }
+      if (rules[9]) {
+        ind <- which((pag == 2 & t(pag) == 1), arr.ind = TRUE)
+        if (length(ind) > 0) {
+          for (i in 1:dim(ind)[1]) {
+            a <- ind[i, 1]
+            c <- ind[i, 2]
+            indB <- which((pag[a, ] == 2 | pag[a, ] == 
+                           1) & (pag[, a] == 1 | pag[, a] == 3) & 
+                          (pag[c, ] == 0 & pag[, c] == 0))
+            indB <- setdiff(indB, c)
+            if (length(indB) > 0) {
+              for (k in 1:length(indB)) {
+                b <- indB[k]
+                indD <- which((pag[b, ] == 2 | pag[b, 
+                                    ] == 1) & (pag[, b] == 1 | pag[, b] == 
+                                                    3) & (pag[a, ] == 0 & pag[, a] == 0))
+                indD <- setdiff(indD, a)
+                if (length(indD) > 0) {
+                  for (l in 1:length(indD)) {
+                    d <- indD[l]
+                    if (pag[c, a] != 3) {
+                      if ((pag[c, d] == 1 | pag[c, d] == 
+                           3) & (pag[d, c] == 1 | pag[d, 
+                                      c] == 2)) {
+                        ##normal version
+                        if (length(unfVect)==0) {
+                          pag[c, a] <- 3
+                          if (verbose) {
+                            cat("\nRule 9: There exists an upd between", 
+                                a, "and", c, ":", a, " ->", 
+                                c, "\n")
+                          }
+                        }
+                        ##conservative version
+                        else {
+                          path2check <- c(a,b,d,c)
+                          faithres <- faith.check(path2check, unfVect, p)
+                          if (faithres==0) {
+                            pag[c, a] <- 3
+                            if (verbose) {
+                              cat("\nRule 9': There exists a faithful upd between", 
+                                  a, "and", c, ":", a, " ->", 
+                                  c, "\n")
+                            }
+                          }
+                        }
+                      }
+                      else {
+                        path <- c(c, a, b, d)
+                        pag <- upd(path = path, pag = pag, 
+                                   n = length(path), verbose = verbose, unfVect=unfVect, p=p)
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      if (rules[10]) {
+        ind <- which((pag == 2 & t(pag) == 1), arr.ind = TRUE)
+        if (length(ind) > 0) {
+          for (i in 1:dim(ind)[1]) {
+            a <- ind[i, 1]
+            c <- ind[i, 2]
+            indB <- which((pag[c, ] == 3 & pag[, c] == 
+                           2))
+            if (length(indB) >= 2) {
+              for (j in 1:length(indB)) {
+                b <- indB[j]
+                indD <- setdiff(indB, b)
+                if (length(indD) > 0 & pag[c, a] != 3) {
+                  for (k in 1:length(indD)) {
+                    d <- indD[k]
+                    if ((pag[a, b] == 1 | pag[a, b] == 
+                         2) & (pag[b, a] == 1 | pag[b, a] == 
+                               3) & (pag[a, d] == 1 | pag[a, d] == 
+                                     2) & (pag[d, a] == 1 | pag[d, a] == 
+                                           3) & (pag[d, b] == 0 & pag[b, d] == 
+                                                 0)) {
+                      ##normal version
+                      if (length(unfVect)==0) {
+                        pag[c, a] <- 3
+                        if (verbose) {
+                          cat("\nRule 10 with mu = beta = ", 
+                              b, "and omega = theta =", d, 
+                              ":", a, "->", c, "\n")
+                        }
+                      }
+                      ##conservative version
+                      else {
+                        ##check faithfulness of b-a-d
+                        if (!any(unfVect==triple2numb(p,b,a,d)) & !any(unfVect==triple2numb(p,d,a,b))) {
+                          pag[c, a] <- 3
+                          if (verbose) {
+                            cat("\nRule 10' with mu = beta = ", 
+                                b, "and omega = theta =", d, 
+                                "and",b,a,d,"faithful:", a, "->", c, "\n")
+                          }
+                        }
+                      }
+                    }
+                    else {
+                      indA <- which((pag[a, ] == 1 | 
+                                     pag[a, ] == 2) & (pag[, a] == 
+                                          1 | pag[, a] == 3), arr.ind = TRUE)
+                      indA <- setdiff(indA, c)
+                      if (length(indA >= 2)) {
+                        for (l in 1:length(indA)) {
                           first.pos <- indA[l]
-                          ##if (first.pos==b){
-                          ##indAA <- setdiff(indA,c(first.pos,d))
-                          ##}
-                          ##if (first.pos==d){
-                          ##indAA <- setdiff(indA,c(first.pos,b))
-                          ##}
-                          ##else {
-                          indAA <- setdiff(indA,first.pos)
-                          if ((length(indAA)>0) & (pag[c,a]!=3)){
-                            for (s in 1:length(indAA)){
+                          indAA <- setdiff(indA, first.pos)
+                          if ((length(indAA) > 0) & (pag[c, 
+                                                         a] != 3)) {
+                            for (s in 1:length(indAA)) {
                               sec.pos <- indAA[s]
-                              p1 <- find.upd(path=c(first.pos,b), a=a, n=2, pag=pag, verb=verbose)
-                              p2 <- find.upd(path=c(sec.pos,d), a=a, n=2, pag=pag, verb=verbose)
-                              if (p1$res==TRUE & p2$res==TRUE){
+                              p1 <- find.upd(path = c(first.pos, 
+                                               b), a = a, n = 2, pag = pag, 
+                                             verbose = verbose, unfVect=unfVect, p=p)
+                              p2 <- find.upd(path = c(sec.pos, 
+                                               d), a = a, n = 2, pag = pag, 
+                                             verbose = verbose, unfVect=unfVect, p=p)
+                              if (p1$res == TRUE & p2$res == TRUE) {
                                 mu <- p1$uncov.path[1]
                                 omega <- p2$uncov.path[1]
-                                if ((mu!=omega) & (pag[mu,omega]==0) & (pag[omega,mu]==0)){
-                                  ##then orient
-                                  pag[c,a] <- 3
-                                  if (verbose==1) {
-                                    cat("Rule 10:",a,"->",c,"\n")
+                                if ((mu != omega) & (pag[mu, 
+                                       omega] == 0) & (pag[omega, 
+                                                          mu] == 0)) {
+                                  ##normal version
+                                  if (length(unfVect)==0) {
+                                    pag[c, a] <- 3
+                                    if (verbose) {
+                                      cat("\nRule 10:", a, 
+                                          "->", c, "\n")
+                                    }
+                                  }
+                                  ##conservative version
+                                  else {
+                                    if (!any(unfVect==triple2numb(p,mu,a,omega)) & !any(unfVect==triple2numb(p,omega,a,mu))) {
+                                      pag[c, a] <- 3
+                                      if (verbose) {
+                                        cat("\nRule 10':",mu,a,omega,"faithful:", a, 
+                                            "->", c, "\n")
+                                      }
+                                    }
                                   }
                                 }
                               }
-                            }## for s
-                          }## if
-                          ##}## else
-                        }## for l
-                      }## if
-                    }##else
-                  }##for k
-                }##if
-              }##for j
-            }##if
-          }##for i
-        }##if
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }## for k
+                }
+              }
+            }
+          }
+        }
       }
-
-    }## while
-
-  }## if
-
+    }
+  }
   return(pag)
 
 }## function
@@ -3352,7 +3175,7 @@ skeleton <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
 
 pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
                fixedEdges = NULL, NAdelete = TRUE, m.max = Inf,
-               u2pd = "rand") {
+               u2pd = "rand", conservative=FALSE) {
 
   ## Purpose: Perform PC-Algorithm, i.e., estimate skeleton of DAG given data
   ## ----------------------------------------------------------------------
@@ -3373,6 +3196,7 @@ pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   ##   "relaxed": udag2pdagRelaxed
   ##   "retry": udag2pdagSpecial
   ## - gTrue: Graph suffStatect of true DAG
+  ## - conservative: If TRUE, conservative PC is done
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 26 Jan 2006; Martin Maechler
   ## Modifications: Sarah Gerster, Date: July 2007
@@ -3388,11 +3212,21 @@ pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
                    NAdelete = NAdelete, m.max = m.max)
 
   ## Orient edges
-  res <- switch (u2pd,
-                 "rand" = udag2pdag(skel),
-                 "retry" = udag2pdagSpecial(skel)$pcObj,
-                 "relaxed" = udag2pdagRelaxed(skel))
-
+  if (!conservative) {
+    res <- switch (u2pd,
+                   "rand" = udag2pdag(skel),
+                   "retry" = udag2pdagSpecial(skel)$pcObj,
+                   "relaxed" = udag2pdagRelaxed(skel))
+  } else {
+    if (u2pd != "relaxed") stop("Conservative PC can only be run with 'u2pd = relaxed'")
+        ##version.unf defined per default
+    ##Tetrad CPC works with version.unf=c(2,1)
+    ## see comment on pc.cons.intern for description of version.unf
+    tmp <- pc.cons.intern(skel, suffStat, indepTest, alpha, verbose=verbose, version.unf=c(2,2))
+    tripleList <- tmp$unfTripl
+    ##vers <- tmp$vers
+    res <- udag2pdagRelaxed(gInput=skel, verbose=verbose, unfVect=tripleList)
+  }
   ## Output
   res
 }
@@ -3401,7 +3235,7 @@ pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
 fci <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
                 fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
                 m.max = Inf, rules = rep(TRUE, 10), doPdsep =
-                TRUE) {
+                TRUE, conservative=c(FALSE,FALSE), biCC=FALSE, cons.rules=FALSE) {
   ## Purpose: Perform PC-Algorithm, i.e., estimate skeleton of DAG given data
   ## ----------------------------------------------------------------------
   ## Arguments:
@@ -3424,18 +3258,12 @@ fci <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
   ## Initial Checks
 ##################################################
   cl <- match.call()
-  ## cl <-  call("sample",3)
-
-##################################################
-  ## Skeleton
-##################################################
-  if (verbose) cat("Compute Skeleton\n================\n")
-
-  skel <- skeleton(suffStat, indepTest, p, alpha, verbose = verbose,
-                   fixedGaps = fixedGaps, fixedEdges = fixedEdges, NAdelete =
-                   NAdelete, m.max = m.max)
-
-  G <- (as(skel@graph,"matrix")!=0)
+  if (verbose) 
+    cat("Compute Skeleton\n================\n")
+  skel <- skeleton(suffStat, indepTest, p, alpha, verbose = verbose, 
+                   fixedGaps = fixedGaps, fixedEdges = fixedEdges, NAdelete = NAdelete, 
+                   m.max = m.max)
+  G <- (as(skel@graph, "matrix") != 0)
   sepset <- skel@sepset
   pMax <- skel@pMax
   n.edgetestsSKEL <- skel@n.edgetests
@@ -3445,19 +3273,48 @@ fci <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
   ## Possible D-Sep
 ##################################################
   allPdsep <- NA
+  tripleList <- NULL
+  ##conservative version
+  if (conservative[1]) {
+    ##version.unf defined per default
+    ##Tetrad CFCI works with version.unf=c(1,2)
+    sk <- pc.cons.intern(skel, suffStat, indepTest, alpha, verbose=verbose, version.unf=c(1,2))
+    tripleList <- sk$unfTripl
+    ##cat("\nfirst conservative list=", tripleList,"\n")
+    ##vers <- sk$vers
+  }
   if (doPdsep) {
-    if (verbose) cat("\nCompute PDSEP\n=============\ncompute collider...done\n")
-    pdsepRes <- pdsep(G, suffStat, indepTest, p, sepset, pMax, NAdelete, verbose, alpha)
+    if (verbose) {
+      cat("\nCompute PDSEP\n=============\ncompute collider...done\n")
+    }
+    ##it will be "pdsep"
+    pdsepRes <- pdsep(skel@graph, suffStat, indepTest, p, sepset, 
+                          pMax, NAdelete, verbose=verbose, alpha, unfVect=tripleList, biCC=biCC)
     G <- pdsepRes$G
     sepset <- pdsepRes$sepset
     pMax <- pdsepRes$pMax
     allPdsep <- pdsepRes$allPdsep
     n.edgetestsPD <- pdsepRes$n.edgetests
     max.ordPD <- pdsepRes$max.ord
-  }  else {
+    
+    ##conservative version
+    if (conservative[2]) {
+      ##compute conservative again, because skelet may have changed
+      colnames(G) <- rownames(G) <- as.character(1:p)
+      Gobject <- as(G, "graphNEL")
+      tmp.pdsep <- new("pcAlgo", graph = Gobject, call = cl, n = integer(0), 
+                       max.ord = as.integer(max.ordSKEL), n.edgetests = n.edgetestsSKEL, 
+                       sepset = sepset, pMax = pMax, zMin = matrix(NA, 1, 1))
+      sk.pdsep <- pc.cons.intern(tmp.pdsep, suffStat, indepTest, alpha, verbose=verbose, version.unf=c(1,2))
+      tripleList <- sk.pdsep$unfTripl
+      ##cat("\nsecond conservative list=", tripleList,"\n")
+      ##vers <- sk.pdsep$vers
+    }
+  }
+  else {
     n.edgetestsPD <- 0
     max.ordPD <- 0
-    allPdsep <- vector("list",p)
+    allPdsep <- vector("list", p)
   }
 
   ## if(verbose) { cat("Final graph adjacency matrix:\n"); print(symnum(G)) }
@@ -3470,26 +3327,24 @@ fci <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
     Gobject <- new("graphNEL", nodes = as.character(1:p))
   } else {
     colnames(G) <- rownames(G) <- as.character(1:p)
-    Gobject <- as(G,"graphNEL")
+    Gobject <- as(G, "graphNEL")
   }
-
-  ## make pcAlgo object
-  tmp <- new("pcAlgo",
-             graph = Gobject,
-             call = cl, n = integer(0),
-             max.ord = as.integer(max.ordSKEL),
-             n.edgetests = n.edgetestsSKEL, sepset = sepset,
-             pMax = pMax, zMin = matrix(NA,1,1))
-
-##################################################
-  ## Transform to PAG
-##################################################
-  if (verbose) cat("\nDirect egdes:\n=============\nUsing rules:", which(rules),"\nCompute collider:\n")
-  if (numEdges(tmp@graph)>0) {
-    ## res contains adj matrix
-    res <- udag2pag(gInput = tmp, rules = rules, verbose = verbose)
-  } else {
-    ## empty graph
+  tmp <- new("pcAlgo", graph = Gobject, call = cl, n = integer(0), 
+             max.ord = as.integer(max.ordSKEL), n.edgetests = n.edgetestsSKEL, 
+             sepset = sepset, pMax = pMax, zMin = matrix(NA, 1, 1))
+  if (verbose) 
+    cat("\nDirect egdes:\n=============\nUsing rules:", which(rules), 
+        "\nCompute collider:\n")
+  if (numEdges(tmp@graph) > 0) {
+    ##it will be "udag2pag"
+    if (cons.rules){
+      res <- udag2pag(gInput = tmp, rules = rules, verbose = verbose, unfVect=tripleList)
+    }
+    else {
+      res <- udag2pag(gInput = tmp, rules = rules, verbose = verbose, unfVect=NULL)
+    }
+  }
+  else {
     res <- G
   }
 
@@ -4173,13 +4028,13 @@ binCItest <- function(x,y,S,suffStat) {
   pval
 }
 
-pdsep <- function(G, suffStat, indepTest, p, sepset, pMax, NAdelete=TRUE,
-                  verbose=FALSE, alpha)
+pdsep <- function (skel, suffStat, indepTest, p, sepset, pMax, NAdelete = TRUE, 
+                       verbose = FALSE, alpha, unfVect=NULL, biCC=FALSE) 
 {
   ## Purpose: Compute possible D-sep for each node and adapt graph accordingly
   ## ----------------------------------------------------------------------
   ## Arguments:
-  ## - G: Boolean adjacency matrix (TRUE if there is an edge)
+  ## - skel: Graph object returned by function skeleton
   ## - sepset: Sepset that was used for finding the skeleton
   ## - pMax: Maximal p-values during estimation of skeleton
   ## - testType: Type of cond. independence test used
@@ -4192,133 +4047,181 @@ pdsep <- function(G, suffStat, indepTest, p, sepset, pMax, NAdelete=TRUE,
   ## - allPdsep: Possible d-sep for each node [list]
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date:  9 Dec 2009, 16:01
-  n.edgetests <- rep(0,1000)
+  G <- (as(skel, "matrix") != 0)
+  n.edgetests <- rep(0, 1000)
   max.ord <- 0
-
-  allPdsep <- vector("list",p)
-
-  ## only start if there is at least one edge
-  if (sum(G)>0) {
+  allPdsep <- vector("list", p)
+  if (biCC) {
+    conn.comp <- biConnComp(skel)
+    for (ii in 1:length(conn.comp)){
+      conn.comp[[ii]] <- as.numeric(conn.comp[[ii]])
+    }
+  }
+  if (sum(G) > 0) {
     amat <- G
     amat[amat==TRUE] <- 1
     amat[amat==FALSE] <- 0
     ind <- which(amat==1, arr.ind=TRUE)
     ##Orient colliders
     for (i in 1:dim(ind)[1]) {
-      x <- ind[i,1]
-      y <- ind[i,2]
-      allZ <- setdiff(which(amat[y,]!=0),x) ## x-y-z
-      if (length(allZ)>0) {
+      x <- ind[i, 1]
+      y <- ind[i, 2]
+      allZ <- setdiff(which(amat[y, ] != 0), x)
+      if (length(allZ) > 0) {
         for (j in 1:length(allZ)) {
           z <- allZ[j]
-          if ((amat[x,z]==0) & !((y %in% sepset[[x]][[z]]) |
+          if ((amat[x, z] == 0) & !((y %in% sepset[[x]][[z]]) | 
                      (y %in% sepset[[z]][[x]]))) {
-            ##-             if (verbose) {
-            ##-               cat("\n",x,"*->",y,"<-*",z,"\n")
-            ##-               cat("Sxz=",sepset[[z]][[x]],"and","Szx=",sepset[[x]][[z]],"\n")
-            ##-             }
-
-            ##x o-> y <-o z
-            amat[x,y] <- amat[z,y] <- 2
-
-          } ## if ((amat[x,z]==0) & etc.
-        } ## for (j in 1:length(allZ))
-      } ## if (length(allZ)>0) {
-    } ## for (i in 1:dim(ind)[1])
-
-    ## Compute poss. sepsets and test edges again
-    for (x in 1:p) {
-      if (any(amat[x,]!=0)){
-        allPdsep[[x]] <- qreach(x,amat)
-        tf1 <- setdiff(allPdsep[[x]],x)
-        if (verbose) {
-          cat("Possible D-Sep of",x," is: ",allPdsep[[x]],"\n")
+            ##normal version
+            if (length(unfVect)==0) {
+              amat[x, y] <- amat[z, y] <- 2
+              if (verbose) {
+                cat(x,"o->", y, "<-o", z, "\n")
+              }
+            }
+            ##conservative version
+            else {
+              ##check if x-y-z is faithful
+              if (!any(unfVect==triple2numb(p,x,y,z)) & !any(unfVect==triple2numb(p,z,y,x))) {
+                amat[x, y] <- amat[z, y] <- 2
+                if (verbose) {
+                  cat(x,"o->", y, "<-o", z, "\n")
+                }
+              }
+            }
+          }
         }
-        adj.x <- (1:p)[amat[x,]!=0]
+      }
+    }
+    for (x in 1:p) {
+      if (any(amat[x, ] != 0)) {
+        allPdsep[[x]] <- qreach(x, amat)
+        tf1 <- setdiff(allPdsep[[x]], x)
+        if (verbose) {
+          cat("Possible D-Sep of", x, " is: ", allPdsep[[x]], 
+              "\n")
+        }
+        adj.x <- (1:p)[amat[x, ] != 0]
         for (y in adj.x) {
-          ##tf = possible_d_sep(amat,x,y)\(x,y)
-          tf <- setdiff(tf1,y)
-          ##define the set of vertex in Pos-D-SEP but not neighbours of x
-          diff.set <- setdiff(tf,adj.x)
-          if (length(diff.set)>0){
+          tf <- setdiff(tf1, y)
+          diff.set <- setdiff(tf, adj.x)
+          ##bi-connected components
+          if (biCC) {
+            index.conncomp <- 0
+            found.conncomp <- FALSE
+            while ((!found.conncomp) & (index.conncomp < length(conn.comp))) {
+              index.conncomp <- index.conncomp + 1
+              if (x %in% conn.comp[[index.conncomp]] & y %in% conn.comp[[index.conncomp]]) {
+                found.conncomp <- TRUE
+              }
+            }
+            bi.conn.comp <- setdiff(conn.comp[[index.conncomp]],c(x,y))
+            tmp.tf <- intersect(tf,bi.conn.comp)
+            tf <- tmp.tf
+            if (verbose) {
+              cat("Possible D-Sep of", x,"and", y,"intersected with the biconnected component is", tf, "\n")
+            }
+            ##if (length(tf)>15) {
+              ##cat("Size of pds bigger than 15: break the survey between",x,"and",y,"\n")
+              ##break
+            ##}
+          }
+          if (length(diff.set) > 0) {
             done <- FALSE
             ord <- 0
-            while (!done && ord < length(tf)){
+            while (!done && ord < length(tf)) {
               ord <- ord + 1
-              if (ord > max.ord) max.ord <- ord
-              if (ord==1){
-                for (j in 1:length(diff.set)){
-                  ## pval <- dsepTest(x,y, diff.set[j], gTrue, jp)
-                  pval <- indepTest(x,y, diff.set[j], suffStat)
-                  if (verbose) cat("x=",x," y=",y," S=",diff.set[j],": pval =",pval,"\n")
-                  n.edgetests[ord+1] <- n.edgetests[ord+1]+1
-                  if (is.na(pval)) pval <- ifelse(NAdelete,1,0)
-                  if (pval > pMax[x,y]) pMax[x,y] <- pval
-                  if(pval >= alpha) { # independent
-                    amat[x,y] <- amat[y,x] <- 0
+              if (ord > max.ord) 
+                max.ord <- ord
+              if (ord == 1) {
+                for (j in 1:length(diff.set)) {
+                  pval <- indepTest(x, y, diff.set[j], 
+                                    suffStat)
+                  n.edgetests[ord + 1] <- n.edgetests[ord + 
+                                                      1] + 1
+                  if (is.na(pval)) 
+                    pval <- ifelse(NAdelete, 1, 0)
+                  if (pval > pMax[x, y]) 
+                    pMax[x, y] <- pval
+                  if (pval >= alpha) {
+                    amat[x, y] <- amat[y, x] <- 0
                     sepset[[x]][[y]] <- sepset[[y]][[x]] <- diff.set[j]
                     done <- TRUE
+                    if (verbose) {
+                      cat("x=", x, " y=", y, " S=", diff.set[j], 
+                          ": pval =", pval, "\n")
+                    }
                     break
-                  } ## if (pval >= alpha)
-                } ## for (j in 1:length(diff.set))
-              } ## if (ord == 1)
+                  }
+                }
+              }
               else {
-                if (ord <= length(adj.x)){
-                  tmp.combn <- combn(tf,ord)
+                if (ord <= length(adj.x)) {
+                  tmp.combn <- combn(tf, ord)
                   for (k in 1:dim(tmp.combn)[2]) {
-                    ## are there nodes outside adj.x, which was
-                    ## already tested ?
-                    tmp.ii <- tmp.combn[,k] %in% adj.x
+                    tmp.ii <- tmp.combn[, k] %in% adj.x
                     if (any(!tmp.ii)) {
-                      ## there are nodes outside adj.x
-                      ## pval <- dsepTest(x,y, tmp.combn[,k], gTrue, jp)
-                      pval <- indepTest(x,y, tmp.combn[,k], suffStat)
-                      if (verbose) cat("x=",x," y=",y," S=",tmp.combn[,k],": pval =",pval,"\n")
-                      n.edgetests[ord+1] <- n.edgetests[ord+1]+1
-                      if (is.na(pval)) pval <- ifelse(NAdelete,1,0)
-                      if (pval > pMax[x,y]) pMax[x,y] <- pval
-                      if(pval >= alpha) { # independent
-                        amat[x,y] <- amat[y,x] <- 0
+                      pval <- indepTest(x, y, tmp.combn[, 
+                                                        k], suffStat)
+                      n.edgetests[ord + 1] <- n.edgetests[ord + 
+                                                          1] + 1
+                      if (is.na(pval)) 
+                        pval <- ifelse(NAdelete, 1, 0)
+                      if (pval > pMax[x, y]) 
+                        pMax[x, y] <- pval
+                      if (pval >= alpha) {
+                        amat[x, y] <- amat[y, x] <- 0
                         sepset[[x]][[y]] <- sepset[[y]][[x]] <- tmp.combn[,k]
                         done <- TRUE
+                        if (verbose) {
+                          cat("x=", x, " y=", y, " S=", 
+                              tmp.combn[, k], ": pval =", 
+                              pval, "\n")
+                        }
                         break
-                      } ## if (pval >= alpha)
-                    } ## if (any(!tmp.ii))
-                  } ## for (k in 1:dim(tmp.combn)[2]
-                } ## if (ord <= length(adj.x))
+                      }
+                    }
+                  }
+                }
                 else {
                   ## check all combinations; no combination has been
                   ## tested before, since ord > adj.x
                   tmp.combn <- combn(tf,ord)
                   for (k in 1:dim(tmp.combn)[2]) {
-                    ## pval <- dsepTest(x,y, tmp.combn[,k], gTrue, jp)
-                    pval <- indepTest(x,y, tmp.combn[,k], suffStat)
-                    if (verbose) cat("x=",x," y=",y," S=",tmp.combn[,k],": pval =",pval,"\n")
-                    n.edgetests[ord+1] <- n.edgetests[ord+1]+1
-                    if (is.na(pval)) pval <- ifelse(NAdelete,1,0)
-                    if (pval > pMax[x,y]) pMax[x,y] <- pval
-                    if(pval >= alpha) { # independent
-                      amat[x,y] <- amat[y,x] <- 0
+                    pval <- indepTest(x, y, tmp.combn[, 
+                                                      k], suffStat)
+                    n.edgetests[ord + 1] <- n.edgetests[ord + 
+                                                        1] + 1
+                    if (is.na(pval)) 
+                      pval <- ifelse(NAdelete, 1, 0)
+                    if (pval > pMax[x, y]) 
+                      pMax[x, y] <- pval
+                    if (pval >= alpha) {
+                      amat[x, y] <- amat[y, x] <- 0
                       sepset[[x]][[y]] <- sepset[[y]][[x]] <- tmp.combn[,k]
                       done <- TRUE
+                      if (verbose) {
+                        cat("x=", x, " y=", y, " S=", tmp.combn[, k], ": pval =", pval, "\n")
+                      }
                       break
-                    } ## if (pval >= alpha)
-                  } ## for (k in 1:dim(tmp.combn)[2]
-                } ## else [ord > length(adj.x)
-              } ## else [ord > 1]
-            } ## while (!done && ord < length(tf))
-          } ## if (length(diff.set) > 0)
-        } ## for (y in adj.x)
-      } ## if (any(amat[x,] != 0))
-    } ## for (x in 1:p)
-
-    G[amat==0] <- FALSE
-    G[amat==1] <- TRUE
-    G[amat==2] <- TRUE
-  } ## if (sum(G) > 0)
-
-  list(G=G, sepset=sepset, pMax=pMax, allPdsep=allPdsep, max.ord = max.ord, n.edgetests = n.edgetests[1:(max.ord+1)])
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    G[amat == 0] <- FALSE
+    G[amat == 1] <- TRUE
+    G[amat == 2] <- TRUE
+  }
+  list(G = G, sepset = sepset, pMax = pMax, allPdsep = allPdsep, 
+       max.ord = max.ord, n.edgetests = n.edgetests[1:(max.ord + 
+                            1)])
 }
+
 
 ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
                 y.notparent = FALSE, verbose=FALSE, all.dags=NA)
@@ -4920,4 +4823,566 @@ plotSG <- function(graphObj, y, dist, amat = NA, directed = TRUE,
   if(!is.null(main) && !is.na(main))
       title(main=main)
   invisible(sg)
+}
+
+triple2numb <- function(p,i,j,k)
+{
+  ## Purpose: transform a triple i-j-k into a unique number
+  ## ----------------------------------------------------------------------
+  ## Arguments:-p:number of nodes;-triple: i-j-k
+  ## ----------------------------------------------------------------------
+  ## Author: Diego Colombo, Date: 11 May 2010, 15:35
+  res <- k + p*(j + p*i)
+  res
+}
+
+find.upd <- function (path = NA, a = NA, n = NA, pag = NA, verbose = FALSE, unfVect=NULL, p=NA) 
+{
+  if (n <= dim(pag)[1]) {
+    final <- path[n]
+    mittle <- path[n - 1]
+    uncov.path <- NA
+    res <- FALSE
+    if (n == 2) {
+      if (path[1] == path[n]) {
+        uncov.path <- path
+        res <- TRUE
+      }
+      else {
+        if ((pag[path[1], path[n]] == 1 | pag[path[1], 
+                  path[n]] == 2) & (pag[path[n], path[1]] == 
+                                               1 | pag[path[n], path[1]] == 3)) {
+          ##check uncovered
+          if (pag[a,final]==0 & pag[final,a]==0 & final!=a) {
+            ##normal version
+            if (length(unfVect)==0) {
+              uncov.path <- path
+              res <- TRUE
+            }
+            ##conservative version
+            else {
+              ##check faithfulness of a-mittle-final
+              if (!any(unfVect==triple2numb(p,a,mittle,final)) & !any(unfVect==triple2numb(p,final,mittle,a))) {
+                uncov.path <- path
+                res <- TRUE
+              } 
+            }
+          }
+        }
+      }
+    }
+    else {
+      indB <- which((pag[mittle, ] == 1 | pag[mittle, ] == 
+                     2) & (pag[, mittle] == 1 | pag[, mittle] == 3))
+      indB <- setdiff(indB, a)
+      if (length(indB) > 0) {
+        counter <- 0
+        while ((!res) & (counter < length(indB))) {
+          counter <- counter + 1
+          b <- indB[counter]
+          if (!(b %in% path)) {
+            new.path <- c(path[1:(n - 1)], b, path[n])
+            check.uncov <- 0
+            for (l in 1:(n - 1)) {
+              if (pag[new.path[l], new.path[l + 2]] == 
+                  0 & pag[new.path[l + 2], new.path[l]] == 
+                  0) {
+                check.uncov <- check.uncov
+              }
+              else {
+                check.uncov <- check.uncov + 1
+              }
+            }
+            if (check.uncov == 0) {
+              if ((pag[b, final] == 1 | pag[b, final] == 
+                   2) & (pag[final, b] == 1 | pag[final, 
+                              b] == 3)) {
+                ##normal version
+                if (length(unfVect)==0) {
+                  uncov.path <- new.path
+                  res <- TRUE
+                }
+                ##conservative version
+                else {
+                  ##check faithfulness
+                  check.faith <- 0
+                  for (l in 1:(n - 1)) {
+                    if (!any(unfVect==triple2numb(p,new.path[l],new.path[l+1],new.path[l+2])) & !any(unfVect==triple2numb(p,new.path[l+2],new.path[l+1],new.path[l]))) {
+                      check.faith <- check.faith
+                    }
+                    else {
+                      check.faith <- check.faith + 1
+                    }
+                  }
+                }
+              }
+              else {
+                tmp <- find.upd(path = new.path, n = length(new.path), 
+                                pag = pag, verbose = verbose, unfVect=unfVect, p=p)
+                uncov.path <- tmp[[2]]
+                res <- tmp[[1]]
+              }
+            }
+            else {
+              tmp <- find.upd(path = new.path, n = length(new.path), 
+                              pag = pag, verbose = verbose, unfVect=unfVect, p=p)
+              uncov.path <- tmp[[2]]
+              res <- tmp[[1]]
+            }
+          }
+        }
+      }
+    }
+  }
+  return(list(res = res, uncov.path = uncov.path))
+}
+
+pc.cons.intern <- function(sk, suffStat, indepTest, alpha, verbose=FALSE, version.unf=c(NA,NA))
+{
+  ## Purpose:  For any unshielded triple A-B-C, consider all subsets D of
+  ## the neighbors of A and of the neighbors of C, and record the sets
+  ## D for which A and C are conditionally independent given D. If B
+  ## is in none of these sets, do nothing (it is a
+  ## v-structure). If B is in all sets, do nothing (it is not a
+  ## v-structure). If B is in some but not all sets, mark the triple as
+  ## "unfaithful".
+  ## ----------------------------------------------------------------------
+  ## Arguments: sk: output returned by function "skeleton"
+  ## suffStat: Sufficient statistics for independent tests
+  ## indepTest: Function for independence test
+  ## alpha: Significance level of test
+  ## version.unf[1]: Consider the case, where a indep c given S in the skeleton; furthermore, suppose that a
+  ## and c are dependent given every subset of the neigbors in the conservative step; then, some error must
+  ## have occured in the pc, but not necessarily in the fci (since here sepsets can contain nodes outside
+  ## the neighborhood). If this option is 1 the corresponding triple is marked 'faithful'; if this option
+  ## is 2, the corresponding triple is marked unfaithful.
+  ## version.unf[2]: 1 do not consider the initial sepset (same as in Tetrad),
+  ##         2 also consider the initial sepset 
+  ## ----------------------------------------------------------------------
+  ## Value: unfTripl: Triple that were marked as unfaithful
+  ## vers: vector containing the version (1 or 2) of the
+  ## corresponding triple saved in unfTripl (1=normal unfaithful triple
+  ## that is, B is in some sepsets; 2=triple coming from version.unf[1]==2
+  ## that is a and c are indep given the initial sepset but there doesn't
+  ## exist a subset of the neighbours that d-separates them)
+  ## ----------------------------------------------------------------------
+  ## Author: Markus Kalisch, Date: 12 Feb 2010, 10:43
+  ## Modification: Diego Colombo, Date: 6 May 2010, 9:13
+
+  skelObj <- list(G = as(sk@graph,"matrix"), sepset = sk@sepset)
+  g <- skelObj$G
+  stopifnot(all(g==t(g))) ## g is guaranteed to be symmetric
+  p <- dim(g)[1]
+  unfTripl <- vers <- rep(NA,min(p*p,100000))
+  if (sum(skelObj$G)>0) {  
+    ind <- which(g==1,arr.ind=TRUE)
+    tripleMatrix <- NULL
+    ## Go through all edges
+    for (i in 1:dim(ind)[1]) {
+      a <- ind[i,1]
+      b <- ind[i,2]
+      allC <- setdiff(which(g[b,]==1),a) ## a-b-c
+      newC <- allC[g[a,allC]==0]
+      tmpMatrix <- cbind(rep(a,length(newC)),rep(b,length(newC)),newC)
+      tripleMatrix <- rbind(tripleMatrix,tmpMatrix)
+      colnames(tripleMatrix) <- c("","","")
+    }
+    if (dim(tripleMatrix)[1]>=1) {
+      ## make sure that a < c
+      deleteDupl <- rep(0,dim(tripleMatrix)[1])
+      for (i in 1:dim(tripleMatrix)[1]) {
+        if (tripleMatrix[i,1]>tripleMatrix[i,3]) {
+          deleteDupl[i] <- 1
+        }
+      }
+      deletedupl <- which(deleteDupl==1)
+      if (length(deletedupl)>0) {
+        finalMatrix <- tripleMatrix[-deletedupl,, drop=FALSE]
+      }
+      else {
+        finalMatrix <- tripleMatrix
+      }
+      
+      counter <- 0
+      if (dim(finalMatrix)[1]>=1) {
+        for (i in 1:dim(finalMatrix)[1]) {
+          ##pay attention to the size of counter
+          if (counter==(length(unfTripl)-1)) {
+            tmp.vec <- rep(NA,min(p*p,100000))
+            unfTripl <- c(unfTripl,tmp.vec)
+            vers <- c(vers,tmp.vec)
+          }
+          a <- finalMatrix[i,1]
+          b <- finalMatrix[i,2]
+          c <- finalMatrix[i,3]
+          nbrsA <- which(g[,a]!=0) ## G symm; c no nbr of a
+          nbrsC <- which(g[,c]!=0)
+          if (verbose) {
+            cat("Sepset by skelet:", skelObj$sepset[[a]][[c]],"and",skelObj$sepset[[c]][[a]],"\n")
+          }
+          resTriple <- checkTriple(a,b,c,nbrsA,nbrsC,skelObj$sepset[[a]][[c]],skelObj$sepset[[c]][[a]],suffStat,indepTest,alpha,verbose=verbose,version.unf=version.unf)
+          ## 1: in NO set; 2: in ALL sets; 3: in SOME but not all
+          ## Take action only if case "3"
+          if (resTriple$decision == 3) {
+            ## record unfaithful triple
+            counter <- counter + 1
+            unfTripl[counter] <- triple2numb(p,a,b,c)
+            vers[counter] <- resTriple$version
+            if (verbose) {
+              cat("new unfTriple:", a,b,c, "\n")
+            }
+          }
+          ## can happen the case in Tetrad, so we must save the triple as unfaithful
+          ## a and c independent given S but not given subsets of the adj(a) or adj(c)
+          if ((version.unf[1]==2) & (resTriple$version==2) & (resTriple$decision!=3)){
+            counter <- counter + 1
+            unfTripl[counter] <- triple2numb(p,a,b,c)
+            vers[counter] <- resTriple$version
+            if (verbose) {
+              cat("new unfTriple:", a,b,c, "\n")
+            }
+          }
+        }
+      }
+    }
+  }
+  length(unfTripl) <- length(vers) <- counter
+  list(unfTripl = unfTripl, vers=vers)
+} ## function
+
+checkTriple <- function(a,b,c,nbrsA,nbrsC,sepsetA,sepsetC,suffStat,indepTest,alpha,verbose=FALSE,version.unf=c(NA,NA))
+{
+  ## Purpose: For each subset of nbrsA and nbrsC where a and c are cond. independent,
+  ## it is checked if b is in the conditioning set.
+  ## ----------------------------------------------------------------------
+  ## Arguments:
+  ## a,b,c: Nodes (positions in adjacency matrix)
+  ## nbrsA: Neighbors of a
+  ## nbrsC: Neighbors of c
+  ## sepsetA, sepsetsC: sepsets of a and c
+  ## suffStat: Sufficient statistics for independent tests
+  ## indepTest: Function for independence test
+  ## alpha: Significance level of test
+  ## version.unf[1]: 1 it checks if b is in some sepsets, 2 it also checks if
+  ## there exists a sepset which is a subset of the neighbours.
+  ## version.unf[2]: 1 same as Tetrad (do not consider the initial sepset),
+  ##         2 consider if b is in sepsetA or sepsetC
+  ## ----------------------------------------------------------------------
+  ## Value: res, vers
+  ## res = 1: b is in NO sepset (-> collider)
+  ## res = 2: b is in ALL sepsets (-> non-collider)
+  ## res = 3: b is in SOME but not all sepsets (-> unfaithful triplet)
+  ## vers: version (1 or 2) of the unfaithful triple (1=normal unfaithful triple
+  ## that is b is in some sepsets; 2=triple coming from version.unf[1]==2
+  ## that is a and c are indep given the initial sepset but there doesn't
+  ## exist a subset of the neighbours that d-separates them)
+  ## ----------------------------------------------------------------------
+  ## Author: Markus Kalisch, Date: 12 Feb 2010, 12:13
+  ## Modification: Diego Colombo, Date: 23 Apr 2010, 11:48
+
+  if ((length(nbrsA) == 0) & (length(nbrsC)==0)) {
+    res <- 1
+    vers <- 0
+  }
+  else {
+    ## make matrix that encodes all subsets of parents
+    tmpLA <- vector("list",length(nbrsA))
+    tmpLC <- vector("list",length(nbrsC))
+    for (i in 1:length(nbrsA)) {
+      tmpLA[[i]] <- c(0,1)
+    } ## for (i in 1:length(nbrsA))
+    allCombA <- expand.grid(tmpLA) ## all subsets of nbrsA
+    for (i in 1:length(nbrsC)) {
+      tmpLC[[i]] <- c(0,1)
+    } ## for (i in 1:length(nbrsC))
+    allCombC <- expand.grid(tmpLC) ## all subsets of nbrsC
+    ## loop through all subsets of parents
+    indep.true <- NULL
+    ##Tetrad
+    if (version.unf[2]==1) {
+      tmp <- NULL
+    }
+    ##our version
+    else {
+      ## check whether b was in original sepset
+      tmp <- (b %in% sepsetA | b %in% sepsetC)
+    }
+    vers <- 0
+    ## loop through all subsets of parents of A
+    for (i in 1:nrow(allCombA)) {
+      S <- nbrsA[which(allCombA[i,]!=0)]
+      pval <- indepTest(a, c, S, suffStat)
+      if (verbose) {
+        cat("(a,b,c)=", a, b, c," S =",S," - pval =",pval,"\n")
+      }
+      if (pval >= alpha) {
+        indep.true <- c(indep.true,TRUE)
+        ## is b in set?
+        tmp <- c(tmp,(b %in% S))
+        vers <- 1
+      } ## if (pval >= alpha)
+      if (length(tmp)>=2) {
+        if ((!all(tmp)) & (sum(tmp)>0)) {
+          ## result should be 3
+          break
+        } ## if ((!all(tmp)) & (sum(tmp)>0))
+      } ## if (length(tmp)>1)
+    } ## for (i in 1:nrow(allComb))
+
+    ## loop through all subsets of parents of C
+    for (i in 1:nrow(allCombC)) {
+      S <- nbrsC[which(allCombC[i,]!=0)]
+      pval <- indepTest(a, c, S, suffStat)
+      if (verbose) {
+        cat("(a,b,c)=", a, b, c," S =",S," - pval =",pval,"\n")
+      }
+      if (pval >= alpha) {
+        indep.true <- c(indep.true,TRUE)
+        ## is b in set?
+        tmp <- c(tmp,(b %in% S))
+        vers <- 1
+      } ## if (pval >= alpha)
+      if (length(tmp)>=2) {
+        if ((!all(tmp)) & (sum(tmp)>0)) {
+          ## result should be 3
+          break
+        } ## if ((!all(tmp)) & (sum(tmp)>0))
+      } ## if (length(tmp)>1)
+    } ## for (i in 1:nrow(allCombC))
+    
+    if (version.unf[1]==2 & length(indep.true)==0) {
+      vers <- 2
+    }
+    if (is.null(tmp)) tmp <- FALSE
+    
+    if (all(tmp)) {
+      res <- 2 ## in ALL sets
+    } else {
+      if (all(!tmp)) {
+        res <- 1 ## in NO set
+      } else {
+        res <- 3 ## in SOME sets
+      }
+    }
+  }
+  if (verbose) {
+    cat("res=", res, "vers=", vers, "\n")
+  }
+  list(decision=res, version=vers)
+}
+
+faith.check <- function(circle.path, unfVect, p)
+{
+  ## Purpose: check if every triple on the circle.path is faithful
+  ## ----------------------------------------------------------------------
+  ## Arguments: circle.path: circle path to check for faithfulness
+  ## ----------------------------------------------------------------------
+  ## Author: Diego Colombo, Date: 25 May 2010, 13:57
+  check.tmp <- 0
+  n <- length(circle.path)
+  for (l in 1:n) {
+    if (!any(unfVect==triple2numb(p,circle.path[l%%n],circle.path[(l+1)%%n],circle.path[(l+2)%%n])) & !any(unfVect==triple2numb(p,circle.path[(l+2)%%n],circle.path[(l+1)%%n],circle.path[l%%n]))) {
+      check.tmp <- check.tmp
+    }
+    else {
+      check.tmp <- check.tmp + 1
+    }
+  }
+  check.tmp
+}
+
+discr.path <- function (path = NA, n = NA, pag = NA, gInput = NA, verbose = FALSE) 
+{
+  if (n <= dim(pag)[1]) {
+    res <- pag
+    c <- path[1]
+    b <- path[2]
+    a <- path[3]
+    first.pos <- path[n]
+    del.pos <- path[n - 1]
+    indD <- which(res[first.pos, ] != 0 & res[, first.pos] == 
+                  2)
+    indD <- setdiff(indD, del.pos)
+    if (length(indD) > 0) {
+      for (k in 1:length(indD)) {
+        d <- indD[k]
+        if ((res[c, b] == 1) & !(d %in% path)) {
+          if (res[c, d] == 0 & res[d, c] == 0) {
+            if ((b %in% gInput@sepset[[c]][[d]]) | (b %in% 
+                                                    gInput@sepset[[d]][[c]])) {
+              if (verbose) {
+                cat("\nRule 4: There is a discriminating path between:", 
+                    d, "and", c, "for", b, "and", b, "is in Sepset of", 
+                    c, "and", d, ":", b, "->", c, "\n")
+              }
+              res[b, c] <- 2
+              res[c, b] <- 3
+            }
+            else {
+              if (verbose) {
+                cat("\nRule 4: There is a discriminating path between:", 
+                    d, "and", c, "for", b, "and", b, "is not in Sepset of", 
+                    c, "and", d, ":", a, "<->", b, "<->", 
+                    c, "\n")
+              }
+              res[a, b] <- res[b, c] <- res[c, b] <- 2
+            }
+          }
+          else {
+            if (res[first.pos, d] == 2 & res[d, c] == 
+                2 & res[c, d] == 3) {
+              new.path <- c(path, d)
+              m <- length(new.path)
+              res <- discr.path(path = new.path, n = m, 
+                                pag = res, gInput = gInput, verbose = verbose)
+            }
+            else {
+              res <- res
+            }
+          }
+        }
+      }
+    }
+  }
+  return(res)
+}
+
+ucp <- function (path = NA, pag = NA, n = NA, verbose = FALSE, unfVect=NULL, p=NA) 
+{
+  if (n <= dim(pag)[1]) {
+    res <- pag
+    indX <- which((res[path[n - 2], ] == 1 & res[, path[n - 
+                        2]] == 1))
+    if (length(indX) > 0) {
+      for (k in 1:length(indX)) {
+        x <- indX[k]
+        if (!(x %in% path) & res[path[1], path[n]] != 
+            3) {
+          new.path <- c(path[c(1:(n - 2))], x, path[n - 
+                                                    1], path[n])
+          if (res[x, path[n - 1]] == 1 & res[path[n - 
+                   1], x] == 1) {
+            check.uncov <- 0
+            for (l in 1:(n - 1)) {
+              if (res[new.path[l], new.path[l + 2]] == 
+                  0 & res[new.path[l + 2], new.path[l]] == 
+                  0) {
+                check.uncov <- check.uncov
+              }
+              else {
+                check.uncov <- check.uncov + 1
+              }
+            }
+            if (check.uncov == 0) {
+              ##normal version
+              if (length(unfVect)==0) {
+                res[new.path[1], new.path[n + 1]] <- res[new.path[n + 1], new.path[1]] <- 3
+                for (j in 1:n) {
+                  res[new.path[j], new.path[j + 1]] <- res[new.path[j + 1], new.path[j]] <- 3
+                }
+                if (verbose) {
+                  cat("\nRule 5: There exists an uncovered circle path between", 
+                      new.path[1], "and", new.path[n + 1], ":", new.path[1], "-", new.path[n + 1], "and for each edge on the path",  new.path, "\n")
+                }
+              }
+              ##conservative version
+              else {
+                faithres <- faith.check(new.path, unfVect, p)
+                if (faithres==0) {
+                  res[new.path[1], new.path[n + 1]] <- res[new.path[n + 1], new.path[1]] <- 3
+                  for (j in 1:n) {
+                    res[new.path[j], new.path[j + 1]] <- res[new.path[j + 1], new.path[j]] <- 3
+                  }
+                  if (verbose) {
+                    cat("\nRule 5': There exists a faithful uncovered circle path between", 
+                        new.path[1], "and", new.path[n + 1], ":", new.path[1], "-", new.path[n + 1], "and for each edge on the path",  new.path, "\n")
+                  }
+                }
+              }
+            }
+            else {
+              if (res[new.path[1], new.path[3]] == 0 & 
+                  res[new.path[3], new.path[1]] == 0) {
+                res <- ucp(path = new.path, pag = res, 
+                           n = length(new.path), verbose = verbose, unfVect=unfVect, p=p)
+              }
+            }
+          }
+          else {
+            res <- ucp(path = new.path, pag = res, n = length(new.path), 
+                       verbose = verbose, unfVect=unfVect, p=p)
+          }
+        }
+      }
+    }
+  }
+  return(res)
+}
+
+upd <- function (path = NA, pag = NA, n = NA, verbose = FALSE, unfVect=NULL, p=NA) 
+{
+  if (n <= dim(pag)[1]) {
+    res <- pag
+    c <- path[1]
+    a <- path[2]
+    b <- path[n - 1]
+    d <- path[n]
+    indX <- which((res[d, ] == 2 | res[d, ] == 1) & (res[, 
+                                        d] == 1 | res[, d] == 3) & (res[b, ] == 0 & res[, 
+                                                                         b] == 0))
+    if (length(indX) > 0) {
+      for (j in 1:length(indX)) {
+        x <- indX[j]
+        if ((!(x %in% path)) & (res[c, a] != 3)) {
+          new.path <- c(path[c(2:n)], x, path[1])
+          if ((res[x, c] == 1 | res[x, c] == 2) & (res[c, 
+                                     x] == 1 | res[c, x] == 3)) {
+            check.uncov <- 0
+            for (l in 1:(n - 1)) {
+              if (res[new.path[l], new.path[l + 2]] == 
+                  0 & res[new.path[l + 2], new.path[l]] == 
+                  0) {
+                check.uncov <- check.uncov
+              }
+              else {
+                check.uncov <- check.uncov + 1
+              }
+            }
+            if (check.uncov == 0) {
+              ##normal version
+              if (length(unfVect)==0) {
+                res[c, a] <- 3
+                if (verbose) {
+                  cat("\nRule 9: There exists an upd between", 
+                      new.path, ":", a, "->", c, "\n")
+                }
+              }
+              ##conservative version
+              else {
+                faithres <- faith.check(new.path, unfVect, p)
+                if (faithres==0) {
+                  res[c, a] <- 3
+                  if (verbose) {
+                    cat("\nRule 9': There exists a faithful upd between", 
+                        new.path, ":", a, "->", c, "\n")
+                  }
+                }
+              }
+            }
+            else {
+              rec.path <- c(path, x)
+              res <- upd(path = rec.path, pag = res, 
+                         n = length(rec.path), verbose = verbose, unfVect=unfVect, p=p)
+            }
+          }
+          else {
+            rec.path <- c(path, x)
+            res <- upd(path = rec.path, pag = res, n = length(rec.path), 
+                       verbose = verbose, unfVect=unfVect, p=p)
+          }
+        }
+      }
+    }
+  }
+  return(res)
 }

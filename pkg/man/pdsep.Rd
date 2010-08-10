@@ -7,11 +7,11 @@
   Possible-D-Sep. The graph is updated accordingly. }
 
 \usage{
-pdsep(G, suffStat, indepTest, p, sepset, pMax, NAdelete = TRUE, verbose
-= FALSE, alpha)
+pdsep(skel, suffStat, indepTest, p, sepset, pMax, NAdelete = TRUE, verbose
+= FALSE, alpha, unfVect = NULL, biCC = FALSE)
 }
 \arguments{
-  \item{G}{Boolean adjacency matrix (TRUE if there is an edge)}
+  \item{skel}{Graph object returned by \code{skeleton}}
   \item{suffStat}{Sufficient statistics: A list containing all necessary
     elements for making conditional independence decisions using
     function \code{indepTest}}
@@ -41,6 +41,11 @@ pdsep(G, suffStat, indepTest, p, sepset, pMax, NAdelete = TRUE, verbose
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
   \item{alpha}{Significance level for the individual conditional
     independence tests}
+  \item{unfVect}{Vector containing numbers that encode the unfaithful
+    triple (as returned by pc.cons.intern). This is needed in the conservative FCI.}
+  \item{biCC}{If TRUE, only nodes on some path between a and c are
+    considered to be in sepset(a,c). Uses biconnected components.}
+
 }
 \value{A list with several elements:
   \item{G}{Updated adjecency matrix}
@@ -107,13 +112,12 @@ alpha <- 0.01
 skel <- skeleton(suffStat, indepTest, p, alpha)
 
 ## prepare input for pdsep
-G <- (as(skel@graph,"matrix")!=0)
 sepset <- skel@sepset
 pMax <- skel@pMax
 n.edgetestsSKEL <- skel@n.edgetests
 max.ordSKEL <- skel@max.ord
 
 ## call pdsep to find possible d-sep and enhance the skeleton
-pdsepRes <- pdsep(G, suffStat, indepTest, p, sepset, pMax, NAdelete,
+pdsepRes <- pdsep(skel@graph, suffStat, indepTest, p, sepset, pMax, NAdelete,
 verbose = TRUE, alpha)
 }

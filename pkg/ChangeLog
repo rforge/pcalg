@@ -1,3 +1,21 @@
+2010-08-09  Markus Kalisch  <kalisch@stat.math.ethz.ch>
+
+	* R/pcalg.R (upd): improved by diego
+	(ucp): improved by diego
+	(discr.path): improved by diego
+	(faith.check): new by diego
+	(checkTriple): new by markus and diego
+	(pc.cons.intern): new by diego
+	(find.upd): improved by diego
+	(triple2numb): new by diego
+	(pc): option 'conservative' included
+	(udag2pdagRelaxed): option 'unfVect' added for use in
+	conservative PC
+	(fci): options 'conservative', 'biCC' and 'cons.rules' added
+	(pdsep): options 'unfVect' and 'biCC' added
+	(udag2pag): option 'unfVect' added for use in
+	conservative PC
+
 2010-04-14  Markus Kalisch  <kalisch@stat.math.ethz.ch>
 
 	* R/pcalg.R (randomDAG): Bug fix (Empty graph could not be

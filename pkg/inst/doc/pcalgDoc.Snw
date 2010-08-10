@@ -661,8 +661,8 @@ Glymour and Scheines (2000, page ...).
 As an example, we estimate the PAG of a graph with five nodes one of which
 is latent.
 <<fciExpl>>=
-## data(latentVarGraph)
-load("/u/kalisch/research/packages/pcalg/data/latentVarGraph.rda")
+data(latentVarGraph)
+## load("/u/kalisch/research/packages/pcalg/data/latentVarGraph.rda")
 
 ## Information on node one is latent
 ## Data matrix "dat" contains data on remaining four nodes
@@ -708,8 +708,8 @@ conditional independence relationships in the data, using the function
 
 <<idaExpl1>>=
 ## load data matrix "dat"
-load("/u/kalisch/research/packages/pcalg/data/idaData.rda")
-## data(idaData)
+## load("/u/kalisch/research/packages/pcalg/data/idaData.rda")
+data(idaData)
 
 ## estimate CPDAG (see the help-file of the function "pc")
 indepTest <- gaussCItest 

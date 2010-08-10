@@ -59,7 +59,11 @@ export(randomDAG,
        idaFast,
        legal.psep,
        qreach,
-       plotSG)
+       plotSG,
+       triple2numb,
+       pc.cons.intern,
+       checkTriple,
+       faith.check)
 
 exportClasses("pcAlgo")
 exportClasses("fciAlgo")

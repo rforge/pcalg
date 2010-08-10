@@ -9,7 +9,8 @@
 \usage{
 fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
 fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10),
-doPdsep = TRUE)
+doPdsep = TRUE, conservative = c(FALSE, FALSE), biCC = FALSE, cons.rules
+= FALSE)
 }
 
 \arguments{
@@ -50,7 +51,17 @@ doPdsep = TRUE)
     and all subsets of Possible-D-SEP are considered as conditioning 
     sets in the conditional independence tests. If FALSE, Possible-D-SEP
     is not computed, so that the algorithm simplifies to the 
-    Modified PC algorithm of Spirtes, Glymour and Scheines (2000, page ...).}
+    Modified PC algorithm of Spirtes, Glymour and Scheines (2000, page
+    ...).}
+  \item{conservative}{If the first argument is TRUE, the skeleton is
+  computed in a conservative way. If the second argument is TRUE, the
+  triples are checked for faithfulness again after possible deletion of
+  edges when finding Possible-D-SEP. For more information, see Details.}
+  \item{biCC}{If TRUE, only nodes on some path between a and c are
+  considered to be in sepset(a,c). Uses biconnected components.}
+  \item{cons.rules}{If TRUE, an orientation rule that needs information
+  on definite non-colliders is only applied, if the corresponding
+  subgraph relevant for the rule does not involve an unfaithful triple.}
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
  \code{\linkS4class{fciAlgo}}) containing the estimated graph 
@@ -104,8 +115,24 @@ doPdsep = TRUE)
   Subsequently, the v-structures are determined (using information in sepset). 
   Finally, as many as possible 
   undetermined edge marks (o) are determined using (a subset of) the 10
-  orientation rules given by Zhang (2009). 
-}
+  orientation rules given by Zhang (2009).
+
+  The conservative FCI consists of two parts. In the first part (done if
+  the first argument of \code{conservative} is \code{TRUE}), we call
+  \code{pc.cons.internal} with option \code{version.unf = c(1,2)} after
+  computing the skeleton. This is a slight variation of the conservative
+  PC: If a is independent of c given some S in the skeleton (i.e., the
+  edge a-c dropped out), but a and c remain dependent given all subsets
+  of neighbors of either a or c, we will call all triples a-b-c
+  'faithful'. This is because in the FCI, the true separating set might
+  be outside the neighborhood of either a or c. In the second part (done
+  if the second argument of \code{conservative} is \code{TRUE}), we call
+  \code{pc.cons.internal} with option \code{version.unf = c(1,2)} again
+  after Possilbe-D-Sep was found and the graph potentially lost some
+  edges. Therefore, new triples might have occured. If this second part
+  is done, the resulting information on sepset and faithful triples will
+  be used for the subsequent orientation rules. }
+
 \references{
   T.S. Richardson and P. Spirtes (2002). Ancestral graph Markov models.
   \emph{Annals of Statistics} \bold{30} 962-1030.

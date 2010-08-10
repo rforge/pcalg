@@ -60,9 +60,10 @@ par(mfrow=c(2,1))
 plot(gt) ; title("True graph")
 plot(gl) ; title("Estimated graph")
 (cg <- compareGraphs(gl,gt))
-}
 \dontshow{
 stopifnot(cg == c(1, 1/2, 4/5))
 }
+}
+
 }
 \keyword{graphs}

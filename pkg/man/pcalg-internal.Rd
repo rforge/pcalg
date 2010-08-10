@@ -22,6 +22,9 @@
 \alias{find.upd}
 \alias{legal.psep}
 \alias{gAlgo-class}
+\alias{triple2numb}
+\alias{checkTriple}
+\alias{faith.check}
 %
 \title{Internal Pcalg Functions}
 \description{

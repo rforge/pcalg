@@ -10,7 +10,7 @@ the option \code{psepset=TRUE}. The result is an adjacency matrix
 indicating also the edge marks.
 }
 \usage{
-udag2pag(gInput, rules, verbose)
+udag2pag(gInput, rules, verbose, unfVect = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -21,6 +21,8 @@ udag2pag(gInput, rules, verbose)
     rule. TRUE in position i means that rule i (Ri) will be used. Per
     default, all rules are set to TRUE.}
   \item{verbose}{0: No output; 1: Details. Default is 0.}
+  \item{unfVect}{Vector containing numbers that encode the unfaithful
+    triple (as returned by pc.cons.intern). This is needed in the conservative FCI.}
 }
 \details{
   The skeleton is extended to a PAG using rules by Zhang (see
