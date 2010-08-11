@@ -57,7 +57,7 @@ doPdsep = TRUE, conservative = c(FALSE, FALSE), biCC = FALSE, cons.rules
   computed in a conservative way. If the second argument is TRUE, the
   triples are checked for faithfulness again after possible deletion of
   edges when finding Possible-D-SEP. For more information, see Details.}
-  \item{biCC}{If TRUE, only nodes on some path between a and c are
+  \item{biCC}{If TRUE, only nodes on paths between a and c are
   considered to be in sepset(a,c). Uses biconnected components.}
   \item{cons.rules}{If TRUE, an orientation rule that needs information
   on definite non-colliders is only applied, if the corresponding
@@ -121,17 +121,18 @@ doPdsep = TRUE, conservative = c(FALSE, FALSE), biCC = FALSE, cons.rules
   the first argument of \code{conservative} is \code{TRUE}), we call
   \code{pc.cons.internal} with option \code{version.unf = c(1,2)} after
   computing the skeleton. This is a slight variation of the conservative
-  PC: If a is independent of c given some S in the skeleton (i.e., the
-  edge a-c dropped out), but a and c remain dependent given all subsets
-  of neighbors of either a or c, we will call all triples a-b-c
-  'faithful'. This is because in the FCI, the true separating set might
-  be outside the neighborhood of either a or c. In the second part (done
-  if the second argument of \code{conservative} is \code{TRUE}), we call
-  \code{pc.cons.internal} with option \code{version.unf = c(1,2)} again
-  after Possilbe-D-Sep was found and the graph potentially lost some
-  edges. Therefore, new triples might have occured. If this second part
-  is done, the resulting information on sepset and faithful triples will
-  be used for the subsequent orientation rules. }
+  PC (which used \code{version.unf = c(2,2)}): If a is independent of c
+  given some S in the skeleton (i.e., the edge a-c dropped out), but a
+  and c remain dependent given all subsets of neighbors of either a or
+  c, we will call all triples a-b-c 'faithful'. This is because in the
+  FCI, the true separating set might be outside the neighborhood of
+  either a or c. In the second part (done if the second argument of
+  \code{conservative} is \code{TRUE}), we call \code{pc.cons.internal}
+  with option \code{version.unf = c(1,2)} again after Possilbe-D-Sep was
+  found and the graph potentially lost some edges. Therefore, new
+  triples might have occured. If this second part is done, the resulting
+  information on sepset and faithful triples overwrites the previous and
+  will be used for the subsequent orientation rules. }
 
 \references{
   T.S. Richardson and P. Spirtes (2002). Ancestral graph Markov models.

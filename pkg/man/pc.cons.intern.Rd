@@ -43,7 +43,7 @@ version.unf = c(NA, NA))
     not necessarily in the fci (since here sepsets can contain nodes
     outside the neighborhood). If this option is 1 the corresponding triple
     is marked 'faithful'; if this option is 2, the corresponding triple is
-    marked unfaithful. Second argument: 1 do not consider the initial sepset (same as in Tetrad),
+    marked unfaithful. Second argument: 1 do not consider the initial sepset,
     2 also consider the initial sepset.}
   }
 

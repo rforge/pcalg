@@ -1,3 +1,9 @@
+2010-08-11  Markus Kalisch  <kalisch@stat.math.ethz.ch>
+
+	* tests/test_fci.R: Tests for conservative FCI added
+
+	* tests/test_pc.R: Tests for conservative PC added
+
 2010-08-09  Markus Kalisch  <kalisch@stat.math.ethz.ch>
 
 	* R/pcalg.R (upd): improved by diego
