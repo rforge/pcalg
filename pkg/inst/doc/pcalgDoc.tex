@@ -89,12 +89,12 @@ are infeasible because of time, cost or ethical constraints.
 
 Recently, we proposed and mathematically justified a statistical method
 (IDA) to obtain bounds on total causal effects based solely on
-observational data under some assumptions (see \cite{BuKaMa10}). Futhermore, we presented an
+observational data under some assumptions (see \cite{BuKaMa10}). Furthermore, we presented an
 experimental validation of our method on a large-scale biological system
 (see \cite{NatMethods10}).
 
 For further validation and broader use of this method, well documented and
-easy to use software is indispensible. Therefore, we wrote the R package
+easy to use software is indispensable. Therefore, we wrote the R package
 \pkg{pcalg}, which incorporates the above mentioned method (IDA).
 
 The objective of this paper is to introduce the R package \pkg{pcalg} and
@@ -117,7 +117,6 @@ package \pkg{pcalg} and the data set.
 \begin{Schunk}
 \begin{Sinput}
 >  library(pcalg, lib.loc = "/sfs/u/staff/kalisch/research/packages/pcalg.Rcheck")
->  ## load data matrix "datG"
 >  data(gaussianData)
 >  dim(datG)
 \end{Sinput}
@@ -126,30 +125,31 @@ package \pkg{pcalg} and the data set.
 \end{Soutput}
 \end{Schunk}
 
-In the next step, we use the function \code{pc} to produce an estimate of
-the underlying causal structure. Since this function is based on
-conditional independence tests, we need to define two things. First, we
-need a function that can compute conditional independence tests in a way
-that is suitable for the data at hand. For standard data types (Gaussian,
-discrete and binary) we provide predefined functions. See the example
-section in the help file of \code{pc} for more details. Secondly, we need a
-summary of the data (sufficient statistic) on which the conditional
-independence function can work. Each conditional independence test can be
-performed at a certain significance level \code{alpha}. This can be
-treated as a tuning parameter.
+In the next step, we use the function \code{pc} to produce an estimate
+of the underlying causal structure. Since this function is based on
+conditional independence tests, we need to define two things. First,
+we need a function that can compute conditional independence tests in
+a way that is suitable for the data at hand. For standard data types
+(Gaussian, discrete and binary) we provide predefined functions. See
+the example section in the help file of \code{pc} for more
+details. Secondly, we need a summary of the data (sufficient
+statistic) on which the conditional independence function can
+work. Each conditional independence test can be performed at a certain
+significance level \code{alpha}. This can be treated as a tuning
+parameter. In the following code, we use the predefined function
+\code{gaussCItest} as conditional independence test and create the
+corresponding sufficient statistic. The sufficient statistic consists
+of the correlation matrix of the data and the sample size. Then we use
+the function \code{pc} to estimate the causal structure and plot the
+result.
 
 \begin{Schunk}
 \begin{Sinput}
-> ## use predefined test for conditional independence tests on Gaussian data
 > indepTest <- gaussCItest 
-> ## the function gaussCItest needs as input the correlation matrix C and 
-> ## the sample size n (see ?gaussCItest)
 > suffStat <- list(C = cor(datG), n = 5000)
-> ## estimate the causal structure
 > pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
 > require(Rgraphviz)
 > par(mfrow = c(1,2))
-> ## plot the resulting causal structure
 > plot(gGtrue, main = "True DAG")
 > plot(pc.fit, main = "Estimated DAG")
 \end{Sinput}
@@ -211,7 +211,7 @@ error).
 If we would like to know the effect of a unit increase in variable $V1$ on
 variables $V3$, $V5$ and $V6$, we could simply call \code{ida} three
 times. However, a faster way is to call the function \code{idaFast}, which
-was taylored for such situations. 
+was tailored for such situations. 
 
 \begin{Schunk}
 \begin{Sinput}
@@ -281,7 +281,7 @@ in Bayesian networks. In Uncertainty in Artificial Intelligence, pages
 411–418, 1995a), so that the assumption does not seem to be very strict in
 practice.
 
-Since the DAG model encodes conditional idependences, it seems plausible
+Since the DAG model encodes conditional independences, it seems plausible
 that information on the latter helps to infer aspects of the former. This
 intuition is made precise in the PC algorithm (see \cite{SpirtesEtAl00}; PC stands for the
 initials of its inventor Peter Spirtes and Clark Glymour) which was proven
@@ -404,7 +404,7 @@ we only give a brief introduction to ancestral graphs.
 Ancestral graphs have nodes, which represent random variables and edges
 which represent some kind of dependence. The edges can be either directed,
 undirected or bidirected (note that in the context of ancestral graphs,
-undirected and bidrected edges do \emph{not} mean the same). There are two
+undirected and bidirected edges do \emph{not} mean the same). There are two
 rules that restrict the direction of edges:
 \begin{description}
   \item[1:] If $i$ and $j$ are joined by an edge with an arrowhead at $i$, then
@@ -504,7 +504,7 @@ causal structures and graphical models. Roughly speaking, if the underlying
 causal structure is a DAG, we observe data generated from this DAG and then
 estimate a DAG model (i.e. a graphical model) on this data, the estimated
 CPDAG represents the equivalence class of the DAG model describing the
-causal strucuture. This holds if we have enough samples and assuming that
+causal structure. This holds if we have enough samples and assuming that
 the true underlying causal structure is indeed a DAG without latent or
 selection variables. Note that even given an infinite amount of data, we
 usually cannot identify the true DAG itself, but only its equivalence
@@ -512,7 +512,7 @@ class. Every DAG in this equivalence is equally likely to represent the
 true causal structure. Taking this into account, we conceptually apply the
 do-calculus on each DAG within the equivalence class and thus obtain not a
 unique value for a causal effect but one value for each DAG in the causal
-strucure (in practice, we developed a local method that is faster but
+structure (in practice, we developed a local method that is faster but
 yields a similar result; see \ref{sec:ida} for more details). Therefore,
 even if we have an infinite amount of observations we can only report on a
 multiset of possible causal values (it is a multiset rather than a set
@@ -546,45 +546,42 @@ graphical models. The functions \code{ida} and \code{idaFast} are intended
 for estimating causal effects when the causal structure is known or was
 estimated.
 
-\subsection{skeleton}
+\subsection{skeleton}\label{sec:skel}
 The function \code{skeleton} implements (P1) and (P2) from Algorithm
 \ref{algo:pc}.The function can be called with the following arguments.
 
 \code{skeleton(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,\\ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf)}
 
-As was shown in section \ref{sec:gm}, the main task in finding the skeleton
-is to compute and test several conditional independencies. To keep the
-function flexible, \code{skeleton} takes as argument a function
-\code{indepTest} that performs these independence tests and returns a
-p-value. All information that is needed in the independence test can be
-passed in the argument \code{suffStat}. The only exceptions are the number
-of variables \code{p} and the significance level $\alpha$ for the conditional
-independence tests, which are passed separately. For
-convenience, we have preprogrammed versions of \code{indepTest} for
-Gaussian data (\code{gaussCItest}), discrete data (\code{disCItest}),
-and binary data (see \code{binCItest}). Each of these independence test
-functions need different arguments as input, which are described in the
-helpfiles of the functions. For example, when using
-\code{gaussCItest}, the input has to be a list containing the correlation
-matrix and the sample size of the data. Thus, the skeleton on the example
-data set \code{gaussianData} (which consists of $p=8$ variables and
-$n=5000$ samples) can be fitted in the following way. The estimated
-skeleton and the true underlying DAG are shown in Fig. \ref{fig:skelExpl}.
+As was shown in section \ref{sec:gm}, the main task in finding the
+skeleton is to compute and test several conditional independencies. To
+keep the function flexible, \code{skeleton} takes as argument a
+function \code{indepTest} that performs these independence tests and
+returns a p-value. All information that is needed in the independence
+test can be passed in the argument \code{suffStat}. The only
+exceptions are the number of variables \code{p} and the significance
+level $\alpha$ for the conditional independence tests, which are
+passed separately. For convenience, we have preprogrammed versions of
+\code{indepTest} for Gaussian data (\code{gaussCItest}), discrete data
+(\code{disCItest}), and binary data (see \code{binCItest}). Each of
+these independence test functions need different arguments as input,
+which are described in the helpfiles of the functions. For example,
+when using \code{gaussCItest}, the input has to be a list containing
+the correlation matrix and the sample size of the data.  In the
+following code, we estimate the skeleton on the data set
+\code{gaussianData} (which consists of $p=8$ variables and $n=5000$
+samples) and plot the results. The estimated skeleton and the true
+underlying DAG are shown in Fig. \ref{fig:skelExpl}.
 
 \begin{Schunk}
 \begin{Sinput}
 > require(pcalg)
-> ## load data matrix "datG"
 > data(gaussianData)
-> ## use predefined test for conditional independence on Gaussian data
 > indepTest <- gaussCItest 
-> ## the functin gaussCItest needs as input a list with
-> ## the correlation matrix C and the sample size n
 > suffStat <- list(C = cor(datG), n = 5000)
-> ## estimate the skeleton
 > pc.fit <- skeleton(suffStat, indepTest, p = 8, alpha = 0.01)
-> ## plot the resulting skeleton
-> plot(pc.fit, main = "")
+> par(mfrow = c(1,2))
+> plot(gGtrue, main = "True DAG")
+> plot(pc.fit, main = "Estimated Skeleton")
 \end{Sinput}
 \end{Schunk}
 \begin{figure}
@@ -596,31 +593,24 @@ skeleton and the true underlying DAG are shown in Fig. \ref{fig:skelExpl}.
 \end{center}
 \end{figure}
 
-To give another example, we show how to fit a skeleton to the example data
-set \code{discreteData} (which consists of $p=5$ discrete variables with 3,
-2, 3, 4 and 2 levels and $n=10000$ samples). The predefined test function
-\code{disCItest} is based on the $G^2$ statistics and takes as input a list
-containing the data matrix, a vector specifying the number of levels for
-each variable and an option which indicates whether to lower the degrees
-of freedom by one for each zero count. The estimated
-skeleton and the true underlying DAG are shown in Fig. \ref{fig:skel2}.
+To give another example, we show how to fit a skeleton to the example
+data set \code{discreteData} (which consists of $p=5$ discrete
+variables with 3, 2, 3, 4 and 2 levels and $n=10000$ samples). The
+predefined test function \code{disCItest} is based on the $G^2$
+statistics and takes as input a list containing the data matrix, a
+vector specifying the number of levels for each variable and an option
+which indicates whether to lower the degrees of freedom by one for
+each zero count. Finally, we plot the result. The estimated skeleton
+and the true underlying DAG are shown in Fig. \ref{fig:skel2}.
 
 \begin{Schunk}
 \begin{Sinput}
-> ## load data matrix "datD"
 > data(discreteData)
 > p <- ncol(datD)
-> ## use predefined test for discrete variables
 > indepTest <- disCItest
-> ## the function disCItest needs as input a list containing
-> ## the data matrix, the number of levels for each variable and 
-> ## a boolean variable indicating whether to adapt the degrees of freedom
-> ## for zero counts
 > suffStat <- list(dm = datD, nlev = c(3,2,3,4,2), adaptDF = FALSE)
-> ## estimate skeleton 
 > alpha <- 0.01 
 > skel.fit <- skeleton(suffStat, indepTest, p, alpha)
-> ## show estimated skeleton and true underlying DAG
 > par(mfrow = c(1,2))
 > plot(gDtrue, main = "True DAG")
 > plot(skel.fit, main = "Estimated Skeleton")
@@ -660,8 +650,8 @@ algorithm. First, the skeleton is computed using the function
 directed (steps (P3) and (P4)). The function can be called with the
 following arguments.
 
-\code{pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "rand",
+\code{pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, \\
+fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "rand", \\
 conservative = FALSE)}
      
 The options \code{suffStat, indepTest, p, alpha, fixedGaps,
@@ -716,22 +706,19 @@ variables in the adjacency matrix, and not with the names of the
 variables. When plotting the object, undirected and bidirected edges are
 equivalent.
 
-As an example, we estimate a CPDAG of the Gaussian data used in the example
-for the skeleton. The estimated CPDAG and the true underlying DAG are shown
-in Fig. \ref{fig:pcFit1}.
+As an example, we estimate a CPDAG of the Gaussian data used in the
+example for the skeleton in section \ref{sec:skel}. Again, we choose
+the predefined function \code{gaussCItest} as conditional independence
+test and create the corresponding test statistic. Finally, we plot the
+result. The estimated CPDAG and the true underlying DAG are shown in
+Fig. \ref{fig:pcFit1}.
 
 \begin{Schunk}
 \begin{Sinput}
-> ## load data matrix "datG"
 > data(gaussianData)
-> ## use predefined test for conditional independence on Gaussian data
 > indepTest <- gaussCItest 
-> ## the functin gaussCItest needs as input a list with
-> ## the correlation matrix C and the sample size n
 > suffStat <- list(C = cor(datG), n = 5000)
-> ## estimate the CPDAG
 > pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
-> ## plot the resulting CPDAG and show true underlying DAG
 > par(mfrow = c(1,2))
 > plot(gGtrue, main = "True DAG")
 > plot(pc.fit, main = "Estimated CPDAG")
@@ -765,7 +752,7 @@ $y$ to decide whether the edge $x-y$ should be removed.  Therefore, the
 initial skeleton may contain some superfluous edges.  These edges are
 removed in the next step of the algorithm. To decide whether edge $x$ o-o $y$
 should be removed, one computes Possible-D-SEP($x$) and Possible-D-SEP($y$)
-and performs conditional indepedence tests of $x$ and $y$ given all
+and performs conditional independence tests of $x$ and $y$ given all
 possible subsets of Possible-D-SEP($x$) and of Possible-D-SEP($y$) (see
 helpfile of function \code{pdsep}). Subsequently, all edges are transformed into o-o again and the v-structures are
 determined (using information in sepset).  Finally, as many as possible
@@ -779,8 +766,8 @@ The function can be called with the following arguments:
   doPdsep = TRUE, conservative = c(FALSE, FALSE), biCC = FALSE, \\
   cons.rules = FALSE))}
      
-The options \code{suffStat, indepTest, p, alpha, fixedGaps, fixedEdges
-,NAdelete} and \code{m.max} are identical to those in function
+The options \code{suffStat, indepTest, p, alpha, fixedGaps, fixedEdges,
+  NAdelete} and \code{m.max} are identical to those in function
 \code{skeleton}. The option \code{rules} contains a logical vector of
 length 10 indicating which rules should be used when directing edges. The
 order of the rules is taken from \cite{Zhang08-orientation-rules}.
@@ -804,8 +791,8 @@ neighbors of either $a$ or $c$, we will call all triples $a-b-c$
 outside the neighborhood of either $a$ or $c$. In the second part (done if
 the second argument of \code{conservative} is \code{TRUE}), we call
 \code{pc.cons.internal} with option \code{version.unf = c(1,2)} again after
-Possilbe-D-Sep was found and the graph potentially lost some
-edges. Therefore, new triples might have occured. If this second part is
+Possible-D-Sep was found and the graph potentially lost some
+edges. Therefore, new triples might have occurred. If this second part is
 done, the resulting information on sepset and faithful triples overwrites
 the previous and will be used for the subsequent orientation rules.
 
@@ -819,20 +806,26 @@ edges. If \code{cons.rules = TRUE}, an orientation rule that needs
 information on definite non-colliders is only applied, if the corresponding
 subgraph relevant for the rule does not involve an unfaithful triple.
 
-As an example, we estimate the PAG of a graph with five nodes. Node
-$V1$ is latent. In Fig. \ref{fig:fci} the true DAG and the estimated
-PAG are shown.
+As an example, we estimate the PAG of a graph with five nodes using
+the function \code{fci} and the predefined function \code{gaussCItest}
+as conditional independence test. Finally, we plot the result. Node $V1$ is latent. In
+Fig. \ref{fig:fci} the true DAG and the estimated PAG are shown.
           
 \begin{Schunk}
 \begin{Sinput}
 > data(latentVarGraph)
-> ## load("/u/kalisch/research/packages/pcalg/data/latentVarGraph.rda")
-> 
-> ## Information on node one is latent
-> ## Data matrix "datL" contains data on remaining four nodes
+> dim(datL)
+\end{Sinput}
+\begin{Soutput}
+[1] 10000     4
+\end{Soutput}
+\begin{Sinput}
 > suffStat1 <- list(C = cor(datL), n = nrow(datL))
 > indepTest1 <- gaussCItest 
 > pag.est <- fci(suffStat1, indepTest1, ncol(datL), alpha = 0.01, verbose=FALSE)
+> par(mfrow = c(1,2))
+> plot(g1, main = "True DAG")
+> plot(pag.est, main = "Estimated PAG")
 \end{Sinput}
 \end{Schunk}
 
@@ -840,8 +833,7 @@ PAG are shown.
   \begin{center}
 \includegraphics{pcalgDoc-013}
 \caption{True data generating DAG and estimated PAG. Variable 1 of the data
-generating DAG is latent. One can see that the PAG was estimated correctly
-(EXPLAIN MORE).}
+generating DAG is latent. One can see that the PAG was estimated correctly.}
 \label{fig:fci}
 \end{center}
 \end{figure}
@@ -869,10 +861,13 @@ conditional independence relationships in the data, using the function
 
 \begin{Schunk}
 \begin{Sinput}
-> ## load data matrix "datI"
-> ## load("/u/kalisch/research/packages/pcalg/data/idaData.rda")
 > data(idaData)
-> ## estimate CPDAG (see the help-file of the function "pc")
+> dim(datI)
+\end{Sinput}
+\begin{Soutput}
+[1] 10000     7
+\end{Soutput}
+\begin{Sinput}
 > indepTest <- gaussCItest 
 > suffStat <- list(C = cor(datI), n = nrow(datI))
 > pc.fit <- pc(suffStat, indepTest, p = ncol(datI), alpha = 0.01)
@@ -912,7 +907,7 @@ DAGs in the equivalence class are shown. DAG 4 is the true DAG.
 \includegraphics{pcalgDoc-018}
 \includegraphics{pcalgDoc-019}
 \caption{All DAGs belonging to the same equivalence class in which the true
-  DAG shwon in Fig. \ref{fig:ida} is.}
+  DAG shown in Fig. \ref{fig:ida} is.}
 \label{fig:allDags}
 \end{center}
 \end{figure}
@@ -936,8 +931,6 @@ produce six possible values of causal effects (one for each DAG).
 
 \begin{Schunk}
 \begin{Sinput}
-> ## Estimate the causal effect of 2 on 5
-> ## True Effekt of 2 on 5: 0.5529
 >      ida(2, 5, cov(datI), pc.fit@graph, method = "global", verbose = FALSE)
 \end{Sinput}
 \begin{Soutput}
@@ -1002,8 +995,6 @@ multiplicities are 1 for both values (they need not always be one).
 
 \begin{Schunk}
 \begin{Sinput}
-> ## Estimate the causal effect of 2 on 5
-> ## True Effekt of 2 on 5: 0.5529
 > ida(2,5,cov(datI),pc.fit@graph,method = "local")
 \end{Sinput}
 \begin{Soutput}
@@ -1065,19 +1056,19 @@ option \code{y.notparent = TRUE} is not implemented.
 
 Consider the example from section \ref{sec:ida}, where we computed the
 causal effect of $V2$ on $V5$. Now, we want to compute the effect of
-$V2$ on $V5$, $V6$ and $V7$ using \code{idaFast}.
+$V2$ on $V5$, $V6$ and $V7$ using \code{idaFast}. In the following
+example, we first simulate data and compute the true DAG, CPDAG and
+covariance matrix. Then, we estimate the causal effects using
+\code{ida} and \code{idaFast}.
 \begin{Schunk}
 \begin{Sinput}
-> ## Simulate the true DAG
 > set.seed(123)
 > p <- 7
 > myDAG <- randomDAG(p, prob = 0.2) ## true DAG
 > myCPDAG <- dag2cpdag(myDAG) ## true CPDAG
 > covTrue <- trueCov(myDAG) ## true covariance matrix
-> ## simulate data from the true DAG
 > n <- 10000
 > dat <- rmvDAG(n, myDAG)
-> ## estimate CPDAG (see help on the function "pc")
 > alpha <- 0.01
 > indepTest <- gaussCItest 
 > suffStat <- list(C = cor(dat), n = n)
@@ -1100,7 +1091,6 @@ $V2$ on $V5$, $V6$ and $V7$ using \code{idaFast}.
 [1] 1.0086138 0.8970766
 \end{Soutput}
 \begin{Sinput}
-> ## These three computations can be combinded in an efficient way by using idaFast
 > (eff.estF <- idaFast(2,c(5,6,7),cov(dat),pc.fit@graph))
 \end{Sinput}
 \begin{Soutput}
@@ -1123,7 +1113,7 @@ in the package.
 The functions \code{skeleton}, \code{pc} and \code{fci} need a
   function of the form \code{myCItest(x, y, S, suffStat)} to test
   conditional independence relationships. This function must return
-  the p-value of the conditional indepence test of $x$ and $y$ given
+  the p-value of the conditional independence test of $x$ and $y$ given
   $S$ given some information on the data in the form of a sufficient
   statistic (this might be simply the data frame with the original
   data), where $x$, $y$, $S$ indicate column positions of the original data
@@ -1148,10 +1138,8 @@ choose this simple method in our example. An implementation of the function
 \begin{Sinput}
 > myCItest <- function(x,y,S, suffStat) {
 +   if (length(S) == 0) {
-+     ## marginal case
 +     res <- cor.test(suffStat[,x],suffStat[,y])$p.value
 +   } else {
-+     ## conditional case
 +     resx <- resid(lm(suffStat[,x] ~ suffStat[,S]))
 +     resy <- resid(lm(suffStat[,y] ~ suffStat[,S]))
 +     res <- cor.test(resx, resy)$p.value
@@ -1168,9 +1156,7 @@ We can now use this function together with the \code{pc} function.
 > indepTest <- myCItest 
 > suffStat <- datG
 > pc.myfit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
-> ## plot the resulting causal structure
 > par(mfrow = c(1,2))
-> ## result using gaussCItest
 > plot(pc.fit, main = "gaussCItest")
 > plot(pc.myfit, main = "myCItest")
 \end{Sinput}
