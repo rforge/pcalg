@@ -75,17 +75,6 @@ pdsep(skel, suffStat, indepTest, p, sepset, pMax, NAdelete = TRUE, verbose
   To make the code more efficient, tests that have been done during
   finding the skeleton are not done again.}
 
-\value{A list with several elements:
-  \item{G}{Updated adjecency matrix}
-  \item{sepset}{Updated sepset}
-  \item{pMax}{Updated matrix containing maximal p-values}
-  \item{allPdsep}{Possible-D-Sep for each node}
-  \item{max.ord}{Maximal order of conditioning sets during independence
-    tests}
-  \item{n.edgetests}{Number of conditional edgetests performed grouped
-    by size of conditioning set.}
-}
-
 \references{
   P. Spirtes, C. Glymour and R. Scheines (2000).
   \emph{Causation, Prediction, and Search}, 2nd edition. The MIT Press.

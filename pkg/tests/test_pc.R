@@ -42,7 +42,7 @@ data(test_conservative_pc_data1)
 ## save(new.mat, file = "/u/kalisch/research/packages/pcalg/data/test_conservative_pc_data1.rda")
 ## load(file = "/u/kalisch/research/packages/pcalg/data/test_conservative_pc_data1.rda")
 
-suffStat.data <- list(C=cor(new.mat),n=n)
+suffStat.data <- list(C=cor(new.mat1),n=n)
 indepTest.data <- gaussCItest
   
 ##pcAlgo conservative sample
@@ -52,7 +52,7 @@ dag1 <- pc(suffStat.data, indepTest.data, p, alpha=0.005, verbose=FALSE, u2pd="r
 dag1.amat <- as(dag1@graph,"matrix")
 
 ##always save the transpose of the matrix to be loaded in Tetrad
-##write(t(new.mat),file="test_conservative_pc_data1.txt",ncolumns=p)
+##write(t(new.mat1),file="test_conservative_pc_data1.txt",ncolumns=p)
 
 ##check the output with Tetrad
 
@@ -84,7 +84,7 @@ data(test_conservative_pc_data2)
 ## save(new.mat, file = "/u/kalisch/research/packages/pcalg/data/test_conservative_pc_data2.rda")
 ## load(file = "/u/kalisch/research/packages/pcalg/data/test_conservative_pc_data2.rda")
 
-suffStat.data <- list(C=cor(new.mat),n=n)
+suffStat.data <- list(C=cor(new.mat2),n=n)
 indepTest.data <- gaussCItest
   
 ##pcAlgo conservative sample
@@ -124,7 +124,7 @@ data(test_conservative_pc_data3)
 
 ##always save the transpose of the matrix to be loaded in Tetrad
 ##write(t(new.mat),file="test_conservative_pc_data3.txt",ncolumns=15)
-suffStat.data <- list(C=cor(new.mat),n=n)
+suffStat.data <- list(C=cor(new.mat3),n=n)
 indepTest.data <- gaussCItest
   
 ##pcAlgo conservative sample

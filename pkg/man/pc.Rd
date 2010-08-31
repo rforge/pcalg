@@ -222,36 +222,36 @@ plot(fit, main = "Estimated CPDAG")
 ## Using discrete data
 ##################################################
 data(discreteData)
-p <- ncol(dat)
+p <- ncol(datD)
 ## define independence test (G^2 statistics)
 indepTest <- disCItest
 ## define sufficient statistics
-suffStat <- list(dm = dat, nlev = c(3,2,3,4,2), adaptDF = FALSE)
+suffStat <- list(dm = datD, nlev = c(3,2,3,4,2), adaptDF = FALSE)
 ## estimate CPDAG
 alpha <- 0.01 
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
 ## show estimated CPDAG
 plot(pc.fit, main = "Estimated CPDAG")
-rm(dat)
+rm(datD)
 }
 
 ##################################################
 ## Using binary data
 ##################################################
 data(binaryData)
-p <- ncol(dat)
+p <- ncol(datB)
 ## define independence test
 indepTest <- binCItest
 ## define sufficient statistics
-suffStat <- list(dm = dat, adaptDF = FALSE)
+suffStat <- list(dm = datB, adaptDF = FALSE)
 ## estimate CPDAG
 alpha <- 0.01 
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
 ## show estimated CPDAG
 plot(pc.fit, main = "Estimated CPDAG")
-rm(dat)
+rm(datB)
 }
 }
 \keyword{multivariate}

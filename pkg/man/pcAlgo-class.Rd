@@ -60,7 +60,7 @@ Class \code{"\linkS4class{gAlgo}"}.
 
 \seealso{
 	\code{\link{pc}}, \code{\link{skeleton}},
-	\code{\linkS4class{fci}}
+	\code{\linkS4class{fciAlgo}}
       }
 
 \examples{

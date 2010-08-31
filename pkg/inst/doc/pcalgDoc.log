@@ -1,4 +1,4 @@
-This is pdfTeXk, Version 3.1415926-1.40.9 (Web2C 7.5.7) (format=pdflatex 2008.10.6)  11 JUN 2010 08:54
+This is pdfTeXk, Version 3.1415926-1.40.9 (Web2C 7.5.7) (format=pdflatex 2008.10.6)  31 AUG 2010 09:59
 entering extended mode
  %&-line parsing enabled.
 **pcalgDoc.tex
@@ -341,27 +341,27 @@ Package: float 2001/11/08 v1.3d Float enhancements (AL)
 (./pcalgDoc.aux)
 \openout1 = `pcalgDoc.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 68.
-LaTeX Font Info:    Try loading font information for TS1+cmr on input line 68.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 76.
+LaTeX Font Info:    ... okay on input line 76.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 76.
+LaTeX Font Info:    ... okay on input line 76.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 76.
+LaTeX Font Info:    ... okay on input line 76.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 76.
+LaTeX Font Info:    ... okay on input line 76.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 76.
+LaTeX Font Info:    ... okay on input line 76.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 76.
+LaTeX Font Info:    ... okay on input line 76.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 76.
+LaTeX Font Info:    Try loading font information for TS1+cmr on input line 76.
 
 (/hg/s/linux/9/app/teTeX/08.08/texmf-dist/tex/latex/base/ts1cmr.fd
 File: ts1cmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 )
-LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 68.
-LaTeX Font Info:    ... okay on input line 68.
+LaTeX Font Info:    ... okay on input line 76.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 76.
+LaTeX Font Info:    ... okay on input line 76.
 
 (/hg/s/linux/9/app/teTeX/08.08/texmf-dist/tex/context/base/supp-pdf.tex
 [Loading MPS to PDF converter (version 2006.09.02).]
@@ -376,7 +376,7 @@ LaTeX Font Info:    ... okay on input line 68.
 \MPnumerator=\count111
 \everyMPtoPDFconversion=\toks20
 )
-Package hyperref Info: Link coloring ON on input line 68.
+Package hyperref Info: Link coloring ON on input line 76.
  (/hg/s/linux/9/app/teTeX/08.08/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2007/05/29 v2.31 Cross-referencing by name of section
 
@@ -385,51 +385,49 @@ Package: refcount 2008/08/11 v3.1 Data extraction from references (HO)
 )
 \c@section@level=\count112
 )
-LaTeX Info: Redefining \ref on input line 68.
-LaTeX Info: Redefining \pageref on input line 68.
+LaTeX Info: Redefining \ref on input line 76.
+LaTeX Info: Redefining \pageref on input line 76.
 
 (./pcalgDoc.out) (./pcalgDoc.out)
 \@outlinefile=\write4
 \openout4 = `pcalgDoc.out'.
 
 \AtBeginShipoutBox=\box30
- <jsslogo.jpg, id=71, 540.0175pt x 393.47pt>
+ <jsslogo.jpg, id=63, 540.0175pt x 393.47pt>
 File: jsslogo.jpg Graphic file (type jpg)
 
 <use jsslogo.jpg>
-LaTeX Font Info:    Try loading font information for T1+pzc on input line 68.
+LaTeX Font Info:    Try loading font information for T1+pzc on input line 76.
 
 (/hg/s/linux/9/app/teTeX/08.08/texmf-dist/tex/latex/psnfss/t1pzc.fd
 File: t1pzc.fd 2001/06/04 font definitions for T1/pzc.
 )
 LaTeX Font Info:    Font shape `T1/pzc/m/n' in size <28> not available
-(Font)              Font shape `T1/pzc/mb/it' tried instead on input line 68.
+(Font)              Font shape `T1/pzc/mb/it' tried instead on input line 76.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <10.95> on input line 68.
+(Font)              <10.95> on input line 76.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 68.
+(Font)              <8> on input line 76.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 68.
-LaTeX Font Info:    Try loading font information for T1+aess on input line 68.
+(Font)              <6> on input line 76.
+LaTeX Font Info:    Try loading font information for T1+aess on input line 76.
 
 (/hg/s/linux/9/app/teTeX/08.08/texmf-dist/tex/latex/ae/t1aess.fd
 File: t1aess.fd 1997/11/16 Font definitions for T1/aess.
 )
-Underfull \hbox (badness 10000) in paragraph at lines 75--76
+LaTeX Font Info:    Try loading font information for T1+aett on input line 76.
+
+(/hg/s/linux/9/app/teTeX/08.08/texmf-dist/tex/latex/ae/t1aett.fd
+File: t1aett.fd 1997/11/16 Font definitions for T1/aett.
+)
+Underfull \hbox (badness 10000) in paragraph at lines 83--84
 
  []
 
 [1
 
 {/hg/s/linux/9/app/teTeX/08.08/texmf-var/fonts/map/pdftex/updmap/pdftex.map} <.
-/jsslogo.jpg>]
-LaTeX Font Info:    Try loading font information for T1+aett on input line 105.
-
-
-(/hg/s/linux/9/app/teTeX/08.08/texmf-dist/tex/latex/ae/t1aett.fd
-File: t1aett.fd 1997/11/16 Font definitions for T1/aett.
-)
-<pcalgDoc-exIntroPlot.pdf, id=87, 505.89pt x 289.08pt>
+/jsslogo.jpg>] <pcalgDoc-exIntroPlot.pdf, id=86, 505.89pt x 289.08pt>
 File: pcalgDoc-exIntroPlot.pdf Graphic file (type pdf)
 
 <use pcalgDoc-exIntroPlot.pdf>
@@ -437,44 +435,25 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 \T1/aer/m/n/10.95 2 []
  []
 
-[2pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) 
-has been already used, duplicate ignored
-
-\AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
-                                                  \fi \fi 
-l.162 
-       <./pcalgDoc-exIntroPlot.pdf>]
-
-Package natbib Warning: Citation `lauritzen' on page 3 undefined on input line 
-216.
-
-
+[2]
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 [] \T1/aer/m/n/10.95 3
  []
 
-[3]
+[3pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) 
+has been already used, duplicate ignored
 
-Package natbib Warning: Citation `lauritzen' on page 4 undefined on input line 
-235.
-
-Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 282.
-
+\AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
+                                                  \fi \fi 
+l.238 
+       <./pcalgDoc-exIntroPlot.pdf>]
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 \T1/aer/m/n/10.95 4 []
  []
 
 [4]
-LaTeX Font Info:    Try loading font information for TS1+aer on input line 338.
-
-LaTeX Font Info:    No file TS1aer.fd. on input line 338.
-
-
-LaTeX Font Warning: Font shape `TS1/aer/m/n' undefined
-(Font)              using `TS1/cmr/m/n' instead
-(Font)              for symbol `textbullet' on input line 338.
-
+Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
+put line 323.
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 [] \T1/aer/m/n/10.95 5
@@ -486,127 +465,123 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
  []
 
 [6]
+Underfull \vbox (badness 1024) has occurred while \output is active []
+
+
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 [] \T1/aer/m/n/10.95 7
  []
 
-[7] <pcalgDoc-skelExpl1Plot.pdf, id=155, 505.89pt x 289.08pt>
-File: pcalgDoc-skelExpl1Plot.pdf Graphic file (type pdf)
-
-<use pcalgDoc-skelExpl1Plot.pdf>
-<pcalgDoc-skelExp2Plot.pdf, id=156, 505.89pt x 289.08pt>
-File: pcalgDoc-skelExp2Plot.pdf Graphic file (type pdf)
-
-<use pcalgDoc-skelExp2Plot.pdf>
+[7]
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 \T1/aer/m/n/10.95 8 []
  []
 
-[8pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) 
-has been already used, duplicate ignored
+[8] <pcalgDoc-skelExpl1Plot.pdf, id=203, 505.89pt x 289.08pt>
+File: pcalgDoc-skelExpl1Plot.pdf Graphic file (type pdf)
+
+<use pcalgDoc-skelExpl1Plot.pdf>
+Overfull \hbox (5.47499pt too wide) has occurred while \output is active
+[] \T1/aer/m/n/10.95 9
+ []
+
+[9] <pcalgDoc-skelExp2Plot.pdf, id=212, 505.89pt x 289.08pt>
+File: pcalgDoc-skelExp2Plot.pdf Graphic file (type pdf)
+
+<use pcalgDoc-skelExp2Plot.pdf>
+Overfull \hbox (3.28047pt too wide) in paragraph at lines 637--644
+[]\T1/aer/m/n/10.95 The in-for-ma-tion in \T1/aett/m/n/10.95 fixedGaps \T1/aer/
+m/n/10.95 and \T1/aett/m/n/10.95 fixedEdges \T1/aer/m/n/10.95 is used as fol-lo
+ws. The gaps given in \T1/aett/m/n/10.95 fixedGaps
+ []
+
+
+Overfull \hbox (10.94998pt too wide) has occurred while \output is active
+\T1/aer/m/n/10.95 10 []
+ []
+
+[10pdfTeX warning (ext4): destination with the same identifier (name{figure.2})
+ has been already used, duplicate ignored
 
 \AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
                                                   \fi \fi 
-l.526 
-       <./pcalgDoc-skelExpl1Plot.pdf>]
-Overfull \hbox (10.63069pt too wide) in paragraph at lines 544--545
+l.665 conservative = FALSE)}
+                             <./pcalgDoc-skelExpl1Plot.pdf>]
+Overfull \hbox (10.63069pt too wide) in paragraph at lines 665--666
 []\T1/aett/m/n/10.95 pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGa
 ps = NULL, fixedEdges
  []
 
 
-Overfull \hbox (5.47499pt too wide) has occurred while \output is active
-[] \T1/aer/m/n/10.95 9
- []
-
-[9pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) 
-has been already used, duplicate ignored
-
-\AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
-                                                  \fi \fi 
-l.574 
-       <./pcalgDoc-skelExp2Plot.pdf>]
-<pcalgDoc-011.pdf, id=177, 505.89pt x 289.08pt>
-File: pcalgDoc-011.pdf Graphic file (type pdf)
- <use pcalgDoc-011.pdf>
-Overfull \hbox (10.94998pt too wide) has occurred while \output is active
-\T1/aer/m/n/10.95 10 []
- []
-
-[10]
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/aer/m/n/10.95 11
  []
 
-[11pdfTeX warning (ext4): destination with the same identifier (name{figure.4})
+[11pdfTeX warning (ext4): destination with the same identifier (name{figure.3})
  has been already used, duplicate ignored
 
 \AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
                                                   \fi \fi 
-l.675 \begin{Sinput}
-                     <./pcalgDoc-011.pdf>]
-<pcalgDoc-013.pdf, id=192, 505.89pt x 289.08pt>
-File: pcalgDoc-013.pdf Graphic file (type pdf)
- <use pcalgDoc-013.pdf>
+l.713 
+       <./pcalgDoc-skelExp2Plot.pdf>]
+<pcalgDoc-011.pdf, id=234, 505.89pt x 289.08pt>
+File: pcalgDoc-011.pdf Graphic file (type pdf)
+ <use pcalgDoc-011.pdf>
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/aer/m/n/10.95 12 []
  []
 
-[12pdfTeX warning (ext4): destination with the same identifier (name{figure.5})
- has been already used, duplicate ignored
-
-\AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
-                                                  \fi \fi 
-l.724 > indepTest <- gaussCItest
-                                 <./pcalgDoc-013.pdf>]
-<pcalgDoc-idaExpl2.pdf, id=207, 505.89pt x 289.08pt>
-File: pcalgDoc-idaExpl2.pdf Graphic file (type pdf)
-
-<use pcalgDoc-idaExpl2.pdf> <pcalgDoc-017.pdf, id=210, 505.89pt x 289.08pt>
-File: pcalgDoc-017.pdf Graphic file (type pdf)
-
-<use pcalgDoc-017.pdf>
+[12]
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/aer/m/n/10.95 13
  []
 
-[13pdfTeX warning (ext4): destination with the same identifier (name{figure.6})
+[13pdfTeX warning (ext4): destination with the same identifier (name{figure.4})
  has been already used, duplicate ignored
 
 \AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
                                                   \fi \fi 
-l.782 I
-       n our example, there are six DAGs in the equivalence class. Therefore...
- <./pcalgDoc-idaExpl2.pdf>]
+l.812 U
+       sing the option \code{biCC = TRUE} only nodes on paths between $a$ an...
+ <./pcalgDoc-011.pdf>] <pcalgDoc-013.pdf, id=258, 505.89pt x 289.08pt>
+File: pcalgDoc-013.pdf Graphic file (type pdf)
+
+<use pcalgDoc-013.pdf>
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/aer/m/n/10.95 14 []
  []
 
-[14pdfTeX warning (ext4): destination with the same identifier (name{figure.7})
+[14pdfTeX warning (ext4): destination with the same identifier (name{figure.5})
  has been already used, duplicate ignored
 
 \AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
                                                   \fi \fi 
-l.828 
-       <./pcalgDoc-017.pdf>]
+l.861 
+       <./pcalgDoc-013.pdf>]
+<pcalgDoc-idaExpl2.pdf, id=272, 505.89pt x 289.08pt>
+File: pcalgDoc-idaExpl2.pdf Graphic file (type pdf)
+
+<use pcalgDoc-idaExpl2.pdf> <pcalgDoc-017.pdf, id=275, 505.89pt x 289.08pt>
+File: pcalgDoc-017.pdf Graphic file (type pdf)
+
+<use pcalgDoc-017.pdf> <pcalgDoc-018.pdf, id=276, 505.89pt x 289.08pt>
+File: pcalgDoc-018.pdf Graphic file (type pdf)
+
+<use pcalgDoc-018.pdf> <pcalgDoc-019.pdf, id=277, 505.89pt x 289.08pt>
+File: pcalgDoc-019.pdf Graphic file (type pdf)
+
+<use pcalgDoc-019.pdf>
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/aer/m/n/10.95 15
  []
 
-[15]
-Overfull \hbox (11.9855pt too wide) in paragraph at lines 898--903
-[]\T1/aer/m/n/10.95 The func-tion \T1/aett/m/n/10.95 idaFast \T1/aer/m/n/10.95 
-can be called with the fol-low-ing ar-gu-ments. \T1/aett/m/n/10.95 idaFast(x.po
-s, y.pos.set,
- []
+[15pdfTeX warning (ext4): destination with the same identifier (name{figure.6})
+ has been already used, duplicate ignored
 
-
-Overfull \hbox (34.58807pt too wide) in paragraph at lines 904--910
-[]\T1/aer/m/n/10.95 This call per-forms \T1/aett/m/n/10.95 ida(x.pos, y.pos, mc
-ov, graphEst, method="local", y.notparent=FALSE,
- []
-
-
+\AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
+                                                  \fi \fi 
+l.918 \end{figure}
+                   <./pcalgDoc-idaExpl2.pdf>]
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/aer/m/n/10.95 16 []
  []
@@ -616,60 +591,99 @@ Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 [] \T1/aer/m/n/10.95 17
  []
 
-[17] <pcalgDoc-024.pdf, id=249, 505.89pt x 289.08pt>
-File: pcalgDoc-024.pdf Graphic file (type pdf)
- <use pcalgDoc-024.pdf>
+[17pdfTeX warning (ext4): destination with the same identifier (name{figure.7})
+ has been already used, duplicate ignored
 
-Package natbib Warning: There were undefined citations.
-
-LaTeX Font Info:    Font shape `T1/pzc/m/n' in size <13> not available
-(Font)              Font shape `T1/pzc/mb/it' tried instead on input line 1039.
+\AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
+                                                  \fi \fi 
+l.997 
+       <./pcalgDoc-017.pdf> <./pcalgDoc-018.pdf> <./pcalgDoc-019.pdf>]
+Overfull \hbox (11.78293pt too wide) in paragraph at lines 1051--1057
+[]\T1/aer/m/n/10.95 The func-tion \T1/aett/m/n/10.95 idaFast \T1/aer/m/n/10.95 
+can be called with the fol-low-ing ar-gu-ments: \T1/aett/m/n/10.95 idaFast(x.po
+s, y.pos.set,
+ []
 
 
 Overfull \hbox (10.94998pt too wide) has occurred while \output is active
 \T1/aer/m/n/10.95 18 []
  []
 
-[18pdfTeX warning (ext4): destination with the same identifier (name{figure.8})
+[18]
+Overfull \hbox (34.58807pt too wide) in paragraph at lines 1058--1065
+[]\T1/aer/m/n/10.95 This call per-forms \T1/aett/m/n/10.95 ida(x.pos, y.pos, mc
+ov, graphEst, method="local", y.notparent=FALSE,
+ []
+
+
+Overfull \hbox (12.04291pt too wide) in paragraph at lines 1123--1132
+[]\T1/aer/m/n/10.95 The func-tions \T1/aett/m/n/10.95 skeleton\T1/aer/m/n/10.95
+ , \T1/aett/m/n/10.95 pc \T1/aer/m/n/10.95 and \T1/aett/m/n/10.95 fci \T1/aer/m
+/n/10.95 need a func-tion of the form \T1/aett/m/n/10.95 myCItest(x, y, S, suff
+Stat)
+ []
+
+
+Overfull \hbox (10.94998pt too wide) has occurred while \output is active
+[] \T1/aer/m/n/10.95 19
+ []
+
+[19] <pcalgDoc-026.pdf, id=328, 505.89pt x 289.08pt>
+File: pcalgDoc-026.pdf Graphic file (type pdf)
+ <use pcalgDoc-026.pdf>
+(./pcalgDoc.bbl
+Overfull \hbox (10.94998pt too wide) has occurred while \output is active
+\T1/aer/m/n/10.95 20 []
+ []
+
+[20])
+LaTeX Font Info:    Font shape `T1/pzc/m/n' in size <13> not available
+(Font)              Font shape `T1/pzc/mb/it' tried instead on input line 1197.
+
+
+Overfull \hbox (10.94998pt too wide) has occurred while \output is active
+[] \T1/aer/m/n/10.95 21
+ []
+
+[21pdfTeX warning (ext4): destination with the same identifier (name{figure.8})
  has been already used, duplicate ignored
 
 \AtBegShi@Output ...ipout \box \AtBeginShipoutBox 
                                                   \fi \fi 
-l.1039 \end{document}
-                      <./pcalgDoc-024.pdf>] (./pcalgDoc.aux)
+l.1197 \end{document}
+                      <./pcalgDoc-026.pdf>]
+Overfull \hbox (10.94998pt too wide) has occurred while \output is active
+\T1/aer/m/n/10.95 22 []
+ []
 
-LaTeX Font Warning: Some font shapes were not available, defaults substituted.
-
- ) 
+[22] (./pcalgDoc.aux) ) 
 Here is how much of TeX's memory you used:
- 6119 strings out of 493886
- 89703 string characters out of 1149008
- 153561 words of memory out of 3000000
- 9151 multiletter control sequences out of 10000+50000
- 50547 words of font info for 90 fonts, out of 3000000 for 5000
+ 6161 strings out of 493886
+ 90210 string characters out of 1149008
+ 154753 words of memory out of 3000000
+ 9178 multiletter control sequences out of 10000+50000
+ 54178 words of font info for 95 fonts, out of 3000000 for 5000
  714 hyphenation exceptions out of 8191
- 43i,9n,34p,353b,426s stack positions out of 5000i,500n,10000p,200000b,50000s
-{/hg/s/linux/9/app/teTeX/08.08/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t
-s1.enc}{/hg/s/linux/9/app/teTeX/08.08/texmf-dist/fonts/enc/dvips/base/8r.enc}</
-hg/s/linux/9/app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmb10.pfb></hg/s
-/linux/9/app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmbx10.pfb></hg/s/li
-nux/9/app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmbx12.pfb></hg/s/linux
-/9/app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmmi10.pfb></hg/s/linux/9/
-app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmmi8.pfb></hg/s/linux/9/app/
-teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmr10.pfb></hg/s/linux/9/app/teTe
-X/08.08/texmf-dist/fonts/type1/bluesky/cm/cmr8.pfb></hg/s/linux/9/app/teTeX/08.
-08/texmf-dist/fonts/type1/bluesky/cm/cmsl10.pfb></hg/s/linux/9/app/teTeX/08.08/
-texmf-dist/fonts/type1/bluesky/cm/cmsltt10.pfb></hg/s/linux/9/app/teTeX/08.08/t
-exmf-dist/fonts/type1/bluesky/cm/cmss10.pfb></hg/s/linux/9/app/teTeX/08.08/texm
-f-dist/fonts/type1/bluesky/cm/cmsy10.pfb></hg/s/linux/9/app/teTeX/08.08/texmf-d
-ist/fonts/type1/bluesky/cm/cmti10.pfb></hg/s/linux/9/app/teTeX/08.08/texmf-dist
-/fonts/type1/bluesky/cm/cmti12.pfb></hg/s/linux/9/app/teTeX/08.08/texmf-dist/fo
-nts/type1/bluesky/cm/cmtt10.pfb></hg/s/linux/9/app/teTeX/08.08/texmf-dist/fonts
-/type1/public/cm-super/sfrm1095.pfb></hg/s/linux/9/app/teTeX/08.08/texmf-dist/f
-onts/type1/urw/zapfchan/uzcmi8a.pfb>
-Output written on pcalgDoc.pdf (18 pages, 287042 bytes).
+ 43i,9n,34p,367b,422s stack positions out of 5000i,500n,10000p,200000b,50000s
+{/hg/s/linux/9/app/teTeX/08.08/texmf-dist/fonts/enc/dvip
+s/base/8r.enc}</hg/s/linux/9/app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/
+cmb10.pfb></hg/s/linux/9/app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmbx
+10.pfb></hg/s/linux/9/app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmbx12.
+pfb></hg/s/linux/9/app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmmi10.pfb
+></hg/s/linux/9/app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmmi8.pfb></h
+g/s/linux/9/app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmr10.pfb></hg/s/
+linux/9/app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmr8.pfb></hg/s/linux
+/9/app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmsl10.pfb></hg/s/linux/9/
+app/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmsltt10.pfb></hg/s/linux/9/a
+pp/teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmss10.pfb></hg/s/linux/9/app/
+teTeX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmsy10.pfb></hg/s/linux/9/app/teT
+eX/08.08/texmf-dist/fonts/type1/bluesky/cm/cmti10.pfb></hg/s/linux/9/app/teTeX/
+08.08/texmf-dist/fonts/type1/bluesky/cm/cmti12.pfb></hg/s/linux/9/app/teTeX/08.
+08/texmf-dist/fonts/type1/bluesky/cm/cmtt10.pfb></hg/s/linux/9/app/teTeX/08.08/
+texmf-dist/fonts/type1/urw/zapfchan/uzcmi8a.pfb>
+Output written on pcalgDoc.pdf (22 pages, 334539 bytes).
 PDF statistics:
- 337 PDF objects out of 1000 (max. 8388607)
- 74 named destinations out of 1000 (max. 131072)
- 190 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 420 PDF objects out of 1000 (max. 8388607)
+ 84 named destinations out of 1000 (max. 131072)
+ 184 words of extra memory for PDF output out of 10000 (max. 10000000)
 

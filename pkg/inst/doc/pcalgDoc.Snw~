@@ -79,65 +79,79 @@ interest in many fields of science. Usually, experimental intervention is
 used to find these relationships. In many settings, however, experiments
 are infeasible because of time, cost or ethical constraints.
 
-Recently, we proposed and mathematically justified a statistical
-method (IDA) to obtain bounds on total causal effects based solely on
-observational data [ANNALS]. Futhermore, we presented an experimental
-validation of our method on a large-scale biological system [NATURE METHODS].
+Recently, we proposed and mathematically justified a statistical method
+(IDA) to obtain bounds on total causal effects based solely on
+observational data on some assumptions [ANNALS]. Futhermore, we presented an
+experimental validation of our method on a large-scale biological system
+[NATURE METHODS].
 
 For further validation and broader use of this method, well documented and
 easy to use software is indispensible. Therefore, we wrote the R package
 \pkg{pcalg}, which incorporates the above mentioned method (IDA).
 
 The objective of this paper is to introduce the R package \pkg{pcalg} and
-explain the main range of functions.
+explain the range of functions.
 
-To get started quickly, we show how two of the main functions can be used
-in a typical application. Suppose we have a system described by some of variables
-and many observations of this system. Furthermore, assume that it seems plausible that
-there are no hidden variables and no feedback loops in the underlying
-causal system. We are interested in the change of variable Y if we changed
-the variable X by intervention, i.e., we seek the causal effect of X on Y.
-To fix ideas, we have simulated an example data set with $p = 8$ continuous
-variables with gaussian noise and $n = 5000$ observations, which we will
-now analyse. First, we load the package \pkg{pcalg} and the data set.
+To get started, we show how two of the main functions can be used in a
+typical application. Suppose we have a system described by some
+variables and many observations of this system. Furthermore, assume
+that it seems plausible that there are no hidden variables and no
+feedback loops in the underlying causal system. The causal structure
+of such a system can be conveniently represented by a Directed Acyclic
+Graph (DAG), where each node represents a variable and each arrow
+represents a direct cause. We are interested in the change of variable
+Y if we changed the variable X by intervention, i.e., we seek the
+causal effect of X on Y.  To fix ideas, we have simulated an example
+data set with $p = 8$ continuous variables with gaussian noise and $n
+= 5000$ observations, which we will now analyse. First, we load the
+package \pkg{pcalg} and the data set.
 
-<<exIntro1>>=
- library(pcalg)
- ## load data matrix "dat"
+<<exIntro1, echo = FALSE>>=
+ library(pcalg, lib.loc = "/sfs/u/staff/kalisch/research/packages/pcalg.Rcheck")
+ ## load data matrix "datG"
  data(gaussianData)
+ summary(datG)
 @
 
 In the next step, we use the function \code{pc} to produce an estimate of
 the underlying causal structure. Since this function is based on
-conditional independence tests, we need to define two things: First, a
-function that can compute conditional independence tests in a way that is
-suitable for the data at hand. For standard data types (gaussian, discrete
-and binary) we provide predefined functions. See the example section in the
-help file of \code{pc} for more details. Secondly, we need a summary of the
-data (sufficient statistic) on which the conditional independence function
-can work. Each conditional independence test can be performed at a certain
-significance level \texttt{alpha}. This can be treated as a tuning
-parameter.
+conditional independence tests, we need to define two things. First, we
+need a function that can compute conditional independence tests in a way
+that is suitable for the data at hand. For standard data types (gaussian,
+discrete and binary) we provide predefined functions. See the example
+section in the help file of \code{pc} for more details. Secondly, we need a
+summary of the data (sufficient statistic) on which the conditional
+independence function can work. Each conditional independence test can be
+performed at a certain significance level \texttt{alpha}. This can be
+treated as a tuning parameter.
 
 <<exIntroPlot>>=
 ## use predefined test for conditional independence tests on gaussian data
 indepTest <- gaussCItest 
 ## the function gaussCItest needs as input the correlation matrix C and 
 ## the sample size n (see ?gaussCItest)
-suffStat <- list(C = cor(dat), n = 5000)
+suffStat <- list(C = cor(datG), n = 5000)
 ## estimate the causal structure
 pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
+require(Rgraphviz)
+par(mfrow = c(1,2))
 ## plot the resulting causal structure
-plot(pc.fit, main = "")
+plot(gGtrue, main = "True DAG")
+plot(pc.fit, main = "Estimated DAG")
 @ 
 
 \begin{figure}
   \begin{center}
 <<exIntroPlot, echo = FALSE, fig = TRUE>>=
 ## plot the resulting causal structure
-plot(pc.fit, main = "")
+require(Rgraphviz)
+par(mfrow = c(1,2))
+## plot the resulting causal structure
+plot(gGtrue, main = "True DAG")
+plot(pc.fit, main = "Estimated DAG")
 @ 
-\caption{Estimated causal structure}
+\caption{True and estimated causal structure represented by a Directed
+  Acyclic Graph (DAG).}
 \label{fig:intro1}
 \end{center}
 \end{figure}
@@ -150,24 +164,36 @@ represent some uncertainty in the resulting model. A fundamental property
 of our method is, that some uncertainty of this kind sometimes remains,
 even if an infinite amount of data is available.
 
-Based on the inferred causal structure, we can estimate the causal
-effect of an intervention. Suppose, we would increase variable $V1$ by
-one unit, how much would variable 6 increase? Since the causal structure
-was not identified perfectly, we cannot expect to get a unique
-number. Instead, we will get a set of possible causal effects. This set can
-be computed by using the function \code{ida}. To provide full quantitative
-information, we need to pass the covariance matrix in addition to the
-estimated causal structure.
+Based on the inferred causal structure, we can estimate the causal effect
+of an intervention. For example, suppose, we would increase variable $V1$
+by external intervention by one unit. The recorded increase in variable
+$V6$ is the (total) causal effect of $V1$ on $V6$. More precisely, the
+causal effect $C(V1, V6, \tilde{x})$ of $V1$ from $V1 = \tilde{x}$ on $V6$
+is defined as
+\begin{eqnarray*}
+C(V1, V6, \tilde{x}) &=& E(V1|do(V6 = \tilde{x} + 1)) - E(V1|do(V6 = \tilde{x})) \ \mbox{or} \\
+C(V1, V6, \tilde{x}) &=& \frac{d}{dx} E(V1|do(V6 = x))|_{x=\tilde{x}}
+\end{eqnarray*}
+If the causal relationships are linear, the causal effect is independent of
+$\tilde{x}$.  
+
+Since the causal structure was not identified perfectly in our example, we
+cannot expect to get a unique number. Instead, we will get a set of
+possible causal effects. This set can be computed by using the function
+\code{ida}. To provide full quantitative information, we need to pass the
+covariance matrix in addition to the estimated causal structure.
 
 <<exIntro2>>=
-ida(1, 6, cov(dat), pc.fit@graph)
+ida(1, 6, cov(datG), pc.fit@graph)
 @ 
 
 Since we simulated the data, we know that the true value of the causal
 effect is 0.296. Thus, one of the two estimates is indeed close to the true
 value. Since both values are larger than zero, we can conclude, that
-variable $V1$ has a positive causal effect on variable $V6$ (note that we have no
-p-value to control the sampling error).
+variable $V1$ has a positive causal effect on variable $V6$. Thus, we can
+always estimate a lower bound to the absolute value of the causal
+effect. (Note that at this point we have no p-value to control the sampling
+error).
 
 If we would like to know the effect of a unit increase in variable $V1$ on
 variables $V3$, $V5$ and $V6$, we could simply call \code{ida} three
@@ -176,17 +202,19 @@ was taylored for such situations. Each row shows the set of effects on the
 target variable indicated by the row names.
 
 <<exIntro3>>=
-idaFast(1, c(3,5,6), cov(dat), pc.fit@graph)
+idaFast(1, c(3,5,6), cov(datG), pc.fit@graph)
 @ 
 
-The true values for the causal effects are 0.441, 0, 0.296 for variables
-$V3$, $V5$ and $V6$, respectively. The first row of the output,
-corresponding to variable $V3$, is uninformative: Although one entry comes
-close to the true value, the other estimate is 0. Thus, we cannot be sure
-if there is a causal effect at all. The second row, corresponding to
-variable $V5$, quite accurately indicates a causal effect that is very close
-to zero or no effect at all. The third row, corresponding to variable $V6$,
-was already discussed in the previous section on \code{ida}.
+Each row in the output shows the estimated set of possible causal
+effects on the target variable indicated by the row names.  The true
+values for the causal effects are 0.441, 0 and 0.296 for variables $V3$,
+$V5$ and $V6$, respectively. The first row of the output,
+corresponding to variable $V3$, is rather uninformative: Although one entry
+comes close to the true value, the other estimate is 0. Thus, we
+cannot be sure if there is a causal effect at all. The second row,
+corresponding to variable $V5$, quite accurately indicates a causal
+effect that is very close to zero or no effect at all. The third row,
+corresponding to variable $V6$, was already discussed above.
 
 \section{Methodological background}
 Our proposed method consists of two major steps. In the first step, the
@@ -217,13 +245,19 @@ model. The physical map here is a graph consisting of nodes and arrows
 (only one arrowhead per line) connecting the nodes. As a further
 restriction, the arrows must be directed in a way, so that it is not
 possible to trace a circle when following the arrowheads. The
-interpretation rule is called d-separation. This rule is a bit more
-intricate and we refer the reader to \cite{lauritzen} for more details
-[ODER HIER ERKLAEREN?]. The interpretation rule can be used in the
+interpretation rule for this graph is called d-separation. This rule is a
+bit more intricate and we refer the reader to \cite{lauritzen} for more
+details. The interpretation rule can be used in the
 following way when given a DAG model (FAITHFULNESS ERKLAEREN?): Two nodes
 $X$ and $Y$ are d-separated by a set of nodes $S$, if and only if the
 corresponding random variables $X$ and $Y$ are conditionally independent
-given the set of random variables $S$.
+given the set of random variables $S$. For the following, we will only deal
+with distributions where the following holds: For each distribution, it is
+possible to find a DAG, whose list of d-separation relations perfectly
+matches the list of conditional independencies of the distribution. Such
+distributions are called faithful. It has been shown that the set of
+distributions that are faithful is the overwhelming majority, so that the
+assumption does not seem to be very strict in practice. (XXX reformulate, reference)
 
 Since the DAG model encodes conditional idependences, it seems plausible
 that information on the latter helps to infer aspects of the former. This
@@ -443,13 +477,13 @@ $n=5000$ samples) can be fitted in the following way.
 
 <<skelExpl1>>=
 require(pcalg)
-## load data matrix "dat"
+## load data matrix "datG"
 data(gaussianData)
 ## use predefined test for conditional independence on gaussian data
 indepTest <- gaussCItest 
 ## the functin gaussCItest needs as input a list with
 ## the correlation matrix C and the sample size n
-suffStat <- list(C = cor(dat), n = 5000)
+suffStat <- list(C = cor(datG), n = 5000)
 ## estimate the skeleton
 pc.fit <- skeleton(suffStat, indepTest, p = 8, alpha = 0.01)
 ## plot the resulting skeleton
@@ -459,10 +493,12 @@ plot(pc.fit, main = "")
   \begin{center}
 <<skelExpl1Plot, fig = TRUE, echo = FALSE>>=
 ## plot the resulting skeleton
-plot(pc.fit, main = "")
+par(mfrow = c(1,2))
+plot(gGtrue, main = "True DAG")
+plot(pc.fit, main = "Estimated Skeleton")
 @ 
-\caption{Estimated skeleton fitted on the gaussian data set provided by the
-  package using the function \code{skeleton}.}
+\caption{True DAG and estimated skeleton fitted on the gaussian data set
+  provided by the package using the function \code{skeleton}.}
 \label{fig:skelExpl}
 \end{center}
 \end{figure}
@@ -476,16 +512,16 @@ each variable and and option which indicates whether to lower the degrees
 of freedom by one for each zero count.
 
 <<skelExp2>>=
-## load data matrix "dat"
+## load data matrix "datD"
 data(discreteData)
-p <- ncol(dat)
+p <- ncol(datD)
 ## use predefined test for discrete variables
 indepTest <- disCItest
 ## the function disCItest needs as input a list containing
 ## the data matrix, the number of levels for each variable and 
 ## a boolean variable indicating whether to adapt the degrees of freedom
 ## for zero counts
-suffStat <- list(dm = dat, nlev = c(3,2,3,4,2), adaptDF = FALSE)
+suffStat <- list(dm = datD, nlev = c(3,2,3,4,2), adaptDF = FALSE)
 ## estimate skeleton 
 alpha <- 0.01 
 skel.fit <- skeleton(suffStat, indepTest, p, alpha)
@@ -496,10 +532,11 @@ plot(skel.fit, main = "")
   \begin{center}
 <<skelExp2Plot, fig = TRUE, echo = FALSE>>=
 ## show estimated skeleton
-plot(skel.fit, main = "")
+par(mfrow = c(1,2))
+plot(gDtrue, main = "True DAG")
+plot(skel.fit, main = "Estimated Skeleton")
 @ 
-\caption{Estimated skeleton fitted on the discrete data set provided by the
-  package using the function \code{skeleton}.}
+\caption{True DAG and estimated skeleton fitted on the discrete data set provided by the package using the function \code{skeleton}.}
 \label{fig:skel2}
 \end{center}
 \end{figure}
@@ -570,13 +607,13 @@ As an example, we estimate a CPDAG of the gaussian data used in the example
 for the skeleton.
 
 <<pcExpl>>=
-## load data matrix "dat"
+## load data matrix "datG"
 data(gaussianData)
 ## use predefined test for conditional independence on gaussian data
 indepTest <- gaussCItest 
 ## the functin gaussCItest needs as input a list with
 ## the correlation matrix C and the sample size n
-suffStat <- list(C = cor(dat), n = 5000)
+suffStat <- list(C = cor(datG), n = 5000)
 ## estimate the skeleton
 pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
 ## plot the resulting skeleton
@@ -661,14 +698,14 @@ Glymour and Scheines (2000, page ...).
 As an example, we estimate the PAG of a graph with five nodes one of which
 is latent.
 <<fciExpl>>=
-## data(latentVarGraph)
-load("/u/kalisch/research/packages/pcalg/data/latentVarGraph.rda")
+data(latentVarGraph)
+## load("/u/kalisch/research/packages/pcalg/data/latentVarGraph.rda")
 
 ## Information on node one is latent
-## Data matrix "dat" contains data on remaining four nodes
-suffStat1 <- list(C = cor(dat), n = nrow(dat))
+## Data matrix "datL" contains data on remaining four nodes
+suffStat1 <- list(C = cor(datL), n = nrow(datL))
 indepTest1 <- gaussCItest 
-pag.est <- fci(suffStat1, indepTest1, ncol(dat), alpha = 0.01, verbose=FALSE)
+pag.est <- fci(suffStat1, indepTest1, ncol(datL), alpha = 0.01, verbose=FALSE)
 @
 
 \begin{figure}
@@ -707,14 +744,14 @@ conditional independence relationships in the data, using the function
 \code{pc} (see section \ref{sec:pc}).
 
 <<idaExpl1>>=
-## load data matrix "dat"
-load("/u/kalisch/research/packages/pcalg/data/idaData.rda")
-## data(idaData)
+## load data matrix "datI"
+## load("/u/kalisch/research/packages/pcalg/data/idaData.rda")
+data(idaData)
 
 ## estimate CPDAG (see the help-file of the function "pc")
 indepTest <- gaussCItest 
-suffStat <- list(C = cor(dat), n = nrow(dat))
-pc.fit <- pc(suffStat, indepTest, p = ncol(dat), alpha = 0.01)
+suffStat <- list(C = cor(datI), n = nrow(datI))
+pc.fit <- pc(suffStat, indepTest, p = ncol(datI), alpha = 0.01)
 @ 
 
 Comparing the true DAG with the CPDAG in Fig. \ref{fig:ida}, we see that
@@ -792,7 +829,7 @@ for each DAG).
 <<idaExpl4>>=
 ## Estimate the causal effect of 2 on 5
 ## True Effekt of 2 on 5: 0.5529
-     ida(2, 5, cov(dat), pc.fit@graph, method = "global", verbose = FALSE)
+     ida(2, 5, cov(datI), pc.fit@graph, method = "global", verbose = FALSE)
 @ 
 
 Among these six values, there are only two unique values: $-0.0049$ and
@@ -850,7 +887,7 @@ be one) and are thus different from the global method.
 <<idaExpl5>>=
 ## Estimate the causal effect of 2 on 5
 ## True Effekt of 2 on 5: 0.5529
-ida(2,5,cov(dat),pc.fit@graph,method = "local")
+ida(2,5,cov(datI),pc.fit@graph,method = "local")
 @ 
 
 One can take summary measures of the multiset. For example, the minimum
@@ -980,17 +1017,17 @@ We can now use this function together with the \code{pc} function.
 ## just re-execute this so that right pc.fit is active
 data(gaussianData)
 indepTest <- gaussCItest 
-## the functin gaussCItest needs as input the correlation matrix C and 
+## the function gaussCItest needs as input the correlation matrix C and 
 ## the sample size n
-suffStat <- list(C = cor(dat), n = 5000)
+suffStat <- list(C = cor(datG), n = 5000)
 ## estimate the causal structure
 pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
 @ 
 
 <<>>=
-data(gaussianData) ## contains data matrix dat
+data(gaussianData) ## contains data matrix datG
 indepTest <- myCItest 
-suffStat <- dat
+suffStat <- datG
 pc.myfit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
 ## plot the resulting causal structure
 par(mfrow = c(1,2))
