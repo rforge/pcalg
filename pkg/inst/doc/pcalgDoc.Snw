@@ -1,6 +1,8 @@
-\documentclass[article]{jss}
+\documentclass[nojss,article]{jss}
+%              ----- for the package-vignette, don't use JSS logo, etc
+% but when submitting, do
 \usepackage{algorithmic}
-\usepackage{algorithm} 
+\usepackage{algorithm}
 
 
 %%\VignetteIndexEntry{Causal Inference: The pcalg R package}
@@ -25,7 +27,7 @@
 \Plainauthor{Markus Kalisch, Martin M\"achler, Diego Colombo, Marloes
   H. Maathuis, Peter B\"uhlmann} %% comma-separated
 \Plaintitle{Causal Inference using Graphical Models: The package pcalg} %% without formatting
-\Shorttitle{Causal Inference} %% a short title (if necessary)
+\Shorttitle{Causal Graphical Models: Package pcalg} %% a short title (if necessary)
 
 %% an abstract and keywords
 \Abstract{ The \pkg{pcalg} package for \proglang{R} is a tool for
@@ -37,9 +39,9 @@
   and \code{idaFast}). In this document, we will give a brief overview of the
   methodological background of estimating intervention effects. Moreover,
   we will demonstrate how the package \pkg{pcalg} can be used for
-  estimating intervention effects and graphical models using examples.} 
+  estimating intervention effects and graphical models using examples.}
 
-\Keywords{IDA, PC, FCI, do-calculus, causality, graphical models, \proglang{R}} 
+\Keywords{IDA, PC, FCI, do-calculus, causality, graphical models, \proglang{R}}
 \Plainkeywords{IDA, PC, FCI, do-calculus, causality, graphical models, R} %% without formatting
 %% at least one keyword must be supplied
 
@@ -80,7 +82,7 @@
 %% Note that you should use the \pkg{}, \proglang{} and \code{} commands.
 
 \section{Introduction}
-THIS DOCUMENTATION IS STILL UNDER CONSTRUCTION! \\
+THIS DOCUMENTATION IS STILL UNDER CONSTRUCTION! \\ %% FIXME
 
 Understanding cause-effect relationships between variables is of primary
 interest in many fields of science. Usually, experimental intervention is
@@ -139,14 +141,14 @@ the function \code{pc} to estimate the causal structure and plot the
 result.
 
 <<exIntroPlot>>=
-indepTest <- gaussCItest 
+indepTest <- gaussCItest
 suffStat <- list(C = cor(datG), n = 5000)
 pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
 require(Rgraphviz)
 par(mfrow = c(1,2))
 plot(gGtrue, main = "True DAG")
 plot(pc.fit, main = "Estimated DAG")
-@ 
+@
 
 \begin{figure}
   \begin{center}
@@ -155,7 +157,7 @@ require(Rgraphviz)
 par(mfrow = c(1,2))
 plot(gGtrue, main = "True DAG")
 plot(pc.fit, main = "Estimated DAG")
-@ 
+@
 \caption{True and estimated causal structure represented by a Directed
   Acyclic Graph (DAG).}
 \label{fig:intro1}
@@ -181,7 +183,7 @@ C(V1, V6, \tilde{x}) &=& E(V1|do(V6 = \tilde{x} + 1)) - E(V1|do(V6 = \tilde{x}))
 C(V1, V6, \tilde{x}) &=& \frac{\partial}{\partial x} E(V1|do(V6 = x))|_{x=\tilde{x}}
 \end{eqnarray*}
 If the causal relationships are linear, the causal effect is independent of
-$\tilde{x}$.  
+$\tilde{x}$.
 
 Since the causal structure was not identified perfectly in our example, we
 cannot expect to get a unique number for the causal effect. Instead, we will get a set of
@@ -191,7 +193,7 @@ covariance matrix in addition to the estimated causal structure.
 
 <<exIntro2>>=
 ida(1, 6, cov(datG), pc.fit@graph)
-@ 
+@
 
 Since we simulated the data, we know that the true value of the causal
 effect is 0.296. Thus, one of the two estimates is indeed close to the true
@@ -204,11 +206,11 @@ error).
 If we would like to know the effect of a unit increase in variable $V1$ on
 variables $V3$, $V5$ and $V6$, we could simply call \code{ida} three
 times. However, a faster way is to call the function \code{idaFast}, which
-was tailored for such situations. 
+was tailored for such situations.
 
 <<exIntro3>>=
 idaFast(1, c(3,5,6), cov(datG), pc.fit@graph)
-@ 
+@
 
 Each row in the output shows the estimated set of possible causal
 effects on the target variable indicated by the row names.  The true
@@ -229,7 +231,7 @@ and can thus be an interesting object by itself. In the second step, we use
 the estimated causal structure and the do-calculus (see \cite{Pearl00}) to calculate
 bounds on causal effects.
 
-\subsection{Estimating graphical models} \label{sec:gm} 
+\subsection{Estimating graphical models} \label{sec:gm}
 Graphical models
 can be thought of as maps of dependence structures of a given probability
 distribution or a sample thereof (see for example \cite{lauritzen}). In
@@ -311,12 +313,12 @@ Completed Partially Directed Acyclic Graph (CPDAG).
 \STATE \textbf{INPUT:} Vertex set V, conditional independence information,
 significance level $\alpha$\\
 \STATE \textbf{OUTPUT:} Estimated CPDAG $\hat{G}$, separation sets $\hat{S}$\\
-\STATE \textbf{EDGE TYPES:} $\rightarrow$, $-$\\ 
+\STATE \textbf{EDGE TYPES:} $\rightarrow$, $-$\\
 \STATE \textbf{(P1)} Form the complete undirected graph on the vertex
 set V\\
 \STATE \textbf{(P2)} Test conditional independence given subsets of
 adjacency sets at a given significance level $\alpha$ and delete edges if
-conditional independent\\ 
+conditional independent\\
 \STATE \textbf{(P3)} Orient v-structures\\
 \STATE \textbf{(P4)} Orient remaining edges.\\
 \end{algorithmic}
@@ -364,7 +366,7 @@ In the case of hidden or selection variables, one could still visualize the
 underlying causal structure with a DAG that includes all observed, hidden
 and selection variables. However, when inferring the DAG from observational
 data, we don't know all hidden and selection variables. Therefore, it is
-practically unfeasible to find the true underlying DAG. 
+practically unfeasible to find the true underlying DAG.
 
 A more modest goal could be trying to find a structure, that represents all
 independence relationships among the observed variables (but not the latent
@@ -403,7 +405,7 @@ incorporates a third rule:
 \item[3:] Every missing edge corresponds to a conditional independence.
 \end{description}
 Ancestral graphs that obey all of the three above rules are called
-\emph{Maximal Ancestral Graphs (MAG)}. 
+\emph{Maximal Ancestral Graphs (MAG)}.
 
 The conditional independence statements of MAGs can be read off using the concept
 of m-separation, which is almost identical to the concept of d-separation
@@ -414,7 +416,7 @@ impossible. Therefore, one only reports on the equivalence class of DAGs in
 which the true DAG must lie. The equivalence class is visualized using a
 CPDAG. The same is true for MAGs: Finding a unique MAG from an independence
 oracle is in general impossible. One only reports on the equivalence class
-in which the true MAG lies. 
+in which the true MAG lies.
 
 An equivalence class of a MAG can be uniquely represented by a
 \emph{Partial Ancestral Graph (PAG)}. A PAG contains the following
@@ -470,7 +472,7 @@ on $x$. For binary random variables (with domain $\{0,1\}$) we use
 $E(X|do(Y=1)) - E(X|do(Y=0)) = P(X=1|do(Y=1)) - P(X=1|do(Y=0))$.
 
 The goal in the remaining section is to estimate the effect of an
-intervention if only observational data is available. 
+intervention if only observational data is available.
 \subsubsection{Without hidden and selection variables}
 If the causal structure is a known DAG and there are no hidden and
 selection variables, \cite{Pearl00} (Th 3.4.1) suggested a set of inference rules
@@ -560,20 +562,20 @@ underlying DAG are shown in Fig. \ref{fig:skelExpl}.
 <<skelExpl1>>=
 require(pcalg)
 data(gaussianData)
-indepTest <- gaussCItest 
+indepTest <- gaussCItest
 suffStat <- list(C = cor(datG), n = 5000)
 pc.fit <- skeleton(suffStat, indepTest, p = 8, alpha = 0.01)
 par(mfrow = c(1,2))
 plot(gGtrue, main = "True DAG")
 plot(pc.fit, main = "Estimated Skeleton")
-@ 
+@
 \begin{figure}
   \begin{center}
 <<skelExpl1Plot, fig = TRUE, echo = FALSE>>=
 par(mfrow = c(1,2))
 plot(gGtrue, main = "True DAG")
 plot(pc.fit, main = "Estimated Skeleton")
-@ 
+@
 \caption{True DAG and estimated skeleton fitted on the Gaussian data set
   provided by the package using the function \code{skeleton}.}
 \label{fig:skelExpl}
@@ -595,19 +597,19 @@ data(discreteData)
 p <- ncol(datD)
 indepTest <- disCItest
 suffStat <- list(dm = datD, nlev = c(3,2,3,4,2), adaptDF = FALSE)
-alpha <- 0.01 
+alpha <- 0.01
 skel.fit <- skeleton(suffStat, indepTest, p, alpha)
 par(mfrow = c(1,2))
 plot(gDtrue, main = "True DAG")
 plot(skel.fit, main = "Estimated Skeleton")
-@ 
+@
 \begin{figure}
   \begin{center}
 <<skelExp2Plot, fig = TRUE, echo = FALSE>>=
 par(mfrow = c(1,2))
 plot(gDtrue, main = "True DAG")
 plot(skel.fit, main = "Estimated Skeleton")
-@ 
+@
 \caption{True DAG and estimated skeleton fitted on the discrete data set provided by the package using the function \code{skeleton}.}
 \label{fig:skel2}
 \end{center}
@@ -627,11 +629,11 @@ If \code{indepTest} returns \code{NA} and the option \code{NAdelete} is
 
 The argument \code{m.max} is the maximal size of the conditioning sets that
 are considered in the conditional independence tests in (P2) of Algorithm \ref{algo:pc}.
-          
+
 Throughout, the function works with the column positions of the
 variables in the adjacency matrix, and not with the names of the variables.
 
-\subsection{pc} \label{sec:pc} 
+\subsection{pc} \label{sec:pc}
 
 The function \code{pc} implements all steps (P1) to (P4) of the PC
 algorithm. First, the skeleton is computed using the function
@@ -642,7 +644,7 @@ following arguments.
 \code{pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, \\
 fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "rand", \\
 conservative = FALSE)}
-     
+
 The options \code{suffStat, indepTest, p, alpha, fixedGaps,
   fixedEdges, NAdelete} and \code{m.max} are identical to those of the
 function \code{skeleton}.
@@ -688,7 +690,7 @@ marked 'unfaithful'. An unfaithful triple is not oriented as a v-structure.
 Furthermore, no later orientation rule that needs to know whether $a-b-c$
 is a v-structure or not is applied. (For more detail, see the help file of
 the internal function \code{pc.cons.intern} which is called with the argument
-\code{version.unf = c(2,2)}.)  
+\code{version.unf = c(2,2)}.)
 
 As with the skeleton, the algorithm works with the column positions of the
 variables in the adjacency matrix, and not with the names of the
@@ -704,13 +706,13 @@ Fig. \ref{fig:pcFit1}.
 
 <<pcExpl>>=
 data(gaussianData)
-indepTest <- gaussCItest 
+indepTest <- gaussCItest
 suffStat <- list(C = cor(datG), n = 5000)
 pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
 par(mfrow = c(1,2))
 plot(gGtrue, main = "True DAG")
 plot(pc.fit, main = "Estimated CPDAG")
-@ 
+@
 \begin{figure}
   \begin{center}
 <<fig = TRUE, echo = FALSE>>=
@@ -718,7 +720,7 @@ plot(pc.fit, main = "Estimated CPDAG")
 par(mfrow = c(1,2))
 plot(gGtrue, main = "True DAG")
 plot(pc.fit, main = "Estimated CPDAG")
-@ 
+@
 \caption{True DAG and estimated CPDAG fitted on the Gaussian data set provided by the
   package using the function \code{pc}.}
 \label{fig:pcFit1}
@@ -753,17 +755,17 @@ orientation rules given by \cite{Zhang08-orientation-rules}.
 
 The function can be called with the following arguments:
 
-\code{fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,\\ 
-  fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10),\\ 
+\code{fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,\\
+  fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10),\\
   doPdsep = TRUE, conservative = c(FALSE, FALSE), biCC = FALSE, \\
   cons.rules = FALSE))}
-     
+
 The options \code{suffStat, indepTest, p, alpha, fixedGaps, fixedEdges,
   NAdelete} and \code{m.max} are identical to those in function
 \code{skeleton}. The option \code{rules} contains a logical vector of
 length 10 indicating which rules should be used when directing edges. The
 order of the rules is taken from \cite{Zhang08-orientation-rules}.
-     
+
 The option \code{doPdsep} indicates, whether Possible-D-SEP should be
 computed. If TRUE, Possible-D-SEP is computed for all nodes, and all
 subsets of Possible-D-SEP are considered as conditioning sets in the
@@ -802,12 +804,12 @@ As an example, we estimate the PAG of a graph with five nodes using
 the function \code{fci} and the predefined function \code{gaussCItest}
 as conditional independence test. Finally, we plot the result. Node $V1$ is latent. In
 Fig. \ref{fig:fci} the true DAG and the estimated PAG are shown.
-          
+
 <<fciExpl>>=
 data(latentVarGraph)
 dim(datL)
 suffStat1 <- list(C = cor(datL), n = nrow(datL))
-indepTest1 <- gaussCItest 
+indepTest1 <- gaussCItest
 pag.est <- fci(suffStat1, indepTest1, ncol(datL), alpha = 0.01, verbose=FALSE)
 par(mfrow = c(1,2))
 plot(g1, main = "True DAG")
@@ -820,7 +822,7 @@ plot(pag.est, main = "Estimated PAG")
 par(mfrow = c(1,2))
 plot(g1, main = "True DAG")
 plot(pag.est, main = "Estimated PAG")
-@ 
+@
 \caption{True data generating DAG and estimated PAG. Variable 1 of the data
 generating DAG is latent. One can see that the PAG was estimated correctly.}
 \label{fig:fci}
@@ -851,10 +853,10 @@ conditional independence relationships in the data, using the function
 <<idaExpl1>>=
 data(idaData)
 dim(datI)
-indepTest <- gaussCItest 
+indepTest <- gaussCItest
 suffStat <- list(C = cor(datI), n = nrow(datI))
 pc.fit <- pc(suffStat, indepTest, p = ncol(datI), alpha = 0.01)
-@ 
+@
 
 Comparing the true DAG with the CPDAG in Fig. \ref{fig:ida}, we see that
 the CPDAG and the true DAG have the same skeleton. Moreover, the directed
@@ -867,7 +869,7 @@ edges bear the same meaning in a CPDAG, so they can be used interchangeably.
 par(mfrow = c(1,2))
 plot(myDAG, main = "True DAG")
 plot(pc.fit, main = "Estimated CPDAG")
-@ 
+@
 \caption{True DAG and estimated CPDAG for illustrating the function \code{ida}}
 \label{fig:ida}
 \end{center}
@@ -882,7 +884,7 @@ can only be directed as $V2 \rightarrow V3 \rightarrow V5$, $V2 \leftarrow
 V3 \leftarrow V5$ or $V2 \leftarrow V3 \rightarrow V5$ but not as $V2
 \rightarrow V3 \leftarrow V5$, since this would introduce a new colliding
 v-structure. There is only one remaining undirected edge ($V1-V6$), which
-can be directed in two ways. Thus, there are six valid DAGs 
+can be directed in two ways. Thus, there are six valid DAGs
 (i.e. they have no new v-structure and no cycle) and these form the
 equivalence class represented by the CPDAG. In Fig. \ref{fig:allDags}, all
 DAGs in the equivalence class are shown. DAG 4 is the true DAG.
@@ -894,21 +896,21 @@ gDag <- vector("list", nrow(ad))
 for (i in 1:nrow(ad)) gDag[[i]] <- as(matrix(ad[i, ], 7, 7), "graphNEL")
 par(mfrow = c(3,2))
 for (i in 1:6) plot(gDag[[i]], main = paste("DAG",i))
-@ 
+@
 \begin{figure}
   \begin{center}
 <<fig = TRUE, echo = FALSE>>=
 par(mfrow = c(1,2))
 for (i in 1:2) plot(gDag[[i]], main = paste("DAG",i))
-@ 
+@
 <<fig = TRUE, echo = FALSE>>=
 par(mfrow = c(1,2))
 for (i in 3:4) plot(gDag[[i]], main = paste("DAG",i))
-@ 
+@
 <<fig = TRUE, echo = FALSE>>=
 par(mfrow = c(1,2))
 for (i in 5:6) plot(gDag[[i]], main = paste("DAG",i))
-@ 
+@
 \caption{All DAGs belonging to the same equivalence class in which the true
   DAG shown in Fig. \ref{fig:ida} is.}
 \label{fig:allDags}
@@ -934,7 +936,7 @@ produce six possible values of causal effects (one for each DAG).
 
 <<idaExpl4>>=
      ida(2, 5, cov(datI), pc.fit@graph, method = "global", verbose = FALSE)
-@ 
+@
 
 Among these six values, there are only two unique values: $-0.0049$ and
 $0.5421$. This is because we compute \code{lm(V5 ~ V2 + pa(V2))} ($Vi$
@@ -950,14 +952,14 @@ times, while the other occurs four times.
 Since the data was simulated from a model, we know that the true value of the
 causal effect of $V2$ on $V5$ is $0.5529$. Thus, one of the two unique values is
 indeed very close to the true causal effect (the slight discrepancy is due
-to sampling error). 
+to sampling error).
 
 The function \code{ida} can be called with the following arguments.
 
-\code{ida(x.pos, y.pos, mcov, graphEst, method = "local", y.notparent = FALSE,\\ 
+\code{ida(x.pos, y.pos, mcov, graphEst, method = "local", y.notparent = FALSE,\\
 verbose = FALSE, all.dags = NA)},
 
-where \code{x.pos} denotes the column position of the cause variable, 
+where \code{x.pos} denotes the column position of the cause variable,
 \code{y.pos} denotes the column position of the effect
 variable, \code{mcov} is the covariance matrix of the original
 data, and \code{graphEst} is a graph object describing the causal structure
@@ -983,7 +985,7 @@ or a v-structure. However, \cite{BuKaMa10} showed
 that there is at least one DAG in the equivalence class for each such local
 configuration.  As a result, it follows that the multisets of total causal
 effects of the \code{global} and the \code{local} method have the same unique
-values. They may, however, have different multiplicities. 
+values. They may, however, have different multiplicities.
 
 Recall, that in the example using the global method, we obtained two unique
 values with multiplicities two and four yielding six numbers in total.
@@ -992,7 +994,7 @@ multiplicities are 1 for both values (they need not always be one).
 
 <<idaExpl5>>=
 ida(2,5,cov(datI),pc.fit@graph,method = "local")
-@ 
+@
 
 One can take summary measures of the multiset. For example, the minimum
 absolute value provides a lower bound on the size of the true causal
@@ -1063,7 +1065,7 @@ n <- 10000
 dat <- rmvDAG(n, myDAG)
 
 alpha <- 0.01
-indepTest <- gaussCItest 
+indepTest <- gaussCItest
 suffStat <- list(C = cor(dat), n = n)
 pc.fit <- pc(suffStat, indepTest, p, alpha)
 
@@ -1072,9 +1074,9 @@ pc.fit <- pc(suffStat, indepTest, p, alpha)
 (eff.est3 <- ida(2,7,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
 
 (eff.estF <- idaFast(2,c(5,6,7),cov(dat),pc.fit@graph))
-@ 
+@
 
-\subsection{Using a user specific conditional independence test} 
+\subsection{Using a user specific conditional independence test}
 
 In some cases it might be desirable to use a user specific conditional
 independence test instead of the provided ones. The \pkg{pcalg}
@@ -1118,24 +1120,24 @@ myCItest <- function(x,y,S, suffStat) {
   }
   res
 }
-@ 
+@
 We can now use this function together with the \code{pc} function.
 <<echo = FALSE>>=
 data(gaussianData)
-indepTest <- gaussCItest 
+indepTest <- gaussCItest
 suffStat <- list(C = cor(datG), n = 5000)
 pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
-@ 
+@
 
 <<>>=
 data(gaussianData) ## contains data matrix datG
-indepTest <- myCItest 
+indepTest <- myCItest
 suffStat <- datG
 pc.myfit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
 par(mfrow = c(1,2))
 plot(pc.fit, main = "gaussCItest")
 plot(pc.myfit, main = "myCItest")
-@ 
+@
 
 \begin{figure}
   \begin{center}
@@ -1143,7 +1145,7 @@ plot(pc.myfit, main = "myCItest")
 par(mfrow = c(1,2))
 plot(pc.fit, main = "gaussCItest")
 plot(pc.myfit, main = "myCItest")
-@ 
+@
 \caption{The estimated CPDAGs using the predefined and the user specified
   conditional independence test are identical.}
 \label{fig:userSpec}
@@ -1156,6 +1158,13 @@ conditional independence test. Note, however, that using
 our computer $0.067$ seconds using \code{gaussCItest} versus $4.448$
 seconds using \code{myCItest}).
 
+\section{Session Information}
+
+<<sessionInfo, results=tex>>=
+toLatex(sessionInfo())
+@
+
+%% FIXME
 ??? MENTION: S4-class gAlgo, pcAlgo, fciAlgo and inheritance.
 \bibliography{Mybib}
 
