@@ -174,35 +174,26 @@ conservative = FALSE)
   Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Martin Maechler.
 }
 \examples{
-## generate a random DAG:
-p <- 8
-set.seed(45)
-myDAG <- randomDAG(p, prob = 0.3)
-
-if (require(Rgraphviz)) {
-## plot the DAG
-plot(myDAG, main = "randomDAG(10, prob = 0.2)")
-}
-
 ##################################################
 ## Using Gaussian Data
 ##################################################
-## generate 10000 samples from the DAG using Gaussian errors
-n <- 10000
-d.mat <- rmvDAG(n, myDAG, errDist = "normal")
+## Load predefined data
+data(gmG)
+n <- nrow(gmG$x)
+p <- ncol(gmG$x)
 
 ## define independence test (partial correlations)
 indepTest <- gaussCItest 
 ## define sufficient statistics
-suffStat <- list(C = cor(d.mat), n = n)
+suffStat <- list(C = cor(gmG$x), n = n)
 ## estimate CPDAG
 alpha <- 0.01
-pc.fit <- pc(suffStat, indepTest, p, alpha)
+pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
 ## show estimated CPDAG
 par(mfrow=c(1,2))
 plot(pc.fit, main = "Estimated CPDAG")
-plot(myDAG, main = "True DAG")
+plot(gmG$g, main = "True DAG")
 }
 ##################################################
 ## Using d-separation oracle
@@ -210,48 +201,52 @@ plot(myDAG, main = "True DAG")
 ## define independence test
 indepTest <- dsepTest
 ## define sufficient statistics (d-separation oracle)
-suffStat <- list(g = myDAG, jp = johnson.all.pairs.sp(myDAG))
+suffStat <- list(g = gmG$g, jp = johnson.all.pairs.sp(gmG$g))
 ## estimate CPDAG
 alpha <- 0.01 ## value is irrelevant as dsepTest returns either 0 or 1
 fit <- pc(suffStat, indepTest, p, alpha)
 if (require(Rgraphviz)) {
 ## show estimated CPDAG
 plot(fit, main = "Estimated CPDAG")
+plot(gmG$g, main = "True DAG")
 }
 ##################################################
 ## Using discrete data
 ##################################################
-data(discreteData)
-p <- ncol(datD)
+## Load data
+data(gmD)
+p <- ncol(gmD$x)
 ## define independence test (G^2 statistics)
 indepTest <- disCItest
 ## define sufficient statistics
-suffStat <- list(dm = datD, nlev = c(3,2,3,4,2), adaptDF = FALSE)
+suffStat <- list(dm = gmD$x, nlev = c(3,2,3,4,2), adaptDF = FALSE)
 ## estimate CPDAG
 alpha <- 0.01 
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
 ## show estimated CPDAG
+par(mfrow = c(1,2))
 plot(pc.fit, main = "Estimated CPDAG")
-rm(datD)
+plot(gmD$g, main = "True DAG")
 }
 
 ##################################################
 ## Using binary data
 ##################################################
-data(binaryData)
-p <- ncol(datB)
+## Load binary data
+data(gmB)
+p <- ncol(gmB$x)
 ## define independence test
 indepTest <- binCItest
 ## define sufficient statistics
-suffStat <- list(dm = datB, adaptDF = FALSE)
+suffStat <- list(dm = gmB$x, adaptDF = FALSE)
 ## estimate CPDAG
 alpha <- 0.01 
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
 ## show estimated CPDAG
 plot(pc.fit, main = "Estimated CPDAG")
-rm(datB)
+plot(gmB$g, main = "True DAG")
 }
 }
 \keyword{multivariate}

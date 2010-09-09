@@ -116,10 +116,18 @@ data set with $p = 8$ continuous variables with Gaussian noise and $n
 = 5000$ observations, which we will now analyse. First, we load the
 package \pkg{pcalg} and the data set.
 
+%%- Used to generate gaussianData
+%%- set.seed(40)
+%%- p <- 8
+%%- n <- 5000
+%%- gGtrue <- randomDAG(p, prob = 0.3) ## true DAG
+%%- datG <- rmvDAG(n, gGtrue)
+%%- 
+
 <<exIntro1, echo = TRUE>>=
  library(pcalg, lib.loc = "/sfs/u/staff/kalisch/research/packages/pcalg.Rcheck")
- data(gaussianData)
- dim(datG)
+ ## data(gaussianData)
+load("/sfs/u/staff/kalisch/research/packages/pcalg/data/gmG.rda")
 @
 
 In the next step, we use the function \code{pc} to produce an estimate
@@ -142,8 +150,8 @@ result.
 
 <<exIntroPlot>>=
 indepTest <- gaussCItest
-suffStat <- list(C = cor(datG), n = 5000)
-pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
+suffStat <- list(C = cor(gmG$x), n = nrow(gmG$x))
+pc.fit <- pc(suffStat, indepTest, p = ncol(gmG$x), alpha = 0.01)
 require(Rgraphviz)
 par(mfrow = c(1,2))
 plot(gGtrue, main = "True DAG")
@@ -155,7 +163,7 @@ plot(pc.fit, main = "Estimated DAG")
 <<exIntroPlot, echo = FALSE, fig = TRUE>>=
 require(Rgraphviz)
 par(mfrow = c(1,2))
-plot(gGtrue, main = "True DAG")
+plot(gmG$g, main = "True DAG")
 plot(pc.fit, main = "Estimated DAG")
 @
 \caption{True and estimated causal structure represented by a Directed
@@ -192,36 +200,38 @@ possible causal effects. This set can be computed by using the function
 covariance matrix in addition to the estimated causal structure.
 
 <<exIntro2>>=
-ida(1, 6, cov(datG), pc.fit@graph)
+ida(1, 6, cov(gmG$x), pc.fit@graph)
 @
 
 Since we simulated the data, we know that the true value of the causal
-effect is 0.296. Thus, one of the two estimates is indeed close to the true
-value. Since both values are larger than zero, we can conclude, that
-variable $V1$ has a positive causal effect on variable $V6$. Thus, we can
-always estimate a lower bound to the absolute value of the causal
-effect. (Note that at this point we have no p-value to control the sampling
-error).
+effect is \Sexpr{round(causalEffect(gGtrue, 6, 1),2)}. Thus, one of the two
+estimates is indeed close to the true value. Since both values are larger
+than zero, we can conclude, that variable $V1$ has a positive causal effect
+on variable $V6$. Thus, we can always estimate a lower bound to the
+absolute value of the causal effect. (Note that at this point we have no
+p-value to control the sampling error).
 
 If we would like to know the effect of a unit increase in variable $V1$ on
-variables $V3$, $V5$ and $V6$, we could simply call \code{ida} three
+variables $V4$, $V5$ and $V6$, we could simply call \code{ida} three
 times. However, a faster way is to call the function \code{idaFast}, which
 was tailored for such situations.
 
 <<exIntro3>>=
-idaFast(1, c(3,5,6), cov(datG), pc.fit@graph)
-@
+idaFast(1, c(4,5,6), cov(gmG$x), pc.fit@graph)
+@ 
 
-Each row in the output shows the estimated set of possible causal
-effects on the target variable indicated by the row names.  The true
-values for the causal effects are 0.441, 0 and 0.296 for variables $V3$,
-$V5$ and $V6$, respectively. The first row of the output,
-corresponding to variable $V3$, is rather uninformative: Although one entry
-comes close to the true value, the other estimate is 0. Thus, we
-cannot be sure if there is a causal effect at all. The second row,
-corresponding to variable $V5$, quite accurately indicates a causal
-effect that is very close to zero or no effect at all. The third row,
-corresponding to variable $V6$, was already discussed above.
+Each row in the output shows the estimated set of possible causal effects
+on the target variable indicated by the row names.  The true values for the
+causal effects are \Sexpr{round(causalEffect(gGtrue, 4, 1),2)},
+\Sexpr{round(causalEffect(gGtrue, 5, 1),2)},
+\Sexpr{round(causalEffect(gGtrue, 6, 1),2)} for variables
+$V4$, $V5$ and $V6$, respectively. The first row, corresponding to
+variable $V4$, quite accurately indicates a causal effect that is very
+close to zero or no effect at all. The second row of the output,
+corresponding to variable $V5$, is rather uninformative: Although one entry
+comes close to the true value, the other estimate is 0. Thus, we cannot be
+sure if there is a causal effect at all. The third row, corresponding to
+$V6$ was already discussed above.
 
 \section{Methodological background}
 Our proposed method consists of two major steps. In the first step, the
@@ -561,19 +571,20 @@ underlying DAG are shown in Fig. \ref{fig:skelExpl}.
 
 <<skelExpl1>>=
 require(pcalg)
-data(gaussianData)
+## data(gmG)
+load("/sfs/u/staff/kalisch/research/packages/pcalg/data/gmG.rda")
 indepTest <- gaussCItest
-suffStat <- list(C = cor(datG), n = 5000)
-pc.fit <- skeleton(suffStat, indepTest, p = 8, alpha = 0.01)
+suffStat <- list(C = cor(gmG$x), n = nrow(gmG$x))
+pc.fit <- skeleton(suffStat, indepTest, p = ncol(gmG$x), alpha = 0.01)
 par(mfrow = c(1,2))
-plot(gGtrue, main = "True DAG")
+plot(gmG$g, main = "True DAG")
 plot(pc.fit, main = "Estimated Skeleton")
 @
 \begin{figure}
   \begin{center}
 <<skelExpl1Plot, fig = TRUE, echo = FALSE>>=
 par(mfrow = c(1,2))
-plot(gGtrue, main = "True DAG")
+plot(gmG$g, main = "True DAG")
 plot(pc.fit, main = "Estimated Skeleton")
 @
 \caption{True DAG and estimated skeleton fitted on the Gaussian data set
@@ -593,21 +604,22 @@ each zero count. Finally, we plot the result. The estimated skeleton
 and the true underlying DAG are shown in Fig. \ref{fig:skel2}.
 
 <<skelExp2>>=
-data(discreteData)
-p <- ncol(datD)
+## data(gmD)
+load("/sfs/u/staff/kalisch/research/packages/pcalg/data/gmD.rda")
+p <- ncol(gmD$x)
 indepTest <- disCItest
-suffStat <- list(dm = datD, nlev = c(3,2,3,4,2), adaptDF = FALSE)
+suffStat <- list(dm = gmD$x, nlev = c(3,2,3,4,2), adaptDF = FALSE)
 alpha <- 0.01
 skel.fit <- skeleton(suffStat, indepTest, p, alpha)
 par(mfrow = c(1,2))
-plot(gDtrue, main = "True DAG")
+plot(gmD$g, main = "True DAG")
 plot(skel.fit, main = "Estimated Skeleton")
 @
 \begin{figure}
   \begin{center}
 <<skelExp2Plot, fig = TRUE, echo = FALSE>>=
 par(mfrow = c(1,2))
-plot(gDtrue, main = "True DAG")
+plot(gmD$g, main = "True DAG")
 plot(skel.fit, main = "Estimated Skeleton")
 @
 \caption{True DAG and estimated skeleton fitted on the discrete data set provided by the package using the function \code{skeleton}.}
@@ -705,12 +717,13 @@ result. The estimated CPDAG and the true underlying DAG are shown in
 Fig. \ref{fig:pcFit1}.
 
 <<pcExpl>>=
-data(gaussianData)
+## data(gmG)
+load("/sfs/u/staff/kalisch/research/packages/pcalg/data/gmG.rda")
 indepTest <- gaussCItest
-suffStat <- list(C = cor(datG), n = 5000)
-pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
+suffStat <- list(C = cor(gmG$x), n = nrow(gmG$x))
+pc.fit <- pc(suffStat, indepTest, p = ncol(gmG$x), alpha = 0.01)
 par(mfrow = c(1,2))
-plot(gGtrue, main = "True DAG")
+plot(gmG$g, main = "True DAG")
 plot(pc.fit, main = "Estimated CPDAG")
 @
 \begin{figure}
@@ -718,7 +731,7 @@ plot(pc.fit, main = "Estimated CPDAG")
 <<fig = TRUE, echo = FALSE>>=
 ## plot the resulting CPDAG
 par(mfrow = c(1,2))
-plot(gGtrue, main = "True DAG")
+plot(gmG$g, main = "True DAG")
 plot(pc.fit, main = "Estimated CPDAG")
 @
 \caption{True DAG and estimated CPDAG fitted on the Gaussian data set provided by the
@@ -806,13 +819,13 @@ as conditional independence test. Finally, we plot the result. Node $V1$ is late
 Fig. \ref{fig:fci} the true DAG and the estimated PAG are shown.
 
 <<fciExpl>>=
-data(latentVarGraph)
-dim(datL)
-suffStat1 <- list(C = cor(datL), n = nrow(datL))
+## data(gmL)
+load("/sfs/u/staff/kalisch/research/packages/pcalg/data/gmL.rda")
+suffStat1 <- list(C = cor(gmL$x), n = nrow(gmL$x))
 indepTest1 <- gaussCItest
-pag.est <- fci(suffStat1, indepTest1, ncol(datL), alpha = 0.01, verbose=FALSE)
+pag.est <- fci(suffStat1, indepTest1, ncol(gmL$x), alpha = 0.01, verbose=FALSE)
 par(mfrow = c(1,2))
-plot(g1, main = "True DAG")
+plot(gmL$g, main = "True DAG")
 plot(pag.est, main = "Estimated PAG")
 @
 
@@ -820,7 +833,7 @@ plot(pag.est, main = "Estimated PAG")
   \begin{center}
 <<fig = TRUE, echo = FALSE>>=
 par(mfrow = c(1,2))
-plot(g1, main = "True DAG")
+plot(gmL$g, main = "True DAG")
 plot(pag.est, main = "Estimated PAG")
 @
 \caption{True data generating DAG and estimated PAG. Variable 1 of the data
@@ -850,12 +863,19 @@ on $V5$. First, we estimate the equivalence class of DAGs that describe the
 conditional independence relationships in the data, using the function
 \code{pc} (see section \ref{sec:pc}).
 
+%%- Generate IDA data:
+%%- set.seed(123)
+%%- p <- 7
+%%- n <- 10000
+%%- myDAG <- randomDAG(p, prob = 0.2) ## true DAG
+%%- datI <- rmvDAG(n, myDAG)
+
 <<idaExpl1>>=
-data(idaData)
-dim(datI)
+## data(idaData)
+load("/sfs/u/staff/kalisch/research/packages/pcalg/data/gmI.rda")
 indepTest <- gaussCItest
-suffStat <- list(C = cor(datI), n = nrow(datI))
-pc.fit <- pc(suffStat, indepTest, p = ncol(datI), alpha = 0.01)
+suffStat <- list(C = cor(gmI$x), n = nrow(gmI$x))
+pc.fit <- pc(suffStat, indepTest, p = ncol(gmI$x), alpha = 0.01)
 @
 
 Comparing the true DAG with the CPDAG in Fig. \ref{fig:ida}, we see that
@@ -867,7 +887,7 @@ edges bear the same meaning in a CPDAG, so they can be used interchangeably.
   \begin{center}
 <<idaExpl2, fig = TRUE, echo = FALSE>>=
 par(mfrow = c(1,2))
-plot(myDAG, main = "True DAG")
+plot(gmI$g, main = "True DAG")
 plot(pc.fit, main = "Estimated CPDAG")
 @
 \caption{True DAG and estimated CPDAG for illustrating the function \code{ida}}
@@ -935,7 +955,7 @@ function \code{ida} (using the option \code{method = global}) will
 produce six possible values of causal effects (one for each DAG).
 
 <<idaExpl4>>=
-     ida(2, 5, cov(datI), pc.fit@graph, method = "global", verbose = FALSE)
+     ida(2, 5, cov(gmI$x), pc.fit@graph, method = "global", verbose = FALSE)
 @
 
 Among these six values, there are only two unique values: $-0.0049$ and
@@ -993,7 +1013,7 @@ Applying the local method, we obtain the same unique values, but the
 multiplicities are 1 for both values (they need not always be one).
 
 <<idaExpl5>>=
-ida(2,5,cov(datI),pc.fit@graph,method = "local")
+ida(2,5,cov(gmI$x),pc.fit@graph,method = "local")
 @
 
 One can take summary measures of the multiset. For example, the minimum
@@ -1049,31 +1069,31 @@ option \code{y.notparent = TRUE} is not implemented.
 %%- \code{y.pos.set} at the same time, which seems not to be desirable.
 
 Consider the example from section \ref{sec:ida}, where we computed the
-causal effect of $V2$ on $V5$. Now, we want to compute the effect of
-$V2$ on $V5$, $V6$ and $V7$ using \code{idaFast}. In the following
-example, we first simulate data and compute the true DAG, CPDAG and
-covariance matrix. Then, we estimate the causal effects using
-\code{ida} and \code{idaFast}.
-<<>>=
-set.seed(123)
-p <- 7
-myDAG <- randomDAG(p, prob = 0.2) ## true DAG
-myCPDAG <- dag2cpdag(myDAG) ## true CPDAG
-covTrue <- trueCov(myDAG) ## true covariance matrix
+causal effect of $V2$ on $V5$. Now, we want to compute the effect of $V2$
+on $V5$, $V6$ and $V7$ using \code{idaFast} and compare the results with
+the output of \code{ida}. As expected, both methods lead to the same results.
 
-n <- 10000
-dat <- rmvDAG(n, myDAG)
+%%- set.seed(123)
+%%- p <- 7
+%%- n <- 10000
+%%- myDAG <- randomDAG(p, prob = 0.2) ## true DAG
+%%- dat <- rmvDAG(n, myDAG)
+
+<<>>=
+load("/sfs/u/staff/kalisch/research/packages/pcalg/data/gmI.rda")
+n <- nrow(gmI$x)
+p <- ncol(gmI$x)
 
 alpha <- 0.01
 indepTest <- gaussCItest
-suffStat <- list(C = cor(dat), n = n)
+suffStat <- list(C = cor(gmI$x), n = n)
 pc.fit <- pc(suffStat, indepTest, p, alpha)
 
-(eff.est1 <- ida(2,5,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
-(eff.est2 <- ida(2,6,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
-(eff.est3 <- ida(2,7,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
+(eff.est1 <- ida(2,5,cov(gmI$x),pc.fit@graph,method="local",verbose=FALSE))
+(eff.est2 <- ida(2,6,cov(gmI$x),pc.fit@graph,method="local",verbose=FALSE))
+(eff.est3 <- ida(2,7,cov(gmI$x),pc.fit@graph,method="local",verbose=FALSE))
 
-(eff.estF <- idaFast(2,c(5,6,7),cov(dat),pc.fit@graph))
+(eff.estF <- idaFast(2,c(5,6,7),cov(gmI$x),pc.fit@graph))
 @
 
 \subsection{Using a user specific conditional independence test}
@@ -1125,14 +1145,14 @@ We can now use this function together with the \code{pc} function.
 <<echo = FALSE>>=
 data(gaussianData)
 indepTest <- gaussCItest
-suffStat <- list(C = cor(datG), n = 5000)
+suffStat <- list(C = cor(gmG$x), n = 5000)
 pc.fit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
 @
 
 <<>>=
 data(gaussianData) ## contains data matrix datG
 indepTest <- myCItest
-suffStat <- datG
+suffStat <- gmG$x
 pc.myfit <- pc(suffStat, indepTest, p = 8, alpha = 0.01)
 par(mfrow = c(1,2))
 plot(pc.fit, main = "gaussCItest")

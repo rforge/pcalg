@@ -1,3 +1,12 @@
+2010-09-09  Markus Kalisch  <kalisch@stat.math.ethz.ch>
+
+	* inst/doc/pcalgDoc.Snw (effect): Adapted text and code to fit to
+	the new data files
+
+	* man/skeleton.Rd: Adapted examples to new form of data files
+
+	* man/pc.Rd: Adapted examples to new form of data files
+
 2010-08-11  Markus Kalisch  <kalisch@stat.math.ethz.ch>
 
 	* tests/test_fci.R: Tests for conservative FCI added

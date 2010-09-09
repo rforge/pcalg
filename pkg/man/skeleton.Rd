@@ -114,86 +114,79 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf)
   Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Martin Maechler.
 }
 \examples{
-## generate a random DAG:
-p <- 8
-set.seed(46)
-myDAG <- randomDAG(p, prob = 0.3)
-
-if (require(Rgraphviz)) {
-## plot the DAG
-plot(myDAG, main = "randomDAG(10, prob = 0.2)")
-}
-
 ##################################################
 ## Using Gaussian Data
 ##################################################
-## generate 10000 samples from the DAG using Gaussian errors 
-n <- 10000
-d.mat <- rmvDAG(n, myDAG, errDist = "normal")
+## Load predefined data
+data(gmG)
+n <- nrow(gmG$x)
+p <- ncol(gmG$x)
 
 ## define independence test (partial correlations)
 indepTest <- gaussCItest 
 ## define sufficient statistics
-suffStat <- list(C = cor(d.mat), n = n)
-## estimate skeleton
+suffStat <- list(C = cor(gmG$x), n = n)
+## estimate Skeleton
 alpha <- 0.01
-skel.fit <- skeleton(suffStat, indepTest, p, alpha)
+skeleton.fit <- skeleton(suffStat, indepTest, p, alpha)
 if (require(Rgraphviz)) {
-## show estimated skeleton
-par(mfrow = c(1,2))
-plot(skel.fit, main = "Estimated Skeleton")
-plot(myDAG, main = "True DAG")
+## show estimated Skeleton
+par(mfrow=c(1,2))
+plot(skeleton.fit, main = "Estimated Skeleton")
+plot(gmG$g, main = "True DAG")
 }
-
 ##################################################
 ## Using d-separation oracle
 ##################################################
 ## define independence test
 indepTest <- dsepTest
 ## define sufficient statistics (d-separation oracle)
-suffStat <- list(g = myDAG, jp = johnson.all.pairs.sp(myDAG))
-## estimate skeleton
+suffStat <- list(g = gmG$g, jp = johnson.all.pairs.sp(gmG$g))
+## estimate Skeleton
 alpha <- 0.01 ## value is irrelevant as dsepTest returns either 0 or 1
-skel.fit <- skeleton(suffStat, indepTest, p, alpha)
+fit <- skeleton(suffStat, indepTest, p, alpha)
 if (require(Rgraphviz)) {
-## show estimated skeleton
-plot(skel.fit, main = "Estimated Skeleton")
+## show estimated Skeleton
+plot(fit, main = "Estimated Skeleton")
+plot(gmG$g, main = "True DAG")
 }
-
 ##################################################
 ## Using discrete data
 ##################################################
-data(discreteData)
-p <- ncol(datD)
+## Load data
+data(gmD)
+p <- ncol(gmD$x)
 ## define independence test (G^2 statistics)
 indepTest <- disCItest
 ## define sufficient statistics
-suffStat <- list(dm = datD, nlev = c(3,2,3,4,2), adaptDF = FALSE)
-## estimate skeleton 
+suffStat <- list(dm = gmD$x, nlev = c(3,2,3,4,2), adaptDF = FALSE)
+## estimate Skeleton
 alpha <- 0.01 
-skel.fit <- skeleton(suffStat, indepTest, p, alpha, verbose = TRUE)
+skeleton.fit <- skeleton(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
-## show estimated skeleton
-plot(skel.fit, main = "Estimated Skeleton")
-rm(datD)
+## show estimated Skeleton
+par(mfrow = c(1,2))
+plot(skeleton.fit, main = "Estimated Skeleton")
+plot(gmD$g, main = "True DAG")
 }
 
 ##################################################
 ## Using binary data
 ##################################################
-data(binaryData)
-p <- ncol(datB)
+## Load binary data
+data(gmB)
+p <- ncol(gmB$x)
 ## define independence test
 indepTest <- binCItest
 ## define sufficient statistics
-suffStat <- list(dm = datB, adaptDF = FALSE)
-## estimate skeleton
+suffStat <- list(dm = gmB$x, adaptDF = FALSE)
+## estimate Skeleton
 alpha <- 0.01 
-skel.fit <- skeleton(suffStat, indepTest, p, alpha, verbose = TRUE)
+skeleton.fit <- skeleton(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
-## show estimated skeleton
-plot(skel.fit, main = "Estimated Skeleton")
-rm(datB)
+## show estimated Skeleton
+plot(skeleton.fit, main = "Estimated Skeleton")
+plot(gmB$g, main = "True DAG")
 }
 }
 \keyword{multivariate}
