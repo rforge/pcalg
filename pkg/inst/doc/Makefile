@@ -13,8 +13,9 @@ R_CALL = ${R_PROG} --no-init-file --no-save --silent
 
 TPUTS = ${TEXINPUTS}:${R_LIB}/share/texmf//
 
+## "Writing R Extensions" requires: 1st target must also clean up
 all: $(DRIVERS:=.pdf)
-	${RM} *.out
+	${MAKE} clean
 
 %.tex: %.Snw
 	${R_PROG} CMD Sweave $<
@@ -34,7 +35,7 @@ all: $(DRIVERS:=.pdf)
 purge:
 	$(RM) Rplots.pdf $(DRIVERS:=.out) *.aux *.log *.blg
 clean: purge
-	$(RM) $(DRIVERS:=.tex) $(DRIVERS:=.bbl)
+	$(RM) $(DRIVERS:=.tex) $(DRIVERS:=.bbl) $(DRIVERS:=-*.pdf)
 
 realclean: clean
 	$(RM) $(DRIVERS:=.pdf)
