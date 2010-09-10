@@ -11,9 +11,9 @@ Description: Standard and robust estimation of the equivalence class of a
        estimated if latent variables and/or selection variables are assumed
        to be present. Functions for causal inference using the IDA
        algorithm (based on do-calculus of Judea Pearl) are provided for CPDAGs.
-Depends: methods, MASS, abind, corpcor, graph, ggm,
-	 vcd, RBGL, sfsmisc, robustbase
-Suggests: Rgraphviz
+Depends: methods, abind, corpcor, vcd, RBGL, sfsmisc
+Imports: graph, robustbase, ggm, graphics
+Suggests: MASS, graph, Rgraphviz, ggm
 License: GPL (>= 2)
 URL: http://pcalg.r-forge.r-project.org/
 
