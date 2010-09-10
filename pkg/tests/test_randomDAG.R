@@ -12,6 +12,7 @@ nEdg <- 0
 nreps <- 10
 acyc <- rep(FALSE,nreps)
 
+stopifnot(require("ggm"))# e.g. isAcyclic() below
 for (i in 1:nreps) {
   myDAG <- randomDAG(p,s,lB,uB)
   amat <- as(myDAG,"matrix")
