@@ -1,8 +1,21 @@
-import(MASS, graph, robustbase)
 
+importFrom("robustbase",
+	   covOGK, hard.rejection,
+	   Qn, s_Qn, scaleTau2 #, Sn, s_Sn, s_mad, s_IQR
+	   )
+
+#import(graph)# importFrom(graph, )
+importClassesFrom("graph", graph, graphNEL)
+importMethodsFrom("graph",
+                  coerce,# as(., ...)
+                  numEdges)
+
+# importFrom("MASS", mvrnorm)
 importFrom("ggm", isAcyclic,transClos,topOrder)
+
 importFrom("graphics", plot)
 
+## FIXME: do *NOT* export those that are "internal" <--> man/pcalg-internal.Rd
 export(randomDAG,
        wgtMatrix,
        rmvDAG,
@@ -65,8 +78,9 @@ export(randomDAG,
        checkTriple,
        faith.check)
 
-exportClasses("pcAlgo")
-exportClasses("fciAlgo")
-exportClasses("gAlgo")
+exportClasses("pcAlgo",
+              "fciAlgo",
+              "gAlgo")
+
 exportMethods("summary","show","plot")
 
