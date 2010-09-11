@@ -4,7 +4,7 @@
 
 DRIVERS = pcalgDoc
 #R_LIB = /usr/local/lib/R
-R_LIB = /usr/local/app/R/current/
+R_LIB = /usr/local/app/R/current
 #R_PROG = R-devel
 R_PROG = R
 #R_CALL = ${R_PROG} --vanilla --silent
@@ -19,8 +19,6 @@ all: $(DRIVERS:=.pdf)
 
 %.tex: %.Snw
 	${R_PROG} CMD Sweave $<
-##	echo "library(tools); Sweave('$<')" | ${R_CALL}
-## I cannot yet set '--vanilla' when using 'R CMD Sweave' ...
 
 %.R: %.Rnw
 	${R_PROG} CMD Stangle $<
@@ -36,6 +34,7 @@ purge:
 	$(RM) Rplots.pdf $(DRIVERS:=.out) *.aux *.log *.blg
 clean: purge
 	$(RM) $(DRIVERS:=.tex) $(DRIVERS:=.bbl) $(DRIVERS:=-*.pdf)
+	$(RM) $(DRIVERS:=-*.pdf) $(DRIVERS:=-*.eps)
 
 realclean: clean
 	$(RM) $(DRIVERS:=.pdf)

@@ -1,14 +1,15 @@
 \name{pdsep}
 \alias{pdsep}
-\title{Compute possible d-sep for each node and test and adapt graph accordingly}
-
-\description{This function computes the Possible-D-Sep for each node
+\title{Compute Possible-D-Sep for Each Node and Adapt Graph Accordingly}
+\description{
+  This function computes the Possible-D-Sep for each node
   and tests conditional independence given all subsets of
-  Possible-D-Sep. The graph is updated accordingly. }
-
+  Possible-D-Sep.  The graph is updated accordingly.
+}
 \usage{
-pdsep(skel, suffStat, indepTest, p, sepset, pMax, NAdelete = TRUE, verbose
-= FALSE, alpha, unfVect = NULL, biCC = FALSE)
+pdsep(skel, suffStat, indepTest, p, sepset,
+      pMax, NAdelete = TRUE, verbose = FALSE,
+      alpha, unfVect = NULL, biCC = FALSE)
 }
 \arguments{
   \item{skel}{Graph object returned by \code{skeleton}}
@@ -41,11 +42,11 @@ pdsep(skel, suffStat, indepTest, p, sepset, pMax, NAdelete = TRUE, verbose
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
   \item{alpha}{Significance level for the individual conditional
     independence tests}
-  \item{unfVect}{Vector containing numbers that encode the unfaithful
-    triple (as returned by pc.cons.intern). This is needed in the conservative FCI.}
+  \item{unfVect}{vector containing numbers that encode the unfaithful
+    triple (as returned by \code{\link{pc.cons.intern}}).  This is
+    needed in the conservative FCI.}
   \item{biCC}{If TRUE, only nodes on some path between a and c are
     considered to be in sepset(a,c). Uses biconnected components.}
-
 }
 \value{A list with several elements:
   \item{G}{Updated adjecency matrix}
@@ -62,7 +63,7 @@ pdsep(skel, suffStat, indepTest, p, sepset, pMax, NAdelete = TRUE, verbose
   and there is an undirected path U between x and y in G such that for
   every subpath a,b,c of U either b is a collider on the subpath, or b
   is not a definite noncollider on U and a,b and c form a trianglein G.
-  
+
   Each pair of nodes x and y which is connected by
   an edge is tested for conditional independence given every subset in
   Possible-D-Sep of x or of y. The conditional independence is tested on
@@ -79,10 +80,9 @@ pdsep(skel, suffStat, indepTest, p, sepset, pMax, NAdelete = TRUE, verbose
   P. Spirtes, C. Glymour and R. Scheines (2000).
   \emph{Causation, Prediction, and Search}, 2nd edition. The MIT Press.
 }
-
 \seealso{\code{\link{qreach}} for a fast way of finding Possible-D-Sep
-    for a given node; \code{\link{fci}} which uses \code{\link{pdsep}}}
-
+  for a given node; \code{\link{fci}} which uses \code{\link{pdsep}}.
+}
 \author{
   Markus Kalisch (\email{kalisch@stat.math.ethz.ch})
 }
@@ -95,7 +95,7 @@ n <- 10000
 d.mat <- rmvDAG(n, myDAG, errDist = "normal")
 
 ## estimate skeleton
-indepTest <- gaussCItest 
+indepTest <- gaussCItest
 suffStat <- list(C = cor(d.mat), n = n)
 alpha <- 0.01
 skel <- skeleton(suffStat, indepTest, p, alpha)

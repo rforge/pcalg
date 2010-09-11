@@ -14,7 +14,8 @@
   available which render this method robust.  }
 
 \usage{
-pcSelect(y,dm, alpha, corMethod = "standard", verbose = 0, directed=FALSE)
+pcSelect(y, dm, alpha, corMethod = "standard",
+         verbose = 0, directed=FALSE)
 }
 \arguments{
   \item{y}{Response Vector (length(y)=nrow(dm))}
@@ -24,14 +25,14 @@ pcSelect(y,dm, alpha, corMethod = "standard", verbose = 0, directed=FALSE)
   estimation}
   \item{verbose}{0: no output, 1: small output, 2: details (using 1 and 2
   makes the function very much slower)}
-  \item{directed}{Boolean; should the output graph be directed?}
+  \item{directed}{logical; should the output graph be directed?}
 }
 \value{
   \item{G}{A boolean vector indicating which column of \code{dm} is
-  associated with \code{y}}
+    associated with \code{y}}
   \item{zMin}{The minimal z-values when testing partial correlations
-  between \code{y} and each column of \code{dm}. The larger the number,
-  the more consistent is the edge with the data.}
+    between \code{y} and each column of \code{dm}. The larger the number,
+    the more consistent is the edge with the data.}
 }
 \details{
   This function basically applies \code{\link{pc}} on the data
@@ -39,14 +40,15 @@ pcSelect(y,dm, alpha, corMethod = "standard", verbose = 0, directed=FALSE)
   not concerned with the edges found within the columns of \code{dm},
   the algorithm is adapted accordingly. Therefore, the runtime and the
   ability to deal with large datasets is typically increased
-  substantially. 
+  substantially.
 }
 
-\references{ Buehlmann, P., Kalisch, M. and Maathuis,
-  M.H. (2009). Variable selection for high-dimensional linear models:
-  partially faithful distributions and the PC-simple algorithm. \emph{To
-  appear in Biometrika}.  }
-
+\references{
+  Buehlmann, P., Kalisch, M. and Maathuis, M.H. (2009).
+  Variable selection for high-dimensional linear models:
+  partially faithful distributions and the PC-simple algorithm.
+  \emph{To appear in Biometrika}.
+}
 \seealso{\code{\link{pc}} which is the more general version of this function.
 }
 \author{
