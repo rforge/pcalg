@@ -10,6 +10,8 @@ R_PROG = R
 #R_CALL = ${R_PROG} --vanilla --silent
 #                  ^^^^^^^^^ also loses R_LIBS
 R_CALL = ${R_PROG} --no-init-file --no-save --silent
+# unfortunately, R CMD Sweave is no longer useful (as it has --vanilla in R 2.12.0)
+# R_SWEAVE = ${R_PROG} CMD Sweave
 
 TPUTS = ${TEXINPUTS}:${R_LIB}/share/texmf//
 
@@ -18,7 +20,8 @@ all: $(DRIVERS:=.pdf)
 	${MAKE} clean
 
 %.tex: %.Snw
-	${R_PROG} CMD Sweave $<
+	echo "utils::Sweave(\"$<\")" | ${R_PROG} --no-restore --no-save --slave
+#	${R_SWEAVE} $<
 
 %.R: %.Rnw
 	${R_PROG} CMD Stangle $<
@@ -33,7 +36,8 @@ all: $(DRIVERS:=.pdf)
 purge:
 	$(RM) Rplots.pdf $(DRIVERS:=.out) *.aux *.log *.blg
 clean: purge
-	$(RM) $(DRIVERS:=.tex) $(DRIVERS:=.bbl) $(DRIVERS:=-*.pdf)
+	$(RM) $(DRIVERS:=.tex) $(DRIVERS:=.bbl)
+	$(RM) $(DRIVERS:=-*.pdf) $(DRIVERS:=-*.eps)
 	$(RM) $(DRIVERS:=-*.pdf) $(DRIVERS:=-*.eps)
 
 realclean: clean
