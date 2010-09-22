@@ -133,9 +133,11 @@ set.seed(40)
 p <- 8
 n <- 5000
 gGtrue <- randomDAG(p, prob = 0.3) ## true DAG
-gmG <- list(g = gGtrue, x = rmvDAG(n, gGtrue))
+gmG <- list(x = rmvDAG(n, gGtrue), g = gGtrue)
 @
 
+% insert below for testing:
+% .libPaths() ## <<-- just for now __FIXME__
 <<exIntro1>>=
 library(pcalg)
 data(gmG)
@@ -285,9 +287,8 @@ following holds: For each distribution, it is possible to find a DAG, whose
 list of d-separation relations perfectly matches the list of conditional
 independencies of the distribution. Such distributions are called
 faithful. It has been shown that the set of distributions that are faithful
-is the overwhelming majority (C. Meek. Strong completeness and faithfulness
-in Bayesian networks. In Uncertainty in Artificial Intelligence, pages
-411–418, 1995a), so that the assumption does not seem to be very strict in
+is the overwhelming majority (\cite{Meek95}),
+so that the assumption does not seem to be very strict in
 practice.
 
 Since the DAG model encodes conditional independences, it seems plausible
@@ -866,7 +867,7 @@ p <- 7
 n <- 10000
 myDAG <- randomDAG(p, prob = 0.2) ## true DAG
 datI <- rmvDAG(n, myDAG)
-gmI <- list(g = myDAG, x = datI)
+gmI <- list(x = datI, g = myDAG)
 @
 
 <<idaExpl1>>=

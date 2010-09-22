@@ -7,18 +7,15 @@
 }
 \usage{data(gmL)}
 \format{
-  The format is:
-%% become shorter, use \item -- FIXME
-List of 2
- $ x: num [1:10000, 1:4] -0.614 1.304 1.45 -1.121 -0.21 ...
-
- $ g:Formal class 'graphNEL' [package "graph"] with 6 slots
-  .. ..@ nodes     : chr [1:5] "1" "2" "3" "4" ...
-  .. ..@ edgeL     :List of 5
-  .. ..@ edgeData  :Formal class 'attrData' [package "graph"] with 2 slots
-  .. ..@ nodeData  :Formal class 'attrData' [package "graph"] with 2 slots
-  .. ..@ renderInfo:Formal class 'renderInfo' [package "graph"] with 4 slots
-  .. ..@ graphData :List of 1
+  The format is a list of 2 components
+  \describe{
+    \item{x:}{num [1:10000, 1:4] -0.614 1.304 1.45 -1.121 -0.21 ...}
+    \item{g:}{Formal class 'graphNEL' [package "graph"] with 6 slots\cr
+      .. ..@ nodes     : chr [1:5] "1" "2" "3" "4" ...\cr
+      .. ..@ edgeL     :List of 5\cr
+      .......
+    }
+  }
 }
 \details{
 %%  ~~ If necessary, more details than the __description__ above ~~
