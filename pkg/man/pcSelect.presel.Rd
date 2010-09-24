@@ -45,7 +45,8 @@ p <- 10
 ## generate and draw random DAG :
 set.seed(101)
 myDAG <- randomDAG(p, prob = 0.2)
-plot(myDAG, main = "randomDAG(10, prob = 0.2)")
+if(require(Rgraphviz))
+   plot(myDAG, main = "randomDAG(10, prob = 0.2)")
 
 ## generate 1000 samples of DAG using standard normal error distribution
 n <- 1000

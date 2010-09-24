@@ -43,11 +43,15 @@
     detach()
  }
 
+
 * DESCRIPTION:
 ** Depends:  too many; I do not believe they are all "dependently" needed.
 
-   - Look at ./NAMESPACE  and replace *ALL*  the  Imports() by
+*** DONE Look at ./NAMESPACE  and replace *ALL*  the  Imports() by
      ImportsFrom(.)
+
+*** TODO Remove more 'Depends:': vcd;  probably RBGL, abind, corpcor
+
 
 * Remarks on specific functions and issues:
 
@@ -55,3 +59,15 @@
   - returns a P-value but not the test statistic.  Should *really* return
     an object of (standard S3 class) "htest" (which contains P-value, test
     statistic, ...)!
+
+** fci() :
+  - returns the adjacency matrix "@ amat" (among other things),
+    a simple matrix with entries in {0,1,2,3}.
+    It would be nice to allow *sparse* matrices here,
+    e.g., by using the  "Matrix" class from the Matrix package.
+
+    This makes sense mostly if it's realistic to have quite sparse
+    and relatively large sets of variables.
+
+** gAlgo-class: consider using setMethod(., "gAlgo")
+   instead of all methods (plot, summary) for both pcAlgo and fciAlgo

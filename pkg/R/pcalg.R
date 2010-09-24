@@ -4623,8 +4623,10 @@ setMethod("show", "pcAlgo",
 
 setMethod("show", "fciAlgo",
 	  function(object) {
-	    cat("Object of class 'fciAlgo', from Call: \n", deparse(object@call),
-                "\n\nAdjacency Matrix G:\nG[i,j] = 1/2/3 if edge mark of edge i-j at j is circle/head/tail. \n")
+	    cat("Object of class 'fciAlgo', from Call:", deparse(object@call),
+                "\nAdjacency Matrix G:",
+                "G[i,j] = 1/2/3 if edge mark of edge i-j at j is circle/head/tail.",
+                "", sep="\n")
 	    print(object@amat)
 	    invisible(object)
 	  })
@@ -4670,7 +4672,8 @@ setMethod("plot", signature(x = "fciAlgo"),
       {
           check.Rgraphviz()
 
-          if(is.null(main)) main <- deparse(x@call)
+          if(is.null(main))
+	      main <- deparse(x@call)
           amat <- x@amat
           g <- as(amat,"graphNEL")
           nn <- nodes(g)

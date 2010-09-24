@@ -4,7 +4,7 @@
   using the PC algorithm}
 \description{
   Estimate the equivalence class of a directed acyclic
-  graph (DAG) from observational data, using the PC-algorithm. 
+  graph (DAG) from observational data, using the PC-algorithm.
 }
 \usage{
 pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
@@ -16,10 +16,10 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     elements for the conditional independence decisions in the
     function \code{indepTest}.}
   \item{indepTest}{Predefined function for testing conditional independence. The
-    function is internally called as \code{indepTest(x,y,S,suffStat)}, and 
+    function is internally called as \code{indepTest(x,y,S,suffStat)}, and
     tests conditional independence of \code{x} and \code{y} given
-    \code{S}. Here, \code{x} and \code{y} are variables, and \code{S} is 
-    a (possibly empty) vector of variables (all variables are denoted 
+    \code{S}. Here, \code{x} and \code{y} are variables, and \code{S} is
+    a (possibly empty) vector of variables (all variables are denoted
     by their column numbers
     in the adjacency matrix). \code{suffStat} is a list containing
     all relevant elements for the conditional independence
@@ -50,15 +50,15 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     for more information.}
 }
 \value{An object of \code{\link{class}} \code{"pcAlgo"} (see
-  \code{\linkS4class{pcAlgo}}) containing an estimate of the equivalence 
-  class of the underlying DAG. 
+  \code{\linkS4class{pcAlgo}}) containing an estimate of the equivalence
+  class of the underlying DAG.
 }
 \details{
-  Under the assumption that the distribution of the observed variables 
-  is faithful to a DAG, this function estimates the equivalence class of 
-  the DAG. We do not estimate the DAG itself, because this is typically 
-  impossible (even with an infinite amount of data), since different 
-  DAGs can describe the same conditional independence relationships. 
+  Under the assumption that the distribution of the observed variables
+  is faithful to a DAG, this function estimates the equivalence class of
+  the DAG. We do not estimate the DAG itself, because this is typically
+  impossible (even with an infinite amount of data), since different
+  DAGs can describe the same conditional independence relationships.
   Since all DAGs in an equivalence class describe the same conditional
   independence relationships, they are equally valid ways to
   describe the conditional dependence structure that was given as
@@ -71,40 +71,40 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   equivalence class, while they point the other way in another DAG in
   the equivalence class.
 
-  An equivalence class can be uniquely represented by a completed 
+  An equivalence class can be uniquely represented by a completed
   partially directed acyclic graph (CPDAG). A CPDAG
-  contains undirected and directed edges. The edges have the following 
-  interpretation: (i) there is a (directed or undirected) edge between i 
-  and j if and only if variables i and j are conditionally dependent 
+  contains undirected and directed edges. The edges have the following
+  interpretation: (i) there is a (directed or undirected) edge between i
+  and j if and only if variables i and j are conditionally dependent
   given S for all possible subsets S of the remaining nodes; (ii) a directed
-  edge i->j means that this directed edge is present in all DAGs in the 
-  equivalence class; (iii) an undirected edge i-j means that there is at least 
+  edge i->j means that this directed edge is present in all DAGs in the
+  equivalence class; (iii) an undirected edge i-j means that there is at least
   one DAG in the equivalence class with edge i->j and there is at least one DAG
-  in the equivalence class with edge i<-j. 
-  
+  in the equivalence class with edge i<-j.
+
   The CPDAG is estimated using the PC algorithm (named after its inventors
-  \bold{P}eter Spirtes and \bold{C}lark Glymour). The skeleton is 
-  estimated by the function \code{\link{skeleton}} (see the help file 
+  \bold{P}eter Spirtes and \bold{C}lark Glymour). The skeleton is
+  estimated by the function \code{\link{skeleton}} (see the help file
   of this function for details). Subsequently, as many edges as possible
   are oriented. This is done in two steps.
 
-  First, the algorithm considers all triples 
+  First, the algorithm considers all triples
   \code{(a,b,c)}, where \code{a} and
   \code{b} are adjacent, \code{b} and \code{c} are adjacent, but
-  \code{a} and \code{c} are not adjacent. For all such triples, 
-  we direct both edges towards b (a->b<-c) if and only if \code{b} was 
-  not part of the conditioning set that made the edge between \code{a} 
+  \code{a} and \code{c} are not adjacent. For all such triples,
+  we direct both edges towards b (a->b<-c) if and only if \code{b} was
+  not part of the conditioning set that made the edge between \code{a}
   and \code{c} drop out. These conditioning sets were saved in
   \code{sepset}. The structure a->b<-c is called a v-structure.
 
   After determining all v-structures, there may still
   be undirected edges. It may be possible to direct some of these edges, since
-  one can deduce that one of the two possible directions of the edge is 
-  invalid because it introduces 
-  a new v-structure or a directed cycle. Such edges are found by 
-  repeatedly applying rules R1-R3 as given in Algorithm 2 of Kalisch 
-  and B\"uhlmann (2007). The algorithm stops if none of the rules is 
-  applicable to the graph. 
+  one can deduce that one of the two possible directions of the edge is
+  invalid because it introduces
+  a new v-structure or a directed cycle. Such edges are found by
+  repeatedly applying rules R1-R3 as given in Algorithm 2 of Kalisch
+  and B\"uhlmann (2007). The algorithm stops if none of the rules is
+  applicable to the graph.
 
   Sampling errors (or hidden variables) can lead to conflicting
   information about edge directions. For example, one may find that
@@ -116,21 +116,21 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   that we obtain a->b->c<-d if a-b-c was visited first, and a->b<-c<-d
   if b-c-d was visited first.
 
-  Sampling errors or hidden variables can also lead to invalid CPDAGs, 
+  Sampling errors or hidden variables can also lead to invalid CPDAGs,
   meaning that there does not exist a DAG
-  that has the same skeleton and v-structures as the 
-  graph found by the algorithm. An example of this is an undirected cycle 
-  consisting of the 
-  edges a-b-c-d and d-a. In this case it is impossible to direct the edges 
-  without creating a cycle or a new v-structure. The option \code{u2pd} 
-  specifies what should be done in such a situation. If the option is set to 
+  that has the same skeleton and v-structures as the
+  graph found by the algorithm. An example of this is an undirected cycle
+  consisting of the
+  edges a-b-c-d and d-a. In this case it is impossible to direct the edges
+  without creating a cycle or a new v-structure. The option \code{u2pd}
+  specifies what should be done in such a situation. If the option is set to
   \code{"relaxed"}, the algorithm simply outputs the invalid CPDAG. If
   the option is set to \code{"rand"},
   all direction information is discarded and a random DAG is generated on the
-  skeleton. If the option is set to \code{"retry"}, up to 100 combinations 
-  of possible directions of the ambiguous edges are tried, and the first 
+  skeleton. If the option is set to \code{"retry"}, up to 100 combinations
+  of possible directions of the ambiguous edges are tried, and the first
   combination that results in a valid CPDAG is chosen. If no valid combination
-  is found, an arbitrary DAG is generated on the skeleton 
+  is found, an arbitrary DAG is generated on the skeleton
   as in the option "rand".
 
   The conservative PC algorithm (\code{"conservative = TRUE"}) is a
@@ -160,11 +160,11 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   R. Scheines (2000).  \emph{Causation, Prediction, and Search}, 2nd
   edition. The MIT Press.
 
-  M. Kalisch and P. Buehlmann (2007). 
+  M. Kalisch and P. Buehlmann (2007).
   Estimating high-dimensional directed acyclic graphs with the PC-algorithm.
   \emph{JMLR} \bold{8} 613-636.
 }
-\seealso{\code{\link{skeleton}} for estimating a skeleton of a DAG; 
+\seealso{\code{\link{skeleton}} for estimating a skeleton of a DAG;
   \code{\link{udag2pdag}} for converting the
   skeleton to a CPDAG; \code{\link{gaussCItest}},
   \code{\link{disCItest}}, \code{\link{binCItest}} and
@@ -183,17 +183,17 @@ n <- nrow(gmG$x)
 p <- ncol(gmG$x)
 
 ## define independence test (partial correlations)
-indepTest <- gaussCItest 
+indepTest <- gaussCItest
 ## define sufficient statistics
 suffStat <- list(C = cor(gmG$x), n = n)
 ## estimate CPDAG
 alpha <- 0.01
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
-## show estimated CPDAG
-par(mfrow=c(1,2))
-plot(pc.fit, main = "Estimated CPDAG")
-plot(gmG$g, main = "True DAG")
+  ## show estimated CPDAG
+  par(mfrow=c(1,2))
+  plot(pc.fit, main = "Estimated CPDAG")
+  plot(gmG$g, main = "True DAG")
 }
 ##################################################
 ## Using d-separation oracle
@@ -206,9 +206,9 @@ suffStat <- list(g = gmG$g, jp = johnson.all.pairs.sp(gmG$g))
 alpha <- 0.01 ## value is irrelevant as dsepTest returns either 0 or 1
 fit <- pc(suffStat, indepTest, p, alpha)
 if (require(Rgraphviz)) {
-## show estimated CPDAG
-plot(fit, main = "Estimated CPDAG")
-plot(gmG$g, main = "True DAG")
+  ## show estimated CPDAG
+  plot(fit, main = "Estimated CPDAG")
+  plot(gmG$g, main = "True DAG")
 }
 ##################################################
 ## Using discrete data
@@ -221,13 +221,13 @@ indepTest <- disCItest
 ## define sufficient statistics
 suffStat <- list(dm = gmD$x, nlev = c(3,2,3,4,2), adaptDF = FALSE)
 ## estimate CPDAG
-alpha <- 0.01 
+alpha <- 0.01
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
-## show estimated CPDAG
-par(mfrow = c(1,2))
-plot(pc.fit, main = "Estimated CPDAG")
-plot(gmD$g, main = "True DAG")
+  ## show estimated CPDAG
+  par(mfrow = c(1,2))
+  plot(pc.fit, main = "Estimated CPDAG")
+  plot(gmD$g, main = "True DAG")
 }
 
 ##################################################
@@ -241,14 +241,14 @@ indepTest <- binCItest
 ## define sufficient statistics
 suffStat <- list(dm = gmB$x, adaptDF = FALSE)
 ## estimate CPDAG
-alpha <- 0.01 
+alpha <- 0.01
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
-## show estimated CPDAG
-plot(pc.fit, main = "Estimated CPDAG")
-plot(gmB$g, main = "True DAG")
+  ## show estimated CPDAG
+  plot(pc.fit, main = "Estimated CPDAG")
+  plot(gmB$g, main = "True DAG")
 }
-}
+}%{examples}
 \keyword{multivariate}
 \keyword{models}
 \keyword{graphs}
