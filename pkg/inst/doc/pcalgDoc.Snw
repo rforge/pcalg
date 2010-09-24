@@ -93,7 +93,7 @@ options(SweaveHooks=
 %% Note that you should use the \pkg{}, \proglang{} and \code{} commands.
 
 \section{Introduction}
-THIS DOCUMENTATION IS STILL UNDER CONSTRUCTION! \\ %% FIXME
+%%THIS DOCUMENTATION IS STILL UNDER CONSTRUCTION! \\ %% FIXME
 
 Understanding cause-effect relationships between variables is of primary
 interest in many fields of science. Usually, experimental intervention is
@@ -137,7 +137,7 @@ gmG <- list(x = rmvDAG(n, gGtrue), g = gGtrue)
 @
 
 % insert below for testing:
-% .libPaths() ## <<-- just for now __FIXME__
+% .libPaths() ## <<-- just for "testing"
 <<exIntro1>>=
 library(pcalg)
 data(gmG)
@@ -155,15 +155,15 @@ statistic) on which the conditional independence function can
 work. Each conditional independence test can be performed at a certain
 significance level \code{alpha}. This can be treated as a tuning
 parameter. In the following code, we use the predefined function
-\code{gaussCItest} as conditional independence test and create the
+\code{gaussCItest()} as conditional independence test and create the
 corresponding sufficient statistic. The sufficient statistic consists
 of the correlation matrix of the data and the sample size. Then we use
-the function \code{pc} to estimate the causal structure and plot the
+the function \code{pc()} to estimate the causal structure and plot the
 result.
 
 %% Define the 'Iplot' chunk here and use it twice below:
 <<Iplot, echo=FALSE, eval=FALSE>>=
-require(Rgraphviz)
+stopifnot(require(Rgraphviz))# needed for all our graph plots
 par(mfrow = c(1,2))
 plot(gmG$g,  main = "True DAG")
 plot(pc.fit, main = "Estimated DAG")
@@ -190,18 +190,18 @@ edges in the estimated causal structure. The directed edges show the
 presence and direction of direct causal effects. The direction of the
 bidirected edges, however, could not be decided by our method. Thus, they
 represent some uncertainty in the resulting model. A fundamental property
-of our method is, that some uncertainty of this kind sometimes remains,
+of our method is that some uncertainty of this kind sometimes remains,
 even if an infinite amount of data is available.
 
 Based on the inferred causal structure, we can estimate the causal effect
-of an intervention. For example, suppose, we would increase variable $V1$
+of an intervention. For example, suppose, we would increase variable $V_1$
 by external intervention by one unit. The recorded increase in variable
-$V6$ is the (total) causal effect of $V1$ on $V6$. More precisely, the
-causal effect $C(V1, V6, \tilde{x})$ of $V1$ from $V1 = \tilde{x}$ on $V6$
+$V_6$ is the (total) causal effect of $V_1$ on $V_6$. More precisely, the
+causal effect $C(V_1, V_6, \tilde{x})$ of $V_1$ from $V_1 = \tilde{x}$ on $V_6$
 is defined as
 \begin{eqnarray*}
-C(V1, V6, \tilde{x}) &=& E(V1|do(V6 = \tilde{x} + 1)) - E(V1|do(V6 = \tilde{x})) \ \mbox{or} \\
-C(V1, V6, \tilde{x}) &=& \frac{\partial}{\partial x} E(V1|do(V6 = x))|_{x=\tilde{x}}
+C(V_1, V_6, \tilde{x}) &=& E(V_1|do(V_6 = \tilde{x} + 1)) - E(V_1|do(V_6 = \tilde{x})) \ \mbox{or} \\
+C(V_1, V_6, \tilde{x}) &=& \frac{\partial}{\partial x} E(V_1|do(V_6 = x))|_{x=\tilde{x}}
 \end{eqnarray*}
 If the causal relationships are linear, the causal effect is independent of
 $\tilde{x}$.
@@ -209,7 +209,7 @@ $\tilde{x}$.
 Since the causal structure was not identified perfectly in our example, we
 cannot expect to get a unique number for the causal effect. Instead, we will get a set of
 possible causal effects. This set can be computed by using the function
-\code{ida}. To provide full quantitative information, we need to pass the
+\code{ida()}. To provide full quantitative information, we need to pass the
 covariance matrix in addition to the estimated causal structure.
 
 <<exIntro2>>=
@@ -220,14 +220,14 @@ Since we simulated the data, we know that the true value of the causal
 effect is \Sexpr{gGtrue <- gmG$g; round(causalEffect(gGtrue, 6, 1), 2)}. %$
 Thus, one of the two
 estimates is indeed close to the true value. Since both values are larger
-than zero, we can conclude, that variable $V1$ has a positive causal effect
-on variable $V6$. Thus, we can always estimate a lower bound to the
+than zero, we can conclude that variable $V_1$ has a positive causal effect
+on variable $V_6$. Thus, we can always estimate a lower bound to the
 absolute value of the causal effect. (Note that at this point we have no
 p-value to control the sampling error).
 
-If we would like to know the effect of a unit increase in variable $V1$ on
-variables $V4$, $V5$ and $V6$, we could simply call \code{ida} three
-times. However, a faster way is to call the function \code{idaFast}, which
+If we would like to know the effect of a unit increase in variable $V_1$ on
+variables $V_4$, $V_5$ and $V_6$, we could simply call \code{ida} three
+times. However, a faster way is to call the function \code{idaFast()}, which
 was tailored for such situations.
 
 <<exIntro3>>=
@@ -239,13 +239,13 @@ on the target variable indicated by the row names.  The true values for the
 causal effects are \Sexpr{round(causalEffect(gGtrue, 4, 1),2)},
 \Sexpr{round(causalEffect(gGtrue, 5, 1),2)},
 \Sexpr{round(causalEffect(gGtrue, 6, 1),2)} for variables
-$V4$, $V5$ and $V6$, respectively. The first row, corresponding to
-variable $V4$, quite accurately indicates a causal effect that is very
+$V_4$, $V_5$ and $V_6$, respectively. The first row, corresponding to
+variable $V_4$, quite accurately indicates a causal effect that is very
 close to zero or no effect at all. The second row of the output,
-corresponding to variable $V5$, is rather uninformative: Although one entry
+corresponding to variable $V_5$, is rather uninformative: Although one entry
 comes close to the true value, the other estimate is 0. Thus, we cannot be
 sure if there is a causal effect at all. The third row, corresponding to
-$V6$ was already discussed above.
+$V_6$ was already discussed above.
 
 \section{Methodological background}
 Our proposed method consists of two major steps. In the first step, the
@@ -304,7 +304,7 @@ shown that the PC algorithm using statistical tests instead of an
 independence oracle is computationally feasible and consistent even for very
 high-dimensional, sparse DAGs (see \cite{KaBu07a}).
 
-It is possible, that several DAGs encode the same list of conditional
+It is possible that several DAGs encode the same list of conditional
 independencies. One can show that such DAGs must share certain
 properties. To be more precise, we have to define a v-structure as the
 subgraph $i \rightarrow j \leftarrow k$ on the nodes $i$, $j$ and $k$ where
@@ -381,7 +381,7 @@ possible to direct some of these edges, since one can deduce that one of
 the two possible directions of the edge is invalid because it introduces a
 new v-structure or a directed cycle. Such edges are found by repeatedly
 applying rules described in \cite{SpirtesEtAl00}, p.85. The resulting output is the
-equivalence class (CPDAG) for the given initial graph, in which every edge
+equivalence class (CPDAG) for the given initial graph in which every edge
 is either undirected (or bidirected, which has the same meaning in the
 context of the CPDAG) or directed.
 
@@ -392,7 +392,7 @@ and selection variables. However, when inferring the DAG from observational
 data, we don't know all hidden and selection variables. Therefore, it is
 practically unfeasible to find the true underlying DAG.
 
-A more modest goal could be trying to find a structure, that represents all
+A more modest goal could be trying to find a structure that represents all
 independence relationships among the observed variables (but not the latent
 and selection variables) of the underlying causal structure. It turns out,
 that this is possible. However, the resulting object will in general not be
@@ -400,7 +400,7 @@ a DAG for the following reason. Suppose, we have a DAG including
 observational, latent and selection variables and we'd like to visualize
 the conditional independencies among the observed variables only. We could
 marginalize out all latent variables and condition on all selection
-variables. It turns out, that the resulting list of conditional
+variables. It turns out that the resulting list of conditional
 independencies can in general not be represented by a DAG. I.e., DAGs are
 not closed under marginalization or conditioning and are therefore not
 suited for representing the conditional independence structure on the
@@ -423,7 +423,7 @@ rules that restrict the direction of edges:
   \item[2:] There are no arrowheads present at a vertex which is an
     endpoint of an undirected edge.
 \end{description}
-In practice, a slight variation of ancestral graphs is used, that
+In practice, a slight variation of ancestral graphs is used that
 incorporates a third rule:
 \begin{description}
 \item[3:] Every missing edge corresponds to a conditional independence.
@@ -444,7 +444,7 @@ in which the true MAG lies.
 
 An equivalence class of a MAG can be uniquely represented by a
 \emph{Partial Ancestral Graph (PAG)}. A PAG contains the following
-types of edges: o-o, o-, o->, ->, <->, -. Roughly, the bidirected edges come
+types of edges: o--o, o--, o-->, -->, <-->, --. Roughly, the bidirected edges come
 from hidden variables, and the undirected edges come from selection
 variables. The edges have the following interpretation: (i) there is
 an edge between $x$ and $y$ if and only if $x$ and $y$ are
@@ -535,7 +535,7 @@ are much larger than zero).
 In addition to this fundamental limitation in estimating a causal effect,
 errors due to finite sample size blur the result as with every statistical
 method. Thus, in a real world situation, we only get an estimate of the set
-of possible causal values. It was shown under some assumptions, that this
+of possible causal values. It was shown under some assumptions that this
 estimate is consistent (see \cite{BuKaMa10}).
 
 It has recently been shown empirically that despite the described
@@ -558,7 +558,7 @@ for estimating causal effects when the causal structure is known or was
 estimated.
 
 \subsection{skeleton}\label{sec:skel}
-The function \code{skeleton} implements (P1) and (P2) from
+The function \code{skeleton()} implements (P1) and (P2) from
 Algorithm~\ref{algo:pc}. The function can be called with the following
 arguments
 \par\vspace*{-1.2ex}
@@ -578,7 +578,7 @@ showF(skeleton)
 As was shown in section \ref{sec:gm}, the main task in finding the
 skeleton is to compute and test several conditional independencies. To
 keep the function flexible, \code{skeleton} takes as argument a
-function \code{indepTest} that performs these independence tests and
+function \code{indepTest()} that performs these independence tests and
 returns a p-value. All information that is needed in the independence
 test can be passed in the argument \code{suffStat}. The only
 exceptions are the number of variables \code{p} and the significance
@@ -607,7 +607,7 @@ plot(gmG$g, main = "True DAG")
 plot(pc.fit, main = "Estimated Skeleton")
 @
 \caption{True DAG and estimated skeleton fitted on the Gaussian data set
-  provided by the package using the function \code{skeleton}.}
+  provided by the package using the function \code{skeleton()}.}
 \label{fig:skelExpl}
 \end{figure}
 
@@ -656,9 +656,9 @@ variables in the adjacency matrix, and not with the names of the variables.
 
 \subsection{pc} \label{sec:pc}
 
-The function \code{pc} implements all steps (P1) to (P4) of the PC
+The function \code{pc()} implements all steps (P1) to (P4) of the PC
 algorithm~\ref{algo:pc}. First, the skeleton is computed using the function
-\code{skeleton} (steps (P1) and (P2)). Then, as many edges as possible are
+\code{skeleton()} (steps (P1) and (P2)). Then, as many edges as possible are
 directed (steps (P3) and (P4)). The function can be called as
 % with the following arguments.
 % \code{pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, \\
@@ -713,7 +713,7 @@ among the neighbors that makes $a$ and $c$ independent, the triple is
 marked 'unfaithful'. An unfaithful triple is not oriented as a v-structure.
 Furthermore, no later orientation rule that needs to know whether $a-b-c$
 is a v-structure or not is applied. (For more detail, see the help file of
-the internal function \code{pc.cons.intern} which is called with the argument
+the internal function \code{pc.cons.intern()} which is called with the argument
 \code{version.unf = c(2,2)}.)
 
 As with the skeleton, the algorithm works with the column positions of the
@@ -723,7 +723,7 @@ equivalent.
 
 As an example, we estimate a CPDAG of the Gaussian data used in the
 example for the skeleton in section \ref{sec:skel}. Again, we choose
-the predefined function \code{gaussCItest} as conditional independence
+the predefined function \code{gaussCItest()} as conditional independence
 test and create the corresponding test statistic. Finally, we plot the
 result. The estimated CPDAG and the true underlying DAG are shown in
 Fig.~\ref{fig:pcFit1}.
@@ -738,7 +738,7 @@ plot(gmG$g, main = "True DAG")
 plot(pc.fit, main = "Estimated CPDAG")
 @
 \caption{True DAG and estimated CPDAG fitted on the Gaussian data set provided by the
-  package using the function \code{pc}.}
+  package using the function \code{pc()}.}
 \label{fig:pcFit1}
 \end{figure}
 
@@ -754,16 +754,16 @@ observed variables.
 
 The first part of the FCI algorithm is analogous to the PC algorithm. It
 starts with a complete undirected graph and estimates an initial skeleton
-using the function \code{skeleton}. All edges of this skeleton are of the
-form o-o. Now, the v-structures are directed as in the PC algorithm. Due to the presence of hidden variables, it is no longer
+using the function \code{skeleton()}. All edges of this skeleton are of the
+form o--o. Now, the v-structures are directed as in the PC algorithm. Due to the presence of hidden variables, it is no longer
 sufficient to consider only subsets of the neighborhoods of nodes $x$ and
 $y$ to decide whether the edge $x-y$ should be removed.  Therefore, the
 initial skeleton may contain some superfluous edges.  These edges are
-removed in the next step of the algorithm. To decide whether edge $x$ o-o $y$
+removed in the next step of the algorithm. To decide whether edge $x$ o--o $y$
 should be removed, one computes Possible-D-SEP($x$) and Possible-D-SEP($y$)
 and performs conditional independence tests of $x$ and $y$ given all
 possible subsets of Possible-D-SEP($x$) and of Possible-D-SEP($y$) (see
-helpfile of function \code{pdsep}). Subsequently, all edges are transformed into o-o again and the v-structures are
+helpfile of function \code{pdsep()}). Subsequently, all edges are transformed into o--o again and the v-structures are
 determined (using information in sepset).  Finally, as many as possible
 undetermined edge marks (o) are determined using (a subset of) the 10
 orientation rules given by \cite{Zhang08-orientation-rules}.
@@ -794,7 +794,7 @@ so that the algorithm simplifies to the Modified PC algorithm of \cite{SpirtesEt
 Using the option \code{conservative} one can invoke the conservative
 FCI which consists of two parts. In the first part (done if
 \code{conservative[1]} is \code{TRUE}), we call the
-internal function \code{pc.cons.internal} with argument
+internal function \code{pc.cons.internal()} with argument
 \code{version.unf = c(1,2)} after computing the skeleton. This is a slight variation of the
 conservative PC (which used \code{version.unf = c(2,2)}): If $a$ is
 independent of $c$ given some $S$ in the skeleton (i.e., the edge $a-c$
@@ -820,8 +820,8 @@ information on definite non-colliders is only applied, if the corresponding
 subgraph relevant for the rule does not involve an unfaithful triple.
 
 As an example, we estimate the PAG of a graph with five nodes using
-the function \code{fci} and the predefined function \code{gaussCItest}
-as conditional independence test. Finally, we plot the result. Node $V1$ is latent. In
+the function \code{fci()} and the predefined function \code{gaussCItest()}
+as conditional independence test. Finally, we plot the result. Node $V_1$ is latent. In
 Fig.~\ref{fig:fci} the true DAG and the estimated PAG are shown.
 \begin{figure}
   \centering
@@ -839,6 +839,16 @@ generating DAG is latent. One can see that the PAG was estimated correctly.}
 \label{fig:fci}
 \end{figure}
 
+An note on implementation: As \code{pc()} and \code{fci()} are similar
+in the result they produce, their resulting values are of (S4) class
+\code{pcAlgo} and \code{fciAlgo} respectively, both of which extend the
+class (of their ``communalities''), \code{gAlgo}.
+%% <<pcAlgo-class>>=
+%% showClass("pcAlgo")
+%% @
+
+
+
 \subsection{ida} \label{sec:ida}
 It is assumed that we have observational data that are multivariate
 Gaussian and faithful to the true (but unknown) underlying causal DAG
@@ -854,11 +864,11 @@ data).
 
 To illustrate this, consider the following example. We have data from seven
 Gaussian variables with a causal structure given on the left of
-Fig.~\ref{fig:ida}. Denote node $i$ in the graph by $Vi$. We assume that
-the causal structure is unknown and want to infer the causal effect of $V2$
-on $V5$. First, we estimate the equivalence class of DAGs that describe the
+Fig.~\ref{fig:ida}. Denote node $i$ in the graph by $V_i$. We assume that
+the causal structure is unknown and want to infer the causal effect of $V_2$
+on $V_5$. First, we estimate the equivalence class of DAGs that describe the
 conditional independence relationships in the data, using the function
-\code{pc} (see section \ref{sec:pc}).
+\code{pc()} (see section \ref{sec:pc}).
 
 <<def-gmI, eval=FALSE, echo=FALSE>>=
 ## Used to generate "gmI" IDA data
@@ -888,19 +898,19 @@ par(mfrow = c(1,2))
 plot(gmI$g, main = "True DAG")
 plot(pc.fit, main = "Estimated CPDAG")
 @
-\caption{True DAG and estimated CPDAG for illustrating the function \code{ida}}
+\caption{True DAG and estimated CPDAG for illustrating the function \code{ida()}}
 \label{fig:ida}
 \end{figure}
 
 Since there are three undirected edges in the CPDAG, there might be up to
 $2^3 = 8$ DAGs in the corresponding equivalence class. However, the
-undirected edges $V2-V3-V5$ can be formed to a new v-structures. As
+undirected edges $V_2-V_3-V_5$ can be formed to a new v-structures. As
 mentioned in section \ref{sec:gm}, DAGs in the equivalence class must have
-exactly the same v-structures as the corresponding CPDAG. Thus, $V2-V3-V5$
-can only be directed as $V2 \rightarrow V3 \rightarrow V5$, $V2 \leftarrow
-V3 \leftarrow V5$ or $V2 \leftarrow V3 \rightarrow V5$ but not as $V2
-\rightarrow V3 \leftarrow V5$, since this would introduce a new colliding
-v-structure. There is only one remaining undirected edge ($V1-V6$), which
+exactly the same v-structures as the corresponding CPDAG. Thus, $V_2-V_3-V_5$
+can only be directed as $V_2 \rightarrow V_3 \rightarrow V_5$, $V_2 \leftarrow
+V_3 \leftarrow V_5$ or $V_2 \leftarrow V_3 \rightarrow V_5$ but not as $V_2
+\rightarrow V_3 \leftarrow V_5$, since this would introduce a new colliding
+v-structure. There is only one remaining undirected edge ($V_1-V_6$), which
 can be directed in two ways. Thus, there are six valid DAGs
 (i.e. they have no new v-structure and no cycle) and these form the
 equivalence class represented by the CPDAG. In Fig.~\ref{fig:allDags}, all
@@ -916,6 +926,7 @@ for (i in 1:6) plot(gDag[[i]], main = paste("DAG",i))
 @
 \begin{figure}
   \centering % height ~= 3 x {default height}
+%% FIXME (R): DAG 2 and 5 below have a large font than the others:
 <<plot-6DAGS, fig=TRUE, height=11, echo = FALSE>>=
 sfsmisc::mult.fig(6)
 for (i in 1:6) plot(gDag[[i]], main = paste("DAG",i))
@@ -939,29 +950,29 @@ the correct one. Therefore, we return the entire multiset of $k$ estimated
 effects.
 
 In our example, there are six DAGs in the equivalence class. Therefore, the
-function \code{ida} (with option \code{method = "global"}) will
+function \code{ida()} (with option \code{method = "global"}) will
 produce six possible values of causal effects (one for each DAG).
 <<idaExpl4>>=
 ida(2, 5, cov(gmI$x), pc.fit@graph, method = "global", verbose = FALSE)
 @
 
 Among these six values, there are only two unique values: $-0.0049$ and
-$0.5421$. This is because we compute \code{lm(V5 ~ V2 + pa(V2))} ($Vi$
-denotes node $i$) for each
-DAG and report the regression coefficient of $V2$. Note that there are
-only two possible parent sets of $V2$ in all six DAGs: In DAGs 3 and 6,
-there are no parents of $V2$. In DAGs 1, 2, 4 and 5, however, the parent
-of $V2$ is $V3$. Thus, exactly the same regressions are computed for
+$0.5421$. This is because we compute \code{lm(V5 ~ V2 + pa(V2))}
+(\code{V\textit{i}} denotes node $V_i$) for each
+DAG and report the regression coefficient of $V_2$. Note that there are
+only two possible parent sets of $V_2$ in all six DAGs: In DAGs 3 and 6,
+there are no parents of $V_2$. In DAGs 1, 2, 4 and 5, however, the parent
+of $V_2$ is $V_3$. Thus, exactly the same regressions are computed for
 DAGs 3 and 6 and the same regressions are computed for DAGs 1, 2, 4 and
-5. Therefore, we end up with two unique values, one of which occurs two
-times, while the other occurs four times.
+5. Therefore, we end up with two unique values, one of which occurs twice,
+while the other occurs four times.
 
 Since the data was simulated from a model, we know that the true value of the
-causal effect of $V2$ on $V5$ is $0.5529$. Thus, one of the two unique values is
+causal effect of $V_2$ on $V_5$ is $0.5529$. Thus, one of the two unique values is
 indeed very close to the true causal effect (the slight discrepancy is due
 to sampling error).
 
-The function \code{ida} can be called as % with the following arguments.
+The function \code{ida()} can be called as % with the following arguments.
 % \code{ida(x.pos, y.pos, mcov, graphEst, method = "local", y.notparent = FALSE,\\
 % verbose = FALSE, all.dags = NA)},
 \par\vspace*{-1.2ex}
@@ -979,7 +990,7 @@ If \code{method="global"}, the method is carried out as described above,
 where all DAGs in the equivalence class of the estimated CPDAG are
 computed. This method is suitable for small graphs (say, up to 10
 nodes). The DAGs can (but need not) be precomputed using the function
-\code{allDags} and passed via argument \code{all.dags}.
+\code{allDags()} and passed via argument \code{all.dags}.
 
 If \code{method="local"}, we do not determine all DAGs in the equivalence
 class of the CPDAG. Instead, we only consider the local neighborhood of $x$
@@ -1032,17 +1043,17 @@ that they are directed towards the response variable at the end.
 \subsection{idaFast}
 In some applications it is desirable to estimate the causal effect of one
 variable on a set of response variables. In these situations, the function
-\code{idaFast} should be used. Imagine for example, that we have data
+\code{idaFast()} should be used. Imagine for example, that we have data
 on several variables, that we have no background knowledge about the causal
 effects among the variables and that we want to estimate the causal effect of
 each variable onto each other variable. To this end, we could consider for
 each variable the problem: What is the causal effect of this variable on
 all other variables. Of course, one could solve the problem by using \code{ida} on
 each pair of variables. However, there is a more efficient way which uses
-the fact, that a linear regression of a fixed set of explanatory variables
+the fact that a linear regression of a fixed set of explanatory variables
 on several different response variables can be computed very efficiently.
 
-The function \code{idaFast} can be called with the following arguments
+The function \code{idaFast()} can be called with the following arguments
 %\code{idaFast(x.pos, y.pos.set, mcov, graphEst)}.
 \par\vspace*{-1.2ex}
 <<idaFast-args, echo=FALSE>>=
@@ -1064,8 +1075,8 @@ option \code{y.notparent = TRUE} is not implemented.
 %%- \code{y.pos.set} at the same time, which seems not to be desirable.
 
 Consider the example from section \ref{sec:ida}, where we computed the
-causal effect of $V2$ on $V5$. Now, we want to compute the effect of $V2$
-on $V5$, $V6$ and $V7$ using \code{idaFast} and compare the results with
+causal effect of $V_2$ on $V_5$. Now, we want to compute the effect of $V_2$
+on $V_5$, $V_6$ and $V_7$ using \code{idaFast} and compare the results with
 the output of \code{ida}. As expected, both methods lead to the same results.
 <<ida-idaFast>>=
 data(gmI)
@@ -1089,10 +1100,10 @@ conditional independence test for Gaussian data that is not predefined
 in the package.
 
 The functions \code{skeleton}, \code{pc} and \code{fci} need a
-function of the form \code{myCItest(x, y, S, suffStat)} to test
+function of the form \code{\textit{CItest}(x, y, S, suffStat)} to test
 conditional independence relationships. This function must return
 the p-value of the conditional independence test of $x$ and $y$ given
-$S$ given some information on the data in the form of a sufficient
+$S$ and some information on the data in the form of a sufficient
 statistic (this might be simply the data frame with the original
 data), where $x$, $y$, $S$ indicate column positions of the original data
 matrix. We will show an example that illustrates how to construct such a
@@ -1105,26 +1116,28 @@ between the residuals. Finally, a correlation test between the residuals
 yields a p-value that can be returned. The argument \code{suffStat} is an
 arbitrary object containing several pieces of information that are all used
 within the function to produce the p-value. In the predefined function
-\code{gaussCItest} for example, a list containing the correlation matrix
-and the number of observations is passed. This has the advantage, that any
+\code{gaussCItest()} for example, a list containing the correlation matrix
+and the number of observations is passed. This has the advantage that any
 favorite (e.g. robust) method of computing the correlation matrix can be
 used before partial correlations are computed. Oftentimes, however, it will
 suffice to just pass the complete data set in \code{suffStat}. We will
 choose this simple method in our example. An implementation of the function
-\code{myCItest} could look like this.
+\code{myCItest()} could look like this.
 <<turn-off-plus, echo=FALSE>>=
 options(continue = " ") # MM: so we don't get the "+ " continuation lines
 @
 <<myCItest>>=
 myCItest <- function(x,y,S, suffStat) {
   if (length(S) == 0) {
-    res <- cor.test(suffStat[,x],suffStat[,y])$p.value
+    x. <- suffStat[,x]
+    y. <- suffStat[,y]
   } else {
-    resx <- resid(lm(suffStat[,x] ~ suffStat[,S]))
-    resy <- resid(lm(suffStat[,y] ~ suffStat[,S]))
-    res <- cor.test(resx, resy)$p.value
+    ## x. <- resid(lm(suffStat[,x] ~ suffStat[,S]))
+    ## y. <- resid(lm(suffStat[,y] ~ suffStat[,S])) ## but more efficiently:
+    rxy <- resid(lm.fit(x= cbind(1, suffStat[,S]), y= suffStat[,c(x,y)]))
+    x. <- rxy[,1];  y. <- rxy[,2]
   }
-  res
+  cor.test(x., y.)$p.value
 }
 @
 We can now use this function together with the \code{pc()} one.
@@ -1132,25 +1145,49 @@ We can now use this function together with the \code{pc()} one.
 suffStat <- list(C = cor(gmG$x), n = 5000)
 pc.fit <- pc(suffStat, indepTest=gaussCItest, p = 8, alpha = 0.01)
 @
-\begin{figure}[htb]
-  \centering
-<<myCItest-ex-plot, fig=TRUE>>=
+<<myCItest-def-plot, eval=False>>=
 pc.myfit <- pc(suffStat = gmG$x, indepTest = myCItest,
                p = 8, alpha = 0.01)
 par(mfrow = c(1,2))
 plot(pc.fit, main = "gaussCItest")
 plot(pc.myfit, main = "myCItest")
 @
+\begin{figure}[htb]
+  \centering
+<<myCItest-ex-plot, echo=False, fig=TRUE>>=
+<<myCItest-def-plot>>
+@
 \caption{The estimated CPDAGs using the predefined and the user specified
   conditional independence test are identical.}
 \label{fig:userSpec}
 \end{figure}
 As expected, the resulting CPDAG (see Fig.~\ref{fig:userSpec}) is the same
-as in section \ref{sec:pc} where we used the function \code{gaussCItest} as
-conditional independence test. Note, however, that using
+as in section \ref{sec:pc} where we used the function \code{gaussCItest()} as
+conditional independence test. Note however that using
 \code{gaussCItest} is considerably faster than using \code{myCItest} (on
-our computer $0.067$ seconds using \code{gaussCItest} versus $4.448$
+our computer
+% 2010-09-24 : -- R 2.12.0 alpha
+% lynne         : x86_64        Linux 2.6.34.6-47.fc13.x86_64 : 129.132.58.30
+% model name	: AMD Phenom(tm) II X4 925 Processor
+% cpu MHz	: 1600.000
+% bogomips	: 5600.57
+$0.059$ seconds using \code{gaussCItest} versus $1.05$
 seconds using \code{myCItest}).
+%% MM: Nach Verbesserung [lm.fit()] ist's immer noch deutlich langsame
+%% -----   myCItest() noch wesentlich schneller geschrieben werden muss !
+<<time-tests, eval=false, echo=false>>=
+system.time(for(i in 1:10)
+            pc.fit <- pc(suffStat, indepTest=gaussCItest, p = 8, alpha = 0.01))
+      ##  User      System verstrichen
+      ## 0.593       0.000       0.594
+system.time(for(i in 1:10)
+            pc.myfit <- pc(gmG$x,  indepTest = myCItest,  p = 8, alpha = 0.01))
+## Using  resid(lm(..)) twice:
+     ##   User      System verstrichen
+     ## 44.864       0.007      44.937
+## Using resid(lm.fit(..)):
+     ## 10.550       0.067      10.632
+@
 
 \section{Session Information}
 
@@ -1158,8 +1195,6 @@ seconds using \code{myCItest}).
 toLatex(sessionInfo())
 @
 
-%% FIXME
-??? MENTION: S4-class gAlgo, pcAlgo, fciAlgo and inheritance.
 \bibliography{Mybib}
 
 \end{document}

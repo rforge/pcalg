@@ -71,3 +71,7 @@
 
 ** gAlgo-class: consider using setMethod(., "gAlgo")
    instead of all methods (plot, summary) for both pcAlgo and fciAlgo
+
+** DONE myCItest() in  der Vignette inst/doc/pcalgDoc.Snw
+   instead of lm() twice, use lm.fit *once* (*multivariate* regression).
+   This will probably be much faster.

@@ -16,8 +16,10 @@ R_CALL = ${R_PROG} --no-init-file --no-save --silent
 TPUTS = ${TEXINPUTS}:${R_LIB}/share/texmf//
 
 ## "Writing R Extensions" requires: 1st target must also clean up
-all: $(DRIVERS:=.pdf)
+doc: all
 	${MAKE} clean
+## but this is a pain --->   use  'make all'  which does *not* delete!
+all: $(DRIVERS:=.tex) $(DRIVERS:=.pdf)
 
 %.tex: %.Snw
 	echo "utils::Sweave(\"$<\")" | ${R_PROG} --no-restore --no-save --slave
