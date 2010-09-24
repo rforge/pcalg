@@ -586,12 +586,12 @@ level $\alpha$ for the conditional independence tests, which are
 passed separately. For convenience, we have preprogrammed versions of
 \code{indepTest} for Gaussian data (\code{gaussCItest}), discrete data
 (\code{disCItest}), and binary data (see \code{binCItest}). Each of
-these independence test functions need different arguments as input,
-which are described in the helpfiles of the functions. For example,
+these independence test functions needs different arguments as input,
+described in the respective help files. For example,
 when using \code{gaussCItest}, the input has to be a list containing
 the correlation matrix and the sample size of the data.  In the
 following code, we estimate the skeleton on the data set
-\code{gaussianData} (which consists of $p=8$ variables and $n=5000$
+\code{gmG} (which consists of $p=8$ variables and $n=5000$
 samples) and plot the results. The estimated skeleton and the true
 underlying DAG are shown in Fig.~\ref{fig:skelExpl}.
 \begin{figure}
@@ -689,17 +689,17 @@ meaning that there does not exist a DAG that has the same skeleton and
 v-structures as the graph found by the algorithm. An example of this is an
 undirected cycle consisting of the edges $a-b-c-d$ and $d-a$. In this case it
 is impossible to direct the edges without creating a cycle or a new
-v-structure. The option \code{u2pd} specifies what should be done in such a
-situation. If the option is set to \code{"relaxed"}, the algorithm simply
-outputs the invalid CPDAG. If the option is set to \code{"rand"}, all direction
+v-structure. The optional argument \code{u2pd} specifies what should be done in such a
+situation. If it is set to \code{"relaxed"}, the algorithm simply
+outputs the invalid CPDAG. If \code{u2pd} is set to \code{"rand"}, all direction
 information is discarded and a random DAG is generated on the skeleton. If
-the option is set to \code{"retry"}, up to 100 combinations of possible
+\code{u2pd} is set to \code{"retry"}, up to 100 combinations of possible
 directions of the ambiguous edges are tried, and the first combination that
 results in a valid CPDAG is chosen. If no valid combination is found, an
-arbitrary DAG is generated on the skeleton as in the option \code{"rand"}.
+arbitrary DAG is generated on the skeleton as with \code{u2pd = "rand"}.
 
-Using the option \code{conservative = TRUE}, the conservative PC
-algorithm done. The conservative PC is a slight variation of the PC
+By setting the argument \code{conservative = TRUE}, the conservative PC
+algorithm is chosen. The conservative PC is a slight variation of the PC
 algorithm and is intended to be more robust against sampling errors. After
 the skeleton is computed, all potential v-structures $a-b-c$ are checked in
 the following way. We test whether $a$ and $c$ are independent conditioning
@@ -708,9 +708,9 @@ $c$. If $b$ is in no such conditioning set (and not in the original sepset)
 or in all such conditioning sets (and in the original sepset), no further
 action is taken and the usual PC is continued. If, however, $b$ is in only
 some conditioning sets, the triple $a-b-c$ is marked
-'unfaithful'. Moreover, if in the conservative step there is no subset
+\emph{``unfaithful''}.  Moreover, if in the conservative step there is no subset
 among the neighbors that makes $a$ and $c$ independent, the triple is
-marked 'unfaithful'. An unfaithful triple is not oriented as a v-structure.
+marked ``unfaithful''. An unfaithful triple is not oriented as a v-structure.
 Furthermore, no later orientation rule that needs to know whether $a-b-c$
 is a v-structure or not is applied. (For more detail, see the help file of
 the internal function \code{pc.cons.intern()} which is called with the argument
@@ -723,7 +723,7 @@ equivalent.
 
 As an example, we estimate a CPDAG of the Gaussian data used in the
 example for the skeleton in section \ref{sec:skel}. Again, we choose
-the predefined function \code{gaussCItest()} as conditional independence
+the predefined \code{gaussCItest()} as conditional independence
 test and create the corresponding test statistic. Finally, we plot the
 result. The estimated CPDAG and the true underlying DAG are shown in
 Fig.~\ref{fig:pcFit1}.
@@ -744,7 +744,7 @@ plot(pc.fit, main = "Estimated CPDAG")
 
 \subsection{fci}\label{sec:fci}
 
-This function is a generalization of the PC algorithm (see section
+This function implements a generalization of the PC algorithm (see section
 \ref{sec:pc}), in the sense that it allows arbitrarily many latent and
 selection variables. Under the assumption that the data are faithful to a
 DAG that includes all latent and selection variables, the FCI algorithm
@@ -791,7 +791,7 @@ subsets of Possible-D-SEP are considered as conditioning sets in the
 conditional independence tests. If FALSE, Possible-D-SEP is not computed,
 so that the algorithm simplifies to the Modified PC algorithm of \cite{SpirtesEtAl00}.
 
-Using the option \code{conservative} one can invoke the conservative
+The argument \code{conservative} can be used to invoke the conservative
 FCI which consists of two parts. In the first part (done if
 \code{conservative[1]} is \code{TRUE}), we call the
 internal function \code{pc.cons.internal()} with argument
@@ -800,7 +800,7 @@ conservative PC (which used \code{version.unf = c(2,2)}): If $a$ is
 independent of $c$ given some $S$ in the skeleton (i.e., the edge $a-c$
 dropped out), but $a$ and $c$ remain dependent given all subsets of
 neighbors of either $a$ or $c$, we will call all triples $a-b-c$
-'faithful'. This is because in the FCI, the true separating set might be
+\emph{``faithful''}. This is because in the FCI, the true separating set might be
 outside the neighborhood of either $a$ or $c$. In the second part (done if
 \code{conservative[2]} is \code{TRUE}), we call
 \code{pc.cons.internal(.., version.unf = c(1,2)} again after
@@ -809,7 +809,7 @@ edges. Therefore, new triples might have occurred. If this second part is
 done, the resulting information on sepset and faithful triples overwrites
 the previous and will be used for the subsequent orientation rules.
 
-Using the option \code{biCC = TRUE} only nodes on paths between $a$ and $c$
+By setting the argument \code{biCC = TRUE}, only nodes on paths between $a$ and $c$
 are considered to be in \code{sepset(a,c)}. This method uses biconnected
 components to find all paths between nodes $a$ and $c$.
 
@@ -821,11 +821,8 @@ subgraph relevant for the rule does not involve an unfaithful triple.
 
 As an example, we estimate the PAG of a graph with five nodes using
 the function \code{fci()} and the predefined function \code{gaussCItest()}
-as conditional independence test. Finally, we plot the result. Node $V_1$ is latent. In
-Fig.~\ref{fig:fci} the true DAG and the estimated PAG are shown.
-\begin{figure}
-  \centering
-<<fciExpl-plot, fig=TRUE>>=
+as conditional independence test. Finally, we plot the result. Node $V_1$ is latent.
+<<def-fciExpl-plot, eval=False>>=
 data(gmL)
 suffStat1 <- list(C = cor(gmL$x), n = nrow(gmL$x))
 pag.est <- fci(suffStat1, indepTest= gaussCItest,
@@ -833,6 +830,12 @@ pag.est <- fci(suffStat1, indepTest= gaussCItest,
 par(mfrow = c(1,2))
 plot(gmL$g, main = "True DAG")
 plot(pag.est, main = "Estimated PAG")
+@
+In Fig.~\ref{fig:fci} the true DAG and the estimated PAG are shown.
+\begin{figure}
+  \centering
+<<fciExpl-plot, echo=False, fig=TRUE>>=
+<<def-fciExpl-plot>>
 @
 \caption{True data generating DAG and estimated PAG. Variable 1 of the data
 generating DAG is latent. One can see that the PAG was estimated correctly.}
@@ -950,8 +953,8 @@ the correct one. Therefore, we return the entire multiset of $k$ estimated
 effects.
 
 In our example, there are six DAGs in the equivalence class. Therefore, the
-function \code{ida()} (with option \code{method = "global"}) will
-produce six possible values of causal effects (one for each DAG).
+function \code{ida()} (with \code{method = "global"}) will
+produce six possible values of causal effects, one for each DAG.
 <<idaExpl4>>=
 ida(2, 5, cov(gmI$x), pc.fit@graph, method = "global", verbose = FALSE)
 @
@@ -1099,9 +1102,10 @@ the user. In this section, we illustrate this feature by using a
 conditional independence test for Gaussian data that is not predefined
 in the package.
 
-The functions \code{skeleton}, \code{pc} and \code{fci} need a
-function of the form \code{\textit{CItest}(x, y, S, suffStat)} to test
-conditional independence relationships. This function must return
+The functions \code{skeleton}, \code{pc} and \code{fci} all need as
+\emph{argument} \code{indepTest} a function of the form
+\code{\textit{CItest}(x, y, S, suffStat)} to test
+conditional independence relationships.  This function must return
 the p-value of the conditional independence test of $x$ and $y$ given
 $S$ and some information on the data in the form of a sufficient
 statistic (this might be simply the data frame with the original
@@ -1134,7 +1138,7 @@ myCItest <- function(x,y,S, suffStat) {
   } else {
     ## x. <- resid(lm(suffStat[,x] ~ suffStat[,S]))
     ## y. <- resid(lm(suffStat[,y] ~ suffStat[,S])) ## but more efficiently:
-    rxy <- resid(lm.fit(x= cbind(1, suffStat[,S]), y= suffStat[,c(x,y)]))
+    rxy <- resid(lm.fit(y= suffStat[,c(x,y)], x= cbind(1, suffStat[,S])))
     x. <- rxy[,1];  y. <- rxy[,2]
   }
   cor.test(x., y.)$p.value
