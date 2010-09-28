@@ -3,7 +3,9 @@
 \docType{data}
 \title{Latent Variable Graphical Model Data Example}
 \description{
-  ......
+This data set contains a matrix containing information on four gaussian
+variables and the corresonding DAG model containing four observed and
+one latent variable.
 }
 \usage{data(gmL)}
 \format{
@@ -18,7 +20,10 @@
   }
 }
 \details{
-%%  ~~ If necessary, more details than the __description__ above ~~
+The data was generated as indicated below. First, a random DAG model was
+generated with five nodes; then 10000 samples were drawn from this
+model; finally, one of the four variables was declared to be latent and
+the corresponding column was deleted from the simulated data set.
 }
 % \source{
 % %%  ~~ reference to a publication or URL from which the data were obtained ~~

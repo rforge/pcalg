@@ -3,28 +3,29 @@
 \docType{data}
 \title{Graphical Model Discrete 5-Dim Example Data}
 \description{
-%%  ~~ A concise (1-5 lines) description of the dataset. ~~
+  This data set contains a matrix containing information on five
+  discrete variables (levels are coded as numbers) and the corresonding
+  DAG model. 
 }
 \usage{data(gmD)}
 \format{
-  The format is:
-List of 2
- $ x:'data.frame':	10000 obs. of  5 variables:
-  ..$ X1: int [1:10000] 2 2 1 1 1 2 2 0 2 0 ...
-  ..$ X2: int [1:10000] 0 1 0 0 0 1 1 0 0 0 ...
-  ..$ X3: int [1:10000] 0 1 1 2 0 1 0 1 2 0 ...
-  ..$ X4: int [1:10000] 2 2 3 2 2 0 2 2 2 0 ...
-  ..$ X5: int [1:10000] 1 1 0 1 1 1 1 1 1 0 ...
- $ g:Formal class 'graphNEL' [package "graph"] with 6 slots
-  .. ..@ nodes     : chr [1:5] "1" "2" "3" "4" ...
-  .. ..@ edgeL     :List of 5
-  .. ..@ edgeData  :Formal class 'attrData' [package "graph"] with 2 slots
-  .. ..@ nodeData  :Formal class 'attrData' [package "graph"] with 2 slots
-  .. ..@ renderInfo:Formal class 'renderInfo' [package "graph"] with 4 slots
-  .. ..@ graphData :List of 1
+  The format is a list of two components
+  \describe{
+    \item{x:}{int [1:10000, 1:5] 2 2 1 1 1 2 2 0 2 0 ...}
+    \item{g:}{Formal class 'graphNEL' [package "graph"] with 6 slots\cr
+      .. ..@ nodes     : chr [1:5] "1" "2" "3" "4" ...\cr
+      .. ..@ edgeL     :List of 5\cr
+      ........      
+    }
+  }
 }
 \details{
-%%  ~~ If necessary, more details than the __description__ above ~~
+The data was generated using Tetrad in the following way. A random DAG
+on five nodes was generated; discrete variables were assigned to each
+node (with 3, 2, 3, 4 and 2 levels); then conditional probability tables
+corresponding 
+to the structure of the generated DAG were constructed. Finally, 10000
+samples were drawn using the conditional probability tables.
 }
 % \source{
 % %%  ~~ reference to a publication or URL from which the data were obtained ~~

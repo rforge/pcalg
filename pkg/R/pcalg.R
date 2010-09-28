@@ -2669,10 +2669,6 @@ udag2pag <- function(gInput, rules=rep(TRUE,10), verbose=TRUE, unfVect=NULL)
           }
         }
       }
-    }
-    old_pag2 <- matrix(rep(0, p^2), nrow = p, ncol = p)
-    while (sum(!(old_pag2 == pag)) > 0) {
-      old_pag2 <- pag
       if (rules[5]) {
         ind <- which((pag == 1 & t(pag) == 1), arr.ind = TRUE)
         if (length(ind) > 0) {

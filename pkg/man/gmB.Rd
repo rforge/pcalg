@@ -3,26 +3,28 @@
 \docType{data}
 \title{Graphical Model 5-Dim Binary Example Data}
 \description{
-%%  ~~ A concise (1-5 lines) description of the dataset. ~~
+This data set contains a matrix containing information on five binary
+variables (coded as 0/1) and the corresonding DAG model.
 }
 \usage{data(gmB)}
 \format{
-  The format is:
-List of 2
- $ x: int [1:5000, 1:5] 0 1 1 0 0 1 1 0 1 1 ...
-  ..- attr(*, "dimnames")=List of 2
-  .. ..$ : NULL
-  .. ..$ : chr [1:5] "V1" "V2" "V3" "V4" ...
- $ g:Formal class 'graphNEL' [package "graph"] with 6 slots
-  .. ..@ nodes     : chr [1:5] "1" "2" "3" "4" ...
-  .. ..@ edgeL     :List of 5
-  .. ..@ edgeData  :Formal class 'attrData' [package "graph"] with 2 slots
-  .. ..@ nodeData  :Formal class 'attrData' [package "graph"] with 2 slots
-  .. ..@ renderInfo:Formal class 'renderInfo' [package "graph"] with 4 slots
-  .. ..@ graphData :List of 1
+  The format is a list of two components
+  \describe{
+    \item{x:}{int [1:5000, 1:5] 0 1 1 0 0 1 1 0 1 1 ...}
+    \item{g:}{Formal class 'graphNEL' [package "graph"] with 6 slots\cr
+      .. ..@ nodes     : chr [1:5] "1" "2" "3" "4" ...\cr
+      .. ..@ edgeL     :List of 5\cr
+      ........      
+    }
+  }
 }
+
 \details{
-%%  ~~ If necessary, more details than the __description__ above ~~
+The data was generated using Tetrad in the following way. A random DAG
+on five nodes was generated; binary variables were assigned to each
+node; then conditional probability tables corresponding
+to the structure of the generated DAG were constructed. Finally, 5000
+samples were drawn using the conditional probability tables.
 }
 % \source{
 % %%  ~~ reference to a publication or URL from which the data were obtained ~~

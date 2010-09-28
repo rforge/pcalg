@@ -1,3 +1,13 @@
+2010-09-28  Markus Kalisch  <kalisch@stat.math.ethz.ch>
+
+	* man/gmI.Rd: description & details added
+
+	* man/gmG.Rd: description & details added
+
+	* man/gmD.Rd: description & details added
+
+	* man/gmB.Rd: description & details added
+
 2010-09-10  Martin Maechler  <maechler@stat.math.ethz.ch>
 
 	* R/pcalg.R (lm.cov): solve(A, b),  *NOT* solve(A) %*% b  !!!!!!!!
