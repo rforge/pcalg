@@ -7,8 +7,18 @@ importFrom("robustbase",
 #import(graph)# importFrom(graph, )
 importClassesFrom("graph", graph, graphNEL)
 importMethodsFrom("graph",
-                  coerce,# as(., ...)
-                  numEdges)
+		  ## addEdge,
+		  coerce,# as(., ...)
+		  edges, edgeData, edgeDataDefaults,
+		  nodes,
+		  numNodes, numEdges,
+		  subGraph, ugraph)
+
+importFrom("RBGL",
+	   biConnComp, johnson.all.pairs.sp, separates)
+importMethodsFrom("RBGL",
+		  bfs)
+
 
 # importFrom("MASS", mvrnorm)
 importFrom("ggm", isAcyclic,transClos,topOrder)

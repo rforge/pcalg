@@ -36,7 +36,8 @@ data(gmL)
 str(gmL, max=3)
 
 ## the graph:
-gmL$g ; nodes(gmL$g) ; str(edges(gmL$g))
+gmL$g
+graph::nodes(gmL$g) ; str(graph::edges(gmL$g))
 if(require("Rgraphviz"))
   plot(gmL$g, main = "gmL $ g -- latent variable example data")
 

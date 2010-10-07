@@ -201,7 +201,7 @@ if (require(Rgraphviz)) {
 ## define independence test
 indepTest <- dsepTest
 ## define sufficient statistics (d-separation oracle)
-suffStat <- list(g = gmG$g, jp = johnson.all.pairs.sp(gmG$g))
+suffStat <- list(g = gmG$g, jp = RBGL::johnson.all.pairs.sp(gmG$g))
 ## estimate CPDAG
 alpha <- 0.01 ## value is irrelevant as dsepTest returns either 0 or 1
 fit <- pc(suffStat, indepTest, p, alpha)

@@ -131,7 +131,7 @@ L3 <- c(8,10)
 ##______________________________________________________
 p <- 12
 amat.g <- as(g3,"matrix")
-colnames(amat.g) <- rownames(amat.g) <- nodes(g3)
+colnames(amat.g) <- rownames(amat.g) <- graph::nodes(g3)
 amat.g[amat.g!=0] <- 1
 
 ##Compute the true covariance matrix of g

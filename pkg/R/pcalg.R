@@ -340,7 +340,7 @@ condIndFisherZ <- function(x,y,S,C,n, cutoff,
   ## - x,y,S: Are x,y cond. indep. given S?
   ## - C: Correlation matrix among nodes
   ## - n: Samples used to estimate correlation matrix
-  ## - cutoff: Cutoff for Significance level for individual
+  ## - cutoff: Cutoff for significance level for individual
   ##           partial correlation tests
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 26 Jan 2006, 17:32
@@ -357,10 +357,9 @@ condIndFisherZ <- function(x,y,S,C,n, cutoff,
   T <- sqrt(n-length(S)-3)*z
   ## cat(" (",x,",",y,") | ",S," : T = ",T,"\n", sep='')
 
-  if (is.na(T))
-    return(TRUE) ## <==>  T <- 0 # if problem, delete edge: be conservative
-  ## else
-  return(abs(T) <= cutoff) ## TRUE / FALSE
+  ## MM: T is only NA when 'r' already is (r = +- 1  <==>  T = +- Inf) -- better check there (FIXME?)
+  ## is.na(T) <==>  T <- 0 # if problem, delete edge: be conservative
+  is.na(T) || abs(T) <= cutoff
 }
 
 pcorOrder <- function(i,j, k, C, cut.at = 0.9999999) {
@@ -371,18 +370,18 @@ pcorOrder <- function(i,j, k, C, cut.at = 0.9999999) {
   ## - C: Correlation matrix among nodes
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 26 Jan 2006; Martin Maechler
-  Res <- 0
   if (length(k)==0) {
     r <- C[i,j]
-  } else {
-    if (length(k)==1) {
-      r <-  (C[i, j] - C[i, k] * C[j, k])/sqrt((1 - C[j, k]^2) * (1 - C[i, k]^2))
-    } else {
-      PM <- pseudoinverse(C[c(i,j,k), c(i,j,k)])
-      r <- -PM[1, 2]/sqrt(PM[1, 1] * PM[2, 2])
-    }
+  } else if (length(k)==1) {
+    r <- (C[i, j] - C[i, k] * C[j, k])/sqrt((1 - C[j, k]^2) * (1 - C[i, k]^2))
+  } else { ## length(k) >= 2
+    ## If corpcor was decent and had a name space, we'd just use
+    ## PM <- corpcor::pseudoinverse(C[c(i,j,k), c(i,j,k)])
+    stopifnot(require("corpcor", quietly=TRUE))
+    PM <- pseudoinverse(C[c(i,j,k), c(i,j,k)])
+    r <- -PM[1, 2]/sqrt(PM[1, 1] * PM[2, 2])
   }
-  if (is.na(r)) r=0
+  if(is.na(r)) r <- 0
   min(cut.at, max(-cut.at, r))
 }
 
@@ -3355,7 +3354,6 @@ gSquareBin <- function(x, y, S, dm, verbose=FALSE,adaptDF=FALSE){
   ##            The value for the DF cannot go below 1.
   ## -------------------------------------------------------------------------
 
-
   if(verbose) cat('\nEdge ',x,' -- ',y,' with subset: ',S,'\n')
 
   n <- dim(dm)[1] # nr of samples
@@ -3370,14 +3368,14 @@ gSquareBin <- function(x, y, S, dm, verbose=FALSE,adaptDF=FALSE){
     prob <- 1    ## gerster prob=0
   }
   else { # enough data to perform the test
-    if(lenS<6){
-
+    if(lenS < 6) {
 
       if (lenS == 0) {
         nij <- array(0,c(2,2))
         for (i in 1:2) {
           for (j in 1:2) {
-	    nij[i,j] <- sum((dm[,x]==i-1)&(dm[,y]==j-1))
+	    nij[i,j] <- sum(dm[,x] == i-1 &
+                            dm[,y] == j-1)
           }
         }
         ## marginal counts
@@ -3388,23 +3386,22 @@ gSquareBin <- function(x, y, S, dm, verbose=FALSE,adaptDF=FALSE){
 
         ## compute G^2
         dij <- t.X %*% t.Y # s_ia * s_jb
-        t.log <- nij*n/dij
-        t.G2 <- 2*nij*log(t.log)
-        t.G2[which(is.nan(t.G2),arr.ind=TRUE)] <- 0
+        t.G2 <- 2*nij*log(nij*n/dij)
+        t.G2[is.nan(t.G2)] <- 0
         G2 <- sum(t.G2)
       } #end lenS=0
 
-      if (lenS==1){
-        a.pos <- sort(c(x,y,S))
+      if (lenS==1) {
+          ## a.pos <- sort(c(x,y,S))
 
         nijk <- array(0,c(2,2,2))
         for(i in 1:2) for(j in 1:2) for(k in 1:2) {
-          nijk[i,j,k] <- sum((dm[,x]==i-1)&(dm[,y]==j-1)&(dm[,S]==k-1))
+          nijk[i,j,k] <- sum((dm[,x]==i-1)&
+                             (dm[,y]==j-1)&
+                             (dm[,S]==k-1))
         }
 
         alt <- c(x,y,S)
-
-
         c <- which(alt==S)
         nik <- apply(nijk,c,rowSums)
         njk <- apply(nijk,c,colSums)
@@ -3419,40 +3416,37 @@ gSquareBin <- function(x, y, S, dm, verbose=FALSE,adaptDF=FALSE){
             t.dijk <- t.X %*% t.Y
             t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
           }
-        } else{
-          if(c==1){
-            for (k in 1:2) {
-              t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
-              t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
-              t.dijk <- t.X %*% t.Y
-              t.log[k,,] <- nijk[k,,]*nk[k]/t.dijk
-            }
-          } else{
-            for (k in 1:2) {
-              t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
-              t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
-              t.dijk <- t.X %*% t.Y
-              t.log[,k,] <- nijk[,k,]*nk[k]/t.dijk
-            }
+        } else if(c==1) {
+          for (k in 1:2) {
+            t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
+            t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
+            t.dijk <- t.X %*% t.Y
+            t.log[k,,] <- nijk[k,,]*nk[k]/t.dijk
+          }
+        } else { ## c == 2 (?)
+          for (k in 1:2) {
+            t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
+            t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
+            t.dijk <- t.X %*% t.Y
+            t.log[,k,] <- nijk[,k,]*nk[k]/t.dijk
           }
         }
 
         t.G2 <- 2 * nijk * log(t.log)
-        t.G2[which(is.nan(t.G2),arr.ind=TRUE)] <- 0
+        t.G2[is.nan(t.G2)] <- 0
         G2 <- sum(t.G2)
-
 
       } # end lenS=1
 
-      if(lenS==2){
-        a.pos <- sort(c(x,y,S))
+      if(lenS==2) {
+          ## a.pos <- sort(c(x,y,S))
 
         nijk2 <- array(NA,c(2,2,2,2))
         for(i in 1:2) for(j in 1:2) for(k in 1:2) for(l in 1:2){
           nijk2[i,j,k,l] <- sum((dm[,x]==i-1)&(dm[,y]==j-1)&(dm[,S[1]]==k-1)&(dm[,S[2]]==l-1))
         }
 
-        alt <- c(x,y,S)
+        ## alt <- c(x,y,S)
 
         nijk <- array(NA,c(2,2,4))
         for(i in 1:2) for(j in 1:2){
@@ -3473,14 +3467,15 @@ gSquareBin <- function(x, y, S, dm, verbose=FALSE,adaptDF=FALSE){
         }
 
         t.G2 <- 2 * nijk * log(t.log)
-        t.G2[which(is.nan(t.G2),arr.ind=TRUE)] <- 0
+        t.G2[is.nan(t.G2)] <- 0
         G2 <- sum(t.G2)
       } #end lenS=2
 
       if(lenS==3){
         nijk <- array(NA,c(2,2,8))
         for(i1 in 1:2) for(i2 in 1:2) for(i3 in 1:2) for(i4 in 1:2) for(i5 in 1:2){
-          nijk[i1,i2,4*(i3-1)+2*(i4-1)+i5] <- sum((dm[,x]==i1-1)&(dm[,y]==i2-1)&(dm[,S[1]]==i3-1)&(dm[,S[2]]==i4-1)&(dm[,S[3]]==i5-1))
+          nijk[i1,i2,4*(i3-1)+2*(i4-1)+i5] <-
+              sum((dm[,x]==i1-1)&(dm[,y]==i2-1)&(dm[,S[1]]==i3-1)&(dm[,S[2]]==i4-1)&(dm[,S[3]]==i5-1))
         }
 
         nik <- apply(nijk,3,rowSums)
@@ -3497,14 +3492,20 @@ gSquareBin <- function(x, y, S, dm, verbose=FALSE,adaptDF=FALSE){
         }
 
         t.G2 <- 2 * nijk * log(t.log)
-        t.G2[which(is.nan(t.G2),arr.ind=TRUE)] <- 0
+        t.G2[is.nan(t.G2)] <- 0
         G2 <- sum(t.G2)
       } #end lenS=3
 
       if(lenS==4){
         nijk <- array(NA,c(2,2,16))
         for(i1 in 1:2) for(i2 in 1:2) for(i3 in 1:2) for(i4 in 1:2) for(i5 in 1:2) for(i6 in 1:2){
-          nijk[i1,i2,8*(i3-1)+4*(i4-1)+2*(i5-1)+i6] <- sum((dm[,x]==i1-1)&(dm[,y]==i2-1)&(dm[,S[1]]==i3-1)&(dm[,S[2]]==i4-1)&(dm[,S[3]]==i5-1)&(dm[,S[4]]==i6-1))
+          nijk[i1,i2,8*(i3-1)+4*(i4-1)+2*(i5-1)+i6] <-
+            sum((dm[,x]==i1-1) &
+                (dm[,y]==i2-1) &
+                (dm[,S[1]]==i3-1) &
+                (dm[,S[2]]==i4-1) &
+                (dm[,S[3]]==i5-1) &
+                (dm[,S[4]]==i6-1))
         }
 
         nik <- apply(nijk,3,rowSums)
@@ -3521,14 +3522,21 @@ gSquareBin <- function(x, y, S, dm, verbose=FALSE,adaptDF=FALSE){
         }
 
         t.G2 <- 2 * nijk * log(t.log)
-        t.G2[which(is.nan(t.G2),arr.ind=TRUE)] <- 0
+        t.G2[is.nan(t.G2)] <- 0
         G2 <- sum(t.G2)
       } #end lens=4
 
       if(lenS==5){
         nijk <- array(NA,c(2,2,32))
         for(i1 in 1:2) for(i2 in 1:2) for(i3 in 1:2) for(i4 in 1:2) for(i5 in 1:2) for(i6 in 1:2) for(i7 in 1:2){
-          nijk[i1,i2,16*(i3-1)+8*(i4-1)+4*(i5-1)+2*(i6-1)+i7] <- sum((dm[,x]==i1-1)&(dm[,y]==i2-1)&(dm[,S[1]]==i3-1)&(dm[,S[2]]==i4-1)&(dm[,S[3]]==i5-1)&(dm[,S[4]]==i6-1)&(dm[,S[5]]==i7-1))
+          nijk[i1,i2,16*(i3-1)+8*(i4-1)+4*(i5-1)+2*(i6-1)+i7] <-
+	      sum((dm[,x]==i1-1)&
+		  (dm[,y]==i2-1)&
+		  (dm[,S[1]]==i3-1)&
+		  (dm[,S[2]]==i4-1)&
+		  (dm[,S[3]]==i5-1)&
+		  (dm[,S[4]]==i6-1)&
+		  (dm[,S[5]]==i7-1))
         }
 
         nik <- apply(nijk,3,rowSums)
@@ -3545,18 +3553,18 @@ gSquareBin <- function(x, y, S, dm, verbose=FALSE,adaptDF=FALSE){
         }
 
         t.G2 <- 2 * nijk * log(t.log)
-        t.G2[which(is.nan(t.G2),arr.ind=TRUE)] <- 0
+        t.G2[is.nan(t.G2)] <- 0
         G2 <- sum(t.G2)
       } # end lenS=5
     }
-    else{ # wenn lenS>5
+    else { # wenn lenS >= 6
       nijk <- tijk <- array(0,c(2,2,1))
       ## first sample 'by hand' to avoid if/else in the for-loop
       i <- dm[1,x]+1
       j <- dm[1,y]+1
       ## create directly a list of all k's
       k <- NULL
-      sapply(as.list(S),(function(x){k <<- cbind(k,dm[,x]+1);return(TRUE)}))
+      sapply(as.list(S),function(x){k <<- cbind(k,dm[,x]+1);return(TRUE)})
       ## first set of subset values
       parents.count <- 1 ## counter variable corresponding to the number
       ## of value combinations for the subset varibales
@@ -3615,12 +3623,11 @@ gSquareBin <- function(x, y, S, dm, verbose=FALSE,adaptDF=FALSE){
         t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
       }
       t.G2 <- 2 * nijk * log(t.log)
-      t.G2[which(is.nan(t.G2),arr.ind=TRUE)] <- 0
+      t.G2[is.nan(t.G2)] <- 0
       G2 <- sum(t.G2)
-
     }
 
-    if (adaptDF&lenS>0) {
+    if (adaptDF && lenS > 0) {
       ## lower the degrees of freedom according to the amount of
       ## zero counts
       zero.counts <- length(which(nijk == 0))
@@ -3633,7 +3640,8 @@ gSquareBin <- function(x, y, S, dm, verbose=FALSE,adaptDF=FALSE){
     prob <- 1 - pchisq(G2,df)
   } # end if/else(number of samples)
   prob
-}
+}## gSquareBin()
+
 gSquareDis <- function(x, y, S, dm, nlev, verbose=FALSE,adaptDF=FALSE){
 
   ## Purpose: G^2 statistic to test for (conditional) independence
@@ -3683,7 +3691,7 @@ gSquareDis <- function(x, y, S, dm, nlev, verbose=FALSE,adaptDF=FALSE){
         dij <- t.X %*% t.Y # s_ia * s_jb
         t.log <- nij*n/dij
         t.G2 <- 2*nij*log(t.log)
-        t.G2[which(is.nan(t.G2),arr.ind=TRUE)] <- 0
+        t.G2[is.nan(t.G2)] <- 0
         G2 <- sum(t.G2)
       } #end lenS=0
 
@@ -3707,7 +3715,7 @@ gSquareDis <- function(x, y, S, dm, nlev, verbose=FALSE,adaptDF=FALSE){
         }
 
         t.G2 <- 2 * nijk * log(t.log)
-        t.G2[which(is.nan(t.G2),arr.ind=TRUE)] <- 0
+        t.G2[is.nan(t.G2)] <- 0
         G2 <- sum(t.G2)
 
       } # end lenS=1
@@ -3732,7 +3740,7 @@ gSquareDis <- function(x, y, S, dm, nlev, verbose=FALSE,adaptDF=FALSE){
         }
 
         t.G2 <- 2 * nijk * log(t.log)
-        t.G2[which(is.nan(t.G2),arr.ind=TRUE)] <- 0
+        t.G2[is.nan(t.G2)] <- 0
         G2 <- sum(t.G2)
       } #end lenS=2
 
@@ -3780,7 +3788,7 @@ gSquareDis <- function(x, y, S, dm, nlev, verbose=FALSE,adaptDF=FALSE){
         }
 
         t.G2 <- 2 * nijk * log(t.log)
-        t.G2[which(is.nan(t.G2),arr.ind=TRUE)] <- 0
+        t.G2[is.nan(t.G2)] <- 0
         G2 <- sum(t.G2)
       } #end lens=4
     }
@@ -3873,7 +3881,7 @@ gSquareDis <- function(x, y, S, dm, nlev, verbose=FALSE,adaptDF=FALSE){
     prob <- 1 - pchisq(G2,df)
   } # end if/else(number of samples)
   prob
-}
+}## gSquareDis()
 
 gaussCItest <- function(x,y,S,suffStat) {
   ## suffStat$C: correlation matrix

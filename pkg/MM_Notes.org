@@ -51,6 +51,12 @@
      ImportsFrom(.)
 
 *** TODO Remove more 'Depends:': vcd;  probably RBGL, abind, corpcor
+    - vcd: I've eliminated it, and all the 'R CMD check' still run
+    - abind: abind() needed in gSquareBin() & *Dis() -- once only, each
+    - corpcor: pseudoinverse() [ -> fast.svd() .. non-optimal "A %% diag(.)" ]
+    - RBGL: .. ok, only a few needed
+    - graph: import quite a few; now found all examples -- is this (not
+      attaching 'graph') acceptable to the current pcalg users ?
 
 
 * Remarks on specific functions and issues:
