@@ -1,3 +1,9 @@
+2010-10-07  Markus Kalisch  <kalisch@stat.math.ethz.ch>
+
+	* R/pcalg.R (fci): Added option "labels" to give nodenames to PAG
+	(myfun): Undid MMs change in plot-fci, since the edge marks were
+	not plotted properly anymore
+
 2010-09-28  Markus Kalisch  <kalisch@stat.math.ethz.ch>
 
 	* man/gmI.Rd: description & details added

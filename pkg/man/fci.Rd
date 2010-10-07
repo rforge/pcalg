@@ -10,7 +10,7 @@
 fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10),
     doPdsep = TRUE, conservative = c(FALSE, FALSE), biCC = FALSE,
-    cons.rules = FALSE)
+    cons.rules = FALSE, labels = NA)
 }
 
 \arguments{
@@ -62,6 +62,8 @@ fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   \item{cons.rules}{If TRUE, an orientation rule that needs information
   on definite non-colliders is only applied, if the corresponding
   subgraph relevant for the rule does not involve an unfaithful triple.}
+\item{labels}{Vector of length p with node names. If \code{NA},
+  \code{as.character{1:p}} is used instead.}
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
  \code{\linkS4class{fciAlgo}}) containing the estimated graph

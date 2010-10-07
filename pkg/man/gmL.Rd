@@ -11,23 +11,37 @@ one latent variable.
 \format{
   The format is a list of 2 components
   \describe{
-    \item{x:}{num [1:10000, 1:4] -0.614 1.304 1.45 -1.121 -0.21 ...}
-    \item{g:}{Formal class 'graphNEL' [package "graph"] with 6 slots\cr
-      .. ..@ nodes     : chr [1:5] "1" "2" "3" "4" ...\cr
-      .. ..@ edgeL     :List of 5\cr
-      .......
-    }
+    \item{x:}{ $ x: num [1:10000, 1:4] 0.924 -0.189 1.016 0.363 0.497 ...
+  ..- attr(*, "dimnames")=List of 2
+  .. ..$ : NULL
+  .. ..$ : chr [1:4] "2" "3" "4" "5"}
+    \item{g:}{ $ g:Formal class 'graphNEL' [package "graph"] with 6 slots
+  .. ..@ nodes     : chr [1:5] "1" "2" "3" "4" ...
+  .. ..@ edgeL     :List of 5
+  ........
+      }
   }
 }
 \details{
 The data was generated as indicated below. First, a random DAG model was
 generated with five nodes; then 10000 samples were drawn from this
-model; finally, one of the four variables was declared to be latent and
+model; finally, variable one was declared to be latent and
 the corresponding column was deleted from the simulated data set.
 }
-% \source{
-% %%  ~~ reference to a publication or URL from which the data were obtained ~~
-% }
+\source{
+  % \code{
+  \preformatted{
+    ## Used to generate "gmL"
+    set.seed(47)
+    p <- 5
+    n <- 10000
+    gGtrue <- randomDAG(p, prob = 0.3) ## true DAG
+    myX <- rmvDAG(n, gGtrue)
+    colnames(myX) <- as.character(1:5)
+    gmL <- list(x = myX[,-1], g = gGtrue)
+  }
+  %}% code
+}
 % \references{
  %%  ~~ possibly secondary sources and usages ~~
 % }

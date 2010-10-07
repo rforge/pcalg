@@ -386,6 +386,13 @@ is either undirected (or bidirected, which has the same meaning in the
 context of the CPDAG) or directed.
 
 \subsubsection{With hidden or selection variables}
+When discovering causal relations from nonexperimental data, two
+difficulties arise. One is the problem of hidden (or latent) variables:
+factors influencing two or more measured variables may not themselves be
+measured. The other is the problem of selection bias: values of the
+variables or features under study may themselves influence whether a unit
+is included in the data sample.
+
 In the case of hidden or selection variables, one could still visualize the
 underlying causal structure with a DAG that includes all observed, hidden
 and selection variables. However, when inferring the DAG from observational
@@ -556,6 +563,10 @@ the main functions of our package for achieving these goals. The functions
 graphical models. The functions \code{ida} and \code{idaFast} are intended
 for estimating causal effects when the causal structure is known or was
 estimated.
+
+Alternatives to this package for estimating graphical models in
+\proglang{R} include: \pkg{bnlearn}, \pkg{deal}, \pkg{gRain}, \pkg{gRbase}
+and \pkg{gRc}.
 
 \subsection{skeleton}\label{sec:skel}
 The function \code{skeleton()} implements (P1) and (P2) from
@@ -842,7 +853,7 @@ generating DAG is latent. One can see that the PAG was estimated correctly.}
 \label{fig:fci}
 \end{figure}
 
-An note on implementation: As \code{pc()} and \code{fci()} are similar
+A note on implementation: As \code{pc()} and \code{fci()} are similar
 in the result they produce, their resulting values are of (S4) class
 \code{pcAlgo} and \code{fciAlgo} respectively, both of which extend the
 class (of their ``communalities''), \code{gAlgo}.
@@ -1192,6 +1203,7 @@ system.time(for(i in 1:10)
 ## Using resid(lm.fit(..)):
      ## 10.550       0.067      10.632
 @
+
 
 \section{Session Information}
 

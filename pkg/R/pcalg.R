@@ -3219,7 +3219,7 @@ pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
 fci <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
                 fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
                 m.max = Inf, rules = rep(TRUE, 10), doPdsep =
-                TRUE, conservative=c(FALSE,FALSE), biCC=FALSE, cons.rules=FALSE)
+                TRUE, conservative=c(FALSE,FALSE), biCC=FALSE, cons.rules=FALSE, labels = NA)
 {
   ## Purpose: Perform PC-Algorithm, i.e., estimate skeleton of DAG given data
   ## ----------------------------------------------------------------------
@@ -3242,6 +3242,11 @@ fci <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
 ##################################################
   ## Initial Checks
 ##################################################
+  if (all(!is.na(labels))) {
+    stopifnot(length(labels) == p)
+  } else {
+    labels <- as.character(1:p)
+  }
   cl <- match.call()
   if (verbose)
     cat("Compute Skeleton\n================\n")
@@ -3285,7 +3290,7 @@ fci <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
     ##conservative version
     if (conservative[2]) {
       ##compute conservative again, because skelet may have changed
-      colnames(G) <- rownames(G) <- as.character(1:p)
+      colnames(G) <- rownames(G) <- labels
       Gobject <- as(G, "graphNEL")
       tmp.pdsep <- new("pcAlgo", graph = Gobject, call = cl, n = integer(0),
                        max.ord = as.integer(max.ordSKEL), n.edgetests = n.edgetestsSKEL,
@@ -3309,9 +3314,9 @@ fci <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
 ##################################################
   ## transform matrix to graph object
   if (sum(G) == 0) {
-    Gobject <- new("graphNEL", nodes = as.character(1:p))
+    Gobject <- new("graphNEL", nodes = labels)
   } else {
-    colnames(G) <- rownames(G) <- as.character(1:p)
+    colnames(G) <- rownames(G) <- labels
     Gobject <- as(G, "graphNEL")
   }
   tmp <- new("pcAlgo", graph = Gobject, call = cl, n = integer(0),
@@ -4704,7 +4709,9 @@ setMethod("plot", signature(x = "fciAlgo"),
           names(ah.list) <- names(at.list) <- list.names
 	  edgeRenderInfo(g) <- list(arrowhead= ah.list,
 				    arrowtail= at.list)
-	  Rgraphviz::plot(g, main = main, ...)
+	  ## Rgraphviz::plot(g, main = main, ...)
+          ## XXX undid change by MM, since edge marks didn't work anymore
+          renderGraph(layoutGraph(g))
       })
 
 
