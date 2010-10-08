@@ -13,23 +13,19 @@ showProc.time <- local({
 ## Standard PC
 ##################################################
 nreps <- 10
-check.res <- rep(FALSE,nreps)
+
 set.seed(234)
 for (ii in 1:nreps) {
   p <- 10
   ## generate and draw random DAG :
   myDAG <- randomDAG(p, prob = 0.3)
   myCPDAG <- dag2cpdag(myDAG)
-
   suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
-  indepTest <- gaussCItest
-
-  res <- pc(suffStat, indepTest, p, 0.99)
-
-  check.res[ii] <- (shd(res,myCPDAG)==0)
+  res <- pc(suffStat, indepTest=gaussCItest, p, 0.99)
+  if( shd(res, myCPDAG) != 0)
+    stop("Test pc wrong: CPDAG ",ii," was not found correctly")
 }
 
-if (!all(check.res)) stop("Test pc wrong: Some CPDAG was not found correctly!")
 showProc.time()
 
 ##################################################
@@ -56,7 +52,7 @@ suffStat.data <- list(C=cor(new.mat1),n=n)
 indepTest.data <- gaussCItest
 
 ##pcAlgo conservative sample
-dag1 <- pc(suffStat.data, indepTest.data, p, alpha=0.005, verbose=FALSE, u2pd="relaxed",conservative=TRUE)
+dag1 <- pc(suffStat.data, indepTest.data, p, alpha=0.005, u2pd="relaxed",conservative=TRUE)
 
 ##adjacency matrix
 dag1.amat <- as(dag1@graph,"matrix")
@@ -209,8 +205,8 @@ g <- randomDAG(p,2/(p-1))
 ##population version
 suffStat <- list(C=cov2cor(trueCov(g)),n=10^9)
 indepTest <- gaussCItest
-dag8 <- pc(suffStat, indepTest, p, alpha=0.9999, verbose=FALSE, u2pd="relaxed")
-dag9 <- pc(suffStat, indepTest, p, alpha=0.9999, verbose=FALSE, u2pd="relaxed",conservative=TRUE)
+dag8 <- pc(suffStat, indepTest, p, alpha=0.9999, u2pd="relaxed")
+dag9 <- pc(suffStat, indepTest, p, alpha=0.9999, u2pd="relaxed", conservative=TRUE)
 
 ##adjacency matrix
 dag8.amat <- as(dag8@graph,"matrix")

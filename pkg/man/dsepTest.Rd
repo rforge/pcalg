@@ -56,8 +56,8 @@ plot(myDAG, main = "randomDAG(10, prob = 0.2)")
 ## define sufficient statistics (d-separation oracle)
 suffStat <- list(g = myDAG, jp = RBGL::johnson.all.pairs.sp(myDAG))
 
-dsepTest(1,6,NULL,suffStat) ## not d-separated
-dsepTest(1,6,3,suffStat) ## not d-separated by node 3
-dsepTest(1,6,c(3,4),suffStat) ## d-separated by node 3 and 4
+dsepTest(1,6, S= NULL,  suffStat) ## not d-separated
+dsepTest(1,6, S= 3,     suffStat) ## not d-separated by node 3
+dsepTest(1,6, S= c(3,4),suffStat) ## d-separated by node 3 and 4
 }
 

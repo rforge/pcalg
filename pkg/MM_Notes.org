@@ -81,3 +81,7 @@
 ** DONE myCItest() in  der Vignette inst/doc/pcalgDoc.Snw
    instead of lm() twice, use lm.fit *once* (*multivariate* regression).
    This will probably be much faster.
+
+** ida():  argument  'all.dags' is never used, i.e., never tested.
+
+** dsepTest(): gibt 0 / 1  zurück; wieso nicht einfach FALSE/TRUE wie dsep()?

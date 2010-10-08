@@ -1,3 +1,7 @@
+2010-10-08  Martin Maechler  <maechler@stat.math.ethz.ch>
+
+	* R/pcalg.R (pdsep): biCC: speedup
+
 2010-10-07  Markus Kalisch  <kalisch@stat.math.ethz.ch>
 
 	* R/pcalg.R (fci): Added option "labels" to give nodenames to PAG

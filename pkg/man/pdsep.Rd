@@ -2,7 +2,7 @@
 \alias{pdsep}
 \title{Compute Possible-D-Sep for Each Node and Adapt Graph Accordingly}
 \description{
-  This function computes the Possible-D-Sep for each node
+  Computes the Possible-D-Sep for each node
   and tests conditional independence given all subsets of
   Possible-D-Sep.  The graph is updated accordingly.
 }
@@ -12,11 +12,11 @@ pdsep(skel, suffStat, indepTest, p, sepset,
       alpha, unfVect = NULL, biCC = FALSE)
 }
 \arguments{
-  \item{skel}{Graph object returned by \code{skeleton}}
-  \item{suffStat}{Sufficient statistics: A list containing all necessary
+  \item{skel}{Graph object returned by \code{\link{skeleton}}.}
+  \item{suffStat}{sufficient statistic: A list containing all necessary
     elements for making conditional independence decisions using
-    function \code{indepTest}}
-  \item{indepTest}{Predefined function for testing conditional independence. The
+    function \code{indepTest}.}
+  \item{indepTest}{predefined function for testing conditional independence. The
     function is internally called as \code{indepTest(x,y,S,suffStat)} for
     testing conditional independence of \code{x} and \code{y} given
     \code{S}. Here, \code{x} and \code{y} are node numbers of the
@@ -25,7 +25,7 @@ pdsep(skel, suffStat, indepTest, p, sepset,
     containing all relevant elements for making conditional independence
     decisions. The return value of \code{indepTest} is the p-value of
     the test for conditional independence.}
-  \item{p}{Number of variables}
+  \item{p}{number of variables}
   \item{sepset}{List of length \code{p}; each element of the list
     contains another list of length \code{p}. The element
     \code{sepset[[x]][[y]]} contains the separation set that made the edge
@@ -45,8 +45,9 @@ pdsep(skel, suffStat, indepTest, p, sepset,
   \item{unfVect}{vector containing numbers that encode the unfaithful
     triple (as returned by \code{\link{pc.cons.intern}}).  This is
     needed in the conservative FCI.}
-  \item{biCC}{If TRUE, only nodes on some path between a and c are
-    considered to be in sepset(a,c). Uses biconnected components.}
+  \item{biCC}{logical; if true, only nodes on some path between a and c are
+    considered to be in sepset(a,c).  Uses biconnected components,
+    \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
 }
 \value{A list with several elements:
   \item{G}{Updated adjecency matrix}

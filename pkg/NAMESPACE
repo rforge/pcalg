@@ -16,6 +16,7 @@ importMethodsFrom("graph",
 
 importFrom("RBGL",
 	   biConnComp, johnson.all.pairs.sp, separates)
+## also    sp.between -- but only for deprecated beta.special(), hence RBGL::*
 importMethodsFrom("RBGL",
 		  bfs)
 

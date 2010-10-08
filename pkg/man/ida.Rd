@@ -1,6 +1,7 @@
 \name{ida}
-\alias{ida}
 \title{Estimate Multiset of Possible Total Causal Effects}
+\alias{ida}
+\alias{causalEffect}% document ! - FIXME
 \description{
   This function estimates the multiset of possible total causal effects of
   one variable (\code{x}) onto another variable (\code{y})
@@ -8,11 +9,13 @@
 }
 \usage{
 ida(x.pos, y.pos, mcov, graphEst, method="local",
-    y.notparent = FALSE,  verbose=FALSE,  all.dags=NA)
+    y.notparent = FALSE,  verbose=FALSE,  all.dags = NA)
+
+causalEffect(g, y, x)
 }
 \arguments{
-\item{x.pos}{Position of variable \code{x} in the covariance matrix.}
-\item{y.pos}{Position of variable \code{y} in the covariance matrix.}
+\item{x.pos, x}{Position of variable \code{x} in the covariance matrix.}
+\item{y.pos, y}{Position of variable \code{y} in the covariance matrix.}
 \item{mcov}{Covariance matrix that was used to estimate \code{graphEst}.}
 \item{graphEst}{Estimated CPDAG from the function
   \code{\link{pc}}. If the output of \code{\link{pc}} is \code{pc.fit},
@@ -27,8 +30,9 @@ ida(x.pos, y.pos, mcov, graphEst, method="local",
 \item{all.dags}{All DAGs in the equivalence class of the
   CPDAG can be precomputed by
   the function \code{\link{allDags}} and passed via this argument.
-  If this is done, no new function call \code{\link{allDags}} is made.
-  This option is only relevant when using method="global".}
+  If this is done, \code{\link{allDags}(..)} is not called internally.
+  This option is only relevant when using \code{method="global"}.}
+\item{g}{graph in which the causal effect is sought.}
 }
 \details{
 It is assumed that we have observational data that are
