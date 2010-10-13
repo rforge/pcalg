@@ -555,7 +555,7 @@ This package has three goals. First, it is intended to provide fast,
 flexible and reliable implementations of the PC and the FCI
 algorithm. Secondly, it is intended to provide a tool for estimating the
 causal effect among continuous variables given a causal structure
-using a for of the do-calculus known as back-door criterium. Finally, combining
+using a form of the do-calculus known as back-door criterium. Finally, combining
 these two applications of the package, it is possible to estimate causal
 effects when no causal structure is known. In the following, we describe
 the main functions of our package for achieving these goals. The functions
@@ -596,7 +596,7 @@ exceptions are the number of variables \code{p} and the significance
 level $\alpha$ for the conditional independence tests, which are
 passed separately. For convenience, we have preprogrammed versions of
 \code{indepTest} for Gaussian data (\code{gaussCItest}), discrete data
-(\code{disCItest}), and binary data (see \code{binCItest}). Each of
+(\code{disCItest}), and binary data (\code{binCItest}). Each of
 these independence test functions needs different arguments as input,
 described in the respective help files. For example,
 when using \code{gaussCItest}, the input has to be a list containing
@@ -714,14 +714,14 @@ algorithm is chosen. The conservative PC is a slight variation of the PC
 algorithm and is intended to be more robust against sampling errors. After
 the skeleton is computed, all potential v-structures $a-b-c$ are checked in
 the following way. We test whether $a$ and $c$ are independent conditioning
-on any subset of the neighbors of a or any subset of the neighbors of
+on any subset of the neighbors of $a$ or any subset of the neighbors of
 $c$. If $b$ is in no such conditioning set (and not in the original sepset)
 or in all such conditioning sets (and in the original sepset), no further
 action is taken and the usual PC is continued. If, however, $b$ is in only
 some conditioning sets, the triple $a-b-c$ is marked
 \emph{``unfaithful''}.  Moreover, if in the conservative step there is no subset
 among the neighbors that makes $a$ and $c$ independent, the triple is
-marked ``unfaithful''. An unfaithful triple is not oriented as a v-structure.
+marked \emph{``unfaithful''}. An unfaithful triple is not oriented as a v-structure.
 Furthermore, no later orientation rule that needs to know whether $a-b-c$
 is a v-structure or not is applied. (For more detail, see the help file of
 the internal function \code{pc.cons.intern()} which is called with the argument
@@ -814,7 +814,7 @@ neighbors of either $a$ or $c$, we will call all triples $a-b-c$
 \emph{``faithful''}. This is because in the FCI, the true separating set might be
 outside the neighborhood of either $a$ or $c$. In the second part (done if
 \code{conservative[2]} is \code{TRUE}), we call
-\code{pc.cons.internal(.., version.unf = c(1,2)} again after
+\code{pc.cons.internal(..., version.unf = c(1,2))} again after
 Possible-D-Sep was found and the graph potentially lost some
 edges. Therefore, new triples might have occurred. If this second part is
 done, the resulting information on sepset and faithful triples overwrites
@@ -825,10 +825,13 @@ are considered to be in \code{sepset(a,c)}. This method uses biconnected
 components to find all paths between nodes $a$ and $c$.
 
 The argument \code{cons.rules} manages the way in which the information
-about unfaithful triplets affects the orientation rules for directing
+about unfaithful triples affects the orientation rules for directing
 edges. If \code{cons.rules = TRUE}, an orientation rule that needs
 information on definite non-colliders is only applied, if the corresponding
 subgraph relevant for the rule does not involve an unfaithful triple.
+Using the argument \code{labels}, one can pass names for the vertices of
+the estimated graph. By default, this argument is set to \code{NA}, in
+which case the node names \code{as.character{1:p}} are used.
 
 As an example, we estimate the PAG of a graph with five nodes using
 the function \code{fci()} and the predefined function \code{gaussCItest()}
@@ -837,7 +840,7 @@ as conditional independence test. Finally, we plot the result. Node $V_1$ is lat
 data(gmL)
 suffStat1 <- list(C = cor(gmL$x), n = nrow(gmL$x))
 pag.est <- fci(suffStat1, indepTest= gaussCItest,
-               p = ncol(gmL$x), alpha = 0.01)
+               p = ncol(gmL$x), alpha = 0.01, labels = as.character(2:5))
 par(mfrow = c(1,2))
 plot(gmL$g, main = "True DAG")
 plot(pag.est, main = "Estimated PAG")
@@ -918,7 +921,7 @@ plot(pc.fit, main = "Estimated CPDAG")
 
 Since there are three undirected edges in the CPDAG, there might be up to
 $2^3 = 8$ DAGs in the corresponding equivalence class. However, the
-undirected edges $V_2-V_3-V_5$ can be formed to a new v-structures. As
+undirected edges $V_2-V_3-V_5$ can be formed to a new v-structure. As
 mentioned in section \ref{sec:gm}, DAGs in the equivalence class must have
 exactly the same v-structures as the corresponding CPDAG. Thus, $V_2-V_3-V_5$
 can only be directed as $V_2 \rightarrow V_3 \rightarrow V_5$, $V_2 \leftarrow
@@ -928,7 +931,7 @@ v-structure. There is only one remaining undirected edge ($V_1-V_6$), which
 can be directed in two ways. Thus, there are six valid DAGs
 (i.e. they have no new v-structure and no cycle) and these form the
 equivalence class represented by the CPDAG. In Fig.~\ref{fig:allDags}, all
-DAGs in the equivalence class are shown. DAG 4 is the true DAG.
+DAGs in the equivalence class are shown. DAG 6 is the true DAG.
 
 <<idaExpl3, echo = FALSE>>=
 am.pdag <- wgtMatrix(pc.fit@graph)
@@ -1071,7 +1074,7 @@ The function \code{idaFast()} can be called with the following arguments
 %\code{idaFast(x.pos, y.pos.set, mcov, graphEst)}.
 \par\vspace*{-1.2ex}
 <<idaFast-args, echo=FALSE>>=
-showF(fci)
+showF(idaFast)
 @
 \par\vspace*{-1ex}
 The arguments
