@@ -998,7 +998,10 @@ udag2pdag <- function(gInput, verbose=0) {
       }
       res@graph <- as(pdag,"graphNEL")
     } else {
+      ## was not extendable; random DAG chosen
       res@graph <- res2$graph
+      ## convert to CPDAG
+      res@graph <- dag2cpdag(res@graph)
     }
   }
   return(res)
