@@ -445,9 +445,10 @@ concept of m-separation, which is almost identical to the concept of
 d-separation in DAGs. Furthermore, part of the causal information in the
 underlying DAG is represented in the MAG. If in the MAG there is an edge
 between node $i$ and node $j$ with an arrowhead at node $i$, then there is
-no directed path from node $i$ to node $j$ in the underlying DAG. If, on
-the other hand, there is an arrowtail at node $i$, then there is a directed
-path from node $i$ to node $j$ in the underlying DAG.
+no directed path from node $i$ to node $j$ nor to any of the selection
+variable in the underlying DAG. If, on the other hand, there is a tail at
+node $i$, then there is a directed path from node $i$ to node $j$ or to one
+of the selection variables in the underlying DAG.
 
 Recall that finding a unique DAG from an independence oracle is in general
 impossible. Therefore, one only reports on the equivalence class of DAGs in
@@ -551,7 +552,9 @@ In addition to this fundamental limitation in estimating a causal effect,
 errors due to finite sample size blur the result as with every statistical
 method. Thus, in a real world situation, we only get an estimate of the set
 of possible causal values. It was shown that this
-estimate is consistent under some assumptions by \cite{BuKaMa09}.
+estimate is consistent under some assumptions by \cite{BuKaMa09}. The
+method was termed "IDA" (\textbf{I}ntervention calculus when the
+\textbf{D}AG is \textbf{a}bsent).
 
 It has recently been shown empirically that despite the described
 fundamental limitations in identifying the causal effect uniquely and
@@ -561,6 +564,36 @@ high-dimensional yeast gene expression data set (see \cite{NatMethods10}).
 
 At the moment, we can not yet estimate causal effects when hidden variables or
 selection variables are present.
+
+\subsection{Summary of assumptions}
+For all proposed methods, we assume that the data is faithful to the
+unknown underlying causal DAG. For the individual methods, further
+assumptions are made.
+
+\begin{description}
+\item[PC-algorithm:] No hidden or selection variables; consistent in
+  high-dimensional settings (the number of variables grows with the sample
+  size) if the underlying DAG is sparse, the data is multivariate Normal
+  and satisfies some regularity conditions on the partial correlations, and
+  $\alpha$ is taken to zero appropriately.  See \cite{KaBu07a} for full
+  details. Consistency in a standard asymptotic regime with a fixed number
+  of variables follows as a special case. 
+
+\item[FCI-algorithm:] Consistent in high-dimensional settings if the
+  underlying MAG is sparse (in a stronger sense than what is needed for
+  PC), the data is multivariate Normal and satisfies some regularity
+  conditions on the partial correlations, and $\alpha$ is taken to zero
+  appropriately. See \cite{rfci} for full details. Consistency in
+  a standard asymptotic regime with a fixed number of variables follows as
+  a special case.
+
+\item[IDA:] No hidden or selection variables; all conditional expectations
+  are linear; consistent in high-dimensional settings if the underlying DAG
+  is sparse, the data is multivariate Normal and satisfies some regularity
+  conditions on the partial correlations and conditional variances, and
+  $\alpha$ is taken to zero appropriately. See \cite{BuKaMa09} for full
+  details.
+\end{description}
 
 \section{Package pcalg}
 This package has three goals. First, it is intended to provide fast,
@@ -1034,7 +1067,7 @@ of $x$ on $y$ as above, using linear regression.
 At first sight, it is not clear that such a local configuration corresponds
 to a DAG in the equivalence class of the CPDAG, since it may be impossible
 to direct the remaining undirected edges without creating a directed cycle
-or a v-structure. However, \cite{BuKaMa10} showed
+or a v-structure. However, \cite{BuKaMa09} showed
 that there is at least one DAG in the equivalence class for each such local
 configuration.  As a result, it follows that the multisets of total causal
 effects of the \code{global} and the \code{local} method have the same unique
