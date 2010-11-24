@@ -45,8 +45,8 @@ corr.pag1 <- rbind(c(.,1,1,.),
                    c(1,.,.,2),
                    c(1,.,.,2),
                    c(.,3,3,.))
-correctEst1 <- all(corr.pag1==true.pag1)
-if (!correctEst1) stop("Test udag2pag wrong: example 1!")
+
+if (!all(corr.pag1==true.pag1)) stop("Test udag2pag wrong: example 1!")
 
 cat('Time elapsed: ', (.pt <- proc.time()),'\n') # "stats"
 
@@ -96,8 +96,8 @@ corr.pag2 <- rbind(c(.,.,.,2,.),
                    c(.,.,.,2,.),
                    c(1,1,1,.,2),
                    c(.,3,.,3,.))
-correctEst2 <- all(corr.pag2==true.pag2)
-if (!correctEst2) stop("Test udag2pag wrong: example 2!")
+
+if (!all(corr.pag2==true.pag2)) stop("Test udag2pag wrong: example 2!")
 
 cat('Time elapsed: ', proc.time() - .pt,'\n') # "stats"
 
@@ -153,8 +153,7 @@ corr.pag3 <- rbind(c(.,.,2,.,.,2,.,.,.,2,2,2),
                    c(3,3,.,1,3,.,.,.,.,1,.,2),
                    c(3,3,.,3,.,.,.,.,.,.,3,.))
 
-correctEst3 <- all(corr.pag3==true.pag3)
-if (!correctEst3) stop("Test udag2pag wrong: example 3!")
+if (!all(corr.pag3==true.pag3)) stop("Test udag2pag wrong: example 3!")
 
 cat('Time elapsed: ', proc.time() - .pt,'\n') # "stats"
 
