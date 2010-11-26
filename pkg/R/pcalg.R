@@ -27,7 +27,7 @@ trueCov <- function(g) {
   for (j in 1:(p-1)) {
     for (i in (j+1):p) {
       if (l.pa[i]>0) {
-        ecov[j,i] = sum(w[i,pa[[i]]]*ecov[j,pa[[i]]])
+        ecov[j,i]  <- sum(w[i,pa[[i]]]*ecov[j,pa[[i]]])
       } else {
         ecov[j,i] <- 0
       }
@@ -119,7 +119,7 @@ wgtMatrix <- function(g, transpose = TRUE)
   }
   ## Usual case, when there are edges:
   if(!("weight" %in% names(edgeDataDefaults(g))))
-    edgeDataDefaults(g, "weight") <- 1:1
+    edgeDataDefaults(g, "weight") <- 1L
   w <- unlist(edgeData(g, attr = "weight"))
   ## we need the *transposed* matrix typically:
   tm <- if(transpose) t(as(g, "matrix")) else as(g, "matrix")
@@ -155,7 +155,7 @@ rmvDAG <- function(n, dag, errDist = c("normal", "cauchy", "mix", "mixt3", "mixN
   weightMatrix <- wgtMatrix(dag)
 
   ## check if top. sorted
-  nonZeros <- which(weightMatrix  != 0, arr.ind = TRUE)
+  nonZeros <- which(weightMatrix != 0, arr.ind = TRUE)
   if (nrow(nonZeros)>0) {
     if (any((nonZeros[,1] - nonZeros[,2])<0) ||
         any(diag(weightMatrix) != 0) )
@@ -237,7 +237,7 @@ pcSelect <- function(y,dm, alpha, corMethod = "standard", verbose = FALSE, direc
             (p <- ncol(dm)) >= 1)
   vNms <- colnames(dm)
   cl <- match.call()
-  sepset <- vector("list",p)
+
   zMin <- c(0,rep.int(Inf,p))
   C <- mcor(cbind(y,dm), method = corMethod)
   cutoff <- qnorm(1 - alpha/2)
@@ -290,16 +290,15 @@ pcSelect <- function(y,dm, alpha, corMethod = "standard", verbose = FALSE, direc
               S <- nextSet$nextSet
             }
           } ## {repeat}
-
-        } } ## end if( G )
-
+        }
+      } ## end if( G )
     } ## end for(i ..)
     ord <- ord+1
   } ## end while
   Gres <- G[-1]
   names(Gres) <- vNms
   list(G = Gres, zMin = zMin[-1])
-}
+}## pcSelect
 
 zStat <- function(x,y, S, C, n)
 {
@@ -326,9 +325,6 @@ zStat <- function(x,y, S, C, n)
 
   res <- sqrt(n- length(S) - 3) * ( 0.5*log( (1+r)/(1-r) ) )
   if (is.na(res)) res <- 0
-
-  ## VERBOSE  cat(" (",x,",",y,") | ",S," : z-Stat = ",res,"\n", sep='')
-
   res
 }
 
@@ -777,7 +773,7 @@ dag2cpdag <- function(dag) {
 
     ## dag is adjacency matrix
     e.df <- labelEdges(dag)
-    cpdag <- matrix(rep(0,p*p),nrow=p,ncol=p)
+    cpdag <- matrix(0, p,p)
     for (i in 1:dim(e.df)[1]) {
       if (e.df$label[i]) {
         cpdag[e.df$tail[i],e.df$head[i]] <- 1
@@ -804,11 +800,10 @@ find.sink <- function(gm) {
   ## Author: Markus Kalisch, Date: 31 Oct 2006, 15:28
 
   ## treat undirected edges
-  undir.nbrs <- which((gm==t(gm) & gm==1),arr.ind=TRUE)
+  undir.nbrs <- which(gm == t(gm) & gm == 1, arr.ind=TRUE)
   gm[undir.nbrs] <- 0
   ## treat directed edges
-  res <- which(apply(gm,2,sum)==0)
-  res
+  which(colSums(gm) == 0)
 }
 
 adj.check <- function(gm,x) {
@@ -870,7 +865,7 @@ amat2dag <- function(amat) {
 ##################################################
 ## udag2pdag
 ##################################################
-udag2pdag <- function(gInput, verbose=0) {
+udag2pdag <- function(gInput, verbose=FALSE) {
   ## Purpose: Transform the Skeleton of a pcAlgo-object to a PDAG using
   ## the rules of Pearl. The output is again a pcAlgo-object.
   ## ----------------------------------------------------------------------
@@ -896,7 +891,7 @@ udag2pdag <- function(gInput, verbose=0) {
         if (g[x,z]==0  &&
             !(y %in% gInput@sepset[[x]][[z]] ||
               y %in% gInput@sepset[[z]][[x]])) {
-          if (verbose==1) {
+          if (verbose) {
             cat("\n",x,"->",y,"<-",z,"\n")
             cat("Sxz=",gInput@sepset[[z]][[x]],"Szx=",gInput@sepset[[x]][[z]])
           }
@@ -911,7 +906,7 @@ udag2pdag <- function(gInput, verbose=0) {
 
     if (res2$success) {
       ## Convert to complete pattern: use rules by Pearl
-      old_pdag <- matrix(rep(0,p^2),nrow=p,ncol=p)
+      old_pdag <- matrix(0, p,p)
       while (!all(old_pdag == pdag)) {
         old_pdag <- pdag
         ## rule 1
@@ -923,7 +918,9 @@ udag2pdag <- function(gInput, verbose=0) {
           if (length(indC)>0) {
             pdag[b,indC] <- 1
             pdag[indC,b] <- 0
-            if (verbose==1) cat("\nRule 1:",a,"->",b," und ",b,"-",indC," wobei ",a," und ",indC," nicht verbunden: ",b,"->",indC,"\n")
+            if (verbose)
+              cat("\nRule 1:",a,"->",b," and ",b,"-",indC,
+                  " where ",a," and ",indC," not connected: ",b,"->",indC,"\n")
           }
         }
         ## x11()
@@ -938,7 +935,7 @@ udag2pdag <- function(gInput, verbose=0) {
           if (length(indC)>0) {
             pdag[a,b] <- 1
             pdag[b,a] <- 0
-            if (verbose==1) cat("\nRule 2: Kette ",a,"->",indC,"->",
+            if (verbose) cat("\nRule 2: Kette ",a,"->",indC,"->",
                   b,":",a,"->",b,"\n")
           }
         }
@@ -963,7 +960,7 @@ udag2pdag <- function(gInput, verbose=0) {
             if (any(g2==0)) { ## if two nodes in g2 are not connected
               pdag[a,b] <- 1
               pdag[b,a] <- 0
-              if (verbose==1) cat("\nRule 3:",a,"->",b,"\n")
+              if (verbose) cat("\nRule 3:",a,"->",b,"\n")
             }
           }
         }
@@ -988,7 +985,7 @@ udag2pdag <- function(gInput, verbose=0) {
         ##-                 if (length(indD)>0) {
         ##-                   found <- TRUE
         ##-                   pdag[b,a] = 0
-        ##-                   if (verbose==1) cat("Rule 4 applied \n")
+        ##-                   if (verbose) cat("Rule 4 applied \n")
         ##-                 }
         ##-               }
         ##-             }
@@ -1025,11 +1022,11 @@ shd <- function(g1,g2)
 
   if (is(g1, "graphNEL")) {
     m1 <- wgtMatrix(g1, transp=FALSE)
-    m1[m1 != 0] <- rep(1, sum(m1 != 0))
+    m1[m1 != 0] <- 1
   }
   if (is(g2, "graphNEL")) {
     m2 <- wgtMatrix(g2, transp=FALSE)
-    m2[m2 != 0] <- rep(1, sum(m2 != 0))
+    m2[m2 != 0] <- 1
   }
 
   p <- dim(m1)[2]
@@ -1037,46 +1034,40 @@ shd <- function(g1,g2)
                                         # Remove superfluous edges from g1
   s1 <- m1 + t(m1)
   s2 <- m2 + t(m2)
-  s1[which(s1==2)] <- 1
-  s2[which(s2==2)] <- 1
-  ds <- s1-s2
-  inds <- which(ds>0)
-  m1[inds] <- 0
-  shd <- shd + sum(ds>0)/2
+  s1[s1==2] <- 1
+  s2[s2==2] <- 1
+  ds <- s1 - s2
+  ind <- which(ds > 0)
+  m1[ind] <- 0
+  shd <- shd + length(ind)/2
                                         # Add missing edges to g1
-  ind <- which(ds<0)
+  ind <- which(ds < 0)
   m1[ind] <- m2[ind]
   shd <- shd + length(ind)/2
                                         # Compare Orientation
   d <- abs(m1-m2)
-  shd <- shd + sum((d + t(d))>0)/2
-
-  shd
+  ## return
+  shd + sum((d + t(d)) > 0)/2
 }
 
 ################################################################################
-## New in V8
-## uses also library(vcd)
+## New in V8 ; uses  vcd  package
 ################################################################################
-ci.test <- function(x,y,S=NULL,dm.df) {
+ci.test <- function(x,y, S=NULL, dm.df) {
   stopifnot(is.data.frame(dm.df), ncol(dm.df) > 1)
   tab <- table(dm.df[,c(x,y,S)])
-  if ((ncol(tab) < 2) | (nrow(tab)<2)) {
-    res <- 1
-  } else {
-    if (length(S)==0) {
-      res <- fisher.test(tab,simulate.p.value=TRUE)$p.value
-    } else {
-      res <- vcd::coindep_test(tab,3:(length(S)+2))$p.value
-    }
-  }
-  res
+  if (any(dim(tab) < 2))
+    1
+  else if (length(S)==0)
+    fisher.test(tab, simulate.p.value=TRUE)$p.value
+  else
+    vcd::coindep_test(tab,3:(length(S)+2))$p.value
 }
 
-pcAlgo <- function(dm = NA, C = NA, n=NA, alpha, corMethod =
-                   "standard", verbose = FALSE, directed=FALSE,
-                   G=NULL, datatype='continuous',NAdelete=TRUE,
-                   m.max=Inf,u2pd="rand",psepset=FALSE) {
+pcAlgo <- function(dm = NA, C = NA, n=NA, alpha, corMethod = "standard",
+                   verbose = FALSE, directed=FALSE,
+                   G=NULL, datatype='continuous', NAdelete=TRUE,
+                   m.max=Inf, u2pd="rand", psepset=FALSE) {
   ## Purpose: Perform PC-Algorithm, i.e., estimate skeleton of DAG given data
   ## Output is an unoriented graph object
   ## ----------------------------------------------------------------------
@@ -1102,8 +1093,9 @@ pcAlgo <- function(dm = NA, C = NA, n=NA, alpha, corMethod =
   ## Modifications: Sarah Gerster, Date: July 2007
   ## Modifications: Diego Colombo, Date: Sept 2009
 
-  cat("This function is deprecated and is only kept for backward compatibility.
+  .Deprecated(msg = "pcAlgo() is deprecated and only kept for backward compatibility.
  Please use skeleton, pc, or fci instead\n")
+  cl <- match.call()
 
   if (any(is.na(dm))) {
     stopifnot(all(!is.na(C)),!is.na(n), (p <- ncol(C))>0)
@@ -1113,22 +1105,18 @@ pcAlgo <- function(dm = NA, C = NA, n=NA, alpha, corMethod =
   }
   n <- as.integer(n)
 
-  cl <- match.call()
-  sepset <- vector("list",p)
-  n.edgetests <- numeric(1)# final length = max { ord}
   if (is.null(G)) {
     ## G := complete graph :
-    G <- matrix(rep(TRUE,p*p), nrow = p, ncol = p)
+    G <- matrix(TRUE, p,p)
     diag(G) <- FALSE
-  } else {
-    if (!(identical(dim(G),c(p,p)))) {
+  } else if (!(identical(dim(G),c(p,p))))
       stop("Dimensions of the dataset and G do not agree.")
-    }
-  }
-  seq_p <- 1:p
-  for (iList in 1:p) sepset[[iList]] <- vector("list",p)
-  zMin <- matrix(rep(Inf,p*p),nrow=p,ncol=p)
 
+  seq_p <- 1:p
+  sepset <- pl <- vector("list",p)
+  for (i in seq_p) sepset[[i]] <- pl
+  zMin <- matrix(Inf, p,p)
+  n.edgetests <- numeric(1)# final length = max { ord}
   done <- FALSE
   ord <- 0
 
@@ -1218,7 +1206,7 @@ pcAlgo <- function(dm = NA, C = NA, n=NA, alpha, corMethod =
                 n.edgetests[ord+1] <- n.edgetests[ord+1]+1
                 prob <- ci.test(x,y, nbrs[S], dm.df)
                 if (verbose) cat("x=",x," y=",y," S=",nbrs[S],":",prob,"\n")
-                if (is.na(prob)) prob <- ifelse(NAdelete,1,0)
+                if (is.na(prob)) prob <- if(NAdelete) 1 else 0
                 if(prob >= alpha) { # independent
                   G[x,y] <- G[y,x] <- FALSE
                   sepset[[x]][[y]] <- nbrs[S]
@@ -1273,7 +1261,7 @@ pcAlgo <- function(dm = NA, C = NA, n=NA, alpha, corMethod =
     for (x in 1:p) {
       attr(x,'class') <- 'possibledsep'
       if (any(amat[x,]!=0)){
-        tf1 <- setdiff(reach(x,-1,-1,amat),x)
+        tf1 <- setdiff(reach(x,-1,-1,amat), x)
         for (y in seq_p[amat[x,]!=0]) {
           ## tf = possible_d_sep(amat,x,y)
           tf <- setdiff(tf1,y)
@@ -1393,7 +1381,7 @@ pdag2dag <- function(g, keepVstruct=TRUE) {
   list(graph=graph, success=success)
 }
 
-udag2pdagSpecial <- function(gInput,verbose=0,n.max=100) {
+udag2pdagSpecial <- function(gInput, verbose=FALSE, n.max=100) {
   ## Purpose: Transform the Skeleton of a pcAlgo-object to a PDAG using
   ## the rules of Pearl. The output is again a pcAlgo-object. Ambiguous
   ## v-structures are reoriented until extendable or max number of tries
@@ -1445,7 +1433,7 @@ udag2pdagSpecial <- function(gInput,verbose=0,n.max=100) {
         if ((g[x,z]==0) &&
             !(y %in% gInput@sepset[[x]][[z]] ||
               y %in% gInput@sepset[[z]][[x]])) {
-          if (verbose==1) {
+          if (verbose) {
             cat("\n",x,"->",y,"<-",z,"\n")
             cat("Sxz=",gInput@sepset[[z]][[x]],"Szx=",gInput@sepset[[x]][[z]])
           }
@@ -1500,8 +1488,8 @@ udag2pdagSpecial <- function(gInput,verbose=0,n.max=100) {
 
     if (xtbl) {
       ## Convert to complete pattern: use rules by Pearl
-      old_pdag <- matrix(rep(0,p^2),nrow=p,ncol=p)
-      while (sum(!(old_pdag==pdag))>0) {
+      old_pdag <- matrix(0, p,p)
+      while (any(old_pdag != pdag)) {
         old_pdag <- pdag
         ## rule 1
         ind <- which((pdag==1 & t(pdag)==0), arr.ind=TRUE) ## a -> b
@@ -1513,7 +1501,9 @@ udag2pdagSpecial <- function(gInput,verbose=0,n.max=100) {
             if (length(indC)>0) {
               pdag[b,indC] <- 1
               pdag[indC,b] <- 0
-              if (verbose==1) cat("\nRule 1:",a,"->",b," und ",b,"-",indC," wobei ",a," und ",indC," nicht verbunden: ",b,"->",indC,"\n")
+              if (verbose)
+                cat("\nRule 1:",a,"->",b," and ",b,"-",indC,
+                    " where ",a," and ",indC," not connected: ",b,"->",indC,"\n")
             }
           }
           ## x11()
@@ -1530,7 +1520,7 @@ udag2pdagSpecial <- function(gInput,verbose=0,n.max=100) {
             if (length(indC)>0) {
               pdag[a,b] <- 1
               pdag[b,a] <- 0
-              if (verbose==1) cat("\nRule 2: Kette ",a,"->",indC,"->",
+              if (verbose) cat("\nRule 2: Kette ",a,"->",indC,"->",
                     b,":",a,"->",b,"\n")
             }
           }
@@ -1557,7 +1547,7 @@ udag2pdagSpecial <- function(gInput,verbose=0,n.max=100) {
               if (any(g2==0)) { ## if two nodes in g2 are not connected
                 pdag[a,b] <- 1
                 pdag[b,a] <- 0
-                if (verbose==1) cat("\nRule 3:",a,"->",b,"\n")
+                if (verbose) cat("\nRule 3:",a,"->",b,"\n")
               }
             }
           }
@@ -1633,17 +1623,18 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL)
     }
   } ## for ( i )
 
-  ## Rule 1
-  old_pdag <- matrix(rep(0, p^2), nrow = p, ncol = p)
-  while (any(old_pdag != pdag)) {
+  repeat {
     old_pdag <- pdag
+
+    ## Rule 1
     ind <- which((pdag == 1 & t(pdag) == 0), arr.ind = TRUE)
     for (i in seq_len(nrow(ind))) {
       a <- ind[i, 1]
       b <- ind[i, 2]
-      indC <- which((pdag[b, ] == 1 & pdag[, b] == 1) &
-                    (pdag[a, ] == 0 & pdag[, a] == 0))
-      if (length(indC) > 0) {
+      isC <- ((pdag[b, ] == 1 & pdag[, b] == 1) &
+              (pdag[a, ] == 0 & pdag[, a] == 0))
+      if (any(isC)) {
+        indC <- which(isC)
         ## normal version
         if (length(unfVect)==0) {
           pdag[b, indC] <- 1
@@ -1656,23 +1647,21 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL)
         }
         ## conservative version
         else {
-          for (j in seq_along(indC)) {
-            c <- indC[j]
+          for (c in indC) {
             ## check that a-b-c not unfaithful
-            if (!any(unfVect == triple2numb(p,a,b,c)) &&
-                !any(unfVect == triple2numb(p,c,b,a))) {
+            if (!any(unfVect == triple2numb(p, a,b,c)) &&
+                !any(unfVect == triple2numb(p, c,b,a))) {
               pdag[b, c] <- 1
               pdag[c, b] <- 0
               if (verbose)
-                cat("\nRule 1':", a, "->", b, " and ", b,
-                    "-", c, " where ", a, " and ", c,
-                    " not connected and ", a, b, c," faithful triple: ", b, "->", c,
-                    "\n")
+                cat("\nRule 1':", a, "->", b, " and ", b, "-", c,
+                    " where ", a, " and ", c, " not connected and ",
+                    a, b, c," faithful triple: ", b, "->", c, "\n")
             }
           }
         }
       }
-    }
+    }##end for (i ..)
 
     ## Rule 2
     ## normal version = conservative version
@@ -1680,13 +1669,13 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL)
     for (i in seq_len(nrow(ind))) {
       a <- ind[i, 1]
       b <- ind[i, 2]
-      indC <- which((pdag[a, ] == 1 & pdag[, a] == 0) &
-                    (pdag[, b] == 1 & pdag[b, ] == 0))
-      if (length(indC) > 0) {
+      isC <- ((pdag[a, ] == 1 & pdag[, a] == 0) &
+              (pdag[, b] == 1 & pdag[b, ] == 0))
+      if (any(isC)) {
         pdag[a, b] <- 1
         pdag[b, a] <- 0
         if (verbose)
-          cat("\nRule 2: Chain ", a, "->", indC,
+          cat("\nRule 2: Chain ", a, "->", which(isC),
               "->", b, ":", a, "->", b, "\n")
       }
     }
@@ -1717,30 +1706,30 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL)
         }
         ## conservative version
         else {
-          comb.indC <- combn(indC,2)
-          ## for (j in 1:dim(comb.indC)[2]) {
-          found <- FALSE
-          j <- 0
-          while (!found && j < dim(comb.indC)[2]) {
-            j <- j + 1
-            c1 <- comb.indC[1,j]
-            c2 <- comb.indC[2,j]
-            if (pdag[c1,c2]==0 && pdag[c2,c1]==0 && c1!=c2) {
-              if (!any(unfVect == triple2numb(p,c1,a,c2)) &&
-                  !any(unfVect == triple2numb(p,c2,a,c1))) {
-                ## if faithful triple found
-                found <- TRUE
-                pdag[a, b] <- 1
-                pdag[b, a] <- 0
-                if (verbose)
-                  cat("\nRule 3':", a, c1, c2, "faithful triple: ", a, "->", b, "\n")
-              }
+          cmb.C <- combn(indC, 2)
+          cC1 <- cmb.C[1,]
+          cC2 <- cmb.C[2,]
+          for (j in seq_along(cC1)) {
+            c1 <- cC1[j]
+            c2 <- cC2[j]
+            if (c1 != c2 && pdag[c1,c2] == 0 && pdag[c2,c1] == 0 &&
+                !any(unfVect == triple2numb(p, c1,a,c2)) &&
+                !any(unfVect == triple2numb(p, c2,a,c1))) { ## faithful triple found
+              pdag[a, b] <- 1
+              pdag[b, a] <- 0
+              if (verbose)
+                cat("\nRule 3':", a, c1, c2, "faithful triple: ", a, "->", b, "\n")
+              break
+              ##=== out of loop
             }
-          }
+          }## for ( j ..)
         }
-      }
-    } ## for ( i )
-  }
+      }## if( length(indC) >= 2 )
+    }## for ( i ..)
+
+    if(all(pdag == old_pdag)) break
+  }## repeat
+
   gInput@graph <- as(pdag, "graphNEL")
   gInput
 }
@@ -2142,17 +2131,13 @@ check.new.coll <- function(amat,amatSkel,x,pa1,pa2.t,pa2.f) {
     papa <- setdiff(which(apply(tmp,2,sum)!=0),x)
     ## if any node in papa is not directly connected to x, there is a new
     ## collider
-    if (length(papa)==0) {
-      res3 <- FALSE
-    } else {
-      res3 <- (min(amatSkel[x,papa])==0) ## TRUE if new collider
-    }
-    res <- (res|res3)
+    if (length(papa) > 0)
+      res <- res | (min(amatSkel[x,papa])==0) ## TRUE if new collider
   }
   res
 }
 
-allDags <- function(gm,a,tmp,verb=FALSE)
+allDags <- function(gm,a,tmp, verbose=FALSE)
 {
   ## Purpose: Find all DAGs for a given PDAG
   ## ----------------------------------------------------------------------
@@ -2169,7 +2154,7 @@ allDags <- function(gm,a,tmp,verb=FALSE)
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date:  7 Apr 2008, 14:08
   if (sum(a) == 0) {
-    if (verb) {
+    if (verbose) {
       cat("Last Call - Final Graph: \n")
       print(gm)
       cat("#################### \n")
@@ -2178,44 +2163,41 @@ allDags <- function(gm,a,tmp,verb=FALSE)
     if (all(!duplicated(tmp2))) tmp <- tmp2
   } else {
     sinks <- find.sink(a)
-    if (verb) {
+    if (verbose) {
       cat("Main Call: ################## \n")
         print(gm)
       print(a)
       cat("Sinks: ",sinks,"\n")
     }
-    n.sinks <- length(sinks)
-    if (n.sinks > 0) {
-      for (i in 1:n.sinks) {
-        if (verb) cat("Try removing",sinks[i]," in a.\n")
-        gm2 <- gm
-        a2 <- a
-        x <- sinks[i]
-        if (adj.check(a,x)) {
-          inc.to.x <- which(a[, x] == 1 & a[x, ] == 1)
-          if (length(inc.to.x) > 0) {
-            real.inc.to.x <- as.numeric(row.names(a)[inc.to.x])
-            real.x <- as.numeric(row.names(a)[x])
-            gm2[real.x, real.inc.to.x] <- rep(1, length(inc.to.x))
-            gm2[real.inc.to.x, real.x] <- rep(0, length(inc.to.x))
-          }
-          a2 <- a[-x,-x]
-          if (verb) {
-            cat("Removed sink",as.numeric(row.names(a)[x]),"in g (",
-                sinks[i],"in a).\n")
-            cat("New graphs: \n")
-            print(gm2)
-            print(a)
-          }
-          tmp <- allDags(gm2,a2,tmp,verb)
+    for(x in sinks) {
+      if (verbose) cat("Try removing", x," in a.\n")
+      gm2 <- gm
+      a2 <- a
+      if (adj.check(a,x)) {
+        inc.to.x <- a[, x] == 1 & a[x, ] == 1
+        if (any(inc.to.x)) {
+          real.inc.to.x <- as.numeric(row.names(a)[inc.to.x])
+          real.x <- as.numeric(row.names(a)[x])
+          gm2[real.x, real.inc.to.x] <- 1
+          gm2[real.inc.to.x, real.x] <- 0
         }
+        a2 <- a[-x,-x]
+        if (verbose) {
+          cat("Removed sink",as.numeric(row.names(a)[x]),
+              "in g (", x,"in a).\n")
+          cat("New graphs: \n")
+          print(gm2)
+          print(a)
+        }
+        tmp <- allDags(gm2,a2,tmp, verbose)
       }
     }
   }
   tmp
 }
 
-pcAlgo.Perfect <- function(C, cutoff=0.00000001, corMethod = "standard", verbose = 0, directed=FALSE,u2pd="rand",psepset=FALSE) {
+pcAlgo.Perfect <- function(C, cutoff= 1e-8, corMethod = "standard", verbose = 0,
+                           directed=FALSE, u2pd="rand", psepset=FALSE) {
   ## Purpose: Perform PC-Algorithm, i.e., estimate skeleton of DAG given data
   ## Output is an unoriented graph object
   ## ----------------------------------------------------------------------
@@ -2234,19 +2216,19 @@ pcAlgo.Perfect <- function(C, cutoff=0.00000001, corMethod = "standard", verbose
   ## Author: Markus Kalisch, Date: 26 Jan 2006; Martin Maechler
   ## Modification: Diego Colombo, Sept 2009
   ## backward compatibility
+  stopifnot((p <- nrow(C)) >= 2)
   if (verbose==FALSE) verbose <- 0
   if (verbose==TRUE) verbose <- 1
-  p <- nrow(C)
   cl <- match.call()
-  sepset <- vector("list",p)
-  pcMin <- matrix(rep(Inf,p*p),nrow=p,ncol=p)
-  diag(pcMin) <- rep(0,p)
-  for (iList in 1:p) sepset[[iList]] <- vector("list",p)
+  seq_p <- 1:p
+  pcMin <- matrix(Inf, p,p)
+  diag(pcMin) <- 0
+  sepset <- pl <- vector("list",p)
+  for (i in seq_p) sepset[[i]] <- pl
   n.edgetests <- numeric(1)# final length = max { ord}
   ## G := complete graph :
-  G <- matrix(rep(TRUE,p*p), nrow = p, ncol = p)
+  G <- matrix(TRUE, p,p)
   diag(G) <- FALSE
-  seq_p <- 1:p
 
   done <- FALSE
   ord <- 0
@@ -2276,7 +2258,7 @@ pcAlgo.Perfect <- function(C, cutoff=0.00000001, corMethod = "standard", verbose
         ##        if (!done) {
         if (length_nbrs >= ord) {
           if (length_nbrs > ord) done <- FALSE
-          S <- seq(length = ord)
+          S <- seq_len(ord)
 
           ## now includes special cases (ord == 0) or (length_nbrs == 1):
           repeat { ## condition w.r.to all  nbrs[S] of size 'ord' :
@@ -2393,73 +2375,63 @@ pcAlgo.Perfect <- function(C, cutoff=0.00000001, corMethod = "standard", verbose
              n.edgetests = n.edgetests, sepset = sepset,
              zMin = pcMin)
 
-  if (directed) {
-    res <- switch (u2pd,
-                   "rand" = udag2pdag(res),
-                   "retry" = udag2pdagSpecial(res)$pcObj,
-                   "relaxed" = udag2pdagRelaxed(res))
-  }
-  res
-}
+  if (directed)
+    switch(u2pd,
+           "rand" = udag2pdag(res),
+           "retry" = udag2pdagSpecial(res)$pcObj,
+           "relaxed" = udag2pdagRelaxed(res))
+  else
+    res
+}## pcAlgo.Perfect
 
+### reach(): currently only called from  pcAlgo() and pcAlgo.Perfect()
+### -------  and only in "possibledsep" version
 ## Function that computes the Possible d-sepset, done by Spirtes
 reach <- function(a,b,c,adjacency)
 {
-                                        #reachable      set of vertices;
-                                        #edgeslist      array[1..maxvertex] of list of edges
-                                        #more           Boolean
-                                        #reachable      list of vertices
-                                        #numvertex      integer
-                                        #labeled        array (by depth) of list of edges that have been labeled
+  ## reachable      set of vertices;
+  ## edgeslist      array[1..maxvertex] of list of edges
+  ## numvertex      integer
+  ## labeled        array (by depth) of list of edges that have been labeled
 
-  makeedge = function(x,y)(list(list(x,y)))
+  makeedge <- function(x,y) list(list(x,y))
 
-  legal <- function(t,...) {UseMethod("legal")}
+  legal.pdsep <- function(r,s) {
+    ## Modifying global 'edgeslist'
+    if ((adjacency[r[[1]],r[[2]]] == 2 &&
+         adjacency[s,     r[[2]]] == 2 && r[[1]] != s) ||
+        (adjacency[r[[1]],s] != 0 && r[[1]] != s)) {
+      edgeslist[[r[[2]]]] <<- setdiff(edgeslist[[r[[2]]]],s)
+      makeedge(r[[2]],s)
+    }
+  }
 
-  legal.possibledsep = function(t,u,v,r,s) {
-    if (((adjacency[r[[1]],r[[2]]] == 2) &&
-         (adjacency[s,r[[2]]] == 2) &&
-         (r[[1]] != s)) ||
-        ((adjacency[r[[1]],s] != 0) &&
-         (r[[1]] != s))){
-      edgeslist[[r[[2]]]]  <<- setdiff(edgeslist[[r[[2]]]],s)
-      makeedge(r[[2]],s)}}
+  initialize.pdsep <- function(x,y) mapply(makeedge, x=x, y=y)
 
-  legal.discriminating = function(t,u,v,r,s) {
-    if ((length(intersect(s,c(t,u,v))) == 0) &&    # s not in the triangle t,u,v
-        (adjacency[s,r[[2]]] == 2) &&            # s collides with r edge at r[[2]]
-        (r[[1]] != s) &&                           # s is not on the r edge
-        (adjacency[u,r[[2]]] == 3) &&
-        (adjacency[r[[2]],u] == 2)){
-      edgeslist[[r[[2]]]]  <<- setdiff(edgeslist[[r[[2]]]],s)
-      makeedge(r[[2]],s)}}
-
-  initialize <- function(x,...) {UseMethod("initialize")}
-
-  initialize.possibledsep <- function(x,y,z) {mapply(makeedge,x=a,y=edgeslist[[a]])}
-
-  initialize.discriminating <- function(x,y,z) {mapply(makeedge,x=a,y=setdiff(which(adjacency[,a] == 2),c(b,c)))}
-
-  labeled = list()
-  numvertex = dim(adjacency)[1]
-  edgeslist = list()
-  for (i in 1:numvertex) edgeslist = c(edgeslist,list(which(adjacency[,i] != 0)))
-  labeled[[1]] = initialize(a,b,c)
-  edgeslist[[a]] = list()
-  depth = 2
-  repeat
-    {more = FALSE
-     labeled[[depth]] = list()
-     for (i in seq_along(labeled[[depth-1]])) {
-       edgestemp = edgeslist[[labeled[[depth-1]][[i]][[2]]]]
-       if (length(edgestemp) == 0) break
-       for (j in seq_along(edgestemp))
-         {labeled[[depth]] =
-            union(legal(a,b,c,labeled[[depth-1]][[i]],edgestemp[[j]]),labeled[[depth]])}}
-     if (length(labeled[[depth]]) != 0){
-       more = TRUE
-       depth = depth  + 1} else break}
-  return(unique(unlist(labeled)))
+  labeled <- list()
+  numvertex <- dim(adjacency)[1]
+  edgeslist <- list()
+  for (i in 1:numvertex)
+    edgeslist <- c(edgeslist,list(which(adjacency[,i] != 0)))
+  labeled[[1]] <- initialize.pdsep(a, edgeslist[[a]])
+  edgeslist[[a]] <- list()
+  depth <- 2
+  repeat {
+    labeled[[depth]] <- list()
+    for (i in seq_along(labeled[[depth-1]])) {
+      lab.i <- labeled[[depth-1]][[i]]
+      edgestemp <- edgeslist[[lab.i[[2]]]]
+      if (length(edgestemp) == 0) break
+      for (j in seq_along(edgestemp))
+        labeled[[depth]] <- union(legal.pdsep(lab.i, edgestemp[[j]]),
+                                  labeled[[depth]])
+    }
+    if (length(labeled[[depth]]) == 0)
+      break
+    ## else :
+    depth <- depth  + 1
+  }
+  unique(unlist(labeled))
 }
 
 udag2pag <- function(gInput, rules=rep(TRUE,10), verbose=TRUE, unfVect=NULL)
@@ -2642,12 +2614,9 @@ udag2pag <- function(gInput, rules=rep(TRUE,10), verbose=TRUE, unfVect=NULL)
         c <- ind[i, 2]
         indA <- which((pag[b, ] == 2 & pag[, b] != 0) &
                       (pag[c, ] == 3 & pag[, c] == 2))
-        for(a in indA) {
-          path <- c(c, b, a)
-          n <- length(path)
-          pag <- discr.path(path = path, n = n,
-                            pag = pag, gInput = gInput, verbose = verbose)
-        }
+        for(a in indA)
+          pag <- discr.path(path = c(c, b, a), pag = pag,
+                            gInput = gInput, verbose = verbose)
       }
     } ## r..[4]
 
@@ -2679,8 +2648,7 @@ udag2pag <- function(gInput, rules=rep(TRUE,10), verbose=TRUE, unfVect=NULL)
                 else {
                   ## check that every triple on the circle is faithful
                   path2check <- c(a,c,d,b)
-                  faithres <- faith.check(path2check, unfVect, p)
-                  if (faithres==0) {
+                  if (faith.check(path2check, unfVect, p)) {
                     pag[a, b] <- pag[b, a] <- 3
                     pag[a, c] <- pag[c, a] <- 3
                     pag[c, d] <- pag[d, c] <- 3
@@ -2695,7 +2663,7 @@ udag2pag <- function(gInput, rules=rep(TRUE,10), verbose=TRUE, unfVect=NULL)
               else {
                 path <- c(a, c, d, b)
                 pag <- ucp(path = path, pag = pag,
-                           n = length(path), verbose = verbose, unfVect=unfVect, p=p)
+                           verbose = verbose, unfVect=unfVect, p=p)
               }
             } ## for d
           }## for c
@@ -2794,8 +2762,7 @@ udag2pag <- function(gInput, rules=rep(TRUE,10), verbose=TRUE, unfVect=NULL)
                 ## conservative version
                 else {
                   path2check <- c(a,b,d,c)
-                  faithres <- faith.check(path2check, unfVect, p)
-                  if (faithres==0) {
+                  if (faith.check(path2check, unfVect, p)) {
                     pag[c, a] <- 3
                     if(verbose)
                       cat("\nRule 9': There exists a faithful upd between",
@@ -2805,8 +2772,7 @@ udag2pag <- function(gInput, rules=rep(TRUE,10), verbose=TRUE, unfVect=NULL)
               }
               else {
                 path <- c(c, a, b, d)
-                pag <- upd(path = path, pag = pag,
-                           n = length(path), verbose = verbose, unfVect=unfVect, p=p)
+                pag <- upd(path=path, pag=pag, verbose=verbose, unfVect=unfVect, p=p)
               }
             }
           } ## for( d )
@@ -2858,9 +2824,9 @@ udag2pag <- function(gInput, rules=rep(TRUE,10), verbose=TRUE, unfVect=NULL)
                   if ((length(indAA) > 0) && (pag[c, a] != 3)) {
                     for (s in seq_along(indAA)) {
                       sec.pos <- indAA[s]
-                      p1 <- find.upd(path = c(first.pos, b), a = a, n = 2, pag = pag,
+                      p1 <- find.upd(path = c(first.pos, b), a = a, pag = pag,
                                      verbose = verbose, unfVect=unfVect, p=p)
-                      p2 <- find.upd(path = c(sec.pos, d), a = a, n = 2, pag = pag,
+                      p2 <- find.upd(path = c(sec.pos, d), a = a, pag = pag,
                                      verbose = verbose, unfVect=unfVect, p=p)
                       if (p1$res && p2$res) {
                         mu <- p1$uncov.path[1]
@@ -2974,53 +2940,48 @@ skeleton <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
   ##-   if(inherits(tst, "try-error"))
   ##-     stop("the 'indepTest' function does not work correctly with 'obj'")
 
+  stopifnot((p <- as.integer(p)) >= 2)
   cl <- match.call()
-
-  pval <- NULL
-
   ## start skeleton
-  sepset <- vector("list",p)
-  n.edgetests <- numeric(1)# final length = max { ord}
 
   ## fixed gaps
   if (is.null(fixedGaps)) {
     ## G := complete graph :
-    G <- matrix(rep(TRUE,p*p), nrow = p, ncol = p)
+    G <- matrix(TRUE, p,p)
     diag(G) <- FALSE
   } else {
-    if (!(identical(dim(fixedGaps),c(p,p)))) {
+    if (!identical(dim(fixedGaps),c(p,p))) {
       stop("Dimensions of the dataset and fixedGaps do not agree.")
     } else {
-      if (fixedGaps != t(fixedGaps)) {
+      if (!all(fixedGaps == t(fixedGaps)))
         stop("fixedGaps must be symmetric")
-      }
       G <- !fixedGaps
-    } ## if (!(identical(dim(fixedGaps),c(p,p))))
+    }
   } ## if(is.null(G))
 
   ## fixed edges
   if (is.null(fixedEdges)) {
-    fixedEdges <- matrix(rep(FALSE,p*p), nrow = p, ncol = p)
+    fixedEdges <- matrix(FALSE, p,p)
   } else {
-    if (!(identical(dim(fixedEdges),c(p,p)))) {
+    if (!(identical(dim(fixedEdges),c(p,p))))
       stop("Dimensions of the dataset and fixedEdges do not agree.")
-    }
-    if (fixedEdges != t(fixedEdges)) {
+    if (fixedEdges != t(fixedEdges))
       stop("fixedEdges must be symmetric")
-    }
-  } ## if(is.null(fixedEdges))
+  }
 
-  seq_p <- 1:p
-  for (iList in 1:p) sepset[[iList]] <- vector("list",p)
+  seq_p <- seq_len(p)
+  sepset <- pl <- vector("list",p)
+  for (i in seq_p) sepset[[i]] <- pl
   ## save maximal p value
-  pMax <- matrix(rep(-Inf,p*p),nrow=p,ncol=p)
+  pMax <- matrix(-Inf, p,p)
   diag(pMax) <- 1
 
   done <- FALSE
-  ord <- 0
+  ord <- 0L
+  n.edgetests <- numeric(1)# final length = max { ord}
 
-  while (!done && any(G) && ord<=m.max) {
-    n.edgetests[ord+1] <- 0
+  while (!done && any(G) && ord <= m.max) {
+    n.edgetests[ord1 <- ord+1L] <- 0
     done <- TRUE
     ind <- which(G, arr.ind = TRUE)
     ## For comparison with C++ sort according to first row
@@ -3032,20 +2993,20 @@ skeleton <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
       if(verbose) { if(i%%100==0) cat("|i=",i,"|iMax=",nrow(ind),"\n") }
       x <- ind[i,1]
       y <- ind[i,2]
-      if (G[y,x] && (!fixedEdges[y,x])) {
+      if (G[y,x] && !fixedEdges[y,x]) {
         nbrsBool <- G[,x]
         nbrsBool[y] <- FALSE
         nbrs <- seq_p[nbrsBool]
         length_nbrs <- length(nbrs)
         if (length_nbrs >= ord) {
           if (length_nbrs > ord) done <- FALSE
-          S <- seq(length = ord)
+          S <- seq_len(ord)
           repeat { ## condition w.r.to all  nbrs[S] of size 'ord'
-            n.edgetests[ord+1] <- n.edgetests[ord+1]+1
+            n.edgetests[ord1] <- n.edgetests[ord1]+1
             pval <- indepTest(x,y, nbrs[S], suffStat)
             ## pval <- dsepTest(x,y,nbrs[S],gTrue,jp = jp)
             if (verbose) cat("x=",x," y=",y," S=",nbrs[S],": pval =",pval,"\n")
-            if (is.na(pval)) pval <- ifelse(NAdelete,1,0)
+            if (is.na(pval)) pval <- if(NAdelete) 1 else 0
             if (pval > pMax[x,y]) pMax[x,y] <- pval
             if(pval >= alpha) { # independent
               G[x,y] <- G[y,x] <- FALSE
@@ -3056,13 +3017,13 @@ skeleton <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
               if(nextSet$wasLast)
                 break
               S <- nextSet$nextSet
-            } ## if (pval >= alpha)
+            }
           } ## repeat
         } ## if (length_nbrs >= ord)
       } ## if(!done)
 
     } ## for(i in 1:remainingEdgeTests)
-    ord <- ord+1
+    ord <- ord1
   } ## while
 
   for (i in 1:(p-1)) {
@@ -3072,12 +3033,14 @@ skeleton <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
   } ## for (i in 1:(p-1))
 
   ## transform matrix to graph object :
-  if (sum(G) == 0) {
-    Gobject <- new("graphNEL", nodes = as.character(1:p))
-  } else {
-    colnames(G) <- rownames(G) <- as.character(1:p)
-    Gobject <- as(G,"graphNEL")
-  }
+  nnms <- as.character(seq_p)
+  Gobject <-
+    if (sum(G) == 0) {
+      new("graphNEL", nodes = nnms)
+    } else {
+      colnames(G) <- rownames(G) <- nnms
+      as(G,"graphNEL")
+    }
 
   ## final object
   new("pcAlgo",
@@ -3150,8 +3113,9 @@ pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
 
 fci <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
                 fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
-                m.max = Inf, rules = rep(TRUE, 10), doPdsep =
-                TRUE, conservative=c(FALSE,FALSE), biCC=FALSE, cons.rules=FALSE, labels = NA)
+                m.max = Inf, rules = rep(TRUE, 10), doPdsep = TRUE,
+                conservative=c(FALSE,FALSE), biCC=FALSE, cons.rules=FALSE,
+                labels = NA)
 {
   ## Purpose: Perform PC-Algorithm, i.e., estimate skeleton of DAG given data
   ## ----------------------------------------------------------------------
@@ -3277,8 +3241,8 @@ fci <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
 }
 
 
-gSquareBin <- function(x, y, S, dm, verbose=FALSE,adaptDF=FALSE){
-
+gSquareBin <- function(x, y, S, dm, verbose=FALSE, adaptDF=FALSE)
+{
   ## Purpose: G^2 statistic to test for (conditional) independence
   ##          of X and Y given S
   ## -------------------------------------------------------------------------
@@ -3301,282 +3265,273 @@ gSquareBin <- function(x, y, S, dm, verbose=FALSE,adaptDF=FALSE){
 
   if (n < 10*df) { ## not enough samples to perform the test, assume
     ## independence
-    if (verbose) cat("\n Not enough samples...\n")
-    prob <- 1    ## gerster prob=0
+    if (verbose) warning("Not enough samples...\n")
+    return( 1 )   ## gerster prob=0
   }
-  else { # enough data to perform the test
-    if(lenS < 6) {
+  ## else --  enough data to perform the test
+  if(lenS < 6) {
 
-      if (lenS == 0) {
-        nij <- array(0,c(2,2))
-        for (i in 1:2) {
-          for (j in 1:2) {
-	    nij[i,j] <- sum(dm[,x] == i-1 &
-                            dm[,y] == j-1)
-          }
+    if (lenS == 0) {
+      nij <- array(0,c(2,2))
+      for (i in 1:2) {
+        for (j in 1:2) {
+          nij[i,j] <- sum(dm[,x] == i-1 &
+                          dm[,y] == j-1)
         }
-        ## marginal counts
-        t.X <- rowSums(nij)
-        dim(t.X) <- c(length(t.X),1)
-        t.Y <- colSums(nij)
-        dim(t.Y) <- c(1,length(t.Y))
+      }
+      ## marginal counts
+      t.X <- rowSums(nij)
+      dim(t.X) <- c(length(t.X),1)
+      t.Y <- colSums(nij)
+      dim(t.Y) <- c(1,length(t.Y))
 
-        ## compute G^2
-        dij <- t.X %*% t.Y # s_ia * s_jb
-        t.G2 <- 2*nij*log(nij*n/dij)
-        t.G2[is.nan(t.G2)] <- 0
-        G2 <- sum(t.G2)
-      } #end lenS=0
+      ## compute G^2
+      dij <- t.X %*% t.Y                # s_ia * s_jb
+      t.G2 <- 2*nij*log(nij*n/dij)
+      t.G2[is.nan(t.G2)] <- 0
+      G2 <- sum(t.G2)
+    }                                   #end lenS=0
+    else if (lenS==1) {
+      ## a.pos <- sort(c(x,y,S))
 
-      if (lenS==1) {
-          ## a.pos <- sort(c(x,y,S))
+      nijk <- array(0,c(2,2,2))
+      for(i in 1:2) for(j in 1:2) for(k in 1:2) {
+        nijk[i,j,k] <- sum((dm[,x]==i-1)&
+                           (dm[,y]==j-1)&
+                           (dm[,S]==k-1))
+      }
 
-        nijk <- array(0,c(2,2,2))
-        for(i in 1:2) for(j in 1:2) for(k in 1:2) {
-          nijk[i,j,k] <- sum((dm[,x]==i-1)&
-                             (dm[,y]==j-1)&
-                             (dm[,S]==k-1))
-        }
+      alt <- c(x,y,S)
+      c <- which(alt==S)
+      nik <- apply(nijk,c,rowSums)
+      njk <- apply(nijk,c,colSums)
+      nk <- colSums(njk)
 
-        alt <- c(x,y,S)
-        c <- which(alt==S)
-        nik <- apply(nijk,c,rowSums)
-        njk <- apply(nijk,c,colSums)
-        nk <- colSums(njk)
-
-        ## compute G^2
-        t.log <- array(0,c(2,2,2))
-        if(c==3){
-          for (k in 1:2) {
-            t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
-            t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
-            t.dijk <- t.X %*% t.Y
-            t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-          }
-        } else if(c==1) {
-          for (k in 1:2) {
-            t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
-            t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
-            t.dijk <- t.X %*% t.Y
-            t.log[k,,] <- nijk[k,,]*nk[k]/t.dijk
-          }
-        } else { ## c == 2 (?)
-          for (k in 1:2) {
-            t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
-            t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
-            t.dijk <- t.X %*% t.Y
-            t.log[,k,] <- nijk[,k,]*nk[k]/t.dijk
-          }
-        }
-
-        t.G2 <- 2 * nijk * log(t.log)
-        t.G2[is.nan(t.G2)] <- 0
-        G2 <- sum(t.G2)
-
-      } # end lenS=1
-
-      if(lenS==2) {
-          ## a.pos <- sort(c(x,y,S))
-
-        nijk2 <- array(NA,c(2,2,2,2))
-        for(i in 1:2) for(j in 1:2) for(k in 1:2) for(l in 1:2){
-          nijk2[i,j,k,l] <- sum((dm[,x]==i-1)&(dm[,y]==j-1)&(dm[,S[1]]==k-1)&(dm[,S[2]]==l-1))
-        }
-
-        ## alt <- c(x,y,S)
-
-        nijk <- array(NA,c(2,2,4))
-        for(i in 1:2) for(j in 1:2){
-          nijk[,,2*(i-1)+j] <- nijk2[,,i,j]
-        }
-
-        nik <- apply(nijk,3,rowSums)
-        njk <- apply(nijk,3,colSums)
-        nk <- colSums(njk)
-
-        ## compute G^2
-        t.log <- array(0,c(2,2,4))
-        for (k in 1:4) {
+      ## compute G^2
+      t.log <- array(0,c(2,2,2))
+      if(c==3){
+        for (k in 1:2) {
           t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
           t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
           t.dijk <- t.X %*% t.Y
           t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
         }
-
-        t.G2 <- 2 * nijk * log(t.log)
-        t.G2[is.nan(t.G2)] <- 0
-        G2 <- sum(t.G2)
-      } #end lenS=2
-
-      if(lenS==3){
-        nijk <- array(NA,c(2,2,8))
-        for(i1 in 1:2) for(i2 in 1:2) for(i3 in 1:2) for(i4 in 1:2) for(i5 in 1:2){
-          nijk[i1,i2,4*(i3-1)+2*(i4-1)+i5] <-
-              sum((dm[,x]==i1-1)&(dm[,y]==i2-1)&(dm[,S[1]]==i3-1)&(dm[,S[2]]==i4-1)&(dm[,S[3]]==i5-1))
-        }
-
-        nik <- apply(nijk,3,rowSums)
-        njk <- apply(nijk,3,colSums)
-        nk <- colSums(njk)
-
-        ## compute G^2
-        t.log <- array(0,c(2,2,8))
-        for (k in 1:8){
+      } else if(c==1) {
+        for (k in 1:2) {
           t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
           t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
           t.dijk <- t.X %*% t.Y
-          t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
+          t.log[k,,] <- nijk[k,,]*nk[k]/t.dijk
         }
-
-        t.G2 <- 2 * nijk * log(t.log)
-        t.G2[is.nan(t.G2)] <- 0
-        G2 <- sum(t.G2)
-      } #end lenS=3
-
-      if(lenS==4){
-        nijk <- array(NA,c(2,2,16))
-        for(i1 in 1:2) for(i2 in 1:2) for(i3 in 1:2) for(i4 in 1:2) for(i5 in 1:2) for(i6 in 1:2){
-          nijk[i1,i2,8*(i3-1)+4*(i4-1)+2*(i5-1)+i6] <-
-            sum((dm[,x]==i1-1) &
-                (dm[,y]==i2-1) &
-                (dm[,S[1]]==i3-1) &
-                (dm[,S[2]]==i4-1) &
-                (dm[,S[3]]==i5-1) &
-                (dm[,S[4]]==i6-1))
-        }
-
-        nik <- apply(nijk,3,rowSums)
-        njk <- apply(nijk,3,colSums)
-        nk <- colSums(njk)
-
-        ## compute G^2
-        t.log <- array(0,c(2,2,16))
-        for (k in 1:16){
+      } else { ## c == 2 (?)
+        for (k in 1:2) {
           t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
           t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
           t.dijk <- t.X %*% t.Y
-          t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
+          t.log[,k,] <- nijk[,k,]*nk[k]/t.dijk
         }
+      }
 
-        t.G2 <- 2 * nijk * log(t.log)
-        t.G2[is.nan(t.G2)] <- 0
-        G2 <- sum(t.G2)
-      } #end lens=4
+      t.G2 <- 2 * nijk * log(t.log)
+      t.G2[is.nan(t.G2)] <- 0
+      G2 <- sum(t.G2)
 
-      if(lenS==5){
-        nijk <- array(NA,c(2,2,32))
-        for(i1 in 1:2) for(i2 in 1:2) for(i3 in 1:2) for(i4 in 1:2) for(i5 in 1:2) for(i6 in 1:2) for(i7 in 1:2){
-          nijk[i1,i2,16*(i3-1)+8*(i4-1)+4*(i5-1)+2*(i6-1)+i7] <-
-	      sum((dm[,x]==i1-1)&
-		  (dm[,y]==i2-1)&
-		  (dm[,S[1]]==i3-1)&
-		  (dm[,S[2]]==i4-1)&
-		  (dm[,S[3]]==i5-1)&
-		  (dm[,S[4]]==i6-1)&
-		  (dm[,S[5]]==i7-1))
-        }
+    }                                   # end lenS=1
+    else if(lenS==2) {
+      ## a.pos <- sort(c(x,y,S))
 
-        nik <- apply(nijk,3,rowSums)
-        njk <- apply(nijk,3,colSums)
-        nk <- colSums(njk)
+      nijk2 <- array(NA,c(2,2,2,2))
+      for(i in 1:2) for(j in 1:2) for(k in 1:2) for(l in 1:2){
+        nijk2[i,j,k,l] <- sum((dm[,x]==i-1)&(dm[,y]==j-1)&(dm[,S[1]]==k-1)&(dm[,S[2]]==l-1))
+      }
 
-        ## compute G^2
-        t.log <- array(0,c(2,2,32))
-        for (k in 1:32){
-          t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
-          t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
-          t.dijk <- t.X %*% t.Y
-          t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-        }
+      ## alt <- c(x,y,S)
 
-        t.G2 <- 2 * nijk * log(t.log)
-        t.G2[is.nan(t.G2)] <- 0
-        G2 <- sum(t.G2)
-      } # end lenS=5
-    }
-    else { # wenn lenS >= 6
-      nijk <- tijk <- array(0,c(2,2,1))
-      ## first sample 'by hand' to avoid if/else in the for-loop
-      i <- dm[1,x]+1
-      j <- dm[1,y]+1
-      ## create directly a list of all k's
-      k <- NULL
-      sapply(as.list(S),function(x){k <<- cbind(k,dm[,x]+1);return(TRUE)})
-      ## first set of subset values
-      parents.count <- 1 ## counter variable corresponding to the number
-      ## of value combinations for the subset varibales
-      ## observed in the data
-      parents.val <- t(k[1,])
-      nijk[i,j,parents.count] <- 1 # cell counts
-
-      ## Do the same for all other samples. If there is already a table
-      ## for the subset values of the sample, increase the corresponding
-      ## cell count. If not, create a new table and set the corresponding
-      ## cell count to 1.
-      for (it.sample in 2:n) {
-        flag <- 0
-        i <- dm[it.sample,x]+1
-        j <- dm[it.sample,y]+1
-        ## comparing the current values of the subset variables to all
-        ## already existing combinations of subset variables values
-        t.comp <- t(parents.val[1:parents.count,])==k[it.sample,]
-                                        # Have to be careful here. When giving dimension to a list,
-                                        # R fills column after column, and NOT row after row.
-        dim(t.comp) <- c(lenS,parents.count)
-        for (it.parents in 1:parents.count) {
-          ## check if the present combination of value alreay exists
-          if(all(t.comp[,it.parents])) {
-            ## if yes, increase the corresponding cell count
-            nijk[i,j,it.parents] <- nijk[i,j,it.parents] + 1
-            flag <- 1
-            break
-          }
-        }# end for(it.parents...)
-        ## if the combination of subset values is new...
-        if (flag==0) {
-          if (verbose) {
-            cat('\n Adding a new combination of parents at sample ',
-                it.sample,'\n')
-          }
-          ## ...increase the number of subset 'types'
-          parents.count <- parents.count + 1
-          ## ...add the new subset to the others
-          parents.val <- rbind(parents.val,k[it.sample,])
-          ## ...update the cell counts (add new array)
-          nijk <- abind(nijk,array(0,c(2,2,1)))
-          nijk[i,j,parents.count] <- 1
-        } # end if(flag==0)
+      nijk <- array(NA,c(2,2,4))
+      for(i in 1:2) for(j in 1:2){
+        nijk[,,2*(i-1)+j] <- nijk2[,,i,j]
       }
 
       nik <- apply(nijk,3,rowSums)
       njk <- apply(nijk,3,colSums)
       nk <- colSums(njk)
+
       ## compute G^2
-      t.log <- array(0,c(2,2,parents.count))
-      for (k in 1:parents.count) {
+      t.log <- array(0,c(2,2,4))
+      for (k in 1:4) {
         t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
         t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
         t.dijk <- t.X %*% t.Y
         t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
       }
+
       t.G2 <- 2 * nijk * log(t.log)
       t.G2[is.nan(t.G2)] <- 0
       G2 <- sum(t.G2)
+    }                                   #end lenS=2
+    else if(lenS==3) {
+      nijk <- array(NA,c(2,2,8))
+      for(i1 in 1:2) for(i2 in 1:2) for(i3 in 1:2) for(i4 in 1:2) for(i5 in 1:2){
+        nijk[i1,i2,4*(i3-1)+2*(i4-1)+i5] <-
+          sum((dm[,x]==i1-1)&(dm[,y]==i2-1)&(dm[,S[1]]==i3-1)&(dm[,S[2]]==i4-1)&(dm[,S[3]]==i5-1))
+      }
+
+      nik <- apply(nijk,3,rowSums)
+      njk <- apply(nijk,3,colSums)
+      nk <- colSums(njk)
+
+      ## compute G^2
+      t.log <- array(0,c(2,2,8))
+      for (k in 1:8){
+        t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
+        t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
+        t.dijk <- t.X %*% t.Y
+        t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
+      }
+
+      t.G2 <- 2 * nijk * log(t.log)
+      t.G2[is.nan(t.G2)] <- 0
+      G2 <- sum(t.G2)
+    }                                   #end lenS=3
+    else if(lenS==4) {
+      nijk <- array(NA,c(2,2,16))
+      for(i1 in 1:2) for(i2 in 1:2) for(i3 in 1:2) for(i4 in 1:2) for(i5 in 1:2) for(i6 in 1:2){
+        nijk[i1,i2,8*(i3-1)+4*(i4-1)+2*(i5-1)+i6] <-
+          sum((dm[,x]==i1-1) &
+              (dm[,y]==i2-1) &
+              (dm[,S[1]]==i3-1) &
+              (dm[,S[2]]==i4-1) &
+              (dm[,S[3]]==i5-1) &
+              (dm[,S[4]]==i6-1))
+      }
+
+      nik <- apply(nijk,3,rowSums)
+      njk <- apply(nijk,3,colSums)
+      nk <- colSums(njk)
+
+      ## compute G^2
+      t.log <- array(0,c(2,2,16))
+      for (k in 1:16){
+        t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
+        t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
+        t.dijk <- t.X %*% t.Y
+        t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
+      }
+
+      t.G2 <- 2 * nijk * log(t.log)
+      t.G2[is.nan(t.G2)] <- 0
+      G2 <- sum(t.G2)
+    }                                   #end lens=4
+    else if(lenS==5) {
+      nijk <- array(NA,c(2,2,32))
+      for(i1 in 1:2) for(i2 in 1:2) for(i3 in 1:2) for(i4 in 1:2) for(i5 in 1:2) for(i6 in 1:2) for(i7 in 1:2){
+        nijk[i1,i2,16*(i3-1)+8*(i4-1)+4*(i5-1)+2*(i6-1)+i7] <-
+          sum((dm[,x]==i1-1)&
+              (dm[,y]==i2-1)&
+              (dm[,S[1]]==i3-1)&
+              (dm[,S[2]]==i4-1)&
+              (dm[,S[3]]==i5-1)&
+              (dm[,S[4]]==i6-1)&
+              (dm[,S[5]]==i7-1))
+      }
+
+      nik <- apply(nijk,3,rowSums)
+      njk <- apply(nijk,3,colSums)
+      nk <- colSums(njk)
+
+      ## compute G^2
+      t.log <- array(0,c(2,2,32))
+      for (k in 1:32){
+        t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
+        t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
+        t.dijk <- t.X %*% t.Y
+        t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
+      }
+
+      t.G2 <- 2 * nijk * log(t.log)
+      t.G2[is.nan(t.G2)] <- 0
+      G2 <- sum(t.G2)
+    }                                   # end lenS=5
+
+  } else { # --- lenS >= 6 ---------
+    nijk <- tijk <- array(0,c(2,2,1))
+    ## first sample 'by hand' to avoid if/else in the for-loop
+    i <- dm[1,x]+1
+    j <- dm[1,y]+1
+    ## create directly a list of all k's
+    k <- NULL
+    sapply(as.list(S),function(x){k <<- cbind(k,dm[,x]+1);return(TRUE)})
+    ## first set of subset values
+    parents.count <- 1 ## counter variable corresponding to the number
+    ## of value combinations for the subset varibales
+    ## observed in the data
+    parents.val <- t(k[1,])
+    nijk[i,j,parents.count] <- 1        # cell counts
+
+    ## Do the same for all other samples. If there is already a table
+    ## for the subset values of the sample, increase the corresponding
+    ## cell count. If not, create a new table and set the corresponding
+    ## cell count to 1.
+    for (it.sample in 2:n) {
+      flag <- 0
+      i <- dm[it.sample,x]+1
+      j <- dm[it.sample,y]+1
+      ## comparing the current values of the subset variables to all
+      ## already existing combinations of subset variables values
+      t.comp <- t(parents.val[1:parents.count,])==k[it.sample,]
+      ## Have to be careful here. When giving dimension to a list,
+      ## R fills column after column, and NOT row after row.
+      dim(t.comp) <- c(lenS,parents.count)
+      for (it.parents in 1:parents.count) {
+        ## check if the present combination of value alreay exists
+        if(all(t.comp[,it.parents])) {
+          ## if yes, increase the corresponding cell count
+          nijk[i,j,it.parents] <- nijk[i,j,it.parents] + 1
+          flag <- 1
+          break
+        }
+      }
+      ## if the combination of subset values is new...
+      if (flag==0) {
+        if (verbose)
+          cat('\n Adding a new combination of parents at sample ',
+              it.sample,'\n')
+        ## ...increase the number of subset 'types'
+        parents.count <- parents.count + 1
+        ## ...add the new subset to the others
+        parents.val <- rbind(parents.val,k[it.sample,])
+        ## ...update the cell counts (add new array)
+        nijk <- abind(nijk,array(0,c(2,2,1)))
+        nijk[i,j,parents.count] <- 1
+      }## end if(flag==0)
+    }## end for(it.sample ..)
+
+    nik <- apply(nijk,3,rowSums)
+    njk <- apply(nijk,3,colSums)
+    nk <- colSums(njk)
+    ## compute G^2
+    t.log <- array(0,c(2,2,parents.count))
+    for (k in 1:parents.count) {
+      t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
+      t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
+      t.dijk <- t.X %*% t.Y
+      t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
     }
+    t.G2 <- 2 * nijk * log(t.log)
+    t.G2[is.nan(t.G2)] <- 0
+    G2 <- sum(t.G2)
+  }
 
-    if (adaptDF && lenS > 0) {
-      ## lower the degrees of freedom according to the amount of
-      ## zero counts
-      zero.counts <- length(which(nijk == 0))
-      ## add zero counts corresponding to the number of parents
-      ## combinations that are missing
-      zero.counts <- zero.counts + 4*(2^lenS-dim(nijk)[3])
-      df <- max((df-zero.counts),1)
-    } # end adaptDF
+  if (adaptDF && lenS > 0) {
+    ## lower the degrees of freedom according to the amount of zero
+    ## counts; add zero counts corresponding to the number of parents
+    ## combinations that are missing
+    zero.counts <- sum(nijk == 0) + 4*(2^lenS-dim(nijk)[3])
+    df <- max(1, df-zero.counts)
+  }
 
-    prob <- 1 - pchisq(G2,df)
-  } # end if/else(number of samples)
-  prob
+  pchisq(G2, df, lower.tail=FALSE)# i.e. == 1 - P(..)
+
 }## gSquareBin()
 
 gSquareDis <- function(x, y, S, dm, nlev, verbose=FALSE,adaptDF=FALSE){
@@ -3605,83 +3560,80 @@ gSquareDis <- function(x, y, S, dm, nlev, verbose=FALSE,adaptDF=FALSE){
 
   if (n < 10*df) { ## not enough samples to perform the test, assume
     ## independence
-    if (verbose) cat("\n Not enough samples...\n")
-    prob <- 1    ## gerster prob=0
+    if (verbose) warning("Not enough samples...\n")
+    return( 1 )   ## gerster prob=0
   }
-  else { # enough data to perform the test
-    if(lenS<5){ #bei gSquareBin lenS<6
+  ## else --  enough data to perform the test
 
-      if (lenS == 0) {
-        nij <- array(0,c(nlev[x],nlev[y]))
-        for (i in 1:nlev[x]) {
-          for (j in 1:nlev[y]) {
-	    nij[i,j] <- sum((dm[,x]==i-1)&(dm[,y]==j-1))
-          }
+  if(lenS < 5) { #bei gSquareBin lenS<6
+
+    if (lenS == 0) {
+      nij <- array(0,c(nlev[x],nlev[y]))
+      for (i in 1:nlev[x]) {
+        for (j in 1:nlev[y]) {
+          nij[i,j] <- sum((dm[,x]==i-1)&(dm[,y]==j-1))
         }
-        ## marginal counts
-        t.X <- rowSums(nij)
-        dim(t.X) <- c(length(t.X),1)
-        t.Y <- colSums(nij)
-        dim(t.Y) <- c(1,length(t.Y))
+      }
+      ## marginal counts
+      t.X <- rowSums(nij)
+      dim(t.X) <- c(length(t.X),1)
+      t.Y <- colSums(nij)
+      dim(t.Y) <- c(1,length(t.Y))
 
-        ## compute G^2
-        dij <- t.X %*% t.Y # s_ia * s_jb
-        t.log <- nij*n/dij
-        t.G2 <- 2*nij*log(t.log)
-        t.G2[is.nan(t.G2)] <- 0
-        G2 <- sum(t.G2)
-      } #end lenS=0
+      ## compute G^2
+      dij <- t.X %*% t.Y                # s_ia * s_jb
+      t.log <- nij*n/dij
+      t.G2 <- 2*nij*log(t.log)
+      t.G2[is.nan(t.G2)] <- 0
+      G2 <- sum(t.G2)
+    }                                   # end lenS=0
+    else if(lenS==1) {
+      nijk <- array(0,c(nlev[x],nlev[y],nlev[S]))
+      for(i in 1:nlev[x]) for(j in 1:nlev[y]) for(k in 1:nlev[S]) {
+        nijk[i,j,k] <- sum((dm[,x]==i-1)&(dm[,y]==j-1)&(dm[,S]==k-1))
+      }
 
-      if (lenS==1){
-        nijk <- array(0,c(nlev[x],nlev[y],nlev[S]))
-        for(i in 1:nlev[x]) for(j in 1:nlev[y]) for(k in 1:nlev[S]) {
-          nijk[i,j,k] <- sum((dm[,x]==i-1)&(dm[,y]==j-1)&(dm[,S]==k-1))
-        }
+      nik <- apply(nijk,3,rowSums)
+      njk <- apply(nijk,3,colSums)
+      nk <- colSums(njk)
 
-        nik <- apply(nijk,3,rowSums)
-        njk <- apply(nijk,3,colSums)
-        nk <- colSums(njk)
+      ## compute G^2
+      t.log <- array(0,c(nlev[x],nlev[y],prod(nlev[S])))
+      for (k in 1:prod(nlev[S])) {
+        t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
+        t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
+        t.dijk <- t.X %*% t.Y
+        t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
+      }
 
-        ## compute G^2
-        t.log <- array(0,c(nlev[x],nlev[y],prod(nlev[S])))
-        for (k in 1:prod(nlev[S])) {
-          t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
-          t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
-          t.dijk <- t.X %*% t.Y
-          t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-        }
+      t.G2 <- 2 * nijk * log(t.log)
+      t.G2[is.nan(t.G2)] <- 0
+      G2 <- sum(t.G2)
+    }                                   # end lenS=1
+    else if(lenS == 2) {
+      nijk <- array(NA,c(nlev[x],nlev[y],nlev[S[1]]*nlev[S[2]]))
+      for(i in 1:nlev[x]) for(j in 1:nlev[y]) for(k in 1:nlev[S[1]]) for(l in 1:nlev[S[2]]){
+        nijk[i,j,nlev[S[2]]*(k-1)+l] <- sum((dm[,x]==i-1)&(dm[,y]==j-1)&(dm[,S[1]]==k-1)&(dm[,S[2]]==l-1))
+      }
 
-        t.G2 <- 2 * nijk * log(t.log)
-        t.G2[is.nan(t.G2)] <- 0
-        G2 <- sum(t.G2)
+      nik <- apply(nijk,3,rowSums)
+      njk <- apply(nijk,3,colSums)
+      nk <- colSums(njk)
 
-      } # end lenS=1
+      ## compute G^2
+      t.log <- array(0,c(nlev[x],nlev[y],prod(nlev[S])))
+      for (k in 1:prod(nlev[S])) {
+        t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
+        t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
+        t.dijk <- t.X %*% t.Y
+        t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
+      }
 
-      if(lenS==2){
-        nijk <- array(NA,c(nlev[x],nlev[y],nlev[S[1]]*nlev[S[2]]))
-        for(i in 1:nlev[x]) for(j in 1:nlev[y]) for(k in 1:nlev[S[1]]) for(l in 1:nlev[S[2]]){
-          nijk[i,j,nlev[S[2]]*(k-1)+l] <- sum((dm[,x]==i-1)&(dm[,y]==j-1)&(dm[,S[1]]==k-1)&(dm[,S[2]]==l-1))
-        }
-
-        nik <- apply(nijk,3,rowSums)
-        njk <- apply(nijk,3,colSums)
-        nk <- colSums(njk)
-
-        ## compute G^2
-        t.log <- array(0,c(nlev[x],nlev[y],prod(nlev[S])))
-        for (k in 1:prod(nlev[S])) {
-          t.X <- array(nik[,k],dim=c(dim(nik)[1],1))
-          t.Y <- array(njk[,k],dim=c(1,dim(njk)[1]))
-          t.dijk <- t.X %*% t.Y
-          t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-        }
-
-        t.G2 <- 2 * nijk * log(t.log)
-        t.G2[is.nan(t.G2)] <- 0
-        G2 <- sum(t.G2)
-      } #end lenS=2
-
-      if(lenS==3){
+      t.G2 <- 2 * nijk * log(t.log)
+      t.G2[is.nan(t.G2)] <- 0
+      G2 <- sum(t.G2)
+    }                                   #end lenS=2
+    else if(lenS == 3) {
         nijk <- array(NA,c(nlev[x],nlev[y],prod(nlev[S])))
         for(i1 in 1:nlev[x]) for(i2 in 1:nlev[y]) for(i3 in 1:nlev[S[1]]) for(i4 in 1:nlev[S[2]]) for(i5 in 1:nlev[S[3]]){
           nijk[i1,i2,nlev[S[3]]*nlev[S[2]]*(i3-1)+nlev[S[3]]*(i4-1)+i5] <- sum((dm[,x]==i1-1)&(dm[,y]==i2-1)&(dm[,S[1]]==i3-1)&(dm[,S[2]]==i4-1)&(dm[,S[3]]==i5-1))
@@ -3704,8 +3656,7 @@ gSquareDis <- function(x, y, S, dm, nlev, verbose=FALSE,adaptDF=FALSE){
         t.G2[which(is.nan(t.G2),arr.ind=TRUE)] <- 0
         G2 <- sum(t.G2)
       } #end lenS=3
-
-      if(lenS==4){
+      else if(lenS == 4) {
         nijk <- array(NA,c(nlev[x],nlev[y],prod(nlev[S])))
         for(i1 in 1:nlev[x]) for(i2 in 1:nlev[y]) for(i3 in 1:nlev[S[1]]) for(i4 in 1:nlev[S[2]]) for(i5 in 1:nlev[S[3]]) for(i6 in 1:nlev[S[4]]){
           nijk[i1,i2,nlev[S[4]]*nlev[S[3]]*nlev[S[2]]*(i3-1)+nlev[S[4]]*nlev[S[3]]*(i4-1)+nlev[S[4]]*(i5-1)+i6] <- sum((dm[,x]==i1-1)&(dm[,y]==i2-1)&(dm[,S[1]]==i3-1)&(dm[,S[2]]==i4-1)&(dm[,S[3]]==i5-1)&(dm[,S[4]]==i6-1))
@@ -3729,7 +3680,7 @@ gSquareDis <- function(x, y, S, dm, nlev, verbose=FALSE,adaptDF=FALSE){
         G2 <- sum(t.G2)
       } #end lens=4
     }
-    else{ # wenn lenS>4 (bei gSquareBin lenS>5)
+    else{ #  lenS > 4 (gSquareBin: lenS>5)
       nijk <- tijk <- array(0,c(nlev[x],nlev[y],1))
       ## first sample 'by hand' to avoid if/else in the for-loop
       i <- dm[1,x]+1
@@ -3797,10 +3748,9 @@ gSquareDis <- function(x, y, S, dm, nlev, verbose=FALSE,adaptDF=FALSE){
       t.G2 <- 2 * nijk * log(t.log)
       t.G2[which(is.nan(t.G2),arr.ind=TRUE)] <- 0
       G2 <- sum(t.G2)
-
     }
 
-    if (adaptDF&lenS>0) {
+    if (adaptDF && lenS>0) {
       ## lower the degrees of freedom according to the amount of
       ## zero counts
       if(lenS==0){
@@ -3815,16 +3765,15 @@ gSquareDis <- function(x, y, S, dm, nlev, verbose=FALSE,adaptDF=FALSE){
       df <- max((df-zero.counts),1)
     } # end adaptDF
 
-    prob <- 1 - pchisq(G2,df)
-  } # end if/else(number of samples)
-  prob
+    pchisq(G2, df, lower.tail=FALSE)# i.e. == 1 - P(..)
+
 }## gSquareDis()
 
 gaussCItest <- function(x,y,S,suffStat) {
   ## suffStat$C: correlation matrix
   ## suffStat$n: sample size
-  z <- zStat(x,y,S,suffStat$C,suffStat$n)
-  2*(1-pnorm(abs(z)))
+  z <- zStat(x,y,S, suffStat$C, suffStat$n)
+  2*pnorm(abs(z), lower.tail=FALSE)
 }
 
 
@@ -3907,22 +3856,22 @@ dsep <- function(a,b,S,g,john.pairs=NA)
 dsepTest <- function(x,y,S,suffStat) {
   ## suffStat$g: True graph (graphNEL suffStatect)
   ## suffStat$jp: johnson all pairs
-  ## pval == 0: keep edge / d-connected
-  ## pval == 1; drop edge / d-separated
+  ## Return "P-value"
+  ## p == 0: keep edge / d-connected
+  ## p == 1; drop edge / d-separated
   g <- suffStat$g
   jp <- suffStat$jp
   stopifnot(is(g, "graph"))
 
   if (x==y || (x %in% S) || (y %in% S)) {
-    pval <- 0
+    0
   } else {
     dSepTrue <- dsep(a = as.character(x), b = as.character(y),
-                     S = if(length(S)==0) NULL else as.character(S),
+                     S = if(length(S)) as.character(S),# else NULL
                      g = g, john.pairs = jp)
-    pval <- if (dSepTrue) ## delete edge
+    if (dSepTrue) ## delete edge
       1 else 0
   }
-  pval
 }
 
 ## disCItest
@@ -3930,18 +3879,18 @@ disCItest <- function(x,y,S,suffStat) {
   dm <- suffStat$dm
   nlev <- suffStat$nlev
   adaptDF <- suffStat$adaptDF
-  pval <- gSquareDis(x = x, y = y, S = S, dm = dm, nlev = nlev,
-                     verbose = FALSE, adaptDF = adaptDF)
-  pval
+  ## P-value:
+  gSquareDis(x = x, y = y, S = S, dm = dm, nlev = nlev,
+             verbose = FALSE, adaptDF = adaptDF)
 }
 
 ## binCItest
 binCItest <- function(x,y,S,suffStat) {
   dm <- suffStat$dm
   adaptDF <- suffStat$adaptDF
-  pval <- gSquareBin(x = x, y = y, S = S, dm = dm, verbose = FALSE,
-                     adaptDF = adaptDF)
-  pval
+  ## P-value:
+  gSquareBin(x = x, y = y, S = S, dm = dm, verbose = FALSE,
+             adaptDF = adaptDF)
 }
 
 pdsep <- function (skel, suffStat, indepTest, p, sepset, pMax, NAdelete = TRUE,
@@ -4047,17 +3996,16 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, pMax, NAdelete = TRUE,
                   pval <- indepTest(x, y, diff.set[j], suffStat)
                   n.edgetests[ord + 1] <- n.edgetests[ord + 1] + 1
                   if (is.na(pval))
-                    pval <- ifelse(NAdelete, 1, 0)
+                    pval <- if(NAdelete) 1 else 0
                   if (pval > pMax[x, y])
                     pMax[x, y] <- pval
                   if (pval >= alpha) {
                     amat[x, y] <- amat[y, x] <- 0
                     sepset[[x]][[y]] <- sepset[[y]][[x]] <- diff.set[j]
                     done <- TRUE
-                    if (verbose) {
+                    if (verbose)
                       cat("x=", x, " y=", y, " S=", diff.set[j],
                           ": pval =", pval, "\n")
-                    }
                     break
                   }
                 }
@@ -4070,7 +4018,7 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, pMax, NAdelete = TRUE,
                       pval <- indepTest(x, y, tmp.combn[, k], suffStat)
                       n.edgetests[ord + 1] <- n.edgetests[ord + 1] + 1
                       if (is.na(pval))
-                        pval <- ifelse(NAdelete, 1, 0)
+                        pval <- if(NAdelete) 1 else 0
                       if (pval > pMax[x, y])
                         pMax[x, y] <- pval
                       if (pval >= alpha) {
@@ -4095,19 +4043,18 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, pMax, NAdelete = TRUE,
                     pval <- indepTest(x, y, tmp.combn[, k], suffStat)
                     n.edgetests[ord + 1] <- n.edgetests[ord + 1] + 1
                     if (is.na(pval))
-                      pval <- ifelse(NAdelete, 1, 0)
+                      pval <- if(NAdelete) 1 else 0
                     if (pval > pMax[x, y])
                       pMax[x, y] <- pval
                     if (pval >= alpha) {
                       amat[x, y] <- amat[y, x] <- 0
                       sepset[[x]][[y]] <- sepset[[y]][[x]] <- tmp.combn[,k]
                       done <- TRUE
-                      if (verbose) {
+                      if(verbose)
                         cat("x=", x, " y=", y, " S=", tmp.combn[, k], ": pval =", pval, "\n")
-                      }
                       break
                     }
-                }
+                  }
               }
             }
           }
@@ -4532,7 +4479,7 @@ setMethod("summary", "fciAlgo",
                 "\nNumber of edgetests from m = 0 up to m =",object@max.ordPDSEP,
                 ": ",object@n.edgetestsPDSEP)
 
-            myfun <- function(x) {ifelse(is.null(x),NA,length(x))}
+            myfun <- function(x) if(is.null(x)) NA else length(x)
             cat("\n\nSize distribution of SEPSET:")
             myTab <- table(sapply(object@sepset,function(x) sapply(x,myfun)),
                            useNA="always")
@@ -4724,11 +4671,15 @@ triple2numb <- function(p,i,j,k)
   k + p*(j + p*i)
 }
 
-find.upd <- function (path = NA, a = NA, n = NA, pag = NA, verbose = FALSE, unfVect=NULL, p=NA)
+find.upd <- function (path, a=NULL, pag, verbose=FALSE, unfVect=NULL, p)
 {
+  stopifnot((n <- length(path)) >= 2)
+  if (n > nrow(pag)) return(list(res = FALSE, uncov.path = NA))
+  ## else  --- "real work"
+
   uncov.path <- NA
   res <- FALSE
-  if (n <= dim(pag)[1]) {
+  if (n <= nrow(pag)) {
     final <- path[n]
     mittle <- path[n - 1]
     if (n == 2) {
@@ -4772,13 +4723,10 @@ find.upd <- function (path = NA, a = NA, n = NA, pag = NA, verbose = FALSE, unfV
             new.path <- c(path[1:(n - 1)], b, path[n])
             check.uncov <- 0
             for (l in 1:(n - 1)) {
-              if (pag[new.path[l], new.path[l + 2]] == 0 &&
-                  pag[new.path[l + 2], new.path[l]] == 0) {
-                check.uncov <- check.uncov
-              }
-              else {
+              if (pag[new.path[l], new.path[l + 2]] != 0 ||
+                  pag[new.path[l + 2], new.path[l]] != 0)
+
                 check.uncov <- check.uncov + 1
-              }
             }
             if (check.uncov == 0) {
               if ((pag[b, final] == 1 | pag[b, final] == 2) &&
@@ -4793,26 +4741,23 @@ find.upd <- function (path = NA, a = NA, n = NA, pag = NA, verbose = FALSE, unfV
                   ## check faithfulness
                   check.faith <- 0
                   for (l in 1:(n - 1)) {
-                    if (!any(unfVect == triple2numb(p,new.path[l],new.path[l+1],new.path[l+2])) &&
-                        !any(unfVect == triple2numb(p,new.path[l+2],new.path[l+1],new.path[l]))) {
-                      check.faith <- check.faith
-                    }
-                    else {
+                    if (any(unfVect == triple2numb(p,new.path[l  ],new.path[l+1],new.path[l+2])) ||
+                        any(unfVect == triple2numb(p,new.path[l+2],new.path[l+1],new.path[l])))
+
                       check.faith <- check.faith + 1
-                    }
                   }
                 }
               }
               else {
-                tmp <- find.upd(path = new.path, n = length(new.path),
-                                pag = pag, verbose = verbose, unfVect=unfVect, p=p)
+		tmp <- find.upd(path = new.path,
+				pag=pag, verbose=verbose, unfVect=unfVect, p=p)
                 uncov.path <- tmp[[2]]
                 res <- tmp[[1]]
               }
             }
             else {
-              tmp <- find.upd(path = new.path, n = length(new.path),
-                              pag = pag, verbose = verbose, unfVect=unfVect, p=p)
+	      tmp <- find.upd(path = new.path,
+			      pag=pag, verbose=verbose, unfVect=unfVect, p=p)
               uncov.path <- tmp[[2]]
               res <- tmp[[1]]
             }
@@ -4821,8 +4766,8 @@ find.upd <- function (path = NA, a = NA, n = NA, pag = NA, verbose = FALSE, unfV
       } ## if length(.) > 0
     }
   }
-  return(list(res = res, uncov.path = uncov.path))
-}
+  list(res = res, uncov.path = uncov.path)
+}## {find.upd}
 
 pc.cons.intern <- function(sk, suffStat, indepTest, alpha, verbose=FALSE, version.unf=c(NA,NA))
 {
@@ -5057,213 +5002,186 @@ checkTriple <- function(a,b,c,nbrsA,nbrsC,sepsetA,sepsetC,suffStat,indepTest,alp
   list(decision=res, version=vers)
 }
 
-faith.check <- function(circle.path, unfVect, p)
+faith.check <- function(cpath, unfVect, p)
 {
-  ## Purpose: check if every triple on the circle.path is faithful
+  ## Purpose: check if every triple on the 'cpath' is faithful
   ## ----------------------------------------------------------------------
-  ## Arguments: circle.path: circle path to check for faithfulness
+  ## Arguments: cpath: circle path to check for faithfulness
   ## ----------------------------------------------------------------------
   ## Author: Diego Colombo, Date: 25 May 2010, 13:57
-  check.tmp <- 0
-  n <- length(circle.path)
-  for (l in seq_len(n)) {
-    if (!any(unfVect == triple2numb(p,circle.path[l%%n],    circle.path[(l+1)%%n],circle.path[(l+2)%%n])) &&
-        !any(unfVect == triple2numb(p,circle.path[(l+2)%%n],circle.path[(l+1)%%n],circle.path[l%%n]))) {
-      check.tmp <- check.tmp
-    }
-    else {
-      check.tmp <- check.tmp + 1
-    }
+  n <- length(cpath)
+  for (j in seq_len(n)) {
+    if (any(unfVect == triple2numb(p,cpath[j%%n],    cpath[(j+1)%%n],cpath[(j+2)%%n])) ||
+	any(unfVect == triple2numb(p,cpath[(j+2)%%n],cpath[(j+1)%%n],cpath[j%%n])))
+
+      return(FALSE)
   }
-  check.tmp
+  TRUE
 }
 
-discr.path <- function (path = NA, n = NA, pag = NA, gInput = NA, verbose = FALSE)
+discr.path <- function (path, pag, gInput, verbose = FALSE)
 {
-  if (n > dim(pag)[1]) return(pag)
-  ## else :
+  stopifnot((n <- length(path)) >= 3)
+  if (n > nrow(pag)) return(pag)
+  ## else  --- "update" pag and return it in the end
 
-  res <- pag
+  pag <- pag
   c <- path[1]
   b <- path[2]
   a <- path[3]
   first.pos <- path[n]
   del.pos <- path[n - 1]
-  indD <- which(res[first.pos, ] != 0 &
-                res[, first.pos] == 2)
+  indD <- which(pag[first.pos, ] != 0 &
+                pag[, first.pos] == 2)
   indD <- setdiff(indD, del.pos)
-  for (d in indD) {
-    if (res[c, b] == 1 && !(d %in% path)) {
-      if (res[c, d] == 0 && res[d, c] == 0) {
-        if ((b %in% gInput@sepset[[c]][[d]]) ||
-            (b %in% gInput@sepset[[d]][[c]])) {
-          if (verbose)
-            cat("\nRule 4: There is a discriminating path between:",
-                d, "and", c, "for", b, "and", b, "is in Sepset of",
-                c, "and", d, ":", b, "->", c, "\n")
-          res[b, c] <- 2
-          res[c, b] <- 3
-        }
-        else {
-          if (verbose) {
-            cat("\nRule 4: There is a discriminating path between:",
-                d, "and", c, "for", b, "and", b, "is not in Sepset of",
-                c, "and", d, ":", a, "<->", b, "<->", c, "\n")
-          }
-          res[a, b] <- res[b, c] <- res[c, b] <- 2
-        }
+  for (d in indD)  if(pag[c, b] == 1 && all(d != path)) {
+    if (pag[c, d] == 0 && pag[d, c] == 0) {
+      if ((b %in% gInput@sepset[[c]][[d]]) ||
+          (b %in% gInput@sepset[[d]][[c]])) {
+        if (verbose)
+          cat("\nRule 4: There is a discriminating path between:",
+              d, "and", c, "for", b, "and", b, "is in Sepset of",
+              c, "and", d, ":", b, "->", c, "\n")
+        pag[b, c] <- 2
+        pag[c, b] <- 3
       }
       else {
-        if (res[first.pos, d] == 2 &&
-            res[d, c] == 2 && res[c, d] == 3) {
-          new.path <- c(path, d)
-          m <- length(new.path)
-          res <- discr.path(path = new.path, n = m,
-                            pag = res, gInput = gInput, verbose = verbose)
-        } ## else : keep 'res'
+        if (verbose) {
+          cat("\nRule 4: There is a discriminating path between:",
+              d, "and", c, "for", b, "and", b, "is not in Sepset of",
+              c, "and", d, ":", a, "<->", b, "<->", c, "\n")
+        }
+        pag[a, b] <- pag[b, c] <- pag[c, b] <- 2
       }
+    }
+    else {
+      if (pag[first.pos, d] == 2 &&
+          pag[d, c] == 2 && pag[c, d] == 3) {
+        pag <- discr.path(path = c(path, d),
+                          pag = pag, gInput = gInput, verbose = verbose)
+      } ## else : keep 'pag'
     }
   } ## for( d )
 
-  res
-}
+  pag
+}## {discr.path}
 
-ucp <- function (path, pag, n, verbose = FALSE, unfVect=NULL, p=NA)
+ucp <- function (path, pag, verbose = FALSE, unfVect=NULL, p)
 {
-  if (n > dim(pag)[1]) return(pag)
-  ## else :
+  stopifnot((n <- length(path)) >= 3)
+  if (n > nrow(pag)) return(pag)
+  ## else  --- "update" pag and return it in the end
 
-  res <- pag
-  indX <- which((res[path[n - 2], ] == 1 &
-                 res[, path[n - 2]] == 1))
-  if (length(indX) > 0) {
-    for (k in seq_along(indX)) {
-      x <- indX[k]
-      if (!(x %in% path) && res[path[1], path[n]] != 3) {
-        new.path <- c(path[c(1:(n - 2))], x, path[n - 1], path[n])
-        if (res[x, path[n - 1]] == 1 &&
-            res[path[n - 1], x] == 1) {
-          check.uncov <- 0
-          for (l in 1:(n - 1)) {
-            if (res[new.path[l], new.path[l + 2]] ==
-                0 & res[new.path[l + 2], new.path[l]] ==
-                0) {
-              check.uncov <- check.uncov
-            }
-            else {
-              check.uncov <- check.uncov + 1
-            }
+  n1 <- n - 1L
+  indX <- which((pag[path[n - 2], ] == 1 &
+                 pag[, path[n - 2]] == 1))
+  for (x in indX) if (!any(x == path) && pag[path[1], path[n]] != 3) {
+    new.path <- c(path[c(1:(n - 2))], x, path[c(n1,n)])
+    if (pag[x, path[n1]] == 1 &&
+        pag[path[n1], x] == 1) {
+      check.uncov <- FALSE
+      for (j in 1:n1) {
+        if (pag[new.path[j], new.path[j + 2]] != 0 ||
+            pag[new.path[j + 2], new.path[j]] != 0)
+          {
+            check.uncov <- TRUE
+            break
           }
-          if (check.uncov == 0) {
-            ## normal version
-            if (length(unfVect)==0) {
-              res[new.path[1], new.path[n + 1]] <- res[new.path[n + 1], new.path[1]] <- 3
-              for (j in 1:n) {
-                res[new.path[j], new.path[j + 1]] <- res[new.path[j + 1], new.path[j]] <- 3
-              }
-              if (verbose) {
-                cat("\nRule 5: There exists an uncovered circle path between",
-                    new.path[1], "and", new.path[n + 1], ":", new.path[1], "-", new.path[n + 1],
-                    "and for each edge on the path",  new.path, "\n")
-              }
-            }
-            ## conservative version
-            else {
-              faithres <- faith.check(new.path, unfVect, p)
-              if (faithres==0) {
-                res[new.path[1], new.path[n + 1]] <- res[new.path[n + 1], new.path[1]] <- 3
-                for (j in 1:n) {
-                  res[new.path[j], new.path[j + 1]] <- res[new.path[j + 1], new.path[j]] <- 3
-                }
-                if (verbose) {
-                  cat("\nRule 5': There exists a faithful uncovered circle path between",
-                      new.path[1], "and", new.path[n + 1], ":", new.path[1], "-", new.path[n + 1],
-                      "and for each edge on the path",  new.path, "\n")
-                }
-              }
-            }
+      }
+      if (!check.uncov) {
+        ## normal version
+        if (length(unfVect)==0) {
+          pag[new.path[1], new.path[n + 1]] <- pag[new.path[n + 1], new.path[1]] <- 3
+          for (j in 1:n) {
+            pag[new.path[j], new.path[j + 1]] <- pag[new.path[j + 1], new.path[j]] <- 3
           }
-          else {
-            if (res[new.path[1], new.path[3]] == 0 &&
-                res[new.path[3], new.path[1]] == 0) {
-              res <- ucp(path = new.path, pag = res,
-                         n = length(new.path), verbose = verbose, unfVect=unfVect, p=p)
-            }
-          }
+          if (verbose)
+            cat("\nRule 5: There exists an uncovered circle path between",
+                new.path[1], "and", new.path[n + 1], ":", new.path[1], "-", new.path[n + 1],
+                "and for each edge on the path",  new.path, "\n")
         }
-        else {
-          res <- ucp(path = new.path, pag = res, n = length(new.path),
-                     verbose = verbose, unfVect=unfVect, p=p)
+        ## conservative version
+        else if (faith.check(new.path, unfVect, p)) {
+          pag[new.path[1], new.path[n + 1]] <- pag[new.path[n + 1], new.path[1]] <- 3
+          for (j in 1:n) {
+            pag[new.path[j], new.path[j + 1]] <- pag[new.path[j + 1], new.path[j]] <- 3
+          }
+          if (verbose) {
+            cat("\nRule 5': There exists a faithful uncovered circle path between",
+                new.path[1], "and", new.path[n + 1], ":", new.path[1], "-", new.path[n + 1],
+                "and for each edge on the path",  new.path, "\n")
+          }
         }
       }
+      else if (pag[new.path[1], new.path[3]] == 0 &&
+               pag[new.path[3], new.path[1]] == 0) {
+        pag <- ucp(path = new.path, pag = pag,
+                   verbose=verbose, unfVect=unfVect, p=p)
+      }
     }
-  }
-  res
-}
+    else {
+      pag <- ucp(path = new.path, pag = pag,
+                 verbose=verbose, unfVect=unfVect, p=p)
+    }
+  } ## for(x ..) if(...)
+  pag
+} ## {ucp}
 
 ## Recursive (!) updating :
-upd <- function (path, pag, n, verbose = FALSE, unfVect=NULL, p=NA)
+upd <- function (path, pag, verbose = FALSE, unfVect=NULL, p)
 {
-  if (n > dim(pag)[1]) return(pag)
-  ## else :
+  stopifnot((n <- length(path)) >= 2)
+  if (n > nrow(pag)) return(pag)
+  ## else  --- "update" pag and return it in the end
 
-  res <- pag
+  n1 <- n - 1L
   c <- path[1]
   a <- path[2]
-  b <- path[n - 1]
+  b <- path[n1]
   d <- path[n]
-  indX <- which((res[d, ] == 2 | res[d, ] == 1) &
-                (res[, d] == 1 | res[, d] == 3) &
-                (res[b, ] == 0 & res[, b] == 0))
-  for (x in indX) {
-    if (!(x %in% path) &&  res[c, a] != 3) {
-      new.path <- c(path[c(2:n)], x, path[1])
+  indX <- which((pag[d, ] == 2 | pag[d, ] == 1) &
+                (pag[, d] == 1 | pag[, d] == 3) &
+                (pag[b, ] == 0 & pag[, b] == 0))
+  for (x in indX) if (!any(x == path) && pag[c, a] != 3) {
+    new.path <- c(path[2:n], x, path[1])
 
-      if ((res[x, c] == 1 || res[x, c] == 2) &&
-          (res[c, x] == 1 || res[c, x] == 3)) {
-        check.uncov <- 0
-        for (l in 1:(n - 1)) {
-          if (res[new.path[l], new.path[l + 2]] == 0 &&
-              res[new.path[l + 2], new.path[l]] == 0) {
-            check.uncov <- check.uncov
+    if ((pag[x, c] == 1 || pag[x, c] == 2) &&
+        (pag[c, x] == 1 || pag[c, x] == 3)) {
+
+      check.uncov <- FALSE
+      for (j in 1:n1) {
+        if (pag[new.path[j], new.path[j + 2]] != 0 ||
+            pag[new.path[j + 2], new.path[j]] != 0)
+          {
+            check.uncov <- TRUE
+            break
           }
-          else {
-            check.uncov <- check.uncov + 1
-          }
+      }
+      if (!check.uncov) {
+        if (length(unfVect)==0) { ## normal version
+          pag[c, a] <- 3
+          if (verbose)
+            cat("\nRule 9: There exists an upd between",
+                new.path, ":", a, "->", c, "\n")
         }
-        if (check.uncov == 0) {
-          ## normal version
-          if (length(unfVect)==0) {
-            res[c, a] <- 3
-            if (verbose) {
-              cat("\nRule 9: There exists an upd between",
-                  new.path, ":", a, "->", c, "\n")
-            }
-          }
-          ## conservative version
-          else {
-            faithres <- faith.check(new.path, unfVect, p)
-            if (faithres==0) {
-              res[c, a] <- 3
-              if (verbose) {
-                cat("\nRule 9': There exists a faithful upd between",
-                    new.path, ":", a, "->", c, "\n")
-              }
-            }
-          }
-        }
-        else {
-          rec.path <- c(path, x)
-          res <- upd(path = rec.path, pag = res,
-                     n = length(rec.path), verbose = verbose, unfVect=unfVect, p=p)
+        else if (faith.check(new.path, unfVect, p)) { ## conservative version
+          pag[c, a] <- 3
+          if (verbose)
+            cat("\nRule 9': There exists a faithful upd between",
+                new.path, ":", a, "->", c, "\n")
         }
       }
       else {
-        rec.path <- c(path, x)
-        res <- upd(path = rec.path, pag = res, n = length(rec.path),
+        pag <- upd(path = c(path, x), pag = pag,
                    verbose = verbose, unfVect=unfVect, p=p)
       }
     }
-  }
-  res
-}
+    else {
+      pag <- upd(path = c(path, x), pag = pag,
+                 verbose = verbose, unfVect=unfVect, p=p)
+    }
+
+  } ## for(x ..) if(...)
+  pag
+}## {upd}
+
