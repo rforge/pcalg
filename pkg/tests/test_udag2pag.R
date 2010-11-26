@@ -34,11 +34,10 @@ true.cov1 <- cov.mat1[-L1,-L1]
 true.corr1 <- cov2cor(true.cov1)
 
 ## compute the true CPDAG
-true.CPDAG1 <- pcAlgo.Perfect(true.corr1, directed=FALSE, psepset=TRUE, verbose=0)
+true.CPDAG1 <- pcAlgo.Perfect(true.corr1, directed=FALSE, psepset=TRUE, verbose=1)
 
 ## orient it with the AFCI algorithm
-rules <- rep(TRUE,10)
-true.pag1 <- udag2pag(true.CPDAG1, rules=rules, verbose=0)
+true.pag1 <- udag2pag(true.CPDAG1, rules=rep(TRUE,10), verbose=TRUE)
 
 ##define correct PAG
 corr.pag1 <- rbind(c(.,1,1,.),
@@ -84,11 +83,10 @@ true.cov2 <- cov.mat2[-L2,-L2]
 true.corr2 <- cov2cor(true.cov2)
 
 ## compute the true CPDAG
-true.CPDAG2 <- pcAlgo.Perfect(true.corr2, directed=FALSE, psepset=TRUE, verbose=0)
+true.CPDAG2 <- pcAlgo.Perfect(true.corr2, directed=FALSE, psepset=TRUE, verbose=1)
 
 ## orient it with the AFCI algorithm
-rules <- rep(TRUE,10)
-true.pag2 <- udag2pag(true.CPDAG2, rules=rules, verbose=0)
+true.pag2 <- udag2pag(true.CPDAG2, rules=rep(TRUE,10), verbose=TRUE)
 
 ##define correct PAG
 corr.pag2 <- rbind(c(.,.,.,2,.),
@@ -133,11 +131,10 @@ true.cov3 <- cov.mat3[-L3,-L3]
 true.corr3 <- cov2cor(true.cov3)
 
 ##Compute the true CPDAG
-true.CPDAG3 <- pcAlgo.Perfect(true.corr3, directed=FALSE, psepset=TRUE, verbose=0)
+true.CPDAG3 <- pcAlgo.Perfect(true.corr3, directed=FALSE, psepset=TRUE, verbose=1)
 
 ##Orient it with the FCI algorithm
-rules <- rep(TRUE,10)
-true.pag3 <- udag2pag(true.CPDAG3, rules=rules, verbose=0)
+true.pag3 <- udag2pag(true.CPDAG3, rules=rep(TRUE,10), verbose=TRUE)
 
 ##define correct PAG
 corr.pag3 <- rbind(c(.,.,2,.,.,2,.,.,.,2,2,2),
