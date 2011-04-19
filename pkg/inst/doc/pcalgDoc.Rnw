@@ -12,7 +12,7 @@
 %%\VignetteIndexEntry{Causal Inference: The pcalg R package}
 %%\VignetteDepends{pcalg, sfsmisc}
 \SweaveOpts{engine=R,eps=FALSE,pdf=TRUE,width=7,height=4}
-\SweaveOpts{keep.source=TRUE,strip.white=TRUE}
+\SweaveOpts{keep.source=TRUE,strip.white="true"}
 %           ^^^^^^^^^^^^^^^^ preserve comments (and all) in R chunks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -134,7 +134,7 @@ package \pkg{pcalg} and the data set.
 set.seed(40)
 p <- 8
 n <- 5000
-gGtrue <- randomDAG(p, prob = 0.3) 
+gGtrue <- randomDAG(p, prob = 0.3)
 gmG <- list(x = rmvDAG(n, gGtrue), g = gGtrue)
 @
 
@@ -577,7 +577,7 @@ assumptions are made.
   and satisfies some regularity conditions on the partial correlations, and
   $\alpha$ is taken to zero appropriately.  See \cite{KaBu07a} for full
   details. Consistency in a standard asymptotic regime with a fixed number
-  of variables follows as a special case. 
+  of variables follows as a special case.
 
 \item[FCI-algorithm:] Consistent in high-dimensional settings if the
   underlying MAG is sparse (in a stronger sense than what is needed for
@@ -822,7 +822,7 @@ should be removed, one computes Possible-D-SEP($x$) and Possible-D-SEP($y$)
 and performs conditional independence tests of $x$ and $y$ given all
 possible subsets of Possible-D-SEP($x$) and of Possible-D-SEP($y$) (see
 helpfile of function \code{pdsep()}). Subsequently, all edges are transformed into o--o again and the v-structures are
-determined (using information in sepset).  Finally, as many 
+determined (using information in sepset).  Finally, as many
 undetermined edge marks (o) as possible are determined using (a subset of) the 10
 orientation rules given by \cite{Zhang08-orientation-rules}.
 
@@ -938,7 +938,7 @@ conditional independence relationships in the data, using the function
 set.seed(123)
 p <- 7
 n <- 10000
-myDAG <- randomDAG(p, prob = 0.2) 
+myDAG <- randomDAG(p, prob = 0.2)
 datI <- rmvDAG(n, myDAG)
 gmI <- list(x = datI, g = myDAG)
 @
