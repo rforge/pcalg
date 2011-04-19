@@ -12,7 +12,7 @@
 %%\VignetteIndexEntry{Causal Inference: The pcalg R package}
 %%\VignetteDepends{pcalg, sfsmisc}
 \SweaveOpts{engine=R,eps=FALSE,pdf=TRUE,width=7,height=4}
-\SweaveOpts{keep.source=TRUE,strip.white="true"}
+\SweaveOpts{keep.source=TRUE,strip.white=true}
 %           ^^^^^^^^^^^^^^^^ preserve comments (and all) in R chunks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
