@@ -1,5 +1,5 @@
-%\documentclass[article]{jss}
-\documentclass[nojss,article]{jss}
+\documentclass[article]{jss}
+%\documentclass[nojss,article]{jss}
 %              ----- for the package-vignette, don't use JSS logo, etc
 % but when submitting, do
 % get rid of too much vertical space between R input & output:
