@@ -9,8 +9,8 @@
 \usepackage{algorithmic}
 \usepackage{algorithm}
 
-%%\VignetteIndexEntry{Causal Inference: The pcalg R package}
-%%\VignetteDepends{pcalg, sfsmisc}
+%%\VignetteIndexEntry{Causal Inference: The R package pcalg}
+%%\VignetteDepends{pcalg, sfsmisc, Rgraphviz}
 \SweaveOpts{engine=R,eps=FALSE,pdf=TRUE,width=7,height=4}
 \SweaveOpts{keep.source=TRUE,strip.white=true}
 %           ^^^^^^^^^^^^^^^^ preserve comments (and all) in R chunks
@@ -129,21 +129,24 @@ data set with $p = 8$ continuous variables with Gaussian noise and $n
 = 5000$ observations, which we will now analyse. First, we load the
 package \pkg{pcalg} and the data set.
 
-%% Used to generate "gmG" gaussianData
+
+<<diagnose-lib, echo=FALSE>>=
+if(Sys.getenv("USER") == "maechler")## just for "testing"
+  print( .libPaths() )
 <<def-gmG, eval=FALSE, echo=FALSE>>=
+## Used to generate the  'gmG'  Gaussian data originally:
+require("pcalg")
 set.seed(40)
 p <- 8
 n <- 5000
 gGtrue <- randomDAG(p, prob = 0.3)
 gmG <- list(x = rmvDAG(n, gGtrue), g = gGtrue)
 @
-
-% insert below for testing:
-% .libPaths() ## <<-- just for "testing"
 <<exIntro1>>=
 library("pcalg")
 data("gmG")
 @
+
 
 In the next step, we use the function \code{pc} to produce an estimate
 of the underlying causal structure. Since this function is based on
