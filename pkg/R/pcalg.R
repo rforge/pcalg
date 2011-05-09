@@ -5066,1220 +5066,6 @@ discr.path <- function (path, pag, gInput, verbose = FALSE)
   pag
 }## {discr.path}
 
-ucp <- function (path, pag, verbose = FALSE, unfVect=NULL, p)
-{
-  stopifnot((n <- length(path)) >= 3)
-  if (n > nrow(pag)) return(pag)
-  ## else  --- "update" pag and return it in the end
-
-  n1 <- n - 1L
-  indX <- which((pag[path[n - 2], ] == 1 &
-                 pag[, path[n - 2]] == 1))
-  for (x in indX) if (!any(x == path) && pag[path[1], path[n]] != 3) {
-    new.path <- c(path[c(1:(n - 2))], x, path[c(n1,n)])
-    if (pag[x, path[n1]] == 1 &&
-        pag[path[n1], x] == 1) {
-      check.uncov <- FALSE
-      for (j in 1:n1) {
-        if (pag[new.path[j], new.path[j + 2]] != 0 ||
-            pag[new.path[j + 2], new.path[j]] != 0)
-          {
-            check.uncov <- TRUE
-            break
-          }
-      }
-      if (!check.uncov) {
-        ## normal version
-        if (length(unfVect)==0) {
-          pag[new.path[1], new.path[n + 1]] <- pag[new.path[n + 1], new.path[1]] <- 3
-          for (j in 1:n) {
-            pag[new.path[j], new.path[j + 1]] <- pag[new.path[j + 1], new.path[j]] <- 3
-          }
-          if (verbose)
-            cat("\nRule 5: There exists an uncovered circle path between",
-                new.path[1], "and", new.path[n + 1], ":", new.path[1], "-", new.path[n + 1],
-                "and for each edge on the path",  new.path, "\n")
-        }
-        ## conservative version
-        else if (faith.check(new.path, unfVect, p)) {
-          pag[new.path[1], new.path[n + 1]] <- pag[new.path[n + 1], new.path[1]] <- 3
-          for (j in 1:n) {
-            pag[new.path[j], new.path[j + 1]] <- pag[new.path[j + 1], new.path[j]] <- 3
-          }
-          if (verbose) {
-            cat("\nRule 5': There exists a faithful uncovered circle path between",
-                new.path[1], "and", new.path[n + 1], ":", new.path[1], "-", new.path[n + 1],
-                "and for each edge on the path",  new.path, "\n")
-          }
-        }
-      }
-      else if (pag[new.path[1], new.path[3]] == 0 &&
-               pag[new.path[3], new.path[1]] == 0) {
-        pag <- ucp(path = new.path, pag = pag,
-                   verbose=verbose, unfVect=unfVect, p=p)
-      }
-    }
-    else {
-      pag <- ucp(path = new.path, pag = pag,
-                 verbose=verbose, unfVect=unfVect, p=p)
-    }
-  } ## for(x ..) if(...)
-  pag
-} ## {ucp}
-
-## Recursive (!) updating :
-upd <- function (path, pag, verbose = FALSE, unfVect=NULL, p)
-{
-  stopifnot((n <- length(path)) >= 2)
-  if (n > nrow(pag)) return(pag)
-  ## else  --- "update" pag and return it in the end
-
-  n1 <- n - 1L
-  c <- path[1]
-  a <- path[2]
-  b <- path[n1]
-  d <- path[n]
-  indX <- which((pag[d, ] == 2 | pag[d, ] == 1) &
-                (pag[, d] == 1 | pag[, d] == 3) &
-                (pag[b, ] == 0 & pag[, b] == 0))
-  for (x in indX) if (!any(x == path) && pag[c, a] != 3) {
-    new.path <- c(path[2:n], x, path[1])
-
-    if ((pag[x, c] == 1 || pag[x, c] == 2) &&
-        (pag[c, x] == 1 || pag[c, x] == 3)) {
-
-      check.uncov <- FALSE
-      for (j in 1:n1) {
-        if (pag[new.path[j], new.path[j + 2]] != 0 ||
-            pag[new.path[j + 2], new.path[j]] != 0)
-          {
-            check.uncov <- TRUE
-            break
-          }
-      }
-      if (!check.uncov) {
-        if (length(unfVect)==0) { ## normal version
-          pag[c, a] <- 3
-          if (verbose)
-            cat("\nRule 9: There exists an upd between",
-                new.path, ":", a, "->", c, "\n")
-        }
-        else if (faith.check(new.path, unfVect, p)) { ## conservative version
-          pag[c, a] <- 3
-          if (verbose)
-            cat("\nRule 9': There exists a faithful upd between",
-                new.path, ":", a, "->", c, "\n")
-        }
-      }
-      else {
-        pag <- upd(path = c(path, x), pag = pag,
-                   verbose = verbose, unfVect=unfVect, p=p)
-      }
-    }
-    else {
-      pag <- upd(path = c(path, x), pag = pag,
-                 verbose = verbose, unfVect=unfVect, p=p)
-    }
-
-  } ## for(x ..) if(...)
-  pag
-}## {upd}
-
-###
-## Neu
-###
-combn2 <- function(n,k)
-{
-  ## Purpose: generate all possible combinations of the set n
-  ##          of length k without duplicates
-  ## ----------------------------------------------------------------------
-  ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 17 Aug 2010, 14:51
-  if (length(n)==1) {
-    if (k==1) {
-      res <- matrix(n,1,1)
-      return(res)
-    }
-  }
-  else {
-    return(combn(n,k))
-  }
-}
-
-skeleton.rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, 
-    fixedEdges = NULL, NAdelete = TRUE, m.max = Inf) 
-{
-  ## Purpose: find an initial skeleton conditioning on the adjacency sets
-  ##          It is the same idea as the pc but we compute all the adjacency
-  ##          sets at the same time to avoid ordering issues
-  ## ----------------------------------------------------------------------
-  ## Arguments: same as skeleton
-  ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 23 Nov 2010, 10:14
-  
-  cl <- match.call()
-  pval <- NULL
-  sepset <- vector("list", p)
-  n.edgetests <- numeric(1)
-  if (is.null(fixedGaps)) {
-    G <- matrix(rep(TRUE, p * p), nrow = p, ncol = p)
-    diag(G) <- FALSE
-  }
-  else {
-    if (!(identical(dim(fixedGaps), c(p, p)))) {
-      stop("Dimensions of the dataset and fixedGaps do not agree.")
-    }
-    else {
-      if (fixedGaps != t(fixedGaps)) {
-        stop("fixedGaps must be symmetric")
-      }
-      G <- !fixedGaps
-    }
-  }
-  if (is.null(fixedEdges)) {
-    fixedEdges <- matrix(rep(FALSE, p * p), nrow = p, ncol = p)
-  }
-  else {
-    if (!(identical(dim(fixedEdges), c(p, p)))) {
-      stop("Dimensions of the dataset and fixedEdges do not agree.")
-    }
-    if (fixedEdges != t(fixedEdges)) {
-      stop("fixedEdges must be symmetric")
-    }
-  }
-  seq_p <- 1:p
-  for (iList in 1:p) sepset[[iList]] <- vector("list", p)
-  pMax <- matrix(rep(-Inf, p * p), nrow = p, ncol = p)
-  diag(pMax) <- 1
-  done <- FALSE
-  ord <- 0
-  while (!done && any(G) && ord <= m.max) {
-    n.edgetests[ord + 1] <- 0
-    done <- TRUE
-    ind <- which(G, arr.ind = TRUE)
-    ind <- ind[order(ind[, 1]), ]
-    remainingEdgeTests <- nrow(ind)
-    if (verbose) 
-      cat("Order=", ord, "; remaining edges:", remainingEdgeTests, 
-          "\n", sep = "")
-    ## compute the adjacency sets for any vertex
-    nbrsBool.tmp <- vector("list",p) 
-    for (i in 1:p) {
-      nbrsBool.tmp[[i]] <- G[, i]
-    }
-    for (i in 1:remainingEdgeTests) {
-      if (verbose) {
-        if (i%%100 == 0) 
-          cat("|i=", i, "|iMax=", nrow(ind), "\n")
-      }
-      x <- ind[i, 1]
-      y <- ind[i, 2]
-      if (G[y, x] && (!fixedEdges[y, x])) {
-        nbrsBool <- nbrsBool.tmp[[x]]
-        nbrsBool[y] <- FALSE
-        nbrs <- seq_p[nbrsBool]
-        length_nbrs <- length(nbrs)
-        if (length_nbrs >= ord) {
-          if (length_nbrs > ord) 
-            done <- FALSE
-          S <- seq(length = ord)
-          repeat {
-            n.edgetests[ord + 1] <- n.edgetests[ord + 1] + 1
-            pval <- indepTest(x, y, nbrs[S], suffStat)
-            if (verbose) 
-              cat("x=", x, " y=", y, " S=", nbrs[S], 
-                  ": pval =", pval, "\n")
-            if (is.na(pval)) 
-              pval <- ifelse(NAdelete, 1, 0)
-            if (pval > pMax[x, y]) 
-              pMax[x, y] <- pval
-            if (pval >= alpha) {
-              G[x, y] <- G[y, x] <- FALSE
-              sepset[[x]][[y]] <- nbrs[S]
-              break
-            }
-            else {
-              nextSet <- getNextSet(length_nbrs, ord, S)
-              if (nextSet$wasLast) 
-                break
-              S <- nextSet$nextSet
-            }
-          }
-        }
-      }
-    }
-    ord <- ord + 1
-  }
-  for (i in 1:(p - 1)) {
-    for (j in 2:p) {
-      pMax[i, j] <- pMax[j, i] <- max(pMax[i, j], pMax[j, 
-                                                       i])
-    }
-  }
-  if (sum(G) == 0) {
-    Gobject <- new("graphNEL", nodes = as.character(1:p))
-  }
-  else {
-    colnames(G) <- rownames(G) <- as.character(1:p)
-    Gobject <- as(G, "graphNEL")
-  }
-  new("pcAlgo", graph = Gobject, call = cl, n = integer(0), 
-      max.ord = as.integer(ord - 1), n.edgetests = n.edgetests, 
-      sepset = sepset, pMax = pMax, zMin = matrix(NA, 1, 1))
-}
-
-
-rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE,
-                  fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
-                  m.max = Inf) 
-{
-  cl <- match.call()
-  skel <- skeleton.rfci(suffStat, indepTest, p, alpha, verbose=verbose, 
-                   fixedGaps = fixedGaps, fixedEdges = fixedEdges, NAdelete = NAdelete, 
-                   m.max = m.max)
-  g <- as(skel@graph, "matrix")
-  sepset <- skel@sepset
-  ##the list of all ordered unshielded triples (the graph g does not change it is just a search!)
-  tmp <- find.unsh.triple(g,p)
-  listM <- tmp$unshTripl
-  vectM <- tmp$unshVect
- 
-  tripleList <- NULL
-
-  ##check and orient v-structures recursively
-  tmp1 <- rfci.vstructures(suffStat, indepTest, p, alpha, sepset, g, listM, vectM, unfVect=tripleList, verbose=verbose)
-  graph <- tmp1$graph
-  sepset <- tmp1$sepset
-  ##orient as many edge marks as possible
-  res <- udag2apag(suffStat, indepTest, alpha, graph, sepset, verbose=verbose, unfVect=tripleList)
- 
-  max.ordSKEL <- skel@max.ord  
-  max.ordPD <- 0
-  n.edgetestsSKEL <- skel@n.edgetests
-  n.edgetestsPD <- 0
-  pMax <- skel@pMax
-  allPdsep <- vector("list", p)
-  sepset <- res$sepset
-  Amat <- res$graph
-  rfciRes <- new("fciAlgo", amat = Amat, call = cl, n = integer(0), 
-        max.ord = as.integer(max.ordSKEL), max.ordPDSEP = as.integer(max.ordPD), 
-        n.edgetests = n.edgetestsSKEL, n.edgetestsPDSEP = n.edgetestsPD, 
-        sepset = sepset, pMax = pMax, allPdsep = allPdsep)
-  rfciRes
-}
-
-find.unsh.triple <- function(g,p)
-{
-  ## Purpose: find the ordered (<x,y,x> with x<z) list of all the unshielded
-  ##          triples in the graph
-  ## ----------------------------------------------------------------------
-  ## Arguments: g: adjacency matrix
-  ## ----------------------------------------------------------------------
-  ## Values: - unshTripl: matrix with 3 rows containing in each column
-  ##                    an unshielded triple
-  ##         - unshVect: containing the unique number for each column in unshTripl
-  ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 21 Oct 2010, 14:05
-
-  if (any(g!=0)) {
-    unshtmp <- NULL
-    ##find all unshielded triple in g
-    indS <- which(g == 1, arr.ind = TRUE) ##x-y
-    for (i in 1:dim(indS)[1]) {
-      x <- indS[i, 1]
-      y <- indS[i, 2]
-      allZ <- setdiff(which(g[y, ] == 1), x) ##x-y-z
-      if (length(allZ) > 0) {
-        for (j in 1:length(allZ)) {
-          z <- allZ[j]
-          if (g[x,z]==0 & g[z,x]==0) {
-            ##save the matrix
-            unshtmp <- cbind(unshtmp,c(x,y,z))
-          }
-        }
-      }
-    }
-    ##delete duplicates in the matrix
-    if (dim(unshtmp)[2] > 0) {
-      deleteDupl <- rep(0,dim(unshtmp)[2])
-      for (i in 1:dim(unshtmp)[2]) {
-        if (unshtmp[1,i]>unshtmp[3,i]) {
-          deleteDupl[i] <- 1
-        }
-      }
-      deletedupl <- which(deleteDupl==1)
-      if (length(deletedupl)>0) {
-        unshTripl <- unshtmp[,-deletedupl, drop=FALSE]
-      }
-      else {
-        unshTripl <- unshtmp
-      }
-    }
-    ##define the vector with the unique number for each triple
-    if (dim(unshTripl)[2] > 0) {
-      unshVect <- rep(NA, dim(unshTripl)[2])
-      for (k in 1 : dim(unshTripl)[2]) {
-        unshVect[k] <- triple2numb(p, unshTripl[1,k], unshTripl[2,k], unshTripl[3,k])
-      }
-    }
-    else {
-      unshVect <- NULL
-    }
-  }
-  list(unshTripl=unshTripl, unshVect=unshVect)
-}
-  
-
-rfci.vstructures <- function(suffStat, indepTest, p, alpha, sepset, graph, unshTripl, unshVect, unfVect=NULL, verbose=FALSE)
-{
-  ## Purpose: check the unshielded triples in unshTripl as v-structures
-  ##          recursively check if new unshielded triples have been found
-  ##          then save and orient the final ones in finalList and finalVect
-  ## ----------------------------------------------------------------------
-  ## Arguments: - suffStat, indepTest, p ,alpha: arguments from the algorithm
-  ##            - skel: output of the function skeleton
-  ##            - unshTripl, unshVect: list/numbers of the unshielded triples
-  ##                                   in graph
-  ##            - unfVect: list of unfaithful triples for the conservative version
-  ## ----------------------------------------------------------------------
-  ## Values: - updated sepset and graph
-  ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 21 Oct 2010, 14:15
-
-  ##check every column (unshielded triple) of unshTripl
-  ##NOTE: what's done is done!!!! I don't look back in the matrix
-  if (dim(unshTripl)[2] > 0) {
-    if (verbose) {
-      cat("\nCheck any unshielded triple for conditional dependence","\n")
-    }
-    ##per default every triple is defined as a v-structure
-    trueVstruct <- rep(TRUE,dim(unshTripl)[2])
-    ##check all the columns in unshTripl as v-structure or not
-    checktmp <- dep.triple(suffStat, indepTest, p, alpha, sepset, graph, unshTripl, unshVect, trueVstruct, verbose=verbose)
-    ##save the updated objects
-    graph <- checktmp$graph
-    sepset <- checktmp$sepset
-    ##note that no column is deleted from the matrix, we can add new triples instead
-    unshTripl <- checktmp$triple
-    unshVect <- checktmp$vect
-    trueVstruct <- checktmp$trueVstruct
-    ##orient the v-structures
-    ##if there is at least one triple with the desired properties
-    if (any(trueVstruct)){
-      if (verbose) {
-        cat("\nOrient the v-structures","\n")
-      }
-      for (i in 1:dim(unshTripl)[2]) {
-        if (trueVstruct[i]) {
-          x <- unshTripl[1, i]
-          y <- unshTripl[2, i]
-          z <- unshTripl[3, i]
-          if ((graph[x, z] == 0) & !((y %in% sepset[[x]][[z]]) | (y %in% sepset[[z]][[x]]))) {
-            ##normal version
-            if (length(unfVect)==0) {
-              ##this is to avoid the problem of:
-              ##assume that <a,b,c> was saved in finalList because a "true" unshielded triple
-              ##but after in the matrix appears <b,c,d> and the edge b-c is deleted
-              ##of course the triple <a,b,c> stays in the finalList but we cannot orient the edge
-              ##b-c because it doesn'e exist anymore
-              if (graph[x,y]!=0 & graph[z,y]!=0) {
-                graph[x, y] <- 2
-                graph[z, y] <- 2
-                if (verbose) {
-                  cat("\n", x, "*->", y, "<-*", z, "\n")
-                  cat("Sxz=", sepset[[z]][[x]], "and", 
-                      "Szx=", sepset[[x]][[z]], "\n")
-                }
-              }
-            }
-            ##conservative version
-            else {
-              ##check if x-y-z is faithful
-              if (!any(unfVect==triple2numb(p,x,y,z)) & !any(unfVect==triple2numb(p,z,y,x))) {
-                if (graph[x,y]!=0 & graph[z,y]!=0) {
-                  graph[x, y] <- 2
-                  graph[z, y] <- 2
-                  if (verbose) {
-                    cat("\n", x, "*->", y, "<-*", z, "\n")
-                    cat("Sxz=", sepset[[z]][[x]], "and", 
-                        "Szx=", sepset[[x]][[z]], "\n")
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  list(sepset = sepset, graph = graph)
-}
-
-
-dep.triple <- function(suffStat, indepTest, p, alpha, sepset, apag, unshTripl, unshVect, trueVstruct, verbose=verbose)
-{
-  ## Purpose: test the two edges of any unshielded triple in unshTripl (column)
-  ##          for dependence given SepSet. If independent find the minimal sepset,
-  ##          delete the edge, define the triple as FALSE in trueVstruct and search
-  ##          in the graph for new triple or destroyed ones. Otherwise do nothing. 
-  ## ----------------------------------------------------------------------
-  ## Arguments: - suffStat, indepTest, p, alpha, sepset, apag: skeleton
-  ##              parameters
-  ##            - unshTripl: matrix containing the unshielded triples (columns)
-  ##            - unshVect: triple2numb of unshTripl
-  ##            - trueVstruct: vector containing T/F for the v-structures
-  ##            - k: recursive parameter for the matrix unshTripl
-  ## ----------------------------------------------------------------------
-  ## Values: - updated sepset, apag, unshTripl, unshVect, trueVstruct
-  ## Author: Diego Colombo, Date: 16 Aug 2010, 15:07
-
-  k <- 0
-  while (k < dim(unshTripl)[2]) {
-    k <- k + 1
-    if (trueVstruct[k]) {
-      ##triple under inspection x-y-z
-      x <- unshTripl[1, k]
-      y <- unshTripl[2, k]
-      z <- unshTripl[3, k]
-      SepSet <- unique(c(sepset[[x]][[z]],sepset[[z]][[x]]))
-      SepSet <- setdiff(SepSet,y)
-      if (verbose) {
-        cat("\nTriple=","<",x,",",y,",",z,">", ";SepSet=", SepSet, "\n")
-      }
-      if (length(SepSet)!=0) {
-        del1 <- FALSE
-        ##check x-y
-        ##check first x and y given the whole sepset(x,z)
-        pvalue1.whole <- indepTest(x, y, SepSet, suffStat)
-        if (pvalue1.whole >= alpha) {
-          ##afterwards we have to define this triple as FALSE in trueVstruct
-          del1 <- TRUE
-          ## x and y are independent, then find the minimal sepset
-          done <- FALSE
-          ord <- 0
-          while (!done && ord < length(SepSet)) {
-            ord <- ord + 1
-            ##all combinations of SepSet of size ord
-            tmp.combn <- combn2(SepSet, ord)
-            for (i in 1:dim(tmp.combn)[2]) {
-              pval <- indepTest(x, y, tmp.combn[,i], suffStat)
-              if (verbose) {
-                cat("x=", x, " y=", y, "S=", tmp.combn[,i], ": pval =", pval, "\n")
-              }
-              if (pval >= alpha) {
-                ##delete edge and save set in sepset
-                if (verbose) {
-                  cat("Independence found: delete edge between",x,"and",y,"\n")
-                }
-                apag[x, y] <- apag[y, x] <- 0
-                sepset[[x]][[y]] <- sepset[[y]][[x]] <- tmp.combn[,i]
-                done <- TRUE
-                break
-              }
-            }
-          }
-      
-          ##case 1: before we had a triangle and now it is an unshielded triple x-m-y
-          indM <- which((apag[x, ] == 1 & apag[, x] == 1) & (apag[y, ] == 1 & apag[, y] == 1))
-          indM <- setdiff(indM,c(x,y,z))##just to be sure
-          if (length(indM) > 0) {
-            for (j in 1:length(indM)) {
-              m <- indM[j]
-              ##in the matrix the first column is always smaller than the third
-              if (x < y) {
-                unshTripl <- cbind(unshTripl, c(x,m,y))
-                unshVect <- c(unshVect, triple2numb(p, x, m, y))
-              }
-              else {
-                unshTripl <- cbind(unshTripl, c(y,m,x))
-                unshVect <- c(unshVect, triple2numb(p, y, m, x))
-              }
-              ##per default this new triple is set as TRUE in trueVstruct
-              trueVstruct <- c(trueVstruct,TRUE)
-            }
-          }
-          ##case 2: an existent unshielded triple has been destroyed
-          ##case 2.a): we had q-x-y or y-x-q in the matrix but not anymore
-          indQ <- which((apag[x, ] == 1 & apag[, x] == 1) & (apag[y, ] == 0 & apag[, y] == 0))
-          indQ <- setdiff(indQ,c(x,y,z))##just to be sure
-          if (length(indQ) > 0) {
-            for (j in 1:length(indQ)) {
-              q <- indQ[j]
-              ##define the triple as FALSE in trueVstruct
-              if (q < y) {
-                ##first check if it exists
-                delTripl <- unshVect == triple2numb(p, q, x, y)  
-                if (any(delTripl)) {
-                  ##if we haven't checked the triple yet, define it as FALSE
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-              else {
-                delTripl <- unshVect == triple2numb(p, y, x, q)
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-            }
-          }
-          ##case 2.b): we had r-y-x or x-y-r in the matrix but not anymore
-          indR <- which((apag[x, ] == 0 & apag[, x] == 0) & (apag[y, ] == 1 & apag[, y] == 1))
-          indR <- setdiff(indQ,c(x,y,z))##just to be sure
-          if (length(indR) > 0) {
-            for (j in 1:length(indR)) {
-              r <- indR[j]
-              ##define the triple as FALSE in trueVstruct
-              if (r < x) {
-                ##first check if it exists
-                delTripl <- unshVect == triple2numb(p, r, y, x)
-                ##if we haven't checked the triple yet, save it as FALSE
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-              else {
-                delTripl <- unshVect == triple2numb(p, x, y, r)
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-            }
-          }
-        }
-    
-        ##check z-y
-        del2 <- FALSE
-        ##check first z and y given the whole sepset(x,z)
-        pvalue2.whole <- indepTest(z, y, SepSet, suffStat)
-        if (pvalue2.whole >= alpha) {
-          ##afterwards we have to set this triple as FALSE in trueVstruct
-          del2 <- TRUE
-          ## z and y are independent, then find the minimal sepset
-          Done <- FALSE
-          Ord <- 0
-          while (!Done && Ord < length(SepSet)) {
-            Ord <- Ord + 1
-            ##all combinations of SepSet of size ord
-            tmp.combn <- combn2(SepSet, Ord)
-            for (i in 1:dim(tmp.combn)[2]) {
-              pval <- indepTest(z, y, tmp.combn[,i], suffStat)
-              if (verbose) {
-                cat("x=", z, " y=", y, " S=", tmp.combn[,i], ": pval =", pval, "\n")
-              }
-              if (pval >= alpha) {
-                ##delete edge and save set in sepset
-                if (verbose) {
-                  cat("Independence found: delete edge between",y,"and", z,"\n")
-                }
-                apag[z, y] <- apag[y, z] <- 0
-                sepset[[z]][[y]] <- sepset[[y]][[z]] <- tmp.combn[,i]
-                Done <- TRUE
-                break
-              }
-            }
-          }
-      
-          ##case 1: before we had a triangle and now it is an unshielded triple z-m-y
-          indM <- which((apag[z, ] == 1 & apag[, z] == 1) & (apag[y, ] == 1 & apag[, y] == 1))
-          indM <- setdiff(indM,c(x,y,z))##just to be sure
-          if (length(indM) > 0) {
-            for (j in 1:length(indM)) {
-              m <- indM[j]
-              ##in the matrix the first column is always smaller than the third
-              if (z < y) {
-                unshTripl <- cbind(unshTripl, c(z,m,y))
-                unshVect <- c(unshVect, triple2numb(p, z, m, y))
-              }
-              else {
-                unshTripl <- cbind(unshTripl, c(y,m,z))
-                unshVect <- c(unshVect, triple2numb(p, y, m, z))
-              }
-              ##per default the triple is defined as TRUE
-              trueVstruct <- c(trueVstruct,TRUE)
-            }
-          }
-          ##case 2: an existent unshielded triple has been destroyed
-          ##case 2.a): we had q-z-y or y-z-q in the matrix but not anymore
-          indQ <- which((apag[z, ] == 1 & apag[, z] == 1) & (apag[y, ] == 0 & apag[, y] == 0))
-          indQ <- setdiff(indQ,c(x,y,z))##just to be sure
-          if (length(indQ) > 0) {
-            for (j in 1:length(indQ)) {
-              q <- indQ[j]
-              ##define the triple as FALSE in trueVstruct
-              if (q < y) {
-                ##first check if it exists
-                delTripl <- unshVect == triple2numb(p, q, z, y)
-                ##if we haven't checked the triple yet, save it as FALSE
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-              else {
-                delTripl <- unshVect == triple2numb(p, y, z, q)
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-            }
-          }
-          ##case 2.b): we had r-y-z or z-y-r in the matrix but not anymore
-          indR <- which((apag[z, ] == 0 & apag[, z] == 0) & (apag[y, ] == 1 & apag[, y] == 1))
-          indR <- setdiff(indQ,c(x,y,z))##just to be sure
-          if (length(indR) > 0) {
-            for (j in 1:length(indR)) {
-              r <- indR[j]
-              ##define the triple as FALSE in trueVstruct
-              if (r < z) {
-                ##first check if it exists
-                delTripl <- unshVect == triple2numb(p, r, y, z)
-                ##if we haven't checked the triple yet, save it as FALSE
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-              else {
-                delTripl <- unshVect == triple2numb(p, z, y, r)
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-            }
-          }
-        }
-        ##if at least one edge has been deleted this is not a future v-structure
-        if (any(del1,del2)) {
-          trueVstruct[k] <- FALSE
-        }
-      }
-      ##the sepset is empty
-      ##so surely <x,y,z> is an unshielded triple because they cannot be indep given the empty set
-      ##nothing changed in sepset and in graph
-      else{
-        sepset <- sepset
-        apag <- apag
-      }
-      ##recursion on the next column of unshTripl
-      ##rec.res <- dep.triple(suffStat, indepTest, p, alpha, sepset, apag, unshTripl, unshVect, trueVstruct, k, verbose=verbose)
-      ##save the modified objects
-      ##unshTripl <- rec.res$triple
-      ##unshVect <- rec.res$vect
-      ##sepset <- rec.res$sepset
-      ##apag <- rec.res$graph
-      ##trueVstruct <- rec.res$trueVstruct
-    }
-  }
-  list(triple = unshTripl, vect = unshVect, sepset = sepset, graph = apag, trueVstruct = trueVstruct)
-}
-
-
-udag2apag <- function (suffStat, indepTest, alpha, apag, sepset, rules = rep(TRUE, 10), verbose = FALSE, unfVect=NULL) 
-{
-  ## Purpose: use the 10 orientation rules to orient the skeleton.
-  ##          Note that the preliminaries v-structures are already oriented
-  ##          in apag
-  ## ----------------------------------------------------------------------
-  ## Arguments: outputs of the function rfci.vstructures
-  ## ----------------------------------------------------------------------
-  ## Values: updated apag (oriented) and sepset
-  ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 21 Oct 2010, 15:13
-
-  if (any(apag!=0)) {
-    if (verbose) {
-      cat("\nOrient the edge marks using the 10 orientation rules","\n")
-    }
-    p <- dim(apag)[1]
-    old_apag1 <- matrix(rep(0, p^2), nrow = p, ncol = p)
-    while (sum(!(old_apag1 == apag)) > 0) {
-      old_apag1 <- apag
-      if (rules[1]) {
-        ind <- which((apag == 2 & t(apag) != 0), arr.ind = TRUE)
-        if (length(ind) > 0) {
-          for (i in 1:dim(ind)[1]) {
-            a <- ind[i, 1]
-            b <- ind[i, 2]
-            indC <- which((apag[b, ] != 0 & apag[, b] == 
-                           1) & (apag[a, ] == 0 & apag[, a] == 0))
-            indC <- setdiff(indC, a)
-            if (length(indC) > 0) {
-              ##normal version
-              if (length(unfVect)==0) {
-                apag[b, indC] <- 2
-                apag[indC, b] <- 3
-                if (verbose) {
-                  cat("\nRule 1:", a, "*->", b, "o-*", indC, 
-                      " where ", a, " and ", indC, " not connected: ", b, "->", indC, "\n")
-                }
-              }
-              ##conservative
-              else {
-                for (j in 1:length(indC)) {
-                  c <- indC[j]
-                  ##check that a-b-c faithful
-                  if (!any(unfVect==triple2numb(p,a,b,c)) & !any(unfVect==triple2numb(p,c,b,a))) {
-                    apag[b, c] <- 2
-                    apag[c, b] <- 3
-                    if (verbose) {
-                      cat("\nRule 1':", a, "*->", b, "o-*", c, 
-                          " where ", a, " and ", c, " not connected: ",a, b, c, "faithful triple", b, "->", c, "\n")
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      if (rules[2]) {
-        ind <- which((apag == 1 & t(apag) != 0), arr.ind = TRUE)
-        if (length(ind) > 0) {
-          for (i in 1:dim(ind)[1]) {
-            a <- ind[i, 1]
-            c <- ind[i, 2]
-            indB <- which(((apag[a, ] == 2 & apag[, a] == 
-                            3) & (apag[c, ] != 0 & apag[, c] == 2)) | 
-                          ((apag[a, ] == 2 & apag[, a] != 0) & (apag[c, 
-                                                 ] == 3 & apag[, c] == 2)))
-            if (length(indB) > 0) {
-              apag[a, c] <- 2
-              if (verbose) {
-                cat("\nRule 2:", a, "->", indB, "*->", 
-                    c, "or", a, "*->", indB, "->", c, "and", 
-                    a, "*-o", c, ":", a, "*->", c, "\n")
-              }
-            }
-          }
-        }
-      }
-      if (rules[3]) {
-        ind <- which((apag != 0 & t(apag) == 1), arr.ind = TRUE)
-        if (length(ind) > 0) {
-          for (i in 1:dim(ind)[1]) {
-            b <- ind[i, 1]
-            d <- ind[i, 2]
-            indAC <- which((apag[b, ] != 0 & apag[, b] == 
-                            2) & (apag[, d] == 1 & apag[d, ] != 0))
-            if (length(indAC) >= 2) {
-              ##normal version
-              if (length(unfVect)==0) {
-                counter <- 0
-                while ((counter < (length(indAC) - 1)) & 
-                       (apag[d, b] != 2)) {
-                  counter <- counter + 1
-                  ii <- counter
-                  while ((ii < length(indAC)) & (apag[d, 
-                                                     b] != 2)) {
-                    ii <- ii + 1
-                    if (apag[indAC[counter], indAC[ii]] == 
-                        0 & apag[indAC[ii], indAC[counter]] == 
-                        0) {
-                      apag[d, b] <- 2
-                      if (verbose) {
-                        cat("\nRule 3:", d, "*->", b, "\n")
-                      }
-                    }
-                  }
-                }
-              }
-              ##conservative version
-              else {
-                comb.indAC <- combn2(indAC,2)
-                for (j in 1:dim(comb.indAC)[2]) {
-                  a <- comb.indAC[1,j]
-                  c <- comb.indAC[2,j]
-                  if (apag[a,c]==0 & apag[c,a]==0 & c!=a) {
-                    ##check fatihfulness a-d-c
-                    if (!any(unfVect==triple2numb(p,a,d,c)) & !any(unfVect==triple2numb(p,c,d,a))) {
-                      apag[d, b] <- 2
-                      if (verbose) {
-                        cat("\nRule 3':", a, d, c, "faithful",  d, "*->", b, "\n")
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      if (rules[4]) {
-        ind <- which((apag != 0 & t(apag) == 1), arr.ind = TRUE)## b o-* c
-        while (length(ind) > 0) {
-          b <- ind[1, 1]
-          c <- ind[1, 2]
-          ind <- ind[-1,, drop=FALSE]
-          ##find all a s.t. a -> c and a <-* b
-          indA <- which((apag[b, ] == 2 & apag[, b] != 0) & (apag[c, ] == 3 & apag[, c] == 2))
-          ##chose one a s.t. the initial triangle structure exists and the edge hasn't been oriented yet
-          while ((length(indA) > 0) & (apag[c,b] == 1)) {
-            a <- indA[1]
-            indA <- indA[-1]
-            ##path is the initial triangle
-            path <- c(a, b, c)
-            ##Done is TRUE if either we found a minimal path or no path exists for this triangle
-            Done <- FALSE
-            while ((!Done) & (apag[a,b] != 0) & (apag[a,c] != 0) & (apag[b,c] != 0)) {
-              ##find a minimal disciminating path for a,b,c
-              tmp.path <- min.discr.path(p, pag = apag, path = path, verbose = verbose)
-              length.path <- length(tmp.path)
-              ##if the path doesn't exists, we are done with this triangle
-              if (length.path == 1) {
-                Done <- TRUE
-              }
-              else {
-                ##a path exists and needs to be checked and maybe oriented
-                ##first check every single edge for independence
-                tmp.checked <- CheckEdges(suffStat, indepTest, p, alpha, apag, sepset, tmp.path)
-                ##save updated graph and sepset
-                sepset <- tmp.checked$sepset
-                apag <- tmp.checked$apag
-                ##no edge deleted ----> orient the edges
-                if (!tmp.checked$deleted) {
-                  ##if b is in sepset
-                  if ((b %in% sepset[[tmp.path[1]]][[tmp.path[length.path]]]) | (b %in% sepset[[tmp.path[length.path]]][[tmp.path[1]]])) {
-                    if (verbose) {
-                      cat("\nNew Rule 4: There is a discriminating path between:", 
-                          tmp.path[1], "and", c, "for", b, "and", b, "is in Sepset of", 
-                          c, "and", tmp.path[1], ":", b, "->", c, "\n")
-                    }
-                    apag[b, c] <- 2
-                    apag[c, b] <- 3
-                  }
-                  else {
-                    ##if b is not in sepset
-                    if (verbose) {
-                      cat("\nNew Rule 4: There is a discriminating path between:", 
-                          tmp.path[1], "and", c, "for", b, "and", b, "is not in Sepset of", 
-                          c, "and", tmp.path[1], ":", a, "<->", b, "<->", 
-                          c, "\n")
-                    }
-                    apag[a, b] <- apag[b, c] <- apag[c, b] <- 2
-                  }
-                  Done <- TRUE
-                }
-              }
-            }
-          }
-        }
-      }
-      if (rules[5]) {
-        ind <- which((apag == 1 & t(apag) == 1), arr.ind = TRUE)
-        if (length(ind) > 0) {
-          for (i in 1:dim(ind)[1]) {
-            a <- ind[i, 1]
-            b <- ind[i, 2]
-            indC <- which((apag[a, ] == 1 & apag[, a] == 
-                           1) & (apag[b, ] == 0 & apag[, b] == 0))
-            indC <- setdiff(indC, b)
-            indD <- which((apag[b, ] == 1 & apag[, b] == 
-                           1) & (apag[a, ] == 0 & apag[, a] == 0))
-            indD <- setdiff(indD, a)
-            if (length(indC) > 0 & length(indD) > 0) {
-              for (j in 1:length(indC)) {
-                c <- indC[j]
-                for (l in 1:length(indD)) {
-                  d <- indD[l]
-                  if (apag[c, d] == 1 & apag[d, c] == 1) {
-                    ##normal version
-                    if (length(unfVect)==0) {
-                      apag[a, b] <- apag[b, a] <- 3
-                      apag[a, c] <- apag[c, a] <- 3
-                      apag[c, d] <- apag[d, c] <- 3
-                      apag[d, b] <- apag[b, d] <- 3
-                      if (verbose) {
-                        cat("\nRule 5: There exists an uncovered circle path between", 
-                            a, "and", b, ":", a, "-", b, 
-                            "and", a, "-", c, "-", d, "-", 
-                            b, "\n")
-                      }
-                    }
-                    ##conservative
-                    else {
-                      ##check that every triple on the circle is faithful
-                      path2check <- c(a,c,d,b)
-                      if (faith.check(path2check, unfVect, p)) {
-                        apag[a, b] <- apag[b, a] <- 3
-                        apag[a, c] <- apag[c, a] <- 3
-                        apag[c, d] <- apag[d, c] <- 3
-                        apag[d, b] <- apag[b, d] <- 3
-                        if (verbose) {
-                          cat("\nRule 5': There exists a faithful uncovered circle path between", 
-                              a, "and", b, ":", a, "-", b, 
-                              "and", a, "-", c, "-", d, "-", 
-                              b, "\n")
-                        }
-                      }
-                    }
-                  }
-                  else {
-                    path <- c(a, c, d, b)
-                    apag <- ucp(path = path, pag = apag, 
-                                verbose = verbose, unfVect=unfVect, p=p)
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      if (rules[6]) {
-        ind <- which((apag != 0 & t(apag) == 1), arr.ind = TRUE)
-        if (length(ind) > 0) {
-          for (i in 1:dim(ind)[1]) {
-            b <- ind[i, 1]
-            c <- ind[i, 2]
-            indA <- which(apag[b, ] == 3 & apag[, b] == 
-                          3)
-            if (length(indA) > 0) {
-              apag[c, b] <- 3
-              if (verbose) {
-                cat("\nRule 6:", a, "-", b, "o-*", c, ":", 
-                    b, "-*", c, "\n")
-              }
-            }
-          }
-        }
-      }
-      if (rules[7]) {
-        ind <- which((apag != 0 & t(apag) == 1), arr.ind = TRUE)
-        if (length(ind) > 0) {
-          for (i in 1:dim(ind)[1]) {
-            b <- ind[i, 1]
-            c <- ind[i, 2]
-            indA <- which((apag[b, ] == 3 & apag[, b] == 
-                           1) & (apag[c, ] == 0 & apag[, c] == 0))
-            indA <- setdiff(indA, c)
-            if (length(indA) > 0) {
-              ##normal version
-              if (length(unfVect)==0) {
-                apag[c, b] <- 3
-                if (verbose) {
-                  cat("\nRule 7:", indA, "-o", b, "o-*", 
-                      c, "and", indA, " and", c, " are not adjacent:", 
-                      b, "-*", c, "\n")
-                }
-              }
-              ##conservative
-              else {
-                for (j in 1:length(indA)) {
-                  a <- indA[j]
-                  ##check fatihfulness of a-b-c
-                  if (!any(unfVect==triple2numb(p,a,b,c)) & !any(unfVect==triple2numb(p,c,b,a))) {
-                    apag[c, b] <- 3
-                    if (verbose) {
-                      cat("\nRule 7':", a, "-o", b, "o-*", 
-                          c, "and", a, " and", c, " are not adjacent and", a,b,c, "faithful:",  
-                          b, "-*", c, "\n")
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      if (rules[8]) {
-        ind <- which((apag == 2 & t(apag) == 1), arr.ind = TRUE)
-        if (length(ind) > 0) {
-          for (i in 1:dim(ind)[1]) {
-            a <- ind[i, 1]
-            c <- ind[i, 2]
-            indB <- which(((apag[a, ] == 2 & apag[, a] == 
-                            3) | (apag[a, ] == 1 & apag[, a] == 3)) & 
-                          (apag[c, ] == 3 & apag[, c] == 2))
-            if (length(indB) > 0) {
-              apag[c, a] <- 3
-              if (verbose) {
-                cat("\nRule 8:", a, "->", indB, "->", c, 
-                    "or", a, "-o", indB, "->", c, "and", 
-                    a, "o->", c, ":", a, "->", c, "\n")
-              }
-            }
-          }
-        }
-      }
-      if (rules[9]) {
-        ind <- which((apag == 2 & t(apag) == 1), arr.ind = TRUE)
-        if (length(ind) > 0) {
-          for (i in 1:dim(ind)[1]) {
-            a <- ind[i, 1]
-            c <- ind[i, 2]
-            indB <- which((apag[a, ] == 2 | apag[a, ] == 
-                           1) & (apag[, a] == 1 | apag[, a] == 3) & 
-                          (apag[c, ] == 0 & apag[, c] == 0))
-            indB <- setdiff(indB, c)
-            if (length(indB) > 0) {
-              for (k in 1:length(indB)) {
-                b <- indB[k]
-                indD <- which((apag[b, ] == 2 | apag[b, 
-                                     ] == 1) & (apag[, b] == 1 | apag[, b] == 
-                                                      3) & (apag[a, ] == 0 & apag[, a] == 0))
-                indD <- setdiff(indD, a)
-                if (length(indD) > 0) {
-                  for (l in 1:length(indD)) {
-                    d <- indD[l]
-                    if (apag[c, a] != 3) {
-                      if ((apag[c, d] == 1 | apag[c, d] == 
-                           3) & (apag[d, c] == 1 | apag[d, 
-                                       c] == 2)) {
-                        ##normal version
-                        if (length(unfVect)==0) {
-                          apag[c, a] <- 3
-                          if (verbose) {
-                            cat("\nRule 9: There exists an upd between", 
-                                a, "and", c, ":", a, " ->", 
-                                c, "\n")
-                          }
-                        }
-                        ##conservative version
-                        else {
-                          path2check <- c(a,b,d,c)
-                          
-                          if (faith.check(path2check, unfVect, p)) {
-                            apag[c, a] <- 3
-                            if (verbose) {
-                              cat("\nRule 9': There exists a faithful upd between", 
-                                  a, "and", c, ":", a, " ->", 
-                                  c, "\n")
-                            }
-                          }
-                        }
-                      }
-                      else {
-                        path <- c(c, a, b, d)
-                        apag <- upd(path = path, pag = apag, 
-                                    verbose = verbose, unfVect=unfVect, p=p)
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      if (rules[10]) {
-        ind <- which((apag == 2 & t(apag) == 1), arr.ind = TRUE)
-        if (length(ind) > 0) {
-          for (i in 1:dim(ind)[1]) {
-            a <- ind[i, 1]
-            c <- ind[i, 2]
-            indB <- which((apag[c, ] == 3 & apag[, c] == 
-                           2))
-            if (length(indB) >= 2) {
-              for (j in 1:length(indB)) {
-                b <- indB[j]
-                indD <- setdiff(indB, b)
-                if (length(indD) > 0 & apag[c, a] != 3) {
-                  for (k in 1:length(indD)) {
-                    d <- indD[k]
-                    if ((apag[a, b] == 1 | apag[a, b] == 
-                         2) & (apag[b, a] == 1 | apag[b, a] == 
-                               3) & (apag[a, d] == 1 | apag[a, d] == 
-                                     2) & (apag[d, a] == 1 | apag[d, a] == 
-                                           3) & (apag[d, b] == 0 & apag[b, d] == 
-                                                 0)) {
-                      ##normal version
-                      if (length(unfVect)==0) {
-                        apag[c, a] <- 3
-                        if (verbose) {
-                          cat("\nRule 10 with mu = beta = ", 
-                              b, "and omega = theta =", d, 
-                              ":", a, "->", c, "\n")
-                        }
-                      }
-                      ##conservative version
-                      else {
-                        ##check faithfulness of b-a-d
-                        if (!any(unfVect==triple2numb(p,b,a,d)) & !any(unfVect==triple2numb(p,d,a,b))) {
-                          apag[c, a] <- 3
-                          if (verbose) {
-                            cat("\nRule 10' with mu = beta = ", 
-                                b, "and omega = theta =", d, 
-                                "and",b,a,d,"faithful:", a, "->", c, "\n")
-                          }
-                        }
-                      }
-                    }
-                    else {
-                      indA <- which((apag[a, ] == 1 | 
-                                     apag[a, ] == 2) & (apag[, a] == 
-                                           1 | apag[, a] == 3), arr.ind = TRUE)
-                      indA <- setdiff(indA, c)
-                      if (length(indA >= 2)) {
-                        for (l in 1:length(indA)) {
-                          first.pos <- indA[l]
-                          indAA <- setdiff(indA, first.pos)
-                          if ((length(indAA) > 0) & (apag[c, 
-                                                          a] != 3)) {
-                            for (s in 1:length(indAA)) {
-                              sec.pos <- indAA[s]
-                              p1 <- find.upd(path = c(first.pos, 
-                                               b), a = a, pag = apag, 
-                                             verbose = verbose, unfVect=unfVect, p=p)
-                              p2 <- find.upd(path = c(sec.pos, 
-                                               d), a = a, pag = apag, 
-                                             verbose = verbose, unfVect=unfVect, p=p)
-                              if (p1$res == TRUE & p2$res == TRUE) {
-                                mu <- p1$uncov.path[1]
-                                omega <- p2$uncov.path[1]
-                                if ((mu != omega) & (apag[mu, 
-                                       omega] == 0) & (apag[omega, 
-                                                           mu] == 0)) {
-                                  ##normal version
-                                  if (length(unfVect)==0) {
-                                    apag[c, a] <- 3
-                                    if (verbose) {
-                                      cat("\nRule 10:", a, 
-                                          "->", c, "\n")
-                                    }
-                                  }
-                                  ##conservative version
-                                  else {
-                                    if (!any(unfVect==triple2numb(p,mu,a,omega)) & !any(unfVect==triple2numb(p,omega,a,mu))) {
-                                      apag[c, a] <- 3
-                                      if (verbose) {
-                                        cat("\nRule 10':",mu,a,omega,"faithful:", a, 
-                                            "->", c, "\n")
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }## for k
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  list(graph = apag, sepset = sepset)
-}
-
 ##################################################
 ## New
 ##################################################
@@ -6426,7 +5212,7 @@ skeleton.rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixed
 
 
 rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, 
-    fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, conservative=FALSE) 
+    fixedEdges = NULL, NAdelete = TRUE, m.max = Inf) 
 {
   cl <- match.call()
   skel <- skeleton.rfci(suffStat, indepTest, p, alpha, verbose=verbose, 
@@ -6439,15 +5225,8 @@ rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NU
   listM <- tmp$unshTripl
   vectM <- tmp$unshVect
  
-  if (conservative) {
-    ##version.unf defined per default
-    ##Tetrad CPC works with version.unf=c(2,1)
-    tmp <- pc.cons.intern(skel, suffStat, indepTest, alpha, verbose=verbose, version.unf=c(2,2))
-    tripleList <- tmp$unfTripl
-  }
-  else {
     tripleList <- NULL
-  }
+
   ##check and orient v-structures recursively
   tmp1 <- rfci.vstructures(suffStat, indepTest, p, alpha, sepset, g, listM, vectM, unfVect=tripleList, verbose=verbose)
   graph <- tmp1$graph
@@ -7522,3 +6301,122 @@ min.discr.path <- function(p, pag = NA, path = NA, verbose = FALSE)
   }
   return(min.path)
 }
+
+ucp <- function (path, pag, verbose = FALSE, unfVect=NULL, p)
+{
+  stopifnot((n <- length(path)) >= 3)
+  if (n > nrow(pag)) return(pag)
+  ## else  --- "update" pag and return it in the end
+
+  n1 <- n - 1L
+  indX <- which((pag[path[n - 2], ] == 1 &
+                 pag[, path[n - 2]] == 1))
+  for (x in indX) if (!any(x == path) && pag[path[1], path[n]] != 3) {
+    new.path <- c(path[c(1:(n - 2))], x, path[c(n1,n)])
+    if (pag[x, path[n1]] == 1 &&
+        pag[path[n1], x] == 1) {
+      check.uncov <- FALSE
+      for (j in 1:n1) {
+        if (pag[new.path[j], new.path[j + 2]] != 0 ||
+            pag[new.path[j + 2], new.path[j]] != 0)
+          {
+            check.uncov <- TRUE
+            break
+          }
+      }
+      if (!check.uncov) {
+        ## normal version
+        if (length(unfVect)==0) {
+          pag[new.path[1], new.path[n + 1]] <- pag[new.path[n + 1], new.path[1]] <- 3
+          for (j in 1:n) {
+            pag[new.path[j], new.path[j + 1]] <- pag[new.path[j + 1], new.path[j]] <- 3
+          }
+          if (verbose)
+            cat("\nRule 5: There exists an uncovered circle path between",
+                new.path[1], "and", new.path[n + 1], ":", new.path[1], "-", new.path[n + 1],
+                "and for each edge on the path",  new.path, "\n")
+        }
+        ## conservative version
+        else if (faith.check(new.path, unfVect, p)) {
+          pag[new.path[1], new.path[n + 1]] <- pag[new.path[n + 1], new.path[1]] <- 3
+          for (j in 1:n) {
+            pag[new.path[j], new.path[j + 1]] <- pag[new.path[j + 1], new.path[j]] <- 3
+          }
+          if (verbose) {
+            cat("\nRule 5': There exists a faithful uncovered circle path between",
+                new.path[1], "and", new.path[n + 1], ":", new.path[1], "-", new.path[n + 1],
+                "and for each edge on the path",  new.path, "\n")
+          }
+        }
+      }
+      else if (pag[new.path[1], new.path[3]] == 0 &&
+               pag[new.path[3], new.path[1]] == 0) {
+        pag <- ucp(path = new.path, pag = pag,
+                   verbose=verbose, unfVect=unfVect, p=p)
+      }
+    }
+    else {
+      pag <- ucp(path = new.path, pag = pag,
+                 verbose=verbose, unfVect=unfVect, p=p)
+    }
+  } ## for(x ..) if(...)
+  pag
+} ## {ucp}
+
+## Recursive (!) updating :
+upd <- function (path, pag, verbose = FALSE, unfVect=NULL, p)
+{
+  stopifnot((n <- length(path)) >= 2)
+  if (n > nrow(pag)) return(pag)
+  ## else  --- "update" pag and return it in the end
+
+  n1 <- n - 1L
+  c <- path[1]
+  a <- path[2]
+  b <- path[n1]
+  d <- path[n]
+  indX <- which((pag[d, ] == 2 | pag[d, ] == 1) &
+                (pag[, d] == 1 | pag[, d] == 3) &
+                (pag[b, ] == 0 & pag[, b] == 0))
+  for (x in indX) if (!any(x == path) && pag[c, a] != 3) {
+    new.path <- c(path[2:n], x, path[1])
+
+    if ((pag[x, c] == 1 || pag[x, c] == 2) &&
+        (pag[c, x] == 1 || pag[c, x] == 3)) {
+
+      check.uncov <- FALSE
+      for (j in 1:n1) {
+        if (pag[new.path[j], new.path[j + 2]] != 0 ||
+            pag[new.path[j + 2], new.path[j]] != 0)
+          {
+            check.uncov <- TRUE
+            break
+          }
+      }
+      if (!check.uncov) {
+        if (length(unfVect)==0) { ## normal version
+          pag[c, a] <- 3
+          if (verbose)
+            cat("\nRule 9: There exists an upd between",
+                new.path, ":", a, "->", c, "\n")
+        }
+        else if (faith.check(new.path, unfVect, p)) { ## conservative version
+          pag[c, a] <- 3
+          if (verbose)
+            cat("\nRule 9': There exists a faithful upd between",
+                new.path, ":", a, "->", c, "\n")
+        }
+      }
+      else {
+        pag <- upd(path = c(path, x), pag = pag,
+                   verbose = verbose, unfVect=unfVect, p=p)
+      }
+    }
+    else {
+      pag <- upd(path = c(path, x), pag = pag,
+                 verbose = verbose, unfVect=unfVect, p=p)
+    }
+
+  } ## for(x ..) if(...)
+  pag
+}## {upd}
