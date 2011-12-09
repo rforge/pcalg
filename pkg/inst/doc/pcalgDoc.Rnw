@@ -36,19 +36,20 @@
 \Shorttitle{Causal Graphical Models: Package pcalg} %% a short title (if necessary)
 
 %% an abstract and keywords
-\Abstract{ The \pkg{pcalg} package for \proglang{R} (\cite{citeR})is a tool for
-  estimating intervention effects when the true underlying causal structure
-  is unknown. To this end, \pkg{pcalg} contains functions for estimating
-  the causal structure using graphical models (functions \code{skeleton},
-  \code{pc} and \code{fci}) and functions for estimating intervention
-  effects given an estimate of the causal structure (functions \code{ida}
-  and \code{idaFast}). In this document, we will give a brief overview of the
+\Abstract{ The \pkg{pcalg} package for \proglang{R} (\cite{citeR}) has two
+  goals: Causal structure learning and estimation of causal effects from
+  observational data. To this end, \pkg{pcalg} contains functions for
+  estimating the causal structure using graphical models and functions for
+  estimating intervention effects given an estimate of the causal
+  structure. In this document, we will give a brief overview of the
   methodological background of estimating intervention effects. Moreover,
   we will demonstrate how the package \pkg{pcalg} can be used for
-  estimating intervention effects and graphical models using examples.}
+  estimating intervention effects and graphical models using
+  examples. Finally, we will illustrate some real world applications of the
+  \pkg{pcalg} package.}
 
-\Keywords{IDA, PC, FCI, do-calculus, causality, graphical models, \proglang{R}}
-\Plainkeywords{IDA, PC, FCI, do-calculus, causality, graphical models, R} %% without formatting
+\Keywords{IDA, PC, RFCI, FCI, do-calculus, causality, graphical models, \proglang{R}}
+\Plainkeywords{IDA, PC, RFCI, FCI, do-calculus, causality, graphical models, R} %% without formatting
 %% at least one keyword must be supplied
 
 %% publication information
@@ -113,10 +114,13 @@ For further validation and broader use of this method, well documented and
 easy to use software is indispensable. Therefore, we wrote the R package
 \pkg{pcalg}, which incorporates the above mentioned method (IDA).
 
-The objective of this paper is to introduce the R package \pkg{pcalg} and
-explain the range of functions.
+The objective of this paper is to introduce the R package \pkg{pcalg},
+explain the range of functions on two simulated data sets and summarize
+some real world applications.
 
-To get started, we show how two of the main functions can be used in a
+To get started, we show how two of the main functions (one for causal
+structure learning and one for estimating causal effects from observational
+data) can be used in a
 typical application. Suppose we have a system described by some
 variables and many observations of this system. Furthermore, assume
 that it seems plausible that there are no hidden variables and no
@@ -149,13 +153,13 @@ data("gmG")
 @
 
 
-In the next step, we use the function \code{pc} to produce an estimate
+In the next step, we use the function \code{pc()} to produce an estimate
 of the underlying causal structure. Since this function is based on
 conditional independence tests, we need to define two things. First,
 we need a function that can compute conditional independence tests in
 a way that is suitable for the data at hand. For standard data types
 (Gaussian, discrete and binary) we provide predefined functions. See
-the example section in the help file of \code{pc} for more
+the example section in the help file of \code{pc()} for more
 details. Secondly, we need a summary of the data (sufficient
 statistic) on which the conditional independence function can
 work. Each conditional independence test can be performed at a certain
@@ -232,7 +236,7 @@ absolute value of the causal effect. (Note that at this point we have no
 p-value to control the sampling error).
 
 If we would like to know the effect of a unit increase in variable $V_1$ on
-variables $V_4$, $V_5$ and $V_6$, we could simply call \code{ida} three
+variables $V_4$, $V_5$ and $V_6$, we could simply call \code{ida()} three
 times. However, a faster way is to call the function \code{idaFast()}, which
 was tailored for such situations.
 
@@ -261,7 +265,7 @@ and can thus be an interesting object by itself. In the second step, we use
 the estimated causal structure and do-calculus (see \cite{Pearl00}) to calculate
 bounds on causal effects.
 
-\subsection{Estimating graphical models} \label{sec:gm}
+\subsection{Estimating causal structures with  graphical models} \label{sec:gm}
 Graphical models
 can be thought of as maps of dependence structures of a given probability
 distribution or a sample thereof (see for example \cite{lauritzen}). In
@@ -393,6 +397,21 @@ information in the data, in which every edge is either undirected (or
 bidirected, which has the same meaning in the context of the CPDAG) or
 directed.
 
+A causal structure without feedback loops and without hidden or selection
+variable can also be visualized using a DAG where the arrows indicate
+direct cause-effect relationships.
+Under some assumptions, \cite{Pearl00} showed (Th. 1.4.1) that there is a
+link between causal structures and graphical models. Roughly speaking, if
+the underlying causal structure is a DAG, we observe data generated from
+this DAG and then estimate a DAG model (i.e. a graphical model) on this
+data, the estimated CPDAG represents the equivalence class of the DAG model
+describing the causal structure. This holds if we have enough samples and
+assuming that the true underlying causal structure is indeed a DAG without
+latent or selection variables. Note that even given an infinite amount of
+data, we usually cannot identify the true DAG itself, but only its
+equivalence class. Every DAG in this equivalence class is equally likely to
+represent the true causal structure.
+
 \subsubsection{With hidden or selection variables}
 When discovering causal relations from nonexperimental data, two
 difficulties arise. One is the problem of hidden (or latent) variables:
@@ -409,8 +428,7 @@ practically unfeasible to find the true underlying DAG.
 
 A more modest goal could be to find a structure that represents all conditional
 independence relationships among the observed variables given the selection
-variables (but not the latent
-and selection variables) of the underlying causal structure. It turns out
+variables of the underlying causal structure. It turns out
 that this is possible. However, the resulting object will in general not be
 a DAG for the following reason. Suppose, we have a DAG including
 observational, latent and selection variables and we would like to visualize
@@ -463,7 +481,7 @@ oracle is in general impossible. One only reports on the equivalence class
 in which the true MAG lies.
 
 An equivalence class of a MAG can be uniquely represented by a
-Partial ancestral graph (PAG) (see
+partial ancestral graph (PAG) (see
 \cite{Zhang08-orientation-rules}). A PAG contains the following types of
 edges: o--o, o--, o-->, -->, <-->, --. Roughly, the bidirected edges come
 from hidden variables, and the undirected edges come from selection
@@ -478,13 +496,21 @@ equivalence class where the edgemark is a tail, and at least one where the
 edgemark is an arrowhead.
 
 An algorithm for finding the PAG given an independence oracle is the FCI
-algorithm (see \cite{SpirtesEtAl00}). This algorithm was slightly extended
-and proven to be sound and complete in
+algorithm (``fast causal inference''; see \cite{SpirtesEtAl00}). This
+algorithm was slightly extended and proven to be sound and complete in
 \cite{Zhang08-orientation-rules}. FCI is very similar to PC but makes
 additional conditional independence tests and uses more orientation rules
-(see section \ref{sec:fci} for more details). We refer the reader to
+(see Section \ref{sec:fci} for more details). We refer the reader to
 \cite{Zhang08-orientation-rules} for a detailed discussion of the FCI
-algorithm.
+algorithm. It turns out that the FCI is computationally infeasible for
+large graphs. The RFCI algorithm (``really fast causal inference''; see
+\cite{rfci}, is much faster than FCI. In some situations the output of RFCI
+is slightly less informative, in particular with respect to conditional
+independence information. However, it was shown in \cite{rfci} that any
+causal information in the output of RFCI is correct and that both FCI and
+RFCI are consistent in (different) sparse high-dimensional
+settings. Finally, in simulations the estimation performances of the
+algorithms are very similar.
 
 \subsection{Estimating bounds on causal effects}
 One way of quantifying the causal effect of variable $X$ on $Y$ is to
@@ -526,23 +552,11 @@ known as ``do-calculus'' whose
 application transforms an expression involving a ``do'' into an expression
 involving only conditional distributions. Thus, information on the
 interventional distribution can be obtained by using information obtained
-by observations and knowledge of the underlying causal structure. \cite{shpitser}
-restructured the rules of ``do-calculus'' into algorithmic form and showed
-that they are complete in a sense that, if the algorithm doesn't find a
-transformation, there exists none.
+by observations and knowledge of the underlying causal structure. 
 
-Unfortunately, the causal structure is rarely known in practice. Under some
-assumptions, \cite{Pearl00} showed (Th. 1.4.1) that there is a link between
-causal structures and graphical models. Roughly speaking, if the underlying
-causal structure is a DAG, we observe data generated from this DAG and then
-estimate a DAG model (i.e. a graphical model) on this data, the estimated
-CPDAG represents the equivalence class of the DAG model describing the
-causal structure. This holds if we have enough samples and assuming that
-the true underlying causal structure is indeed a DAG without latent or
-selection variables. Note that even given an infinite amount of data, we
-usually cannot identify the true DAG itself, but only its equivalence
-class. Every DAG in this equivalence class is equally likely to represent
-the true causal structure. Taking this into account, we conceptually apply
+Unfortunately, the causal structure is rarely known in practice. However,
+as shown in Section \ref{sec:gm}, we can estimate the equivalence class, in which
+the true causal DAG is. Taking this into account, we conceptually apply
 the do-calculus on each DAG within the equivalence class and thus obtain a
 possible causal effect for each DAG in the equivalence class (in practice,
 we developed a local method that is faster but yields a similar result; see
@@ -583,7 +597,7 @@ assumptions are made.
   details. Consistency in a standard asymptotic regime with a fixed number
   of variables follows as a special case.
 
-\item[FCI-algorithm:] Consistent in high-dimensional settings if the
+\item[FCI/RFCI-algorithm:] Consistent in high-dimensional settings if the
   underlying MAG is sparse (in a stronger sense than what is needed for
   PC), the data is multivariate Normal and satisfies some regularity
   conditions on the partial correlations, and $\alpha$ is taken to zero
@@ -600,25 +614,27 @@ assumptions are made.
 \end{description}
 
 \section{Package pcalg}
-This package has three goals. First, it is intended to provide fast,
-flexible and reliable implementations of the PC and FCI
-algorithms. Second, it is intended to provide a tool for estimating the
-causal effect among continuous variables given a causal structure
-using a form of the do-calculus known as back-door criterium. Finally, combining
-these two applications of the package, it is possible to estimate causal
-effects when no causal structure is known and hidden or selection variables
-are absent. In the following, we describe
-the main functions of our package for achieving these goals. The functions
-\code{skeleton}, \code{pc} and \code{fci} are intended for estimating
-graphical models. The functions \code{ida} and \code{idaFast} are intended
-for estimating causal effects when the causal structure is known or was
-estimated.
+This package has two goals. First, it is intended to provide fast, flexible
+and reliable implementations of the PC, FCI and RFCI algorithms for
+estimating causal structures and graphical models. Second, it is intended
+to provide a tool for estimating the causal effect among continuous
+variables given observational data using a form of the do-calculus known as
+back-door criterium when no causal structure is known and hidden or
+selection variables are absent. For this, the causal structure is
+estimated using the PC algorithm. 
+
+In the following, we describe the main functions of our package for
+achieving these goals. The functions \code{skeleton()}, \code{pc()},
+\code{fci()} and \code{rfci()} are intended for estimating graphical
+models. The functions 
+\code{ida()} and \code{idaFast()} are intended for estimating causal
+effects when the causal structure is known or was estimated.
 
 Alternatives to this package for estimating graphical models in
 \proglang{R} include: \pkg{bnlearn}, \pkg{deal}, \pkg{gRain}, \pkg{gRbase}
 and \pkg{gRc}.
 
-\subsection{Skeleton}\label{sec:skel}
+\subsection{skeleton}\label{sec:skel}
 The function \code{skeleton()} implements (P1) and (P2) from
 Algorithm~\ref{algo:pc}. The function can be called with the following
 arguments
@@ -636,19 +652,19 @@ showF <- function(f, width = 82) {
 showF(skeleton)
 @
 
-As was shown in section \ref{sec:gm}, the main task in finding the skeleton
+As was shown in Section \ref{sec:gm}, the main task in finding the skeleton
 is to compute and test several conditional independencies. To keep the
-function flexible, \code{skeleton} takes as argument a function
+function flexible, \code{skeleton()} takes as argument a function
 \code{indepTest()} that performs these conditional independence tests and
 returns a p-value. All information that is needed in the conditional
 independence test can be passed in the argument \code{suffStat}. The only
-exceptions are the number of variables \code{p} and the significance level
-$\alpha$ for the conditional independence tests, which are passed
+exceptions are the number of variables \code{p} and the significance
+\code{alpha} for the conditional independence tests, which are passed
 separately. For convenience, we have preprogrammed versions of
-\code{indepTest} for Gaussian data (\code{gaussCItest}), discrete data
-(\code{disCItest}), and binary data (\code{binCItest}). Each of these
+\code{indepTest()} for Gaussian data (\code{gaussCItest()}), discrete data
+(\code{disCItest()}), and binary data (\code{binCItest()}). Each of these
 independence test functions needs different arguments as input, described
-in the respective help files. For example, when using \code{gaussCItest},
+in the respective help files. For example, when using \code{gaussCItest()},
 the input has to be a list containing the correlation matrix and the sample
 size of the data.  In the following code, we estimate the skeleton on the
 data set \code{gmG} (which consists of $p=8$ variables and $n=5000$
@@ -666,7 +682,7 @@ par(mfrow = c(1,2))
 plot(gmG$g, main = "")
 plot(pc.fit, main = "")
 @
-\caption{True DAG (left) and estimated skeleton (right) fitted on the Gaussian data set
+\caption{True DAG (left) and estimated skeleton (right) fitted on the simulated Gaussian data set
   provided by the package.}
 \label{fig:skelExpl}
 \end{figure}
@@ -691,7 +707,7 @@ par(mfrow = c(1,2))
 plot(gmD$g, main = "")
 plot(skel.fit, main = "")
 @
-\caption{True DAG (left) and estimated skeleton (right) fitted on the
+\caption{True DAG (left) and estimated skeleton (right) fitted on the simulated
   discrete data set provided by the package.}
 \label{fig:skel2}
 \end{figure}
@@ -704,7 +720,7 @@ resulting graph. Pairs $(i,j)$ in \code{fixedEdges} are skipped in
 all steps of the algorithm, so that these edges are guaranteed to be
 present in the resulting graph.
 
-If \code{indepTest} returns \code{NA} and the option \code{NAdelete} is
+If \code{indepTest()} returns \code{NA} and the option \code{NAdelete} is
 \code{TRUE}, the corresponding edge is deleted. If this option is
 \code{FALSE}, the edge is not deleted.
 
@@ -717,7 +733,7 @@ variables in the adjacency matrix, and not with the names of the variables.
 \subsection{pc} \label{sec:pc}
 
 The function \code{pc()} implements all steps (P1) to (P4) of the PC
-algorithm~\ref{algo:pc}. First, the skeleton is computed using the function
+algorithm shown in display algorithm \ref{algo:pc}. First, the skeleton is computed using the function
 \code{skeleton()} (steps (P1) and (P2)). Then, as many edges as possible are
 directed (steps (P3) and (P4)). The function can be called as
 % with the following arguments.
@@ -784,7 +800,7 @@ variables. When plotting the object, undirected and bidirected edges are
 equivalent.
 
 As an example, we estimate a CPDAG of the Gaussian data used in the
-example for the skeleton in section \ref{sec:skel}. Again, we choose
+example for the skeleton in Section \ref{sec:skel}. Again, we choose
 the predefined \code{gaussCItest()} as conditional independence
 test and create the corresponding test statistic. Finally, we plot the
 result. The estimated CPDAG and the true underlying DAG are shown in
@@ -799,19 +815,19 @@ par(mfrow = c(1,2))
 plot(gmG$g, main = "")
 plot(pc.fit, main = "")
 @
-\caption{True DAG (left) and estimated CPDAG (right) fitted on the Gaussian
+\caption{True DAG (left) and estimated CPDAG (right) fitted on the
+  simulated Gaussian
   data set provided by the package.}
 \label{fig:pcFit1}
 \end{figure}
 
 \subsection{fci}\label{sec:fci}
 
-This function implements a generalization of the PC algorithm (see section
-\ref{sec:pc}), in the sense that it allows arbitrarily many latent and
-selection variables. Under the assumption that the data are faithful to a
-DAG that includes all latent and selection variables, the FCI algorithm
-(Fast Causal Inference algorithm) estimates the equivalence class of MAGs
-that describe the conditional independence relationships between the
+This function implements a generalization of the PC algorithm, in the sense
+that it allows arbitrarily many latent and selection variables. Under the
+assumption that the data are faithful to a DAG that includes all latent and
+selection variables, the FCI algorithm estimates the equivalence class of
+MAGs that describe the conditional independence relationships between the
 observed variables given the selection variables.
 
 The first part of the FCI algorithm is analogous to the PC algorithm. It
@@ -884,42 +900,76 @@ Using the argument \code{labels}, one can pass names for the vertices of
 the estimated graph. By default, this argument is set to \code{NA}, in
 which case the node names \code{as.character(1:p)} are used.
 
-As an example, we estimate the PAG of a graph with five nodes using
-the function \code{fci()} and the predefined function \code{gaussCItest()}
-as conditional independence test. Finally, we plot the result. Node $V_1$ is latent.
+As an example, we estimate the PAG of a graph with five nodes using the
+function \code{fci()} and the predefined function \code{gaussCItest()} as
+conditional independence test. In Fig. \ref{fig:fci} the true DAG and the
+PAG estimated with \code{fci()} are shown. Node $V_1$ is latent. We can
+read off that both $V_4$ and $V_5$ cannot be a cause of $V_2$ and $V_3$,
+which can be confirmed in the true DAG.
+
 <<def-fciExpl-plot, eval=False>>=
 data("gmL")
 suffStat1 <- list(C = cor(gmL$x), n = nrow(gmL$x))
-pag.est <- fci(suffStat1, indepTest= gaussCItest,
+pag.est <- fci(suffStat1, indepTest = gaussCItest,
                p = ncol(gmL$x), alpha = 0.01, labels = as.character(2:5))
 par(mfrow = c(1,2))
 plot(gmL$g, main = "")
 plot(pag.est)
-@ In Fig. \ref{fig:fci} the true DAG and the estimated PAG are shown.
+@ 
 \begin{figure}
   \centering
 <<fciExpl-plot, echo=False, fig=TRUE>>=
 <<def-fciExpl-plot>>
 @
 \caption{True data generating DAG (left) and estimated PAG
-  (right). Variable 1 of the data generating DAG is latent.}
+  (right). The estimated PAG using FCI and RFCI are the same. Variable 1 of the data generating DAG is latent.}
 \label{fig:fci}
 \end{figure}
 
-A note on implementation: As \code{pc()} and \code{fci()} are similar
-in the result they produce, their resulting values are of (S4) class
-\code{pcAlgo} and \code{fciAlgo} respectively, both of which extend the
-class (of their ``communalities''), \code{gAlgo}.
 %% <<pcAlgo-class>>=
 %% showClass("pcAlgo")
 %% @
 
+\subsection{rfci}
+\par\vspace*{-1.2ex}
+<<rfci-args, echo=FALSE>>=
+showF(rfci)
+@
+\par\vspace*{-1ex}
+where the arguments \code{suffStat}, \code{indepTest}, \code{p},
+\code{alpha}, \code{fixedGaps}, \code{fixedEdges}, \code{NAdelete} and
+\code{m.max} are identical to those in % function
+\code{skeleton()}.
 
+This function is rather similar to \code{fci()}. However, it does not compute any
+Possible-D-SEP sets and thus does not make tests conditioning on them. This
+makes \code{rfci()} much faster than \code{fci()}. The orientation rules
+for v-structures and 
+rule 4 were modified in order to produce a PAG which, in the oracle
+version, is guaranteed to have the correct ancestral relationships.
+
+As an example, we re-run the example from Section \ref{sec:fci} and show
+the PAG estimated with \code{rfci()} in Figure \ref{fig:fci}. The PAG
+estimated with \code{fci()} and the PAG estimated with \code{rfci()} are
+the same.
+
+<<def-rfciExpl-plot, eval=False>>=
+data("gmL")
+suffStat1 <- list(C = cor(gmL$x), n = nrow(gmL$x))
+pag.est <- rfci(suffStat1, indepTest = gaussCItest,
+               p = ncol(gmL$x), alpha = 0.01, labels = as.character(2:5))
+@ 
+
+A note on implementation: As \code{pc()}, \code{rfci()} and \code{fci()}
+are similar in the result they produce, their resulting values are of (S4)
+class \code{pcAlgo} and \code{fciAlgo} (for both \code{fci()} and
+\code{rfci()}), respectively. Both classes extend
+the class (of their ``communalities'') \code{gAlgo}.
 
 \subsection{ida} \label{sec:ida}
 It is assumed that we have observational data that are multivariate
 Gaussian and faithful to the true (but unknown) underlying causal DAG
-(without hidden variables).  Under these assumptions, \code{ida}
+(without hidden variables).  Under these assumptions, \code{ida()}
 estimates the multiset of possible total causal effects of $x$ on $y$,
 where the total causal effect is defined via Pearl's do-calculus as
 $\frac{\partial}{\partial z} E[Y|do(X=z)]$ (this value does not depend on $z$, since
@@ -929,13 +979,13 @@ effect, since it is typically impossible to identify the latter when the
 true underlying causal DAG is unknown (even with an infinite amount of
 data).
 
-To illustrate this, consider the following example. We have data from seven
-Gaussian variables with a causal structure given on the left of
-Fig. \ref{fig:ida}. We assume that
-the causal structure is unknown and want to infer the causal effect of $V_2$
-on $V_5$. First, we estimate the equivalence class of DAGs that describe the
-conditional independence relationships in the data, using the function
-\code{pc()} (see section \ref{sec:pc}).
+To illustrate this, consider the following example. We have simulated 10000
+samples from seven Gaussian variables with a causal structure given on the
+left of Fig. \ref{fig:ida}. We assume that the causal structure is unknown
+and want to infer the causal effect of $V_2$ on $V_5$. First, we estimate
+the equivalence class of DAGs that describe the conditional independence
+relationships in the data, using the function \code{pc()} (see Section
+\ref{sec:pc}).
 
 %% Used to generate "gmI" IDA data
 <<def-gmI, eval=FALSE, echo=FALSE>>=
@@ -972,7 +1022,7 @@ plot(pc.fit, main = "")
 Since there are three undirected edges in the CPDAG, there might be up to
 $2^3 = 8$ DAGs in the corresponding equivalence class. However, the
 undirected edges $V_2-V_3-V_5$ can be formed to a new v-structure. As
-mentioned in section \ref{sec:gm}, DAGs in the equivalence class must have
+mentioned in Section \ref{sec:gm}, DAGs in the equivalence class must have
 exactly the same v-structures as the corresponding CPDAG. Thus, $V_2-V_3-V_5$
 can only be directed as $V_2 \rightarrow V_3 \rightarrow V_5$, $V_2 \leftarrow
 V_3 \leftarrow V_5$ or $V_2 \leftarrow V_3 \rightarrow V_5$, and not as $V_2
@@ -1116,7 +1166,7 @@ on several variables, that we have no background knowledge about the causal
 effects among the variables and that we want to estimate the causal effect of
 each variable onto each other variable. To this end, we could consider for
 each variable the problem: What is the causal effect of this variable on
-all other variables. Of course, one could solve the problem by using \code{ida} on
+all other variables. Of course, one could solve the problem by using \code{ida()} on
 each pair of variables. However, there is a more efficient way which uses
 the fact that a linear regression of a fixed set of explanatory variables
 on several different response variables can be computed very efficiently.
@@ -1130,7 +1180,7 @@ showF(idaFast)
 \par\vspace*{-1ex}
 The arguments
 \code{x.pos}, \code{mcov}, \code{graphEst} have the same meaning as
-the corresponding arguments in \code{ida}. The argument \code{y.pos.set}
+the corresponding arguments in \code{ida()}. The argument \code{y.pos.set}
 is a vector containing the column positions of all response variables of
 interest.
 
@@ -1142,10 +1192,10 @@ option \code{y.notparent = TRUE} is not implemented.
 %%- clear how to do that efficiently without orienting all edges away from
 %%- \code{y.pos.set} at the same time, which seems not to be desirable.
 
-Consider the example from section \ref{sec:ida}, where we computed the
+Consider the example from Section \ref{sec:ida}, where we computed the
 causal effect of $V_2$ on $V_5$. Now, we want to compute the effect of $V_2$
-on $V_5$, $V_6$ and $V_7$ using \code{idaFast} and compare the results with
-the output of \code{ida}. As expected, both methods lead to the same results.
+on $V_5$, $V_6$ and $V_7$ using \code{idaFast()} and compare the results with
+the output of \code{ida()}. As expected, both methods lead to the same results.
 <<ida-idaFast>>=
 data("gmI")
 suffStat <- list(C = cor(gmI$x), n = nrow(gmI$x))
@@ -1167,7 +1217,7 @@ the user. In this section, we illustrate this feature by using a
 conditional independence test for Gaussian data that is not predefined
 in the package.
 
-The functions \code{skeleton}, \code{pc} and \code{fci} all need the
+The functions \code{skeleton()}, \code{pc()} and \code{fci()} all need the
 argument \code{indepTest}, a function of the form
 \code{\textit{indepTest}(x, y, S, suffStat)} to test
 conditional independence relationships.  This function must return
@@ -1230,17 +1280,17 @@ plot(pc.myfit, main = "")
 \label{fig:userSpec}
 \end{figure}
 As expected, the resulting CPDAG (see Fig. \ref{fig:userSpec}) is the same
-as in section \ref{sec:pc} where we used the function \code{gaussCItest()} as
+as in Section \ref{sec:pc} where we used the function \code{gaussCItest()} as
 conditional independence test. Note however that using
-\code{gaussCItest} is considerably faster than using \code{myCItest} (on
+\code{gaussCItest()} is considerably faster than using \code{myCItest()} (on
 our computer
 % 2010-09-24 : -- R 2.12.0 alpha
 % lynne         : x86_64        Linux 2.6.34.6-47.fc13.x86_64 : 129.132.58.30
 % model name	: AMD Phenom(tm) II X4 925 Processor
 % cpu MHz	: 1600.000
 % bogomips	: 5600.57
-$0.059$ seconds using \code{gaussCItest} versus $1.05$
-seconds using \code{myCItest}).
+$0.059$ seconds using \code{gaussCItest()} versus $1.05$
+seconds using \code{myCItest()}).
 %% MM: Nach Verbesserung [lm.fit()] ist's immer noch deutlich langsame
 %% -----   myCItest() noch wesentlich schneller geschrieben werden muss !
 <<time-tests, eval=false, echo=false>>=
@@ -1257,6 +1307,82 @@ system.time(for(i in 1:10)
      ## 10.550       0.067      10.632
 @
 
+\section{Applications}
+In this section we summarize some applications in which the \pkg{pcalg} package
+was used.
+
+\subsection{Graphical Models and Causal Effects  in Human Functioning}
+In \cite{ICF}, the development of WHO's International Classification of
+Functioning, Disability and Health (ICF) on the one hand and recent
+developments in graphical modeling on the other hand were combined to
+deepen the understanding of human functioning. The objective of the paper
+was to explore how graphical models and estimation of causal effects can be
+used in the study of ICF data. For computations, the \pkg{pcalg} package
+was used.
+
+\subsection{Causal effects on time to flowering}
+In CITE???, the objective was to find candidate genes that causally influence
+the time to flowering in the plant Arabidopsis thaliane. This is of
+interest, because fast growing crop plants lead to more efficient food
+production. The data consisted of $n = 47$ observations of ``time to
+flowering'' (the univariate response variable) and of expressions of $p = 21
+326$ genes (the p-dimensional covariable), collected from wild-type
+(non-mutated) plants. Based on these observational data, the authors
+inferred the effects of a single gene intervention on the response of
+interest (namely the ``time to flowering''), for each of the $p = 21 326$
+genes.  The analysis was based on the \pkg{pcalg} and derived
+functions. The result could be used to prioritize future biological
+experiments, in particular for the situation here where ``fishing blindly''
+for the best genetic modification would be extremely costly. The authors
+also performed biological experiments for validation. As a result, 4 new
+significant mutations were discovered showing a significant effect on the
+``time to flowering''.
+
+\subsection{Causal effects among genes}
+In \cite{NatMethods10}, the authors aim at quantifying the effects of single gene
+interventions on the expression of other genes in yeast, allowing for better
+insights into causal relations between genes. With $n = 63$
+observational data measuring the expression of $p = 5361$ genes, the goal
+was to identify the largest intervention effects between all genes (in
+total $p \cdot (p − 1) = 28 734 960$ effects). For the analysis, the
+\pkg{pcalg} package was used.
+
+The paper also includes data on 234 measurements of interventional experi-
+ments, namely from 234 single-gene deletion mutant strains and for each of
+them measuring the expressions of all the genes. Using this data, we know
+the true causal effect in good approximation. We can then quantify how well
+we can find the true intervention effects in the following way: We encode
+the true large intervention effects as ``true'' effects and all others as
+``false''. We then check in an ROC curve, how well the causal effects
+estimated with \code{ida()} correspond to the true causal effects. For
+comparison, the authors also used the (conceptually wrong) Lasso and
+Elastic Net to identify the largest causal effects. In Figure
+\ref{fig:yeast} one can see that \code{ida()} is clearly superior to the
+alternative methods (and random guessing) in terms of identifying true
+causal effects.
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics{Figure1FAT.pdf}
+\caption{The largest causal effects found in experiments among yeast genes are
+  identified much better with IDA than with Lasso, Elastic Net or random
+  guessing. The figure is essentially taken from \cite{NatMethods10}.}
+\label{fig:yeast}
+\end{figure}
+
+\section{Discussion}
+Causal structure learning and the estimation of causal effects from
+observational data has large potential. However, we don't propose this
+method as a replacement for experiments. It should rather be a guide for
+prioritizing experiments, especially in situations where no clear
+preferences based on the context can be given.
+
+Since many assumptions of the proposed methods are uncheckable, it is
+important to further validate them. We think that the \pkg{pcalg} package
+makes a contribution to this important issue. Furthermore, methods relying
+on fewer or milder assumptions (like RFCI) are desirable and need to be
+developed further. Moreover, refined methods for assessing the uncertainty
+of causal structures need to be developed.
 
 \section{Session information}
 
