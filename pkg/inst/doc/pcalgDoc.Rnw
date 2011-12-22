@@ -37,7 +37,7 @@
 
 %% an abstract and keywords
 \Abstract{ The \pkg{pcalg} package for \proglang{R} (\cite{citeR}) can be
-  used for the following two pruposes: Causal structure learning and
+  used for the following two purposes: Causal structure learning and
   estimation of causal effects from observational data. In this document,
   we give a brief overview of the methodology, and demonstrate the
   package's functionality in both toy examples and applications.}
@@ -98,12 +98,13 @@ used to find these relationships. In many settings, however, experiments
 are infeasible because of time, cost or ethical constraints.
 
 We therefore consider the problem of inferring causal information from
-observational data. Under some assumptions, the PC algorithm (XXX), the FCI
-algorithm (XXX) and the RFCI algorithm (XXX) can infer information about
-the causal structure from observational data. Thus, these algorithms tell
-us which variables could or could not be a cause  of some variable of
-interest. They do not, however, give information about the size of the
-causal effects. We therefore developed the IDA method (see
+observational data. Under some assumptions, the PC algorithm
+(see \cite{SpirtesEtAl00}), the FCI algorithm (see \cite{SpirtesEtAl00} and
+\cite{SpirtesMeekRichardson99}) and the RFCI algorithm (see \cite{rfci}) can
+infer information about the causal structure from observational data. Thus,
+these algorithms tell us which variables could or could not be a cause of
+some variable of interest. They do not, however, give information about the
+size of the causal effects. We therefore developed the IDA method (see
 \cite{BuKaMa09}), which can infer bounds on causal effects based on
 observational data under some assumptions. IDA was validated on a
 large-scale biological system (see \cite{NatMethods10}).
@@ -202,7 +203,7 @@ that in general one cannot estimate a unique DAG from observational data,
 not even with an infinite amount of data, since several DAGs can describe
 the same conditional independence information.
 
-Based on the inferred causal structure, we can estimate the causal effect
+On the inferred causal structure, we can estimate the causal effect
 of an intervention. Denote the variable corresponding to node $i$ in the
 graph by $V_i$. For example, suppose that, by external intervention, we
 first set the variable $V_1$ to some value $\tilde{x}$, and then to the
@@ -214,9 +215,9 @@ defined as
 C(V_1, V_6, \tilde{x}) &=& E(V_1|do(V_6 = \tilde{x} + 1)) - E(V_1|do(V_6 = \tilde{x})) \ \mbox{or} \\
 C(V_1, V_6, \tilde{x}) &=& \frac{\partial}{\partial x} E(V_1|do(V_6 = x))|_{x=\tilde{x}},
 \end{eqnarray*}
-where $do(V_6 = x)$ denotes Pearl's do-operator (XXX). If the causal
-relationships are linear, these two expressions are equivalent and do not
-depend on $\tilde{x}$.
+where $do(V_6 = x)$ denotes Pearl's do-operator (see \cite{Pearl00}). If
+the causal relationships are linear, these two expressions are equivalent
+and do not depend on $\tilde{x}$.
 
 Since the causal structure was not identified uniquely in our example, we
 cannot expect to get a unique number for the causal effect. Instead, we get
@@ -235,7 +236,7 @@ estimates is indeed close to the true value. Since both values are larger
 than zero, we can conclude that variable $V_1$ has a positive causal effect
 on variable $V_6$. Thus, we can always estimate a lower bound for the
 absolute value of the causal effect. (Note that at this point we have no
-p-value to control the sampling error).
+p-value to control the sampling error.)
 
 If we would like to know the effect of a unit increase in variable $V_1$ on
 variables $V_4$, $V_5$ and $V_6$, we could simply call \code{ida()} three
@@ -261,9 +262,11 @@ already discussed above.
 
 \section{Methodological background}
 In Section \ref{sec:gm} we propose methods for estimating the causal
-structure from observational data. In particular, we discuss the
-PC-algorithm (XXX), the FCI-algorithm (XXX) and the RFCI-algorithm
-(XXX). In Section \ref{sec:bounds} we describe the IDA method (XXX) to
+structure from observational data. In particular, we discuss 
+the PC algorithm
+(see \cite{SpirtesEtAl00})), the FCI algorithm (see \cite{SpirtesEtAl00} and
+\cite{SpirtesMeekRichardson99}) and the RFCI algorithm (see \cite{rfci}).
+In Section \ref{sec:bounds} we describe the IDA method (see \cite{BuKaMa09}) to
 obtain bounds on causal effects from observational data. This method is
 based on first estimating the causal structure and then applying do-calculus (see \cite{Pearl00}) 
 
@@ -283,25 +286,23 @@ with a rule for interpreting this graph. In general, nodes in the graph
 represent (random) variables and edges represent some kind of dependence.
 
 \subsubsection{Without hidden and selection variables}
-An example of a graphical model is the DAG
-model. The physical map here is a graph consisting of nodes and directed
-edges ($\leftarrow$ or $\rightarrow$). As a further
-restriction, the edges must be directed in a way, so that it is not
-possible to trace a cycle when following the arrowheads (i.e. no directed cycles). The
-interpretation rule is called d-separation. This rule is a
-bit intricate and we refer the reader to \cite{lauritzen} for more
-details. This interpretation rule can be used in the
-following way: If two nodes $X$ and $Y$ are d-separated
-by a set of nodes $S$, then the corresponding random variables
-$X$ and $Y$ are conditionally independent given the set of random variables
-$S$. For the following, we only deal with distributions where the
-following holds: For each distribution, it is possible to find a DAG, whose
-list of d-separation relations perfectly matches the list of conditional
-independencies of the distribution. Such distributions are called
-faithful. It has been shown that the set of distributions that are faithful
-is the overwhelming majority (\cite{Meek95}),
-so that the assumption does not seem to be very strict in
-practice.
+An example of a graphical model is the DAG model. The physical map here is
+a graph consisting of nodes and directed edges ($\leftarrow$ or
+$\rightarrow$). As a further restriction, the edges must be directed in a
+way, so that it is not possible to trace a cycle when following the
+arrowheads (i.e. no directed cycles). The interpretation rule is called
+d-separation. This rule is a bit intricate and we refer the reader to
+\cite{lauritzen} for more details. This interpretation rule can be used in
+the following way: If two nodes $x$ and $y$ are d-separated by a set of
+nodes $S$, then the corresponding random variables $V_{x}$ and $V_{y}$ are
+conditionally independent given the set of random variables $V_{S}$. For the
+following, we only deal with distributions where the following holds: For
+each distribution, it is possible to find a DAG, whose list of d-separation
+relations perfectly matches the list of conditional independencies of the
+distribution. Such distributions are called faithful. It has been shown
+that the set of distributions that are faithful is the overwhelming
+majority (\cite{Meek95}), so that the assumption does not seem to be very
+strict in practice.
 
 Since the DAG model encodes conditional independencies, it seems plausible
 that information on the latter helps to infer aspects of the former. This
@@ -375,11 +376,11 @@ results which we denote by $G_1$. In the second step, all pairs of nodes
 $(i,j)$ still adjacent in $G_1$ are tested for conditional independence
 given any single node in adj$(G_1,i)\setminus \{j\}$ or
 adj$(G_1,j)\setminus \{i\}$ (adj$(G,i)$ denotes the set of nodes in graph
-$G$ that are adjacent to node $i$) . If there is any node $k$ such that $i$
-and $j$ are conditionally independent given $k$, the edge between $i$ and
+$G$ that are adjacent to node $i$) . If there is any node $k$ such that $V_i$
+and $V_j$ are conditionally independent given $V_k$, the edge between $i$ and
 $j$ is removed and node $k$ is saved as separation sets (sepset)
 $\hat{S}[i,j]$ and $\hat{S}[j,i]$. If all adjacent pairs have been tested
-given one neighboring node, a new graph results which we denote by
+given one adjacent node, a new graph results which we denote by
 $G_2$. The algorithm continues in this way by increasing the size of the
 conditioning set step by step. The algorithm stops if all adjacency sets in
 the current graph are smaller than the size of the conditioning set. The
@@ -403,18 +404,18 @@ bidirected edges in the output as soon as at least one directed edge is
 present. If no directed edge is present, all edges are undirected.)
 
 A causal structure without feedback loops and without hidden or selection
-variable can be visualized using a DAG where the edges indicate
-direct cause-effect relationships.
-Under some assumptions, \cite{Pearl00} showed (Th. 1.4.1) that there is a
-link between causal structures and graphical models. Roughly speaking, if
-the underlying causal structure is a DAG, we observe data generated from
-this DAG and then estimate a DAG model (i.e. a graphical model) on this
-data, the estimated CPDAG represents the equivalence class of the DAG model
-describing the causal structure. This holds if we have enough samples and
-assuming that the true underlying causal structure is indeed a DAG without
-latent or selection variables. Note that even given an infinite amount of
-data, we usually cannot identify the true DAG itself, but only its
-equivalence class. Every DAG in this equivalence class is can be the true causal structure.
+variable can be visualized using a DAG where the edges indicate direct
+cause-effect relationships.  Under some assumptions, \cite{Pearl00} showed
+(Th. 1.4.1) that there is a link between causal structures and graphical
+models. Roughly speaking, if the underlying causal structure is a DAG, we
+observe data generated from this DAG and then estimate a DAG model (i.e. a
+graphical model) on this data, the estimated CPDAG represents the
+equivalence class of the DAG model describing the causal structure. This
+holds if we have enough samples and assuming that the true underlying
+causal structure is indeed a DAG without latent or selection
+variables. Note that even given an infinite amount of data, we usually
+cannot identify the true DAG itself, but only its equivalence class. Every
+DAG in this equivalence class can be the true causal structure.
 
 \subsubsection{With hidden or selection variables}
 When discovering causal relations from nonexperimental data, two
@@ -473,7 +474,7 @@ d-separation. Furthermore, part of the causal information in the underlying
 DAG is represented in the MAG. If in the MAG there is an edge between node
 $i$ and node $j$ with an arrowhead at node $i$, then there is no directed
 path from node $i$ to node $j$ nor to any of the selection variables in the
-underlying DAG (i.e., $i$ is a cause of $j$ or of the selection
+underlying DAG (i.e., $i$ is not a cause of $j$ or of the selection
 variables). If, on the other hand, there is a tail at node $i$, then there
 is a directed path from node $i$ to node $j$ or to one of the selection
 variables in the underlying DAG (i.e., $i$ is a cause of $j$ or of a
@@ -486,29 +487,29 @@ CPDAG. The same is true for MAGs: Finding a unique MAG from an independence
 oracle is in general impossible. One only reports on the equivalence class
 in which the true MAG lies.
 
-An equivalence class of a MAG can be uniquely represented by a
-partial ancestral graph (PAG) (see e.g.
-\cite{Zhang08-orientation-rules}). A PAG contains the following types of
-edges: o--o, o--, o-->, -->, <-->, --. Roughly, the bidirected edges come
-from hidden variables, and the undirected edges come from selection
-variables. The edges have the following interpretation: (i) There is an
-edge between $x$ and $y$ if and only if $x$ and $y$ are conditionally
-dependent given S for all sets S consisting of all selection variables and
-a subset of the observed variables; (ii) a tail on an edge means that this
-tail is present in all MAGs in the equivalence class; (iii) an arrowhead on
-an edge means that this arrowhead is present in all MAGs in the equivalence
-class; (iv) a o-edgemark means that there is a at least one MAG in the
-equivalence class where the edgemark is a tail, and at least one where the
-edgemark is an arrowhead.
+An equivalence class of a MAG can be uniquely represented by a partial
+ancestral graph (PAG) (see e.g.  \cite{Zhang08-orientation-rules}). A PAG
+contains the following types of edges: o--o, o--, o-->, -->, <-->,
+--. Roughly, the bidirected edges come from hidden variables, and the
+undirected edges come from selection variables. The edges have the
+following interpretation: (i) There is an edge between $x$ and $y$ if and
+only if $V_x$ and $V_y$ are conditionally dependent given $V_S$ for all
+sets $V_S$ consisting of all selection variables and a subset of the
+observed variables; (ii) a tail on an edge means that this tail is present
+in all MAGs in the equivalence class; (iii) an arrowhead on an edge means
+that this arrowhead is present in all MAGs in the equivalence class; (iv) a
+o-edgemark means that there is a at least one MAG in the equivalence class
+where the edgemark is a tail, and at least one where the edgemark is an
+arrowhead.
 
 An algorithm for finding the PAG given an independence oracle is the FCI
 algorithm (``fast causal inference''; see \cite{SpirtesEtAl00} and
-XXXRichardson). The orientation rules of this algorithm were slightly
+\cite{fci}). The orientation rules of this algorithm were slightly
 extended and proven to be complete in \cite{Zhang08-orientation-rules}. FCI
 is very similar to PC but makes additional conditional independence tests
 and uses more orientation rules (see Section \ref{sec:fci} for more
 details). We refer the reader to \cite{Zhang08-orientation-rules} or
-CITEcolombo for a detailed discussion of the FCI algorithm. It turns out
+\cite{rfci} for a detailed discussion of the FCI algorithm. It turns out
 that the FCI algorithm is computationally infeasible for large graphs. The
 RFCI algorithm (``really fast causal inference''; see \cite{rfci}), is much
 faster than FCI. The output of RFCI is in general slightly less informative
@@ -520,38 +521,38 @@ settings. Finally, in simulations the estimation performances of the
 algorithms are very similar.
 
 \subsection{Estimating bounds on causal effects} \label{sec:bounds}
-One way of quantifying the causal effect of variable $X$ on $Y$ is to
-measure the state of $Y$ if $X$ is forced to take value $X=x$ and compare
-this to the value of $Y$ if $X$ is forced to take the value $X=x+1$ or
-$X=x+\delta$. If $X$ and $Y$ are random variables, forcing $X=x$ could have
-the effect of changing the distribution of $Y$. Following the conventions
+One way of quantifying the causal effect of variable $V_x$ on $V_y$ is to
+measure the state of $V_y$ if $V_x$ is forced to take value $V_x=x$ and compare
+this to the value of $V_y$ if $V_x$ is forced to take the value $V_x=x+1$ or
+$V_x=x+\delta$. If $V_x$ and $V_y$ are random variables, forcing $V_x=x$ could have
+the effect of changing the distribution of $V_y$. Following the conventions
 in \cite{Pearl00}, the resulting distribution after manipulation is denoted
-by $P[Y | do(X=x)]$. Note that this is different from the conditional
-distribution $P[Y | X=x]$. To illustrate this, imagine the following
+by $P[V_y | do(V_x=x)]$. Note that this is different from the conditional
+distribution $P[V_y | V_x=x]$. To illustrate this, imagine the following
 simplistic situation. Suppose we observe a particular spot on
-the street during some hour. The random variable $X$ denotes whether it rained during that
-hour ($X=1$ if it rained, $X=0$ otherwise). The random variable $Y$ denotes
-whether the street was wet at the end of that hour ($Y=1$
-if it was wet, $Y=0$ otherwise). If we assume $P(X=1) = 0.1$ (rather dry
-region), $P(Y=1|X=1) = 0.99$ (the street is almost always still wet at the
-end of the hour when it rained during that hour) and $P(Y=1|X=0) = 0.02$
+the street during some hour. The random variable $V_x$ denotes whether it rained during that
+hour ($V_x=1$ if it rained, $V_x=0$ otherwise). The random variable $V_y$ denotes
+whether the street was wet at the end of that hour ($V_y=1$
+if it was wet, $V_y=0$ otherwise). If we assume $P(V_x=1) = 0.1$ (rather dry
+region), $P(V_y=1|V_x=1) = 0.99$ (the street is almost always still wet at the
+end of the hour when it rained during that hour) and $P(V_y=1|V_x=0) = 0.02$
 (other reasons for making the street wet are rare), we can compute the
-conditional probability $P(X=1|Y=1) = 0.85$. So, if we observe the street
+conditional probability $P(V_x=1|V_y=1) = 0.85$. So, if we observe the street
 to be wet, the probability that there was rain in the last hour is about
 $0.85$. However, if we take a garden hose and force the street to be wet at
-a randomly chosen hour, we get $P(X=1|do(Y=1)) = P(X=1) = 0.1$. Thus, the
+a randomly chosen hour, we get $P(V_x=1|do(V_y=1)) = P(V_x=1) = 0.1$. Thus, the
 distribution of the random variable describing rain is quite different when
 making an observation versus making an intervention.  
 
 Oftentimes, only the change of the target distribution under intervention
 is reported. We use the change in mean, i.e. $\frac{\partial}{\partial x}
-E[Y|do(X=x)]$, as a general measure for the causal effect of $X$ on
-$Y$. For multivariate Gaussian random variables, $E[Y|do(X=x)]$ depends
+E[V_y|do(V_x=x)]$, as a general measure for the causal effect of $V_x$ on
+$V_y$. For multivariate Gaussian random variables, $E[V_y|do(V_x=x)]$ depends
 linearly on $x$. Therefore, the derivative is constant which means that the
 causal effect does not depend on $x$, and can also be interpreted as
-$E[Y|do(X=x+1)] - E[Y|do(X=x)]$. For binary random variables (with domain
-$\{0,1\}$) we define the causal effect of $X$ on $Y$ as $E(Y|do(X=1)) -
-E(Y|do(X=0)) = P(Y=1|do(X=1)) - P(Y=1|do(X=0))$.
+$E[V_y|do(V_x=x+1)] - E[V_y|do(V_x=x)]$. For binary random variables (with domain
+$\{0,1\}$) we define the causal effect of $V_x$ on $V_y$ as $E(V_y|do(V_x=1)) -
+E(V_y|do(V_x=0)) = P(V_y=1|do(V_x=1)) - P(V_y=1|do(V_x=0))$.
 
 The goal in the remainder of this section is to estimate the effect of an
 intervention if only observational data is available.
@@ -576,7 +577,7 @@ even if we have an infinite amount of observations we can in general report
 on a multiset of possible causal values (it is a multiset rather than a set
 because it can contain duplicate values). One of these values is the true
 causal effect. Despite the inherent ambiguity, this result can still be
-very useful when the multi-set has certain properties (e.g. all values are much
+very useful when the multiset has certain properties (e.g. all values are much
 larger than zero). These ideas are incorporated in the IDA method
 (\textbf{I}ntervention calculus when the \textbf{D}AG is \textbf{A}bsent).
 
@@ -612,12 +613,12 @@ assumptions are made.
   of variables follows as a special case.
 
 \item[FCI-algorithm:] Allows for hidden and selection variables; consistent
-  in high-dimensional settings if the so-called Possible-D-Sep sets (see
-  XXX) are sparse, the data is multivariate Normal and satisfies some regularity
-  conditions on the partial correlations, and $\alpha$ is taken to zero
-  appropriately. See \cite{rfci} for full details. Consistency in
-  a standard asymptotic regime with a fixed number of variables follows as
-  a special case.
+  in high-dimensional settings if the so-called Possible-D-SEP sets (see
+  \cite{SpirtesEtAl00}) are sparse, the data is multivariate Normal and
+  satisfies some regularity conditions on the partial correlations, and
+  $\alpha$ is taken to zero appropriately. See \cite{rfci} for full
+  details. Consistency in a standard asymptotic regime with a fixed number
+  of variables follows as a special case.
   
 \item[RFCI-algorithm:] Allows for hidden and selection variables; consistent
   in high-dimensional settings if the underlying MAG is sparse (this is a
@@ -735,7 +736,7 @@ plot(skel.fit, main = "")
 In some situations, one may have prior information about the underlying
 DAG, for example that certain edges are absent or present. Such information
 can be incorporated  into the algorithm via the arguments
-\code{fixedGapgs} (absent edges) and \code{fixedEdges} (present edges).
+\code{fixedGaps} (absent edges) and \code{fixedEdges} (present edges).
 The information in \code{fixedGaps} and \code{fixedEdges} is used as
 follows.  The gaps given in \code{fixedGaps} are introduced in the very
 beginning of the algorithm by removing the corresponding edges from the
@@ -800,17 +801,17 @@ results in a valid CPDAG is chosen. If no valid combination is found, an
 arbitrary CPDAG is generated on the skeleton as with \code{u2pd = "rand"}.
 
 By setting the argument \code{conservative = TRUE}, the conservative PC
-algorithm (CITE) is chosen. The conservative PC is a slight variation of
-the PC algorithm and is intended to be more robust against sampling errors
-in its edge orientations. After the skeleton is computed, all unshielded
-triplets $a-b-c$ are checked in the following way. We test whether $a$ and
-$c$ are conditionally independent given any subset of the adjacency set of
-$a$ or any subset of the adjacency set of $c$. If $b$ is in no such
-conditioning set (and not in the original sepset) or in all such
+algorithm (see \cite{Ramsey06}) is chosen. The conservative PC is a slight
+variation of the PC algorithm and is intended to be more robust against
+sampling errors in its edge orientations. After the skeleton is computed,
+all unshielded triplets $a-b-c$ are checked in the following way. We test
+whether $V_a$ and $V_c$ are conditionally independent given any subset of the
+adjacency set of $a$ or any subset of the adjacency set of $c$. If $b$ is
+in no such conditioning set (and not in the original sepset) or in all such
 conditioning sets (and in the original sepset), the triple is marked as
 \emph{faithful}. If, however, $b$ is in some conditioning sets but not in
 others, or if there was no subset $S$ of the adjacency set of $a$ nor of
-$c$ such that $a$ and $c$ are conditionally independent given $S$, the
+$c$ such that $V_a$ and $V_c$ are conditionally independent given $V_S$, the
 triple is marked as \emph{``unfaithful''}. Only faithful triples are
 oriented as v-structures. Furthermore, orientation rules that need to know
 whether $a-b-c$ is a v-structure or not are only applied to faithful
@@ -864,7 +865,7 @@ initial skeleton may contain some superfluous edges.  These edges are
 removed in the next step of the algorithm. To decide whether edge $x$ o--o $y$
 should be removed, one computes Possible-D-SEP($x$, $y$) and
 Possible-D-SEP($y$, $x$)
-and performs conditional independence tests of $x$ and $y$ given all
+and performs conditional independence tests of $V_x$ and $V_y$ given all
  subsets of Possible-D-SEP($x$, $y$) and of Possible-D-SEP($y$, $x$) (see
 helpfile of function \code{pdsep()}). Subsequently, all edges are
 transformed into o--o again and the v-structures are newly
@@ -895,30 +896,33 @@ subsets of Possible-D-SEP are considered as conditioning sets in the
 conditional independence tests. If FALSE, Possible-D-SEP is not computed,
 so that the algorithm simplifies to the Modified PC algorithm of \cite{SpirtesEtAl00}.
 
-The argument \code{conservative} can be used to invoke the conservative
-FCI algorithm which consists of two parts. In the first part (done if
-\code{conservative[1]} is \code{TRUE}), we call the
-internal function \code{pc.cons.internal()} with argument
-\code{version.unf = c(1,2)} after computing the skeleton. This is a slight variation of the
-conservative PC algorithm (which used \code{version.unf = c(2,2)}): If $a$ is
-independent of $c$ given some $S$ in the skeleton (i.e., the edge $a-c$
-dropped out), but $a$ and $c$ remain dependent given all subsets of
-neighbors of either $a$ or $c$, we call $a-b-c$
-\emph{``faithful''}. This is because in the FCI algorithm, the true separating set might be
-outside the neighborhoods of $a$ or $c$. In the second part (done if
-\code{conservative[2]} is \code{TRUE}), we call
-\code{pc.cons.internal(..., version.unf = c(1,2))} again after
-Possible-D-Sep was found and the graph potentially lost some
-edges. Therefore, new triples might have occurred. If this second part is
-done, the resulting information on sepset and faithful triples overwrites
-the previous and will be used for the subsequent orientation rules.
+The argument \code{conservative} can be used to invoke the conservative FCI
+algorithm which consists of two parts. In the first part (done if
+\code{conservative[1]} is \code{TRUE}), we call the internal function
+\code{pc.cons.internal()} with argument \code{version.unf = c(1,2)} after
+computing the skeleton. This is a slight variation of the conservative PC
+algorithm (which used \code{version.unf = c(2,2)}): If $V_a$ is independent
+of $V_c$ given some $V_S$ in the skeleton (i.e., the edge $a-c$ dropped out),
+but $V_a$ and $V_c$ remain dependent given all subsets of the adjacency set of
+either $a$ or $c$, we call $a-b-c$ \emph{``unambiguous''}. This is because
+in the FCI algorithm, the true separating set might be outside the
+adjacency sets of $a$ or $c$. The purpose of this conservative version is
+to speed up the algorithm in the sample version (less v-structures lead to
+smaller Possible-D-SEP sets). In the second part (done if
+\code{conservative[2]} is \code{TRUE}), we call \code{pc.cons.internal(...,
+  version.unf = c(1,2))} again after Possible-D-SEP was found and the graph
+potentially lost some edges. Therefore, new triples might have occurred. If
+this second part is done, the resulting information on sepset and faithful
+triples overwrites the previous and will be used for the subsequent
+orientation rules. The purpose of this conservative version is used in the
+hope to obtain better edge orientations. See \cite{rfci} for more details.
 
-By setting the argument \code{biCC = TRUE}, Possible-D-Sep($a$, $c$) is
-defined as the intersection of the original Possible-D-Sep($a$, $c$) and
+By setting the argument \code{biCC = TRUE}, Possible-D-SEP($a$, $c$) is
+defined as the intersection of the original Possible-D-SEP($a$, $c$) and
 the set of nodes that lie on a path between $a$ and $c$.  This method uses
 biconnected components to find all nodes on a path between nodes $a$ and
-$c$. The smaller Possible-D-Sep sets lead to faster computing times, while
-CITE showed that the algorithm is identical to the original FCI algorithm
+$c$. The smaller Possible-D-SEP sets lead to faster computing times, while
+\cite{rfci} showed that the algorithm is identical to the original FCI algorithm
 given oracle information on the conditional independence relationships.
 
 The argument \code{cons.rules} manages the way in which the information
@@ -934,9 +938,9 @@ which case the node names \code{as.character(1:p)} are used.
 As an example, we estimate the PAG of a graph with five nodes using the
 function \code{fci()} and the predefined function \code{gaussCItest()} as
 conditional independence test. In Fig. \ref{fig:fci} the true DAG and the
-PAG estimated with \code{fci()} are shown. Node $V_1$ is latent. We can
-read off that both $V_4$ and $V_5$ cannot be a cause of $V_2$ and $V_3$,
-which can be confirmed in the true DAG.
+PAG estimated with \code{fci()} are shown. Random variable $V_1$ is
+latent. We can read off that both $V_4$ and $V_5$ cannot be a cause of
+$V_2$ and $V_3$, which can be confirmed in the true DAG.
 
 <<def-fciExpl-plot, eval=False>>=
 data("gmL")
@@ -954,7 +958,7 @@ plot(pag.est)
 @
 \caption{True underlying DAG (left) and estimated PAG
   (right), when applying the FCI and RFCI algorithms to the data set
-  \code{gmL}. The ouput of FCI and RFCI is identical. Variable 1 of the
+  \code{gmL}. The output of FCI and RFCI is identical. Variable $V_1$ of the
   true underlying DAG is latent.}
 \label{fig:fci}
 \end{figure}
@@ -996,7 +1000,7 @@ pag.est <- rfci(suffStat1, indepTest = gaussCItest,
                p = ncol(gmL$x), alpha = 0.01, labels = as.character(2:5))
 @ 
 
-A note on implementation: As \code{pc()}, \code{rfci()} and \code{fci()}
+A note on implementation: As \code{pc()}, \code{fci()} and \code{rfci()}
 are similar in the result they produce, their resulting values are of (S4)
 class \code{pcAlgo} and \code{fciAlgo} (for both \code{fci()} and
 \code{rfci()}), respectively. Both classes extend
@@ -1046,13 +1050,13 @@ plot(pc.fit, main = "")
 
 Since there are three undirected edges in the CPDAG, there might be up to
 $2^3 = 8$ DAGs in the corresponding equivalence class. However, the
-undirected edges $V_2-V_3-V_5$ can be oriented as a new v-structure. As
+undirected edges $2-3-5$ can be oriented as a new v-structure. As
 mentioned in Section \ref{sec:gm}, DAGs in the equivalence class must have
 exactly the same v-structures as the corresponding CPDAG. Thus,
-$V_2-V_3-V_5$ can only be oriented as $V_2 \rightarrow V_3 \rightarrow
-V_5$, $V_2 \leftarrow V_3 \leftarrow V_5$ or $V_2 \leftarrow V_3
-\rightarrow V_5$, and not as $V_2 \rightarrow V_3 \leftarrow V_5$. There is
-only one remaining undirected edge ($V_1-V_6$), which can be oriented in
+$2-3-5$ can only be oriented as $2 \rightarrow 3 \rightarrow
+5$, $2 \leftarrow 3 \leftarrow 5$ or $2 \leftarrow 3
+\rightarrow 5$, and not as $2 \rightarrow 3 \leftarrow 5$. There is
+only one remaining undirected edge ($1-6$), which can be oriented in
 two ways. Thus, there are six valid DAGs (i.e. they have no new v-structures
 and no directed cycles) and these form the equivalence class represented by
 the CPDAG. In Fig. \ref{fig:allDags}, all DAGs in the equivalence class are
@@ -1074,22 +1078,23 @@ sfsmisc::mult.fig(6)
 for (i in 1:6) plot(gDag[[i]], main = paste("DAG",i))
 @
 \caption{All DAGs belonging to the same equivalence class as the true
-  DAG shown in Fig. \ref{fig:ida.}}
+  DAG shown in Fig. 6.}
+  %% \ref{fig:ida.}}
 \label{fig:allDags}
 \end{figure}
 
 For each DAG G in the equivalence class, we apply Pearl's do-calculus to
-estimate the total causal effect of $x$ on $y$. Since we assume
+estimate the total causal effect of $V_x$ on $V_y$. Since we assume
 Gaussianity, this can be done via a
 simple linear regression: If $y$ is not a parent of $x$, we take the
-regression coefficient of $x$ in the regression \code{lm(y ~ x +
-  pa(x))}, where \code{pa(x)} denotes the parents of $x$ in the DAG G (z is
-called a parent of x if G if G contains the edge z $\rightarrow$ x); if
+regression coefficient of $V_x$ in the regression \code{lm(Vy ~ Vx +
+  pa(Vx))}, where \code{pa(Vx)} denotes the parents of $x$ in the DAG G ($z$ is
+called a parent of $x$ if G if G contains the edge $z \rightarrow x$); if
 $y$ is a parent of $x$ in G, we set the estimated causal effect to zero.
 
 If the equivalence class contains $k$ DAGs, this yields $k$ estimated
 total causal effects. Since we do not know which DAG is the true causal
-DAG, we do not know which estimated total causal effect of $x$ on $y$ is
+DAG, we do not know which estimated total causal effect of $V_x$ on $V_y$ is
 the correct one. Therefore, we return the entire multiset of $k$ estimated
 effects.
 
@@ -1104,9 +1109,9 @@ Among these six values, there are only two unique values: $-0.0049$ and
 $0.5421$. This is because we compute \code{lm(V5 ~ V2 + pa(V2))}
 for each
 DAG and report the regression coefficient of $V_2$. Note that there are
-only two possible parent sets of $V_2$ in all six DAGs: In DAGs 3 and 6,
-there are no parents of $V_2$. In DAGs 1, 2, 4 and 5, however, the parent
-of $V_2$ is $V_3$. Thus, exactly the same regressions are computed for
+only two possible parent sets of node $2$ in all six DAGs: In DAGs 3 and 6,
+there are no parents of node $2$. In DAGs 1, 2, 4 and 5, however, the parent
+of node $2$ is node $3$. Thus, exactly the same regressions are computed for
 DAGs 3 and 6, and the same regressions are computed for DAGs 1, 2, 4 and
 5. Therefore, we end up with two unique values, one of which occurs twice,
 while the other occurs four times.
@@ -1141,7 +1146,7 @@ class of the CPDAG. Instead, we only consider the local neighborhood of $x$
 in the CPDAG. In particular, we consider all possible directions of
 undirected edges that have $x$ as endpoint, such that no new v-structure is
 created. For each such configuration, we estimate the total causal effect
-of $x$ on $y$ as above, using linear regression.
+of $V_x$ on $V_y$ as above, using linear regression.
 
 At first sight, it is not clear that such a local configuration corresponds
 to a DAG in the equivalence class of the CPDAG, since it may be impossible
@@ -1170,8 +1175,8 @@ method are identical implies that summary measures of the multiset that
 only depend on the unique values (such as the minimum absolute value) can
 be found using the local method.
 
-In some applications, it is clear that some variable is definitivly not an
-effect or not. Consider for example a bacterium producing
+In some applications, it is clear that some variable is definitivly a cause
+of other variables. Consider for example a bacterium producing
 a certain substance, taking the amount of produced substance as response
 variable. Knocking out genes in the bacterium might change the ability to
 produce the substance. By measuring the expression levels of genes, we want
@@ -1247,16 +1252,16 @@ The functions \code{skeleton()}, \code{pc()} and \code{fci()} all need the
 argument \code{indepTest}, a function of the form
 \code{indepTest(x, y, S, suffStat)} to test
 conditional independence relationships.  This function must return
-the p-value of the conditional independence test of $x$ and $y$ given
-$S$ and some information on the data in the form of a sufficient
+the p-value of the conditional independence test of $V_x$ and $V_y$ given
+$V_S$ and some information on the data in the form of a sufficient
 statistic (this might be simply the data frame with the original
 data), where $x$, $y$, $S$ indicate column positions of the original data
 matrix. We will show an example that illustrates how to construct such a
 function.
 
-A simple way to compute the partial correlation of $x$ and $y$ given $S$
+A simple way to compute the partial correlation of $V_x$ and $V_y$ given $V_S$
 for some data is to solve the two associated linear regression problems
-\code{lm}($x \sim S$) and \code{lm}($y \sim S$), get the residuals, and
+\code{lm}($Vx \sim VS$) and \code{lm}($Vy \sim VS$), get the residuals, and
 calculate the correlation between the residuals. Finally, a correlation
 test between the residuals yields a p-value that can be returned. The
 argument \code{suffStat} is an arbitrary object containing several pieces
@@ -1336,16 +1341,17 @@ system.time(for(i in 1:10)
 @
 
 \section{Applications}
-The \pkg{pcalg} package has been used for applications in epidemiology
-(CITE), biology (CITE) and the social sciences (CITE). We will discuss two
-applications in more detail below.
+The \pkg{pcalg} package has been used for applications in epidemiology (see
+\cite{ICF}), biology (see \cite{NatMethods10} and \cite{nagarajan}) and the
+social sciences (see \cite{danenberg}). We will discuss two applications in
+more detail below.
 
 \subsection{Graphical Models and Causal Effects  in Human Functioning}
 In \cite{ICF}, the development of WHO's International Classification of
 Functioning, Disability and Health (ICF) on the one hand and recent
 developments in graphical modeling on the other hand were combined to
 deepen the understanding of human functioning. The objective of the paper
-was to explore how graphical model can be
+was to explore how graphical models can be
 used in the study of ICF data. It was found that graphical models could be used
 successfully for visualization of the dependence structure of the data set,
 dimension reduction, and the comparison of subpopulations. Moreover,
@@ -1357,30 +1363,30 @@ In \cite{NatMethods10}, the authors aim at quantifying the effects of
 single gene interventions on the expression of other genes in yeast,
 allowing for better insights into causal relations between genes. With $n =
 63$ samples of observational data measuring the expression of $p = 5361$
-genes (CITE), the goal was to identify the largest intervention effects
-between all pairs of genes. For the analysis, the \pkg{pcalg} package was
-used.
+genes (see \cite{HughesEtAl00}), the goal was to identify the largest
+intervention effects between all pairs of genes. For the analysis, the
+\pkg{pcalg} package was used.
 
-CITE also provide gene expression measurements from 234 interventional
-experiments, namely from 234 single-gene deletion mutant strains. Using
-this data, we know the true causal effect of the knock-out genes on the
-remaining genes in good approximation. We can
-then quantify how well we can find the true intervention effects in the
-following way: We encode the largest 10\% of the intervention effects
-computed from the interventional data as the target set of effects that we
-want to identify. We then check in an ROC curve, how
-well the ranking of the causal effects estimated by applying \code{ida()}
-to the observational data is able to identify effects in the target set. For comparison, the authors also used the (conceptually
-wrong) Lasso and Elastic Net to obtain rankings. In
-Figure \ref{fig:yeast} one can see that \code{ida()} is clearly superior to
-the alternative methods (and random guessing) in terms of identifying
-effects in the target set.
+\cite{HughesEtAl00} also provide gene expression measurements from 234
+interventional experiments, namely from 234 single-gene deletion mutant
+strains. Using this data, we know the true causal effect of the knock-out
+genes on the remaining genes in good approximation. We can then quantify
+how well we can find the true intervention effects in the following way: We
+encode the largest 10\% of the intervention effects computed from the
+interventional data as the target set of effects that we want to
+identify. We then check in an ROC curve, how well the ranking of the causal
+effects estimated by applying \code{ida()} to the observational data is
+able to identify effects in the target set. For comparison, the authors
+also used the (conceptually wrong) Lasso and Elastic Net to obtain
+rankings. In Figure \ref{fig:yeast} one can see that \code{ida()} is
+clearly superior to the alternative methods (and random guessing) in terms
+of identifying effects in the target set.
 
 We note that the yeast data set is very high-dimensional ($n=63$,
 $p=5361$). Thus, unlike the toy examples used to illustrate the package in
 this manuscript, where $n$ was much bigger than $p$ and the causal
 structure was recovered exactly up to its equivalence class, the estimated
-causal structure for the yeat data is likely to contain many sampling
+causal structure for the yeast data is likely to contain many sampling
 errors. However, Figure \ref{fig:yeast} shows that it is still possible to
 extract useful information about causal effects.
 
