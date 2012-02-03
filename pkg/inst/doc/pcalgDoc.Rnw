@@ -42,7 +42,7 @@
   we give a brief overview of the methodology, and demonstrate the
   package's functionality in both toy examples and applications.}
 
-\Keywords{IDA, PC, RFCI, FCI, do-calculus, causality, graphical models, \proglang{R}}
+\Keywords{IDA, PC, RFCI, FCI, do-calculus, causality, graphical model, \proglang{R}}
 \Plainkeywords{IDA, PC, RFCI, FCI, do-calculus, causality, graphical models, R} %% without formatting
 %% at least one keyword must be supplied
 
@@ -193,7 +193,7 @@ pc.fit <- pc(suffStat, indepTest = gaussCItest,
 \label{fig:intro1}
 \end{figure}
 
-As can be seen in Fig. \ref{fig:intro1}, there are directed and bidirected
+As can be seen in Fig.~\ref{fig:intro1}, there are directed and bidirected
 edges in the estimated causal structure. The directed edges show the
 presence and direction of direct causal effects. A bidirected edge means
 that the PC-algorithm was unable to decide whether the edge orientation
@@ -261,12 +261,12 @@ there is a causal effect at all. The third row, corresponding to $V_6$ was
 already discussed above.
 
 \section{Methodological background}
-In Section \ref{sec:gm} we propose methods for estimating the causal
+In Section~\ref{sec:gm} we propose methods for estimating the causal
 structure from observational data. In particular, we discuss 
 the PC algorithm
 (see \cite{SpirtesEtAl00})), the FCI algorithm (see \cite{SpirtesEtAl00} and
 \cite{SpirtesMeekRichardson99}) and the RFCI algorithm (see \cite{rfci}).
-In Section \ref{sec:bounds} we describe the IDA method (see \cite{BuKaMa09}) to
+In Section~\ref{sec:bounds} we describe the IDA method (see \cite{BuKaMa09}) to
 obtain bounds on causal effects from observational data. This method is
 based on first estimating the causal structure and then applying do-calculus (see \cite{Pearl00}) 
 
@@ -290,7 +290,7 @@ An example of a graphical model is the DAG model. The physical map here is
 a graph consisting of nodes and directed edges ($\leftarrow$ or
 $\rightarrow$). As a further restriction, the edges must be directed in a
 way, so that it is not possible to trace a cycle when following the
-arrowheads (i.e. no directed cycles). The interpretation rule is called
+arrowheads (i.e.,  no directed cycles). The interpretation rule is called
 d-separation. This rule is a bit intricate and we refer the reader to
 \cite{lauritzen} for more details. This interpretation rule can be used in
 the following way: If two nodes $x$ and $y$ are d-separated by a set of
@@ -321,7 +321,7 @@ As mentioned before, several DAGs can encode the same list of conditional
 independencies. One can show that such DAGs must share certain
 properties. To be more precise, we have to define a v-structure as the
 subgraph $i \rightarrow j \leftarrow k$ on the nodes $i$, $j$ and $k$ where
-$i$ and $k$ are not adjacent (i.e., there is no edge between $i$ and
+$i$ and $k$ are not adjacent (i.e., , there is no edge between $i$ and
 $k$). Furthermore, let the skeleton of a DAG be the graph that is obtained
 by removing all arrowheads from the DAG. It was shown that two DAGs encode
 the same conditional independence statements if and only if the
@@ -362,10 +362,8 @@ conditional independent\\
 \label{algo:pc}
 \end{algorithm}
 
-We now describe the PC-algorithm, which is shown in Algorithm
-\ref{algo:pc}, in more detail. The PC-algorithm starts with a complete
-undirected graph, $G_0$, as stated in \textbf{(P1)} of Algorithm
-\ref{algo:pc}. In stage \textbf{(P2)}, a series of conditional independence
+We now describe the PC-algorithm, which is shown in Algorithm~\ref{algo:pc}, in more detail. The PC-algorithm starts with a complete
+undirected graph, $G_0$, as stated in \textbf{(P1)} of Algorithm~\ref{algo:pc}. In stage \textbf{(P2)}, a series of conditional independence
 tests is done and edges are deleted in the following way. First, all pairs
 of nodes are tested for marginal independence. If two nodes $i$ and $j$ are
 judged to be marginally independent at level $\alpha$, the edge between
@@ -408,7 +406,7 @@ variable can be visualized using a DAG where the edges indicate direct
 cause-effect relationships.  Under some assumptions, \cite{Pearl00} showed
 (Th. 1.4.1) that there is a link between causal structures and graphical
 models. Roughly speaking, if the underlying causal structure is a DAG, we
-observe data generated from this DAG and then estimate a DAG model (i.e. a
+observe data generated from this DAG and then estimate a DAG model (i.e.,  a
 graphical model) on this data, the estimated CPDAG represents the
 equivalence class of the DAG model describing the causal structure. This
 holds if we have enough samples and assuming that the true underlying
@@ -474,10 +472,10 @@ d-separation. Furthermore, part of the causal information in the underlying
 DAG is represented in the MAG. If in the MAG there is an edge between node
 $i$ and node $j$ with an arrowhead at node $i$, then there is no directed
 path from node $i$ to node $j$ nor to any of the selection variables in the
-underlying DAG (i.e., $i$ is not a cause of $j$ or of the selection
+underlying DAG (i.e., , $i$ is not a cause of $j$ or of the selection
 variables). If, on the other hand, there is a tail at node $i$, then there
 is a directed path from node $i$ to node $j$ or to one of the selection
-variables in the underlying DAG (i.e., $i$ is a cause of $j$ or of a
+variables in the underlying DAG (i.e., , $i$ is a cause of $j$ or of a
 selection variable).
 
 Recall that finding a unique DAG from an independence oracle is in general
@@ -488,7 +486,7 @@ oracle is in general impossible. One only reports on the equivalence class
 in which the true MAG lies.
 
 An equivalence class of a MAG can be uniquely represented by a partial
-ancestral graph (PAG) (see e.g.  \cite{Zhang08-orientation-rules}). A PAG
+ancestral graph (PAG) (see e.g.,   \cite{Zhang08-orientation-rules}). A PAG
 contains the following types of edges: o--o, o--, o-->, -->, <-->,
 --. Roughly, the bidirected edges come from hidden variables, and the
 undirected edges come from selection variables. The edges have the
@@ -507,7 +505,7 @@ algorithm (``fast causal inference''; see \cite{SpirtesEtAl00} and
 \cite{fci}). The orientation rules of this algorithm were slightly
 extended and proven to be complete in \cite{Zhang08-orientation-rules}. FCI
 is very similar to PC but makes additional conditional independence tests
-and uses more orientation rules (see Section \ref{sec:fci} for more
+and uses more orientation rules (see Section~\ref{sec:fci} for more
 details). We refer the reader to \cite{Zhang08-orientation-rules} or
 \cite{rfci} for a detailed discussion of the FCI algorithm. It turns out
 that the FCI algorithm is computationally infeasible for large graphs. The
@@ -545,7 +543,7 @@ distribution of the random variable describing rain is quite different when
 making an observation versus making an intervention.  
 
 Oftentimes, only the change of the target distribution under intervention
-is reported. We use the change in mean, i.e. $\frac{\partial}{\partial x}
+is reported. We use the change in mean, i.e.,  $\frac{\partial}{\partial x}
 E[V_y|do(V_x=x)]$, as a general measure for the causal effect of $V_x$ on
 $V_y$. For multivariate Gaussian random variables, $E[V_y|do(V_x=x)]$ depends
 linearly on $x$. Therefore, the derivative is constant which means that the
@@ -567,17 +565,17 @@ interventional distribution can be obtained by using information obtained
 by observations and knowledge of the underlying causal structure. 
 
 Unfortunately, the causal structure is rarely known in practice. However,
-as discussed in Section \ref{sec:gm}, we can estimate the Markov
+as discussed in Section~\ref{sec:gm}, we can estimate the Markov
 equivalence class of the true causal DAG. Taking this into account, we
 conceptually apply the do-calculus on each DAG within the equivalence class
 and thus obtain a possible causal effect for each DAG in the equivalence
 class (in practice, we developed a local method that is faster but yields a
-similar result; see Section \ref{sec:ida} for more details). Therefore,
+similar result; see Section~\ref{sec:ida} for more details). Therefore,
 even if we have an infinite amount of observations we can in general report
 on a multiset of possible causal values (it is a multiset rather than a set
 because it can contain duplicate values). One of these values is the true
 causal effect. Despite the inherent ambiguity, this result can still be
-very useful when the multiset has certain properties (e.g. all values are much
+very useful when the multiset has certain properties (e.g.,  all values are much
 larger than zero). These ideas are incorporated in the IDA method
 (\textbf{I}ntervention calculus when the \textbf{D}AG is \textbf{A}bsent).
 
@@ -652,8 +650,8 @@ models. The functions
 effects from observational data.
 
 Alternatives to this package for estimating graphical models in
-\proglang{R} include: \pkg{bnlearn}, \pkg{deal}, \pkg{gRain}, \pkg{gRbase}
-and \pkg{gRc}.
+\proglang{R} include: \cite{bnlearn}, \cite{deal}, \cite{gRain}, \cite{gRbase}
+and \cite{gRc}.
 
 \subsection{skeleton}\label{sec:skel}
 The function \code{skeleton()} implements (P1) and (P2) from
@@ -673,7 +671,7 @@ showF <- function(f, width = 82) {
 showF(skeleton)
 @
 
-As was discussed in Section \ref{sec:gm}, the main task in finding the skeleton
+As was discussed in Section~\ref{sec:gm}, the main task in finding the skeleton
 is to compute and test several conditional independencies. To keep the
 function flexible, \code{skeleton()} takes as argument a function
 \code{indepTest()} that performs these conditional independence tests and
@@ -690,7 +688,7 @@ the input has to be a list containing the correlation matrix and the sample
 size of the data.  In the following code, we estimate the skeleton on the
 data set \code{gmG} (which consists of $p=8$ variables and $n=5000$
 samples) and plot the results. The estimated skeleton and the true
-underlying DAG are shown in Fig. \ref{fig:skelExpl}.
+underlying DAG are shown in Fig.~\ref{fig:skelExpl}.
 \begin{figure}
   \centering
 <<skelExpl1Plot, fig=TRUE>>=
@@ -716,7 +714,7 @@ statistic and takes as input a list containing the data matrix, a
 vector specifying the number of levels for each variable and an option
 which indicates if the degrees of freedom must be lowered by one for
 each zero count. Finally, we plot the result. The estimated skeleton
-and the true underlying DAG are shown in Fig. \ref{fig:skel2}.
+and the true underlying DAG are shown in Fig.~\ref{fig:skel2}.
 \begin{figure}
   \centering
 <<skelExp2Plot, fig = TRUE, echo = FALSE>>=
@@ -758,7 +756,7 @@ variables in the adjacency matrix, and not with the names of the variables.
 \subsection{pc} \label{sec:pc}
 
 The function \code{pc()} implements all steps (P1) to (P4) of the PC
-algorithm shown in display algorithm \ref{algo:pc}. First, the skeleton is computed using the function
+algorithm shown in display algorithm~\ref{algo:pc}. First, the skeleton is computed using the function
 \code{skeleton()} (steps (P1) and (P2)). Then, as many edges as possible are
 oriented (steps (P3) and (P4)). The function can be called as
 % with the following arguments.
@@ -825,11 +823,11 @@ variables. When plotting the object, undirected and bidirected edges are
 equivalent.
 
 As an example, we estimate a CPDAG of the Gaussian data used in the
-example for the skeleton in Section \ref{sec:skel}. Again, we choose
+example for the skeleton in Section~\ref{sec:skel}. Again, we choose
 the predefined \code{gaussCItest()} as conditional independence
 test and create the corresponding test statistic. Finally, we plot the
 result. The estimated CPDAG and the true underlying DAG are shown in
-Fig. \ref{fig:pcFit1}.
+Fig.~\ref{fig:pcFit1}.
 
 \begin{figure}
   \centering
@@ -902,7 +900,7 @@ algorithm which consists of two parts. In the first part (done if
 \code{pc.cons.internal()} with argument \code{version.unf = c(1,2)} after
 computing the skeleton. This is a slight variation of the conservative PC
 algorithm (which used \code{version.unf = c(2,2)}): If $V_a$ is independent
-of $V_c$ given some $V_S$ in the skeleton (i.e., the edge $a-c$ dropped out),
+of $V_c$ given some $V_S$ in the skeleton (i.e., , the edge $a-c$ dropped out),
 but $V_a$ and $V_c$ remain dependent given all subsets of the adjacency set of
 either $a$ or $c$, we call $a-b-c$ \emph{``unambiguous''}. This is because
 in the FCI algorithm, the true separating set might be outside the
@@ -937,7 +935,7 @@ which case the node names \code{as.character(1:p)} are used.
 
 As an example, we estimate the PAG of a graph with five nodes using the
 function \code{fci()} and the predefined function \code{gaussCItest()} as
-conditional independence test. In Fig. \ref{fig:fci} the true DAG and the
+conditional independence test. In Fig.~\ref{fig:fci} the true DAG and the
 PAG estimated with \code{fci()} are shown. Random variable $V_1$ is
 latent. We can read off that both $V_4$ and $V_5$ cannot be a cause of
 $V_2$ and $V_3$, which can be confirmed in the true DAG.
@@ -988,8 +986,8 @@ where the arguments \code{suffStat}, \code{indepTest}, \code{p},
 \code{skeleton()}.
 
 
-As an example, we re-run the example from Section \ref{sec:fci} and show
-the PAG estimated with \code{rfci()} in Figure \ref{fig:fci}. The PAG
+As an example, we re-run the example from Section~\ref{sec:fci} and show
+the PAG estimated with \code{rfci()} in Figure~\ref{fig:fci}. The PAG
 estimated with \code{fci()} and the PAG estimated with \code{rfci()} are
 the same.
 
@@ -1010,11 +1008,11 @@ the class (of their ``communalities'') \code{gAlgo}.
 
 To illustrate the function \code{ida()}, consider the following example. We
 simulated 10000 samples from seven multivariate Gaussian random variables
-with a causal structure given on the left of Fig. \ref{fig:ida}. We assume
+with a causal structure given on the left of Fig.~\ref{fig:ida}. We assume
 that the causal structure is unknown and want to infer the causal effect of
 $V_2$ on $V_5$. First, we estimate the equivalence class of DAGs that
 describe the conditional independence relationships in the data, using the
-function \code{pc()} (see Section \ref{sec:pc}).
+function \code{pc()} (see Section~\ref{sec:pc}).
 
 %% Used to generate "gmI" IDA data
 <<def-gmI, eval=FALSE, echo=FALSE>>=
@@ -1032,7 +1030,7 @@ suffStat <- list(C = cor(gmI$x), n = nrow(gmI$x))
 pc.fit <- pc(suffStat, indepTest=gaussCItest,
              p = ncol(gmI$x), alpha = 0.01)
 @
-Comparing the true DAG with the CPDAG in Fig. \ref{fig:ida}, we see that
+Comparing the true DAG with the CPDAG in Fig.~\ref{fig:ida}, we see that
 the CPDAG and the true DAG have the same skeleton. Moreover, the directed
 edges in the CPDAG are also directed in that way in the true DAG. Three
 edges in the CPDAG are bidirected. Recall that undirected and bidirected
@@ -1051,15 +1049,15 @@ plot(pc.fit, main = "")
 Since there are three undirected edges in the CPDAG, there might be up to
 $2^3 = 8$ DAGs in the corresponding equivalence class. However, the
 undirected edges $2-3-5$ can be oriented as a new v-structure. As
-mentioned in Section \ref{sec:gm}, DAGs in the equivalence class must have
+mentioned in Section~\ref{sec:gm}, DAGs in the equivalence class must have
 exactly the same v-structures as the corresponding CPDAG. Thus,
 $2-3-5$ can only be oriented as $2 \rightarrow 3 \rightarrow
 5$, $2 \leftarrow 3 \leftarrow 5$ or $2 \leftarrow 3
 \rightarrow 5$, and not as $2 \rightarrow 3 \leftarrow 5$. There is
 only one remaining undirected edge ($1-6$), which can be oriented in
-two ways. Thus, there are six valid DAGs (i.e. they have no new v-structures
+two ways. Thus, there are six valid DAGs (i.e.,  they have no new v-structures
 and no directed cycles) and these form the equivalence class represented by
-the CPDAG. In Fig. \ref{fig:allDags}, all DAGs in the equivalence class are
+the CPDAG. In Fig.~\ref{fig:allDags}, all DAGs in the equivalence class are
 shown. DAG 6 is the true DAG.
 
 <<idaExpl3, echo = FALSE>>=
@@ -1079,7 +1077,7 @@ for (i in 1:6) plot(gDag[[i]], main = paste("DAG",i))
 @
 \caption{All DAGs belonging to the same equivalence class as the true
   DAG shown in Fig. 6.}
-  %% \ref{fig:ida.}}
+  %%~\ref{fig:ida.}}
 \label{fig:allDags}
 \end{figure}
 
@@ -1223,7 +1221,7 @@ option \code{y.notparent = TRUE} is not implemented.
 %%- clear how to do that efficiently without orienting all edges away from
 %%- \code{y.pos.set} at the same time, which seems not to be desirable.
 
-Consider the example from Section \ref{sec:ida}, where we computed the
+Consider the example from Section~\ref{sec:ida}, where we computed the
 causal effect of $V_2$ on $V_5$. Now, we want to compute the effect of $V_2$
 on $V_5$, $V_6$ and $V_7$ using \code{idaFast()} and compare the results with
 the output of \code{ida()}. As expected, both methods lead to the same results.
@@ -1268,7 +1266,7 @@ argument \code{suffStat} is an arbitrary object containing several pieces
 of information that are all used within the function to produce the
 p-value. In the predefined function \code{gaussCItest()} for example, a
 list containing the correlation matrix and the number of observations is
-passed. This has the advantage that any favorite (e.g. robust) method of
+passed. This has the advantage that any favorite (e.g.,  robust) method of
 computing the correlation matrix can be used before partial correlations
 are computed. Oftentimes, however, it suffices to just pass the
 complete data set in \code{suffStat}. We choose this simple method in
@@ -1312,8 +1310,8 @@ plot(pc.myfit, main = "")
   are identical for the \code{gmG} data.}
 \label{fig:userSpec}
 \end{figure}
-As expected, the resulting CPDAG (see Fig. \ref{fig:userSpec}) is the same
-as in Section \ref{sec:pc} where we used the function \code{gaussCItest()} as
+As expected, the resulting CPDAG (see Fig.~\ref{fig:userSpec}) is the same
+as in Section~\ref{sec:pc} where we used the function \code{gaussCItest()} as
 conditional independence test. Note however that using
 \code{gaussCItest()} is considerably faster than using \code{myCItest()} (on
 our computer
@@ -1378,7 +1376,7 @@ identify. We then check in an ROC curve, how well the ranking of the causal
 effects estimated by applying \code{ida()} to the observational data is
 able to identify effects in the target set. For comparison, the authors
 also used the (conceptually wrong) Lasso and Elastic Net to obtain
-rankings. In Figure \ref{fig:yeast} one can see that \code{ida()} is
+rankings. In Figure~\ref{fig:yeast} one can see that \code{ida()} is
 clearly superior to the alternative methods (and random guessing) in terms
 of identifying effects in the target set.
 
@@ -1387,7 +1385,7 @@ $p=5361$). Thus, unlike the toy examples used to illustrate the package in
 this manuscript, where $n$ was much bigger than $p$ and the causal
 structure was recovered exactly up to its equivalence class, the estimated
 causal structure for the yeast data is likely to contain many sampling
-errors. However, Figure \ref{fig:yeast} shows that it is still possible to
+errors. However, Figure~\ref{fig:yeast} shows that it is still possible to
 extract useful information about causal effects.
 
 \begin{figure}[htb]
@@ -1420,7 +1418,7 @@ toLatex(sessionInfo())
 <<finalizing, echo=FALSE>>=
 options(op.orig)
 @
-
+\newpage
 \bibliography{Mybib}
 
 \end{document}
