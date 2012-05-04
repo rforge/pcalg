@@ -101,33 +101,42 @@ randomDAG <- function (n, prob, lB = 0.1, uB = 1)
 ## A version of this is also in	/u/maechler/R/MM/Pkg-ex/graph/weightmatrix.R
 ## another on in  Matrix/R/sparseMatrix.R  function graph.wgtMatrix() :
 
-wgtMatrix <- function(g, transpose = TRUE)
-{
-  ## Purpose: work around "graph" package's  as(g, "matrix") bug
-  ## ----------------------------------------------------------------------
-  ## ACHTUNG: mat_[i,j]==1 iff j->i,
-  ## whereas with as(g,"matrix") mat_[i,j]==1 iff i->j
-  ## ----------------------------------------------------------------------
-  ## Arguments: g: an object inheriting from (S4) class "graph"
-  ## ----------------------------------------------------------------------
-  ## Author: Martin Maechler, based on Seth Falcon's code;  Date: 12 May 2006
+## wgtMatrix <- function(g, transpose = TRUE)
+## {
+##   ## Purpose: work around "graph" package's  as(g, "matrix") bug
+##   ## ----------------------------------------------------------------------
+##   ## ACHTUNG: mat_[i,j]==1 iff j->i,
+##   ## whereas with as(g,"matrix") mat_[i,j]==1 iff i->j
+##   ## ----------------------------------------------------------------------
+##   ## Arguments: g: an object inheriting from (S4) class "graph"
+##   ## ----------------------------------------------------------------------
+##   ## Author: Martin Maechler, based on Seth Falcon's code;  Date: 12 May 2006
 
-  ## MM: another buglet for the case of  "no edges":
-  if(numEdges(g) == 0) {
-    p <- length(nd <- nodes(g))
-    return( matrix(0, p,p, dimnames = list(nd, nd)) )
+##   ## MM: another buglet for the case of  "no edges":
+##   if(numEdges(g) == 0) {
+##     p <- length(nd <- nodes(g))
+##     return( matrix(0, p,p, dimnames = list(nd, nd)) )
+##   }
+##   ## Usual case, when there are edges:
+##   if(!("weight" %in% names(edgeDataDefaults(g))))
+##     edgeDataDefaults(g, "weight") <- 1L
+##   w <- unlist(edgeData(g, attr = "weight"))
+##   ## we need the *transposed* matrix typically:
+##   tm <- if(transpose) t(as(g, "matrix")) else as(g, "matrix")
+##   ## now is a 0/1 - matrix (instead of 0/wgts) with the 'graph' bug
+##   if(any(w != 1)) ## fix it
+##     tm[tm != 0] <- w
+##   ## tm_[i,j]==1 iff i->j
+##   tm
+## }
+
+wgtMatrix <- function(g, transpose = TRUE) {
+  res <- as(g, "matrix")
+  if (transpose) {
+    return(t(res))
+  } else {
+    return(res)
   }
-  ## Usual case, when there are edges:
-  if(!("weight" %in% names(edgeDataDefaults(g))))
-    edgeDataDefaults(g, "weight") <- 1L
-  w <- unlist(edgeData(g, attr = "weight"))
-  ## we need the *transposed* matrix typically:
-  tm <- if(transpose) t(as(g, "matrix")) else as(g, "matrix")
-  ## now is a 0/1 - matrix (instead of 0/wgts) with the 'graph' bug
-  if(any(w != 1)) ## fix it
-    tm[tm != 0] <- w
-  ## tm_[i,j]==1 iff i->j
-  tm
 }
 
 rmvDAG <- function(n, dag, errDist = c("normal", "cauchy", "mix", "mixt3", "mixN100","t4"),
