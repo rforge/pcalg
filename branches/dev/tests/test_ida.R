@@ -1,4 +1,4 @@
-library(pcalg)
+library(pcalg, lib.loc = "/sfs/u/staff/kalisch/research/packages/dev.Rcheck")
 
 set.seed(123)
 nreps <- 100
@@ -30,6 +30,18 @@ if (!all(res)) stop("Test ida: True effects were not recovered!")
 
 ## *one* test for  method="global" :
 eff.g.est <- Rnd(ida(x,y, mcov, myCPDAG, method="global", verbose=TRUE))
-stopifnot(identical(eff.est, eff.g.est))
+stopifnot(eff.est == eff.g.est)
 
 cat('Time elapsed additionally: ', proc.time() - .pt,"\n")
+
+## another special case (from Raphael Gervais)
+set.seed(123)
+p <- 7
+myDAG <- randomDAG(p, prob = 0.2) ## true DAG
+amatT <- as(myDAG, "matrix") # weighted adjacency matrix of true DAG
+effT <- Rnd(amatT[2,3]*amatT[3,5]) # Causal effect of 2 on 5 from true DAG weighted matrix
+myCPDAG <- dag2cpdag(myDAG) ## true CPDAG
+covTrue <- trueCov(myDAG) ## true covariance matrix
+effG <- Rnd(ida(2,5, covTrue,myCPDAG,method = "global"))
+
+if (!(effT %in% effG)) stop("Test ida special case: True effects were not recovered!")

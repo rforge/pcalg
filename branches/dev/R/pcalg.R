@@ -10,61 +10,70 @@ check.Rgraphviz <- function() {
 ##' @title
 ##' @param g a "graph" or adjacency matrix
 ##' @return
-trueCov <- function(g) {
-  if (is(g, "graphNEL")) {
-    w <- wgtMatrix(g)
-  } else {
-    w <- g
-  }
-  ## find all parents
-  p <- ncol(w)
-  pa <- vector("list",p)
-  for (i in 1:p) pa[[i]] <- which(w[i,]!=0)
-  l.pa <- sapply(pa,length)
+## trueCov <- function(g) {
+##   if (is(g, "graphNEL")) {
+##     w <- wgtMatrix(g)
+##   } else {
+##     w <- g
+##   }
+##   ## find all parents
+##   p <- ncol(w)
+##   pa <- vector("list",p)
+##   for (i in 1:p) pa[[i]] <- which(w[i,]!=0)
+##   l.pa <- sapply(pa,length)
 
-  ## make EX-Matrix
-  ecov <- diag(1,p)
-  for (j in 1:(p-1)) {
-    for (i in (j+1):p) {
-      if (l.pa[i]>0) {
-        ecov[j,i]  <- sum(w[i,pa[[i]]]*ecov[j,pa[[i]]])
-      } else {
-        ecov[j,i] <- 0
-      }
-    }
-  }
+##   ## make EX-Matrix
+##   ecov <- diag(1,p)
+##   for (j in 1:(p-1)) {
+##     for (i in (j+1):p) {
+##       if (l.pa[i]>0) {
+##         ecov[j,i]  <- sum(w[i,pa[[i]]]*ecov[j,pa[[i]]])
+##       } else {
+##         ecov[j,i] <- 0
+##       }
+##     }
+##   }
 
-  ## make Covariance Matrix
-  xcov <- matrix(0,p,p)
+##   ## make Covariance Matrix
+##   xcov <- matrix(0,p,p)
 
-  for (i in 1:p) {
-    for (j in 1:i) {
-      case.id <- as.character((l.pa[i]!=0)*10+(l.pa[j]!=0))
-      switch(case.id,
-             "0" = {
-               ## l.pa[i]=0 & l.pa[j]=0
-               if (i!=j) {
-                 xcov[i,j] <- xcov[j,i] <- 0
-               } else {
-                 xcov[i,j] <- 1
-               }},
-             "1" = {
-               ## l.pa[i]=0 & l.pa[j] != 0
-               xcov[i,j] <- xcov[j,i] <- ecov[i,j]
-             },
-             "10" = {
-               ## l.pa[i]!=0 & l.pa[j] = 0
-               xcov[i,j] <- xcov[j,i] <- ecov[j,i]
-             },
-             "11" = {
-               ## l.pa[i]!=0 & l.pa[j] = 0
-               xcov[i,j] <- xcov[j,i] <-
-                 w[i,pa[[i]],drop=FALSE] %*% xcov[pa[[i]],pa[[j]]] %*% t(w[j,pa[[j]],drop=FALSE]) +
-                   ecov[j,i]
-             })
-    }
-  }
-  xcov
+##   for (i in 1:p) {
+##     for (j in 1:i) {
+##       case.id <- as.character((l.pa[i]!=0)*10+(l.pa[j]!=0))
+##       switch(case.id,
+##              "0" = {
+##                ## l.pa[i]=0 & l.pa[j]=0
+##                if (i!=j) {
+##                  xcov[i,j] <- xcov[j,i] <- 0
+##                } else {
+##                  xcov[i,j] <- 1
+##                }},
+##              "1" = {
+##                ## l.pa[i]=0 & l.pa[j] != 0
+##                xcov[i,j] <- xcov[j,i] <- ecov[i,j]
+##              },
+##              "10" = {
+##                ## l.pa[i]!=0 & l.pa[j] = 0
+##                xcov[i,j] <- xcov[j,i] <- ecov[j,i]
+##              },
+##              "11" = {
+##                ## l.pa[i]!=0 & l.pa[j] = 0
+##                xcov[i,j] <- xcov[j,i] <-
+##                  w[i,pa[[i]],drop=FALSE] %*% xcov[pa[[i]],pa[[j]]] %*% t(w[j,pa[[j]],drop=FALSE]) +
+##                    ecov[j,i]
+##              })
+##     }
+##   }
+##   xcov
+## }
+
+trueCov <- function(myDAG)
+{
+  wm <- wgtMatrix(myDAG)
+  p <- length(myDAG@nodes)
+  id <- diag(p)
+  tmp <- solve( id - wm )
+  tmp %*% t(tmp)
 }
 
 randomDAG <- function (n, prob, lB = 0.1, uB = 1)
