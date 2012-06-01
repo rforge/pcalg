@@ -88,11 +88,17 @@ export(randomDAG,
        pc.cons.intern,
        checkTriple,
        faith.check,
-       rfci)
+       rfci,
+       r.gauss.pardag,
+       rmvnorm.ivent)
 
 exportClasses("pcAlgo",
               "fciAlgo",
-              "gAlgo")
+              "gAlgo",
+              "pardag",
+              "gauss.pardag",
+              "int.score",
+              "gauss.bic.int.score",
+              "ess.graph")
 
-exportMethods("summary","show","plot")
-
+useDynLib(pcalg)
