@@ -439,7 +439,7 @@ std::set<uint> EssentialGraph::getChainComponent(const uint v) const
 ArrowInsertion EssentialGraph::getOptimalArrowInsertion(const uint v)
 {
 	// For DEBUGGING purposes: print vertex being processed
-	DBOUT(2, "Calculating optimal arrow insertion for vertex " << v);
+	dout.level(2) << "Calculating optimal arrow insertion for vertex " << v << "\n";
 
 	// Initialize optimal score gain
 	ArrowInsertion result;
@@ -520,16 +520,16 @@ ArrowInsertion EssentialGraph::getOptimalArrowInsertion(const uint v)
 							C_par = set_union(C, parents);
 							hmi = localScore.find(C_par);
 							if (hmi == localScore.end()) {
-								DBOUT(3, "calculating partial score for vertex " << v << ", parents " << C_par << "...");
+								dout.level(3) << "calculating partial score for vertex " << v << ", parents " << C_par << "...\n";
 								diffScore = - _score->calcPartial(v, C_par);
 								localScore[C_par] = diffScore;
 							}
 							else
 								diffScore = hmi->second;
-							DBOUT( 3, "partial score for vertex " << v << ", parents " << C_par << ": " << -diffScore );
+							dout.level(3) << "partial score for vertex " << v << ", parents " << C_par << ": " << -diffScore << "\n";
 							C_par.insert(u);
 							diffScore += _score->calcPartial(v, C_par);
-							DBOUT( 3, "partial score for vertex " << v << ", parents " << C_par << ": " << _score->calcPartial(v, C_par) );
+							dout.level(3) << "partial score for vertex " << v << ", parents " << C_par << ": " << _score->calcPartial(v, C_par) << "\n";
 
 							// If new score is better than previous optimum, and there is no
 							// v-u-path that does not go through C, store (u, v, C) as new optimum
@@ -631,7 +631,7 @@ uint EssentialGraph::_getOptimalSingleVertexTarget()
 
 	// Search over all chain components
 	while ((u = notChecked.find_first()) < getVertexCount()) {
-		DBOUT(3, "  checking chain component of vertex " << u << "...\n");
+		dout.level(3) << "  checking chain component of vertex " << u << "...\n";
 		// Find chain component of v, and check whether it is non-trivial
 		chainComp = getChainComponent(u);
 		notChecked.reset(u);
@@ -642,7 +642,7 @@ uint EssentialGraph::_getOptimalSingleVertexTarget()
 
 			v_ind = 0;
 			for (si = chainComp.begin(); si != chainComp.end(); ++si, ++v_ind) {
-				DBOUT(3, "  checking vertex " << *si << "...\n");
+				dout.level(3) << "  checking vertex " << *si << "...\n";
 				notChecked.reset(*si);
 				chainCompVert.clear();
 				for (i = 0; i < chainComp.size(); ++i)
@@ -953,7 +953,7 @@ bool EssentialGraph::greedyForward()
 	ArrowInsertion insertion, optInsertion;
 
 	// For DEBUGGING purposes: print phase
-	DBOUT(3, "== starting forward phase...");
+	dout.level(3) << "== starting forward phase...\n";
 
 	// Initialize optimal score gain
 	optInsertion.score = 0.;
@@ -973,6 +973,7 @@ bool EssentialGraph::greedyForward()
 	}
 
 	// If caching is enabled, search the cache for the best score
+	dout.level(3) << "vertex count: " << getVertexCount() << "\n";
 	if (_doCaching) {
 		// If score has to be initialized (current phase is not forward), do it
 		if (_actualPhase != CP_FORWARD)
@@ -989,12 +990,12 @@ bool EssentialGraph::greedyForward()
 	// If the score can be augmented, do it
 	if (optInsertion.score > 0.) {
 		// For DEBUGGING purposes: print inserted arrow
-		DBOUT(1, "  inserting edge (" << optInsertion.source << ", " << v_opt << ") with C = "
-				<< optInsertion.clique << ", S = " << optInsertion.score);
+		dout.level(3) << "  inserting edge (" << optInsertion.source << ", " << v_opt << ") with C = "
+				<< optInsertion.clique << ", S = " << optInsertion.score << "\n";
 		insert(optInsertion.source, v_opt, optInsertion.clique);
-		#if DEBUG_OUTPUT_LEVEL >= 2
-			getAdjacencyMatrix().print("A = ");
-		#endif
+//		#if DEBUG_OUTPUT_LEVEL >= 2
+//			getAdjacencyMatrix().print("A = ");
+//		#endif
 		return true;
 	}
 	else
@@ -1013,7 +1014,7 @@ bool EssentialGraph::greedyBackward()
 	CliqueStack cliqueStack;
 
 	// For DEBUGGING purposes: print phase
-	DBOUT(3, "== starting backward phase...");
+	dout.level(3) << "== starting backward phase...\n" ;
 
 	// Initialize optimal score gain
 	diffScore_opt = 0.;
@@ -1075,8 +1076,8 @@ bool EssentialGraph::greedyBackward()
 	// If the score can be augmented, do it
 	if (diffScore_opt > 0.) {
 		// For DEBUGGING purposes
-		DBOUT(1, "  deleting edge (" << u_opt << ", " << v_opt << ") with C = "
-				<< C_opt << ", S = " << diffScore_opt);
+		dout.level(1) << "  deleting edge (" << u_opt << ", " << v_opt << ") with C = "
+				<< C_opt << ", S = " << diffScore_opt << "\n";
 		remove(u_opt, v_opt, C_opt);
 		//getAdjacencyMatrix().print("A = ");
 		return true;
@@ -1096,7 +1097,7 @@ bool EssentialGraph::greedyTurn()
 	CliqueStack cliqueStack;
 
 	// For DEBUGGING purposes: print phase
-	DBOUT(3, "== starting turning phase...");
+	dout.level(3) << "== starting turning phase...\n";
 
 	// Initialize optimal score gain
 	diffScore_opt = 0.;
@@ -1104,7 +1105,7 @@ bool EssentialGraph::greedyTurn()
 	for (v = 0; v < getVertexCount(); ++v) 
 		// Respect vertices that are not allowed to have parents, but only children
 		if (!_childrenOnly.test(v))  {
-			DBOUT(3, "  checking edges incident to v = " << v << "...");
+			dout.level(3) << "  checking edges incident to v = " << v << "...\n";
 
 			// Store parents and neighbors of v
 			neighbors = getNeighbors(v);
@@ -1170,7 +1171,7 @@ bool EssentialGraph::greedyTurn()
 			// Search over all children of v; turning essential arrows
 			children = getChildren(v);
 			for (ui = children.begin(); ui != children.end(); ++ui) {
-				DBOUT(2, "  trying to turn arrow (" << v << ", " << *ui << ")...");
+				dout.level(2) << "  trying to turn arrow (" << v << ", " << *ui << ")...\n";
 				N = set_intersection(neighbors, getParents(*ui));
 
 				// Add N as a set to check, and at the same time as a stop set.
@@ -1200,7 +1201,7 @@ bool EssentialGraph::greedyTurn()
 								diffScore -= _score->calcPartial(*ui, C_par);
 								C_par.erase(v);
 								diffScore += _score->calcPartial(*ui, C_par);
-								DBOUT(2, "  score difference for (u, v, C) = (" << *ui << ", " << v << ", " << C << "): " << diffScore);
+								dout.level(2) << "  score difference for (u, v, C) = (" << *ui << ", " << v << ", " << C << "): " << diffScore << "\n";
 
 
 								// If new score is better than previous optimum, and there is no
@@ -1236,11 +1237,11 @@ bool EssentialGraph::greedyTurn()
 	// Turn the highest-scoring edge
 	if (diffScore_opt > 0.) {
 		// For DEBUGGING purposes
-		DBOUT(1, "  turning edge (" << v_opt << ", " << u_opt << ") with C = " << C_opt << ", S = " << diffScore_opt);
+		dout.level(1) << "  turning edge (" << v_opt << ", " << u_opt << ") with C = " << C_opt << ", S = " << diffScore_opt << "\n";
 		turn(u_opt, v_opt, C_opt);
-		#if DEBUG_OUTPUT_LEVEL >= 2
-			getAdjacencyMatrix().print("A = ");
-		#endif
+//		#if DEBUG_OUTPUT_LEVEL >= 2
+//			getAdjacencyMatrix().print("A = ");
+//		#endif
 		return true;
 	}
 	else

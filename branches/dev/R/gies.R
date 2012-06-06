@@ -83,7 +83,7 @@ r.gauss.pardag <- function(p,
     H <- sqrt(H)
     for (i in 1:p)
       if (length(edL[[i]]) > 0)
-        result$params[[i]][-c(1, 2)] <- pars[[i]][-c(1, 2)] * H[edL[[i]]] / H[i]
+        result$.params[[i]][-c(1, 2)] <- pars[[i]][-c(1, 2)] * H[edL[[i]]] / H[i]
   }
   
   ## Validate object
@@ -126,3 +126,12 @@ rmvnorm.ivent <- function(n, object, target = integer(0), target.value = numeric
   t(solve(t(A), Y))
 }
 
+##################################################
+## Structure learning algorithms
+##################################################
+gies <- function(p, targets, score, ...)
+{
+  essgraph <- new("ess.graph", nodes = as.character(1:p), targets = targets, score = score)
+  essgraph$gies(...)
+  return(list(essgraph = essgraph, repr = essgraph$repr()))
+}

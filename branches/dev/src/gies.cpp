@@ -17,7 +17,8 @@ typedef unsigned int uint;
 
 #include "score.hpp"
 #include "greedy.hpp"
-
+#define DEFINE_GLOBAL_DEBUG_STREAM
+#include "gies_debug.hpp"
 
 using namespace boost::lambda;
 
@@ -109,18 +110,25 @@ RcppExport SEXP causalInference(
 	// Initialize automatic exception handling; manual one does not work any more...
 	initUncaughtExceptionHandler();
 
+	// Cast debug level from options
+	Rcpp::List options(argOptions);
+	dout.setLevel(Rcpp::as<int>(options["DEBUG.LEVEL"]));
+
 	// Cast graph
+	dout.level(1) << "Casting graph...\n";
 	EssentialGraph graph = castGraph(argGraph);
 
 	// Cast list of targets
+	dout.level(1) << "Casting list of targets...\n";
 	TargetFamily targets = castTargets(argTargets);
 
-	// Cast algorithm string and options
+	// Cast algorithm string
+	dout.level(1) << "Casting algorithm and options...\n";
 	std::string algName = Rcpp::as<std::string>(argAlgorithm);
-	Rcpp::List options(argOptions);
 
 	// TODO: cast score type, allow for C++ scoring objects
 	// Up to now, only R functions are allowed for scoring...
+	dout.level(1) << "Casting score...\n";
 	BICScore* score;
 	score = new BICScoreRFunction(graph.getVertexCount(), &targets, Rcpp::Function(argScore), Rcpp::Function(argScore));
 
@@ -130,6 +138,7 @@ RcppExport SEXP causalInference(
 	std::vector<int> steps;
 
 	// Cast option for limits in vertex degree
+	dout.level(1) << "Casting maximum vertex degree...\n";
 	Rcpp::NumericVector maxDegree = options["maxdegree"];
 	if (maxDegree.size() > 0) {
 		if (maxDegree.size() == 1) {
@@ -156,6 +165,8 @@ RcppExport SEXP causalInference(
 	// Perform inference algorithm:
 	// GIES
 	if (algName == "GIES") {
+		dout.level(1) << "Performing GIES...\n";
+
 		// Enable caching, if requested
 		if (options["caching"])
 			graph.enableCaching();
@@ -182,6 +193,8 @@ RcppExport SEXP causalInference(
 
 	// Single phase or step of GIES
 	else if (algName == "GIES-F" || algName == "GIES-B" || algName == "GIES-T") {
+		dout.level(1) << "Performing " << algName << "...\n";
+
 		// Limit to single step if requested
 		stepLimit = options["maxsteps"];
 		if (stepLimit == 0)
@@ -233,6 +246,18 @@ RcppExport SEXP causalInference(
 	delete score;
 	return Rcpp::List::create(Rcpp::Named("in.edges") = wrapGraph(graph),
 			Rcpp::Named("steps") = steps);
+}
+
+RcppExport SEXP representative(SEXP argGraph)
+{
+	// Initialize automatic exception handling; manual one does not work any more...
+	initUncaughtExceptionHandler();
+
+	// Cast graph
+	EssentialGraph graph = castGraph(argGraph);
+
+	// Get and return representative
+	return wrapGraph(graph.getRepresentative());
 }
 
 

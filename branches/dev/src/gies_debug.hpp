@@ -56,4 +56,45 @@ template <typename T> ostream& operator<<(ostream& out, const set<T>& s) {
 #define DBOUT( level, message )
 #endif
 
+namespace std {
+
+class nullbuf: public streambuf
+{
+	int xputc(int) { return 0; }
+	streamsize xsputn(char const *, streamsize n) { return n; }
+	int sync() { return 0; }
+};
+
+} // NAMESPACE std
+
+class DebugStream
+{
+	int _level;
+	std::nullbuf _nullbuf;
+	std::ostream _nullstream;
+
+public:
+	DebugStream() : _level(0), _nullstream(&_nullbuf) {}
+	DebugStream(int level) : _level(level), _nullstream(&_nullbuf) {}
+
+	void setLevel(const int level) { _level = level; }
+
+	int getLevel() const { return _level; }
+
+	std::ostream& level(const int messageLevel)
+	{
+		if (messageLevel <= _level)
+			return std::cout;
+		return _nullstream;
+	}
+};
+
+#ifdef DEFINE_GLOBAL_DEBUG_STREAM
+#define GLOBAL
+#else
+#define GLOBAL extern
+#endif
+
+GLOBAL DebugStream dout;
+
 #endif /* GIES_DEBUG_HPP_ */

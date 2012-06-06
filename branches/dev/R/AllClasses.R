@@ -27,17 +27,19 @@ setClass("pcAlgo",
 #' The meaning of the "params" depends on the model used.
 setRefClass("pardag",
     fields = list(
-        nodes = "vector",
-        in.edges = "list",
-        params = "list"),
+        .nodes = "vector",
+        .in.edges = "list",
+        .params = "list"),
     
     validity = function(object) {
-      if (any(names(object$in.edges) != object$nodes))
+      if (anyDuplicated(object$.nodes))
+        return("The node names must be unique")
+      if (any(names(object$.in.edges) != object$.nodes))
         return("The elements of 'in.edges' must be named after the nodes.")
-      if (!all(sapply(object$in.edges, is.numeric)))
+      if (!all(sapply(object$.in.edges, is.numeric)))
         return("The vectors in 'in.edges' must contain numbers.")
       
-      edgeRange <- range(unlist(object$in.edges))
+      edgeRange <- range(unlist(object$.in.edges))
       if (object$edge.count() > 0 &&
           (edgeRange[1] < 1 || edgeRange[2] > object$node.count()))
         return("Invalid range of edge sources.")
@@ -46,14 +48,27 @@ setRefClass("pardag",
     },
     
     methods = list(
+        #' Constructor
+        initialize = function(nodes, in.edges = NULL, params = list()) {
+          .nodes <<- nodes
+          
+          if (is.null(in.edges))
+            .in.edges <<- replicate(length(nodes), integer(0), simplify = FALSE)
+          else
+            .in.edges <<- lapply(1:length(in.edges), function(i) as.integer(in.edges[[i]]))
+          names(.in.edges) <<- nodes
+          
+          .params <<- params
+        },
+        
         #' Yields the number of nodes
         node.count = function() {
-          length(nodes)
+          length(.nodes)
         },
         
         #' Yields the total number of edges in the graph
         edge.count = function() {
-          sum(sapply(in.edges, length))
+          sum(sapply(.in.edges, length))
         }
         ),
         
@@ -63,8 +78,8 @@ setRefClass("pardag",
 setAs("pardag", "graphNEL",
     def = function(from) {
       result <- new("graphNEL", 
-          nodes = from$nodes, 
-          edgeL = from$in.edges, 
+          nodes = from$.nodes, 
+          edgeL = from$.in.edges, 
           edgemode = "directed")
       return(reverseEdgeDirections(result))
     })
@@ -89,7 +104,8 @@ setRefClass("int.score",
         .target.index = "vector",
         .data = "matrix",
         decomp = "logical",
-        c.fcn = "character"),
+        c.fcn = "character",
+        .pardag.class = "character"),
     
     validity = function(object) {
       ## Check if targets are valid (i.e., unique)
@@ -144,7 +160,7 @@ setRefClass("int.score",
         #' Calculates the global score of a DAG
         global.score = function(dag) {
           sum(sapply(1:.node.count,
-                  function(i) local.score(i, dag$in.edges[[i]])))
+                  function(i) local.score(i, dag$.in.edges[[i]])))
         },
         
         #' Calculates the global score of a DAG which is only specified
@@ -162,7 +178,7 @@ setRefClass("int.score",
         #' Calculates the global MLE
         global.mle = function(dag) {
           lapply(1:.node.count,
-              function(i) local.mle(i, dag$in.edges[[i]]))
+              function(i) local.mle(i, dag$.in.edges[[i]]))
         }
         ),
     "VIRTUAL")
@@ -197,6 +213,9 @@ setRefClass("gauss.bic.int.score",
           
           ## BIC is decomposable
           decomp <<- TRUE
+          
+          ## Underlying causal model class: Gaussian
+          .pardag.class <<- "gauss.pardag"
           
           ## If an intercept is allowed, add column of ones to data matrix
           .intercept <<- intercept
@@ -267,8 +286,6 @@ setRefClass("gauss.bic.int.score",
           parents <- sort(parents)
           if (.intercept)
             parents <- c(.node.count + 1, parents)
-          else
-            beta <- 0
           
           sigma2 <- .scatter[[.scatter.index[vertex]]][vertex, vertex]
           if (length(parents) != 0) {
@@ -276,8 +293,13 @@ setRefClass("gauss.bic.int.score",
                 .scatter[[.scatter.index[vertex]]][vertex, parents])
             sigma2 <- sigma2 - .scatter[[.scatter.index[vertex]]][vertex, parents] %*% beta
           }
+          else
+            beta <- numeric(0)
           
-          return(c(sigma2/.data.count[vertex], beta))
+          if (.intercept)
+            return(c(sigma2/.data.count[vertex], beta))
+          else
+            return(c(sigma2/.data.count[vertex], 0, beta))
         }
         )
     )
@@ -285,20 +307,19 @@ setRefClass("gauss.bic.int.score",
 #' Interventional essential graph
 setRefClass("ess.graph",
     fields = list(
-        nodes = "vector",
-        in.edges = "list",
+        .nodes = "vector",
+        .in.edges = "list",
         targets = "list",
-        repr = "pardag",
         score = "int.score"
     ),
     
     validity = function(object) {
-      if (any(names(object$in.edges) != object$nodes))
+      if (any(names(object$.in.edges) != object$.nodes))
         return("The elements of 'in.edges' must be named after the nodes.")
-      if (!all(sapply(object$in.edges, is.numeric)))
+      if (!all(sapply(object$.in.edges, is.numeric)))
         return("The vectors in 'in.edges' must contain numbers.")
       
-      edgeRange <- range(unlist(object$in.edges))
+      edgeRange <- range(unlist(object$.in.edges))
       if (object$edge.count() > 0 &&
           (edgeRange[1] < 1 || edgeRange[2] > object$node.count()))
         return("Invalid range of edge sources.")
@@ -307,18 +328,32 @@ setRefClass("ess.graph",
     },
     
     methods = list(
+        #' Constructor
+        initialize = function(nodes, in.edges, ...) {
+          .nodes <<- nodes
+          if (missing(in.edges)) {
+            in.edges <- replicate(length(nodes), integer(0))
+            names(in.edges) <- nodes
+          }
+          .in.edges <<- in.edges
+          
+          callSuper(...)
+        },
+
         #' Creates a list of options for the C++ function "causalInference";
         #' internal function
         causal.inf.options = function(caching = TRUE, 
             turning = TRUE, 
             maxdegree = integer(0),
             maxsteps = 0,
-            childrenonly = integer(0)) {
+            childrenonly = integer(0),
+            DEBUG.LEVEL = 0) {
           list(caching = caching,
               turning = turning,
               maxdegree = maxdegree,
               maxsteps = maxsteps,
-              childrenonly = childrenonly)
+              childrenonly = childrenonly,
+              DEBUG.LEVEL = DEBUG.LEVEL)
         },
         
         #' Performs one greedy step
@@ -336,17 +371,15 @@ setRefClass("ess.graph",
           substr(direction, 1, 1) <- toupper(substr(direction, 1, 1))
           
           new.graph <- .Call("causalInference", 
-              in.edges,
+              .in.edges,
               targets,
               alg.name,
               score.fcn, 
               causal.inf.options(caching = FALSE, maxsteps = 1),
               PACKAGE = "pcalg")
           if (new.graph$steps > 0) {
-            in.edges <<- new.graph$in.edges
-            names(in.edges) <<- nodes
-            
-            ## TODO: Calculate new representative with MLE
+            .in.edges <<- new.graph$.in.edges
+            names(.in.edges) <<- .nodes
           }
           
           return(new.graph$steps == 1)
@@ -358,16 +391,14 @@ setRefClass("ess.graph",
               function(edges) score$global.score.int(edges))
           substr(direction, 1, 1) <- toupper(substr(direction, 1, 1))
           
-          new.graph <- .Call(sprintf("greedy%s", direction), in.edges, score.fcn)
-          if (new.graph$steps > 0) {
-            in.edges <<- new.graph$in.edges
-            repr <<- new.graph$repr
-          }
+          new.graph <- .Call(sprintf("greedy%s", direction), .in.edges, score.fcn)
+          if (new.graph$steps > 0)
+            .in.edges <<- new.graph$in.edges
           
           return(new.graph$steps)
         },
         
-        ## Performs GIES from an arbitrary start DAG
+        #' Performs GIES from an arbitrary start DAG
         gies = function(...) {
           if (score$decomp)
             score.fcn <- function(vertex, parents) score$local.score(vertex, parents)
@@ -375,29 +406,62 @@ setRefClass("ess.graph",
             score.fcn <- function(edges) score$global.score.int(edges)
           
           new.graph <- .Call("causalInference", 
-              in.edges,
+              .in.edges,
               targets,
               "GIES",
               score.fcn, 
               causal.inf.options(...),
               PACKAGE = "pcalg")
           
-          in.edges <<- new.graph$in.edges
-          names(in.edges) <<- nodes
+          .in.edges <<- new.graph$in.edges
+          names(.in.edges) <<- .nodes
           
           ## TODO: calculate new representative with MLE
+        },
+        
+        #' Yields a representative (estimating parameters via MLE)
+        repr = function() {
+          in.edges <- .Call("representative", .in.edges, PACKAGE = "pcalg")
+          ## TODO: rewrite constructor of gauss.pardag s.t. names of in-edge list
+          ## are automatically adjusted
+          names(in.edges) <- .nodes
+          result <- new(score$.pardag.class, nodes = .nodes, in.edges = in.edges)
+          result$.params <- score$global.mle(result)
+          
+          return(result)
         }
         ))
-    
+
+#' Coercion to a graphNEL instance
+setAs("ess.graph", "graphNEL",
+    def = function(from) {
+      result <- new("graphNEL", 
+          nodes = from$.nodes, 
+          edgeL = from$.in.edges, 
+          edgemode = "directed")
+      return(reverseEdgeDirections(result))
+    })
+        
+#' Plot method (needs Rgraphviz to work!!)
+setMethod("plot", "ess.graph", 
+    function(x, y, ...) {
+      if (!validObject(x))
+        stop("The parametric DAG model to be plotted is not valid")
+      
+      if (missing(y))
+        y <- "dot"
+      invisible(plot(as(x, "graphNEL"), y, ...))
+    })
+        
 #' Gaussian causal model
 setRefClass("gauss.pardag",
     contains = "pardag",
     
     validity = function(object) {
-      if (any(names(object$params) != object$nodes))
+      if (any(names(object$.params) != object$.nodes))
         return("The elements of 'params' must be named after the nodes.")
       if (!all(sapply(1:object$node.count(), 
-          function(i) length(object$params[[i]]) == length(object$in.edges[[i]]) + 2)))
+          function(i) length(object$.params[[i]]) == length(object$.in.edges[[i]]) + 2)))
         return("The number of parameters does not match the number of in-edges.")
       
       return(TRUE)
@@ -407,24 +471,24 @@ setRefClass("gauss.pardag",
         
         #' Yields the intercept
         intercept = function() {
-          sapply(params, function(par.vec) par.vec[2])
+          sapply(.params, function(par.vec) par.vec[2])
         },
         
         #' Sets the intercept
         set.intercept = function(value) {
           for (i in 1:node.count())
-            params[[i]][2] <<- value[i]
+            .params[[i]][2] <<- value[i]
         },
         
         #' Yields the error variances
         err.var = function() {
-          sapply(params, function(par.vec) par.vec[1])
+          sapply(.params, function(par.vec) par.vec[1])
         },
         
         #' Sets the error variances
         set.err.var = function(value) {
           for (i in 1:node.count())
-            params[[i]][1] <<- value[i]
+            .params[[i]][1] <<- value[i]
         },
         
         #' Yields the weight matrix
@@ -435,11 +499,11 @@ setRefClass("gauss.pardag",
           p <- node.count()
           result <- matrix(0, p, p)
           for (i in 1:p)
-            result[in.edges[[i]], i] <- params[[i]][-c(1, 2)]
+            result[.in.edges[[i]], i] <- .params[[i]][-c(1, 2)]
           
           ## Set row and column names
-          rownames(result) <- nodes
-          colnames(result) <- nodes
+          rownames(result) <- .nodes
+          colnames(result) <- .nodes
           
           return(result)
         },

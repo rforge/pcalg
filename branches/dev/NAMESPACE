@@ -90,7 +90,8 @@ export(randomDAG,
        faith.check,
        rfci,
        r.gauss.pardag,
-       rmvnorm.ivent)
+       rmvnorm.ivent,
+       gies)
 
 exportClasses("pcAlgo",
               "fciAlgo",
