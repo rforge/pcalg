@@ -84,6 +84,13 @@ setAs("pardag", "graphNEL",
       return(reverseEdgeDirections(result))
     })
 
+#' Coercion to a (logical) matrix
+setAs("pardag", "matrix",
+    def = function(from) {
+      p <- from$node.count()
+      sapply(1:p, function(i) 1:p %in% from$.in.edges[[i]])
+    })
+
 #' Plot method (needs Rgraphviz to work!!)
 setMethod("plot", "pardag", 
     function(x, y, ...) {
@@ -340,6 +347,11 @@ setRefClass("ess.graph",
           callSuper(...)
         },
 
+        #' Yields the number of nodes
+        node.count = function() {
+          length(.nodes)
+        },
+        
         #' Creates a list of options for the C++ function "causalInference";
         #' internal function
         causal.inf.options = function(caching = TRUE, 
@@ -441,7 +453,14 @@ setAs("ess.graph", "graphNEL",
           edgemode = "directed")
       return(reverseEdgeDirections(result))
     })
-        
+
+#' Coercion to a (logical) matrix
+setAs("ess.graph", "matrix",
+    def = function(from) {
+      p <- from$node.count()
+      sapply(1:p, function(i) 1:p %in% from$.in.edges[[i]])
+    })
+
 #' Plot method (needs Rgraphviz to work!!)
 setMethod("plot", "ess.graph", 
     function(x, y, ...) {
