@@ -260,6 +260,22 @@ RcppExport SEXP representative(SEXP argGraph)
 	return wrapGraph(graph.getRepresentative());
 }
 
+RcppExport SEXP dagToEssentialGraph(SEXP argGraph, SEXP argTargets)
+{
+	// Initialize automatic exception handling; manual one does not work any more...
+	initUncaughtExceptionHandler();
+
+	// Cast arguments
+	EssentialGraph graph = castGraph(argGraph);
+	TargetFamily targets = castTargets(argTargets);
+
+	// Calculate essential graph
+	graph.setTargets(&targets);
+	graph.replaceUnprotected();
+
+	// Return essential graph
+	return wrapGraph(graph);
+}
 
 //RcppExport SEXP optimalTarget(SEXP argAdjacency, SEXP argMaxSize)
 //{

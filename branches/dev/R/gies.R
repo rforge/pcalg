@@ -135,3 +135,10 @@ gies <- function(p, targets, score, ...)
   essgraph$gies(...)
   return(list(essgraph = essgraph, repr = essgraph$repr()))
 }
+
+dag2essgraph <- function(dag, targets = list(integer(0))) {
+  new("ess.graph", 
+      nodes = dag$.nodes, 
+      in.edges = .Call("dagToEssentialGraph", dag$.in.edges, targets),
+      targets = targets)
+}

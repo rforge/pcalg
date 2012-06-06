@@ -338,11 +338,11 @@ setRefClass("ess.graph",
         #' Constructor
         initialize = function(nodes, in.edges, ...) {
           .nodes <<- nodes
-          if (missing(in.edges)) {
-            in.edges <- replicate(length(nodes), integer(0))
-            names(in.edges) <- nodes
-          }
-          .in.edges <<- in.edges
+          if (missing(in.edges))
+            .in.edges <- replicate(length(nodes), integer(0))
+          else
+            .in.edges <<- in.edges
+          names(.in.edges) <<- nodes
           
           callSuper(...)
         },
@@ -350,6 +350,11 @@ setRefClass("ess.graph",
         #' Yields the number of nodes
         node.count = function() {
           length(.nodes)
+        },
+        
+        #' Yields the total number of edges in the graph
+        edge.count = function() {
+          sum(sapply(.in.edges, length))
         },
         
         #' Creates a list of options for the C++ function "causalInference";
