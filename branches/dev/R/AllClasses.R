@@ -339,7 +339,7 @@ setRefClass("ess.graph",
         initialize = function(nodes, in.edges, ...) {
           .nodes <<- nodes
           if (missing(in.edges))
-            .in.edges <- replicate(length(nodes), integer(0))
+            .in.edges <<- replicate(length(nodes), integer(0))
           else
             .in.edges <<- in.edges
           names(.in.edges) <<- nodes
