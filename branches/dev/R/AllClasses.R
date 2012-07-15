@@ -415,8 +415,9 @@ setRefClass("ess.graph",
           return(new.graph$steps)
         },
         
-        #' Performs GIES from an arbitrary start DAG
-        gies = function(...) {
+        #' Performs a causal inference from an arbitrary start DAG
+        #' with a specified algorithm
+        caus.inf = function(algorithm, ...) {
           if (score$decomp)
             score.fcn <- function(vertex, parents) score$local.score(vertex, parents)
           else
@@ -425,23 +426,27 @@ setRefClass("ess.graph",
           new.graph <- .Call("causalInference", 
               .in.edges,
               targets,
-              "GIES",
+              algorithm,
               score.fcn, 
               causal.inf.options(...),
               PACKAGE = "pcalg")
           
           .in.edges <<- new.graph$in.edges
           names(.in.edges) <<- .nodes
-          
-          ## TODO: calculate new representative with MLE
         },
+        
+        #' Performs GIES from an arbitrary start DAG
+        gies = function(...) caus.inf("GIES", ...),
+        
+        #' Performs GDS from an arbitrary start DAG
+        gds = function(...) caus.inf("GDS", ...),
+        
+        #' DP search of Silander and Myllymäki (ignores the start DAG!)
+        silander = function(...) caus.inf("Silander", ...),
         
         #' Yields a representative (estimating parameters via MLE)
         repr = function() {
           in.edges <- .Call("representative", .in.edges, PACKAGE = "pcalg")
-          ## TODO: rewrite constructor of gauss.pardag s.t. names of in-edge list
-          ## are automatically adjusted
-          names(in.edges) <- .nodes
           result <- new(score$.pardag.class, nodes = .nodes, in.edges = in.edges)
           result$.params <- score$global.mle(result)
           

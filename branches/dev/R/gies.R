@@ -129,12 +129,18 @@ rmvnorm.ivent <- function(n, object, target = integer(0), target.value = numeric
 ##################################################
 ## Structure learning algorithms
 ##################################################
-gies <- function(p, targets, score, ...)
+caus.inf <- function(algorithm, p, targets, score, ...)
 {
   essgraph <- new("ess.graph", nodes = as.character(1:p), targets = targets, score = score)
-  essgraph$gies(...)
+  essgraph$caus.inf(algorithm, ...)
   return(list(essgraph = essgraph, repr = essgraph$repr()))
 }
+
+gies <- function(p, targets, score, ...) caus.inf("GIES", p, targets, score, ...)
+
+gds <- function(p, targets, score, ...) caus.inf("GDS", p, targets, score, ...)
+
+silander <- function(p, targets, score, ...) caus.inf("Silander", p, targets, score, ...)
 
 dag2essgraph <- function(dag, targets = list(integer(0))) {
   new("ess.graph", 
