@@ -103,4 +103,6 @@ exportClasses("pcAlgo",
               "gauss.bic.int.score",
               "ess.graph")
 
+exportMethods("summary","show","plot")
+
 useDynLib(pcalg)
