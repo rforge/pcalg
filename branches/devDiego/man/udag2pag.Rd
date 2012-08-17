@@ -1,26 +1,31 @@
 \name{udag2pag}
 \alias{udag2pag}
-\title{Extend a pcAlgo-object containing a skeleton to a PAG}
+\title{Extend the final skeleton into a PAG}
 \description{
-This function extends a pcAlgo-object containing a skeleton and
-corresponding conditional independence information to a Partial
-Ancestral Graph (PAG). The pcAlgo-object must have been estimated with
-the option \code{psepset=TRUE}. The result is an adjacency matrix
+This function extends an undirected final skeleton into a Partial
+Ancestral Graph (PAG). The final skeleton must have been estimated
+either with the function \link{skeleton} (if the search on
+Possible-D-SEP has not been performed) or with the
+function \link{pdsep}. The result is an adjacency matrix
 indicating also the edge marks.
 }
 \usage{
-udag2pag(gInput, rules, verbose, unfVect = NULL)
+udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose)
 }
 \arguments{
-  \item{gInput}{pcAlgo-object containing skeleton and
-    cond. ind. information; must have been estimated with
-    \code{psepset=TRUE}}
+  \item{pag}{adjacency matrix of the final skeleton of size pxp.}
+  \item{sepset}{List of length p; each element of the list
+    contains another list of length p. The element
+    \code{sepset[[x]][[y]]} contains the separation set that made the edge
+    between \code{x} and \code{y} drop out. This object is thought to be
+    obtained from a \code{pcAlgo}-object.}
   \item{rules}{array of length 10 containing TRUE or FALSE for each
     rule. TRUE in position i means that rule i (Ri) will be used. Per
     default, all rules are set to TRUE.}
-  \item{verbose}{0: No output; 1: Details. Default is 0.}
   \item{unfVect}{Vector containing numbers that encode the unfaithful
-    triple (as returned by pc.cons.intern). This is needed in the conservative FCI.}
+    triple (as returned by pc.cons.intern). This is needed in the
+    conservative FCI.}
+  \item{verbose}{0: No output; 1: Details. Default is 0.}
 }
 \details{
   The skeleton is extended to a PAG using rules by Zhang (see
@@ -61,28 +66,34 @@ plot(g)
 ## define the latent variable
 L <- 1
 
+## compute the true covariance matrix of g
+cov.mat <- trueCov(g)
+      
+## delete rows and columns which belong to L
+true.cov <- cov.mat[-L,-L]
+      
+## transform it in a correlation matrix
+true.corr <- cov2cor(true.cov)
+
 ## generate 100000 samples of DAG using standard normal error distribution
+library(mvtnorm)
 n <- 100000
-d.mat <- rmvDAG(n, g, errDist = "normal")
+alpha <- 0.01
+d.mat <- rmvnorm(n, mean = rep(0,dim(true.corr)[1]), sigma = true.cov) 
 
-## delete rows and columns corresponding to the latent variable
-d.mat <- d.mat[-L,-L]
+## estimate the skeleton of given data
+suffStat <- list(C = cor(d.mat), n = n)
+indepTest <- gaussCItest
+resD <- skeleton(suffStat, indepTest, dim(true.corr)[2], alpha=alpha,
+verbose=FALSE)
 
-## estimate the skeleton of given data using psepset=TRUE
-(resD <- pcAlgo(d.mat, alpha=0.05, psepset=TRUE))
+## estimate the final skeleton of given data using Possible-D-Sep
+pdsepRes <- pdsep(resD@graph, suffStat, indepTest, dim(true.corr)[2],
+resD@sepset, alpha = alpha, m.max = Inf, pMax = resD@pMax, verbose = FALSE)
 
-## extend the pcalgo-object into a PAG using all 10 rules
+## extend the skeleton into a PAG using all 10 rules
 rules <- rep(TRUE,10)
-resP <- udag2pag(resD, rules=rules, verbose=1)
-colnames(resP) <- rownames(resP) <- graph::nodes(g)[-L]
-
-if (require(Rgraphviz)) {
-  ## plot the original DAG and the PAG
-  op <- par(mfrow=c(1,2))
-  plot(g, main="original (random) DAG")
-  plotAG(resP)
-  par(op)
-}
+resP <- udag2pag(pag = pdsepRes$G, pdsepRes$sepset, rules = rules, verbose = 1)
 }
 \keyword{multivariate}
 \keyword{models}
