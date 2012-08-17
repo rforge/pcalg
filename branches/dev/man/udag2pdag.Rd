@@ -8,7 +8,7 @@
   is a \code{"pcAlgo"}-object as well.
 }
 \usage{
-udag2pdag(gInput,verbose)
+udag2pdag(gInput, verbose)
 }
 \arguments{
   \item{gInput}{pcAlgo-object containing skeleton and

@@ -4,12 +4,11 @@
 \description{
   Computes the Possible-D-Sep for each node
   and tests conditional independence given all subsets of
-  Possible-D-Sep.  The graph is updated accordingly.
+  Possible-D-Sep. The graph is updated accordingly.
 }
 \usage{
-pdsep(skel, suffStat, indepTest, p, sepset,
-      pMax, NAdelete = TRUE, verbose = FALSE,
-      alpha, unfVect = NULL, biCC = FALSE)
+pdsep(skel, suffStat, indepTest, p, sepset, alpha, m.max, pMax,
+pdsep.max, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
 }
 \arguments{
   \item{skel}{Graph object returned by \code{\link{skeleton}}.}
@@ -31,23 +30,34 @@ pdsep(skel, suffStat, indepTest, p, sepset,
     \code{sepset[[x]][[y]]} contains the separation set that made the edge
     between \code{x} and \code{y} drop out. This object is thought to be
     obtained from a \code{pcAlgo}-object or \code{fciAlgo}-object.}
+  \item{alpha}{Significance level for the individual conditional
+    independence tests}
+  \item{m.max}{Maximum size of the conditioning sets that are considered in the
+    conditional independence tests.}
   \item{pMax}{Matrix with the maximal p-values of conditional
     independence tests in a previous call of \code{\link{skeleton}},
     \code{\link{pc}} or \code{\link{fci}} which produced \code{G}. This
     object is thought to be obtained from a \code{pcAlgo}-object or
     \code{fciAlgo}-object.}
+  \item{pdsep.max}{Maximum size of Possible-D-SEP for which subsets are
+    considered as conditioning sets in the conditional independence
+    tests. If the size of Possible-D-SEP(\code{x}) is bigger than
+    pdsep.max, no conditional independence tests are performed between
+    \code{x} and its neighbours given subsets of
+    Possible-D-SEP(\code{x}) and the edges are simply left in the graph.
+    Note that if pdsep.max is less than Inf, the final PAG
+    may be a supergraph than the one computed with pdsep.max = Inf,
+    because less tests may have been performed in the former.}
   \item{NAdelete}{If indepTest returns \code{NA} and this option is
     \code{TRUE}, the corresponding edge is deleted. If this option is
     \code{FALSE}, the edge is not deleted.}
-  \item{verbose}{If \code{TRUE}, detailed output is provided.}
-  \item{alpha}{Significance level for the individual conditional
-    independence tests}
   \item{unfVect}{vector containing numbers that encode the unfaithful
-    triple (as returned by \code{\link{pc.cons.intern}}).  This is
+    triple (as returned by \code{\link{pc.cons.intern}}). This is
     needed in the conservative FCI.}
   \item{biCC}{logical; if true, only nodes on some path between a and c are
     considered to be in sepset(a,c).  Uses biconnected components,
     \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
+  \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
 \value{A list with several elements:
   \item{G}{Updated adjecency matrix}
@@ -108,6 +118,6 @@ n.edgetestsSKEL <- skel@n.edgetests
 max.ordSKEL <- skel@max.ord
 
 ## call pdsep to find possible d-sep and enhance the skeleton
-pdsepRes <- pdsep(skel@graph, suffStat, indepTest, p, sepset, pMax, NAdelete,
-verbose = TRUE, alpha)
+pdsepRes <- pdsep(skel@graph, suffStat, indepTest, p, sepset, alpha,
+m.max = Inf, pMax, NAdelete, verbose = TRUE)
 }

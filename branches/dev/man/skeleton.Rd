@@ -7,8 +7,8 @@
   using the PC-algorithm.
 }
 \usage{
-skeleton(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-fixedEdges = NULL, NAdelete = TRUE, m.max = Inf)
+skeleton(suffStat, indepTest, p, alpha, fixedGaps = NULL,
+fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
 }
 \arguments{
   \item{suffStat}{Sufficient statistics: List containing all necessary
@@ -27,7 +27,6 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf)
   \item{p}{Number of variables.}
   \item{alpha}{Significance level for the individual conditional
     independence tests.}
-  \item{verbose}{If \code{TRUE}, detailed output is provided.}
   \item{fixedGaps}{A logical matrix of dimension p*p. If entry
     \code{[i,j]} or \code{[j,i]} (or both) are TRUE, the edge i-j is
     removed before starting the algorithm. Therefore, this edge is
@@ -41,6 +40,7 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf)
     \code{FALSE}, the edge is not deleted.}
   \item{m.max}{Maximal size of the conditioning sets that are considered in the
     conditional independence tests.}
+  \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
 \value{An object of \code{\link{class}} \code{"pcAlgo"} (see
   \code{\linkS4class{pcAlgo}}) containing an estimate of the skeleton of

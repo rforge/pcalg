@@ -2,12 +2,14 @@
 \alias{rfci}
 \title{Estimate the equivalence class of a MAG (PAG) using the RFCI Algorithm}
 \description{
-Estimate the RFCI-PAG from observational data, using the RFCI-algorithm.
+  Estimate the equivalence class of a maximal ancestral graph (MAG) from
+  observational data, using the RFCI-algorithm.
 }
 
 \usage{
 rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-    fixedEdges = NULL, NAdelete = TRUE, m.max = Inf)
+    fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE,
+10), conservative = FALSE, cons.rules = FALSE)
 }
 
 \arguments{
@@ -39,8 +41,16 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   \item{NAdelete}{If indepTest returns \code{NA} and this option is
     \code{TRUE}, the corresponding edge is deleted. If this option is
     \code{FALSE}, the edge is not deleted.}
-  \item{m.max}{Maximal size of the conditioning sets that are considered in the
+  \item{m.max}{Maximum size of the conditioning sets that are considered in the
     conditional independence tests.}
+  \item{rules}{Logical vector of length 10 indicating which rules
+    should be used when directing edges. The order of the rules is taken
+    from Zhang (2009).}
+  \item{conservative}{If TRUE, the skeleton is computed in a
+    conservative way.}
+  \item{cons.rules}{If TRUE, an orientation rule that needs information
+  on definite non-colliders is only applied, if the corresponding
+  subgraph relevant for the rule does not involve an unfaithful triple.}
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
  \code{\linkS4class{fciAlgo}}) containing the estimated graph
@@ -50,7 +60,7 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
 }
 
 \details{ This function is rather similar to \link{fci}. However, it
-does not compute any possible d-sep sets and thus does not make tests
+does not compute any Possible-D-Sep sets and thus does not make tests
 conditioning on them. This makes RFCI much faster than FCI. The
 orientation rules for v-structures and rule 4 were modified in order to
 produce a PAG which, in the oracle version, is guaranteed to have the
@@ -58,8 +68,9 @@ correct ancestral relationships.}
 
 \references{
   Diego Colombo, Marloes H. Maathuis, Markus Kalisch, Thomas
-  S. Richardson (2011). Learning high-dimensional DAGs with latent and
-  selection variables. \emph{Arxiv}, http://arxiv.org/abs/1104.5617
+  S. Richardson (2012). Learning high-dimensional directed acyclic
+  graphs with latent and selection variables. \emph{Ann. Statist.} \bold{40},
+  294-321. 
 }
 \seealso{\code{\link{fci}} for estimating a PAG using the FCI algorithm;
   \code{\link{skeleton}} for estimating a skeleton
@@ -93,7 +104,54 @@ mycor <- cov2cor(trueCov(myDAG))
 ## find skeleton and CPDAG using the RFCI algorithm
 suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
 indepTest <- gaussCItest
-res <- rfci(suffStat, indepTest, p, alpha = 0.99, verbose=TRUE)
+res <- rfci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE)
+
+
+##################################################
+## Example with hidden variables
+## Zhang (2008), Fig. 6, p.1882
+##################################################
+
+## create the graph
+p <- 4
+amat1 <- t(matrix(c(0,1,0,0,1, 0,0,1,0,0, 0,0,0,1,0, 0,0,0,0,0, 0,0,0,1,0),5,5))
+colnames(amat1) <- rownames(amat1) <- as.character(1:5)
+L1 <- 1
+V1 <- as.character(1:5)
+edL1 <- vector("list",length=5)
+names(edL1) <- V1
+edL1[[1]] <- list(edges=c(2,4),weights=c(1,1))
+edL1[[2]] <- list(edges=3,weights=c(1))
+edL1[[3]] <- list(edges=5,weights=c(1))
+edL1[[4]] <- list(edges=5,weights=c(1))
+g1 <- new("graphNEL", nodes=V1, edgeL=edL1, edgemode="directed")
+
+## compute the true covariance matrix of g1
+cov.mat1 <- trueCov(g1)
+
+## delete rows and columns belonging to latent variable L1
+true.cov1 <- cov.mat1[-L1,-L1]
+
+## transform covariance matrix into a correlation matrix
+true.corr1 <- cov2cor(true.cov1)
+
+## find PAG with RFCI algorithm
+## as dependence "oracle", we use the true correlation matrix in the
+## function gaussCItest with a large "virtual sample size" and a large
+## alpha
+suffStat1 <- list(C = true.corr1, n = 10^9)
+indepTest1 <- gaussCItest
+true.pag1 <- rfci(suffStat1, indepTest1, p, alpha = 0.9999, verbose=TRUE)
+
+## define PAG given in paper
+corr.pag1 <- matrix(0,4,4)
+corr.pag1[1,] <- c(0,1,1,0)
+corr.pag1[2,] <- c(1,0,0,2)
+corr.pag1[3,] <- c(1,0,0,2)
+corr.pag1[4,] <- c(0,3,3,0)
+
+## check if estimated and correct PAG are in agreement
+all(corr.pag1==true.pag1@amat)
 
 }
 \keyword{multivariate}
