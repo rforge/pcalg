@@ -835,7 +835,7 @@ adj.check <- function(gm,x) {
 
 amat2dag <- function(amat) {
   ## Purpose: Transform the adjacency matrix of an PDAG to the adjacency
-  ## matrix of a DAG
+  ## matrix of a SOME DAG in the equiv. class
   ## ----------------------------------------------------------------------
   ## Arguments:
   ## - amat: adjacency matrix; x -> y if amat[x,y]=1,amat[y,x]=0
