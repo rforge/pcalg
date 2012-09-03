@@ -896,7 +896,7 @@ udag2pdag <- function(gInput, verbose=FALSE) {
   res <- gInput
   if (numEdges(gInput@graph)>0) {
     g <- as(gInput@graph,"matrix") ## g_ij if i->j
-    p <- dim(g)[1]
+    p <- as.numeric(dim(g)[1])
     pdag <- g
     ind <- which(g==1,arr.ind=TRUE)
 
@@ -1599,7 +1599,7 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL)
 
   ## collider
   g <- as(gInput@graph, "matrix")
-  p <- dim(g)[1]
+  p <- as.numeric(dim(g)[1])
   pdag <- g
   ind <- which(g==1, arr.ind=TRUE)
 
@@ -6377,14 +6377,13 @@ ancTS <- function(g) {
  an
 }
 
-dag2pag <- function(suffStat, indepTest, graph, ancList, L, alpha, rules = rep(TRUE,10), verbose = FALSE) {
+dag2pag <- function(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), verbose = FALSE) {
   ## Purpose: Perform fat oracle FCI-Algorithm, i.e., estimate PAG from
   ##          the true DAG
   ## ----------------------------------------------------------------------
   ## Arguments:
   ## - suffStat, indepTest: info for the tests
   ## - graph: the true DAG
-  ## - ancList: list containing the ancestors of each node in the graph
   ## - L: array containing the latent variables (columns in the adjacency matrix)
   ## - alpha: Significance level of individual partial correlation tests
   ## - rules: array of length 10 wich contains TRUE or FALSE corrsponding
@@ -6397,6 +6396,11 @@ dag2pag <- function(suffStat, indepTest, graph, ancList, L, alpha, rules = rep(T
   
   p <- numNodes(graph)
   cl <- match.call()
+  if (verbose) {
+    cat("Compute the ancestor sets\n================\n")
+  }
+  ##find the ancestor sets
+  ancList <- ancTS(graph)
   if (verbose) {
     cat("Compute Skeleton\n================\n")
   }

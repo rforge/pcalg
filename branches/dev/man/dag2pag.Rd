@@ -6,7 +6,7 @@
 Convert a DAG with latent variables to a Partially Ancestral Graph (PAG).
 }
 \usage{
-dag2pag(suffStat, indepTest, graph, ancList, L, alpha, rules = rep(TRUE,10), verbose = FALSE)
+dag2pag(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), verbose = FALSE)
 }
 
 \arguments{
@@ -23,10 +23,8 @@ dag2pag(suffStat, indepTest, graph, ancList, L, alpha, rules = rep(TRUE,10), ver
     all relevant elements for the conditional independence
     decisions. The return value of \code{indepTest} is the p-value of
     the test for conditional independence.}
-  \item{g}{DAG with \code{p} nodes (graph object).}
-  \item{ancList}{List of length \code{p} containing the ancestors of
-  each node in the graph \code{g}. This must be precomputed using the
-  function ancTS(g).}
+  \item{g}{DAG with \code{p} nodes (graph object). The graph must be
+  topological sorted (for example produced using \code{random.DAG}).}
   \item{L}{Array containing the labels of the nodes in the graph
   \code{g} corresponding to the latent variables.}
   \item{alpha}{Significance level for the individual conditional
@@ -63,9 +61,7 @@ set.seed(78)
 p <- 8
 g <- randomDAG(p, prob = 0.4)
 
-## compute the ancestors
 library(RBGL)
-anc.list <- ancTS(g)
 
 ## define nodes 2 and 6 to be latent variables
 L <- c(2,6)
@@ -82,10 +78,10 @@ true.corr <- cov2cor(cov.mat)
 ## alpha
 suffStat <- list(C=true.corr, n=10^9)
 indepTest <- gaussCItest
-true.pag <- dag2pag(suffStat, indepTest, g, anc.list, L, alpha=0.9999)
+true.pag <- dag2pag(suffStat, indepTest, g, L, alpha=0.9999)
 
 ##find PAG using fci-function
-## compute the true covariance matrix of g1
+## compute the true covariance matrix of g
 cov.mat1 <- trueCov(g)
 
 ## delete rows and columns belonging to latent variable L
