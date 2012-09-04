@@ -46,9 +46,9 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   \item{rules}{Logical vector of length 10 indicating which rules
     should be used when directing edges. The order of the rules is taken
     from Zhang (2009).}
-  \item{conservative}{If TRUE, the skeleton is computed in a
+  \item{conservative}{If \code{TRUE}, the skeleton is computed in a
     conservative way.}
-  \item{cons.rules}{If TRUE, an orientation rule that needs information
+  \item{cons.rules}{If \code{TRUE}, an orientation rule that needs information
   on definite non-colliders is only applied, if the corresponding
   subgraph relevant for the rule does not involve an unfaithful triple.}
 }
@@ -91,15 +91,6 @@ set.seed(42)
 p <- 7
 ## generate and draw random DAG :
 myDAG <- randomDAG(p, prob = 0.4)
-amat <- wgtMatrix(myDAG)
-amat[amat!=0] <- 1
-amat <- amat + t(amat)
-amat[amat!=0] <- 1
-
-myCPDAG <- dag2cpdag(myDAG)
-amat2 <- t(wgtMatrix(myCPDAG))
-
-mycor <- cov2cor(trueCov(myDAG))
 
 ## find skeleton and CPDAG using the RFCI algorithm
 suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
@@ -114,44 +105,44 @@ res <- rfci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE)
 
 ## create the graph
 p <- 4
-amat1 <- t(matrix(c(0,1,0,0,1, 0,0,1,0,0, 0,0,0,1,0, 0,0,0,0,0, 0,0,0,1,0),5,5))
-colnames(amat1) <- rownames(amat1) <- as.character(1:5)
-L1 <- 1
-V1 <- as.character(1:5)
-edL1 <- vector("list",length=5)
-names(edL1) <- V1
-edL1[[1]] <- list(edges=c(2,4),weights=c(1,1))
-edL1[[2]] <- list(edges=3,weights=c(1))
-edL1[[3]] <- list(edges=5,weights=c(1))
-edL1[[4]] <- list(edges=5,weights=c(1))
-g1 <- new("graphNEL", nodes=V1, edgeL=edL1, edgemode="directed")
+amat <- t(matrix(c(0,1,0,0,1, 0,0,1,0,0, 0,0,0,1,0, 0,0,0,0,0, 0,0,0,1,0),5,5))
+colnames(amat) <- rownames(amat) <- as.character(1:5)
+L <- 1
+V <- as.character(1:5)
+edL <- vector("list",length=5)
+names(edL) <- V
+edL[[1]] <- list(edges=c(2,4),weights=c(1,1))
+edL[[2]] <- list(edges=3,weights=c(1))
+edL[[3]] <- list(edges=5,weights=c(1))
+edL[[4]] <- list(edges=5,weights=c(1))
+g <- new("graphNEL", nodes=V, edgeL=edL, edgemode="directed")
 
-## compute the true covariance matrix of g1
-cov.mat1 <- trueCov(g1)
+## compute the true covariance matrix of g
+cov.mat <- trueCov(g)
 
-## delete rows and columns belonging to latent variable L1
-true.cov1 <- cov.mat1[-L1,-L1]
+## delete rows and columns belonging to latent variable L
+true.cov <- cov.mat[-L,-L]
 
 ## transform covariance matrix into a correlation matrix
-true.corr1 <- cov2cor(true.cov1)
+true.corr <- cov2cor(true.cov)
 
 ## find PAG with RFCI algorithm
 ## as dependence "oracle", we use the true correlation matrix in the
 ## function gaussCItest with a large "virtual sample size" and a large
 ## alpha
-suffStat1 <- list(C = true.corr1, n = 10^9)
-indepTest1 <- gaussCItest
-true.pag1 <- rfci(suffStat1, indepTest1, p, alpha = 0.9999, verbose=TRUE)
+suffStat <- list(C = true.corr, n = 10^9)
+indepTest <- gaussCItest
+rfci.pag <- rfci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE)
 
 ## define PAG given in paper
-corr.pag1 <- matrix(0,4,4)
-corr.pag1[1,] <- c(0,1,1,0)
-corr.pag1[2,] <- c(1,0,0,2)
-corr.pag1[3,] <- c(1,0,0,2)
-corr.pag1[4,] <- c(0,3,3,0)
+corr.pag <- matrix(0,4,4)
+corr.pag[1,] <- c(0,1,1,0)
+corr.pag[2,] <- c(1,0,0,2)
+corr.pag[3,] <- c(1,0,0,2)
+corr.pag[4,] <- c(0,3,3,0)
 
 ## check if estimated and correct PAG are in agreement
-all(corr.pag1==true.pag1@amat)
+all(corr.pag == rfci.pag@amat)
 
 }
 \keyword{multivariate}

@@ -11,10 +11,11 @@ the final adjacency matrix indicating also the edge marks and the
 updated sepsets.  
 }
 \usage{
-udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose)
+udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
+10), unfVect = NULL, verbose = FALSE)
 }
 \arguments{
-  \item{apag}{adjacency matrix of the pcAlgo-object of size pxp}
+  \item{apag}{adjacency matrix of the pcAlgo-object of size p*p}
   \item{suffStat}{Sufficient statistics: List containing all necessary
     elements for the conditional independence decisions in the
     function \code{indepTest}.}
@@ -35,13 +36,13 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE, 10), unfVe
     \code{sepset[[x]][[y]]} contains the separation set that made the edge
     between \code{x} and \code{y} drop out. This object is thought to be
     obtained from a \code{pcAlgo}-object.}
-  \item{rules}{array of length 10 containing TRUE or FALSE for each
-    rule. TRUE in position i means that rule i (Ri) will be used. Per
-    default, all rules are set to TRUE.}
+  \item{rules}{array of length 10 containing \code{TRUE} or \code{FALSE} for each
+    rule. \code{TRUE} in position i means that rule i (Ri) will be used. Per
+    default, all rules are set to \code{TRUE}.}
   \item{unfVect}{Vector containing numbers that encode the unfaithful
-    triple (as returned by pc.cons.intern). This is needed in the
+    triple (as returned by \code{\link{pc.cons.intern}}). This is needed in the
     conservative RFCI.}
-  \item{verbose}{0: No output; 1: Details. Default is 0.}
+  \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
 \details{
   The partially oriented skeleton (v-structures have already been
@@ -125,7 +126,7 @@ vectM <- tmp$unshVect
  
 ## check and orient v-structures
 vstruct.amat <- rfci.vstructures(suffStat, indepTest, dim(true.corr)[2],
-alpha=alpha, sepset, amat.resD, listM, vectM, verbose = FALSE)
+alpha=alpha, sepset, amat.resD, listM, vectM, verbose = TRUE)
 
 ## estimate the final skeleton and extend it into a PAG using all 10 rules
 rules <- rep(TRUE,10)

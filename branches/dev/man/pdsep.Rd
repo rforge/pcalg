@@ -7,8 +7,8 @@
   Possible-D-Sep. The graph is updated accordingly.
 }
 \usage{
-pdsep(skel, suffStat, indepTest, p, sepset, alpha, m.max, pMax,
-pdsep.max, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
+pdsep(skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = Inf,
+pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
 }
 \arguments{
   \item{skel}{Graph object returned by \code{\link{skeleton}}.}
@@ -24,27 +24,29 @@ pdsep.max, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
     containing all relevant elements for making conditional independence
     decisions. The return value of \code{indepTest} is the p-value of
     the test for conditional independence.}
-  \item{p}{number of variables}
+  \item{p}{Number of variables.}
   \item{sepset}{List of length \code{p}; each element of the list
     contains another list of length \code{p}. The element
     \code{sepset[[x]][[y]]} contains the separation set that made the edge
     between \code{x} and \code{y} drop out. This object is thought to be
     obtained from a \code{pcAlgo}-object or \code{fciAlgo}-object.}
   \item{alpha}{Significance level for the individual conditional
-    independence tests}
-  \item{m.max}{Maximum size of the conditioning sets that are considered in the
-    conditional independence tests.}
+    independence test.s}
   \item{pMax}{Matrix with the maximal p-values of conditional
     independence tests in a previous call of \code{\link{skeleton}},
     \code{\link{pc}} or \code{\link{fci}} which produced \code{G}. This
     object is thought to be obtained from a \code{pcAlgo}-object or
     \code{fciAlgo}-object.}
+  \item{m.max}{Maximum size of the conditioning sets that are considered in the
+    conditional independence tests.}
   \item{pdsep.max}{Maximum size of Possible-D-SEP for which subsets are
     considered as conditioning sets in the conditional independence
-    tests. If the size of Possible-D-SEP(\code{x}) is bigger than
-    pdsep.max, no conditional independence tests are performed between
-    \code{x} and its neighbours given subsets of
-    Possible-D-SEP(\code{x}) and the edges are simply left in the graph.
+    tests. If the nodes \code {x} and \code{y} are adjacent in the graph
+    and the size of Possible-D-SEP(\code{x})\{\code{x},\code{y}},
+  estimated normally or using biconnected components, see later, is
+  bigger than pdsep.max, no conditional independence tests are performed between
+    \code{x} and its neighbour \code{y} given subsets of
+    Possible-D-SEP(\code{x}) and the edge is simply left in the graph.
     Note that if pdsep.max is less than Inf, the final PAG
     may be a supergraph than the one computed with pdsep.max = Inf,
     because less tests may have been performed in the former.}
@@ -54,8 +56,8 @@ pdsep.max, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
   \item{unfVect}{vector containing numbers that encode the unfaithful
     triple (as returned by \code{\link{pc.cons.intern}}). This is
     needed in the conservative FCI.}
-  \item{biCC}{logical; if true, only nodes on some path between a and c are
-    considered to be in sepset(a,c).  Uses biconnected components,
+  \item{biCC}{logical; if \code{TRUE}, only nodes on paths between nodes
+    a and c are considered to be in sepset(a,c). Uses biconnected components,
     \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
@@ -63,7 +65,7 @@ pdsep.max, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
   \item{G}{Updated adjecency matrix}
   \item{sepset}{Updated sepset}
   \item{pMax}{Updated matrix containing maximal p-values}
-  \item{allPdsep}{Possible d-sep for each node}
+  \item{allPdsep}{Possible-D-SEP for each node}
   \item{max.ord}{Maximal order of conditioning sets during independence
     tests}
   \item{n.edgetests}{Number of conditional edgetests performed grouped
@@ -101,7 +103,9 @@ pdsep.max, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
 p <- 10
 ## generate and draw random DAG :
 myDAG <- randomDAG(p, prob = 0.2)
+
 ## generate 10000 samples of DAG using gaussian distribution
+library(RGBL)
 n <- 10000
 d.mat <- rmvDAG(n, myDAG, errDist = "normal")
 
@@ -119,5 +123,8 @@ max.ordSKEL <- skel@max.ord
 
 ## call pdsep to find possible d-sep and enhance the skeleton
 pdsepRes <- pdsep(skel@graph, suffStat, indepTest, p, sepset, alpha,
-m.max = Inf, pMax, NAdelete, verbose = TRUE)
+pMax, verbose = TRUE)
+## call pdsep with biconnected components to find possible d-sep and enhance the skeleton
+pdsepResBicc <- pdsep(skel@graph, suffStat, indepTest, p, sepset, alpha,
+pMax, biCC= TRUE, verbose = TRUE)
 }

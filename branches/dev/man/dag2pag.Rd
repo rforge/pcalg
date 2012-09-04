@@ -23,10 +23,10 @@ dag2pag(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), verbose = FA
     all relevant elements for the conditional independence
     decisions. The return value of \code{indepTest} is the p-value of
     the test for conditional independence.}
-  \item{g}{DAG with \code{p} nodes (graph object). The graph must be
+  \item{graph}{DAG with \code{p} nodes (graph object). The graph must be
   topological sorted (for example produced using \code{random.DAG}).}
-  \item{L}{Array containing the labels of the nodes in the graph
-  \code{g} corresponding to the latent variables.}
+  \item{L}{Array containing the labels of the nodes in the \code{graph}
+  corresponding to the latent variables.} 
   \item{alpha}{Significance level for the individual conditional
     independence tests.}
   \item{rules}{Logical vector of length 10 indicating which rules
@@ -99,7 +99,7 @@ indepTest1 <- gaussCItest
 true.pag1 <- fci(suffStat1, indepTest1, dim(true.corr1)[1], alpha = 0.9999)
 
 ##check if the outputs are equal
-any(true.pag@amat != true.pag1@amat)
+all(true.pag@amat == true.pag1@amat)
 }
 \keyword{multivariate}
 \keyword{models}

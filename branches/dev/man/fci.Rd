@@ -46,29 +46,32 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
     conditional independence tests.}
   \item{pdsep.max}{Maximum size of Possible-D-SEP for which subsets are
     considered as conditioning sets in the conditional independence
-    tests. If the size of Possible-D-SEP(\code{x}) is bigger than
-    pdsep.max, no conditional independence tests are performed between
-    \code{x} and its neighbours given subsets of
-    Possible-D-SEP(\code{x}) and the edges are simply left in the graph.
+    tests. If the nodes \code {x} and \code{y} are adjacent in the graph
+    and the size of Possible-D-SEP(\code{x})\{\code{x},\code{y}},
+  estimated normally or using biconnected components, see later, is
+  bigger than pdsep.max, no conditional independence tests are performed between
+    \code{x} and its neighbour \code{y} given subsets of
+    Possible-D-SEP(\code{x}) and the edge is simply left in the graph.
     Note that if pdsep.max is less than Inf, the final PAG
     may be a supergraph than the one computed with pdsep.max = Inf,
     because less tests may have been performed in the former.}
   \item{rules}{Logical vector of length 10 indicating which rules
     should be used when directing edges. The order of the rules is taken
     from Zhang (2009).}
-  \item{doPdsep}{If TRUE, Possible-D-SEP is computed for all nodes,
+  \item{doPdsep}{If \code{TRUE}, Possible-D-SEP is computed for all nodes,
     and all subsets of Possible-D-SEP are considered as conditioning
-    sets in the conditional independence tests. If FALSE, Possible-D-SEP
+    sets in the conditional independence tests. If \code{FALSE}, Possible-D-SEP
     is not computed, so that the algorithm simplifies to the
     Modified PC algorithm of Spirtes, Glymour and Scheines (2000, page
     ...).}
-  \item{conservative}{If the first argument is TRUE, the skeleton is
-  computed in a conservative way. If the second argument is TRUE, the
+  \item{conservative}{If the first argument is \code{TRUE}, the skeleton is
+  computed in a conservative way. If the second argument is \code{TRUE}, the
   triples are checked for faithfulness again after possible deletion of
   edges when finding Possible-D-SEP. For more information, see Details.}
-  \item{biCC}{If TRUE, only nodes on paths between a and c are
-  considered to be in sepset(a,c). Uses biconnected components.}
-  \item{cons.rules}{If TRUE, an orientation rule that needs information
+  \item{biCC}{If \code{TRUE}, only nodes on paths between nodes a and c are
+  considered to be in sepset(a,c). Uses biconnected components,
+  \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
+  \item{cons.rules}{If \code{TRUE}, an orientation rule that needs information
   on definite non-colliders is only applied, if the corresponding
   subgraph relevant for the rule does not involve an unfaithful triple.}
   \item{labels}{Vector of length p with node names. If \code{NA},
@@ -238,34 +241,34 @@ FALSE)
 
 ## create the graph
 p <- 4
-amat1 <- t(matrix(c(0,1,0,0,1, 0,0,1,0,0, 0,0,0,1,0, 0,0,0,0,0, 0,0,0,1,0),5,5))
-colnames(amat1) <- rownames(amat1) <- as.character(1:5)
-L1 <- 1
-V1 <- as.character(1:5)
-edL1 <- vector("list",length=5)
-names(edL1) <- V1
-edL1[[1]] <- list(edges=c(2,4),weights=c(1,1))
-edL1[[2]] <- list(edges=3,weights=c(1))
-edL1[[3]] <- list(edges=5,weights=c(1))
-edL1[[4]] <- list(edges=5,weights=c(1))
-g1 <- new("graphNEL", nodes=V1, edgeL=edL1, edgemode="directed")
+amat <- t(matrix(c(0,1,0,0,1, 0,0,1,0,0, 0,0,0,1,0, 0,0,0,0,0, 0,0,0,1,0),5,5))
+colnames(amat) <- rownames(amat) <- as.character(1:5)
+L <- 1
+V <- as.character(1:5)
+edL <- vector("list",length=5)
+names(edL) <- V
+edL[[1]] <- list(edges=c(2,4),weights=c(1,1))
+edL[[2]] <- list(edges=3,weights=c(1))
+edL[[3]] <- list(edges=5,weights=c(1))
+edL[[4]] <- list(edges=5,weights=c(1))
+g <- new("graphNEL", nodes=V, edgeL=edL, edgemode="directed")
 
-## compute the true covariance matrix of g1
-cov.mat1 <- trueCov(g1)
+## compute the true covariance matrix of g
+cov.mat <- trueCov(g)
 
-## delete rows and columns belonging to latent variable L1
-true.cov1 <- cov.mat1[-L1,-L1]
+## delete rows and columns belonging to latent variable L
+true.cov <- cov.mat[-L,-L]
 
 ## transform covariance matrix into a correlation matrix
-true.corr1 <- cov2cor(true.cov1)
+true.corr <- cov2cor(true.cov)
 
 ## find PAG with FCI algorithm.
 ## As dependence "oracle", we use the true correlation matrix in the
 ## function gaussCItest with a large "virtual sample size" and a large
 ## alpha
-suffStat1 <- list(C = true.corr1, n = 10^9)
-indepTest1 <- gaussCItest
-true.pag1 <- fci(suffStat1, indepTest1, p, alpha = 0.9999, verbose=TRUE,
+suffStat <- list(C = true.corr, n = 10^9)
+indepTest <- gaussCItest
+normal.pag <- fci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE,
 doPdsep= TRUE) 
 
 ## find PAG with Anytime FCI algorithm with m.max = 1
@@ -273,7 +276,7 @@ doPdsep= TRUE)
 ## As dependence "oracle", we use the true correlation matrix in the
 ## function gaussCItest with a large "virtual sample size" and a large
 ## alpha
-anytime.pag <- fci(suffStat1, indepTest1, p, alpha = 0.9999, verbose=TRUE,
+anytime.pag <- fci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE,
 m.max = 1, doPdsep = TRUE, type = "anytime")
 
 ## find PAG with Adaptive Anytime FCI algorithm.
@@ -283,20 +286,20 @@ m.max = 1, doPdsep = TRUE, type = "anytime")
 ## As dependence "oracle", we use the true correlation matrix in the
 ## function gaussCItest with a large "virtual sample size" and a large
 ## alpha
-adaptive.pag <- fci(suffStat1, indepTest1, p, alpha = 0.9999, verbose=TRUE,
+adaptive.pag <- fci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE,
 doPdsep = TRUE, type = "adaptive")
 
 ## define PAG given in paper
-corr.pag1 <- matrix(0,4,4)
-corr.pag1[1,] <- c(0,1,1,0)
-corr.pag1[2,] <- c(1,0,0,2)
-corr.pag1[3,] <- c(1,0,0,2)
-corr.pag1[4,] <- c(0,3,3,0)
+corr.pag <- matrix(0,4,4)
+corr.pag[1,] <- c(0,1,1,0)
+corr.pag[2,] <- c(1,0,0,2)
+corr.pag[3,] <- c(1,0,0,2)
+corr.pag[4,] <- c(0,3,3,0)
 
 ## check if estimated and correct PAG are in agreement
-all(corr.pag1==true.pag1@amat)
-all(corr.pag1==anytime.pag@amat)
-all(corr.pag1==adaptive.pag@amat)
+all(corr.pag == normal.pag@amat)
+all(corr.pag == anytime.pag@amat)
+all(corr.pag == adaptive.pag@amat)
 }
 \keyword{multivariate}
 \keyword{models}

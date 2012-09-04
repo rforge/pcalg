@@ -10,22 +10,22 @@ function \link{pdsep}. The result is an adjacency matrix
 indicating also the edge marks.
 }
 \usage{
-udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose)
+udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose = FALSE)
 }
 \arguments{
-  \item{pag}{adjacency matrix of the final skeleton of size pxp.}
+  \item{pag}{adjacency matrix of the final skeleton of size p*p.}
   \item{sepset}{List of length p; each element of the list
     contains another list of length p. The element
     \code{sepset[[x]][[y]]} contains the separation set that made the edge
     between \code{x} and \code{y} drop out. This object is thought to be
     obtained from a \code{pcAlgo}-object.}
-  \item{rules}{array of length 10 containing TRUE or FALSE for each
-    rule. TRUE in position i means that rule i (Ri) will be used. Per
-    default, all rules are set to TRUE.}
+  \item{rules}{array of length 10 containing \code{TRUE} or \code{FALSE}
+    for each rule. \code{TRUE} in position i means that rule i (Ri) will
+    be used. Per default, all rules are set to TRUE.}
   \item{unfVect}{Vector containing numbers that encode the unfaithful
-    triple (as returned by pc.cons.intern). This is needed in the
+    triple (as returned by \code{\link{pc.cons.intern}}). This is needed in the
     conservative FCI.}
-  \item{verbose}{0: No output; 1: Details. Default is 0.}
+  \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
 \details{
   The skeleton is extended to a PAG using rules by Zhang (see
@@ -93,7 +93,7 @@ resD@sepset, alpha = alpha, m.max = Inf, pMax = resD@pMax, verbose = FALSE)
 
 ## extend the skeleton into a PAG using all 10 rules
 rules <- rep(TRUE,10)
-resP <- udag2pag(pag = pdsepRes$G, pdsepRes$sepset, rules = rules, verbose = 1)
+resP <- udag2pag(pag = pdsepRes$G, pdsepRes$sepset, rules = rules, verbose = TRUE)
 }
 \keyword{multivariate}
 \keyword{models}
