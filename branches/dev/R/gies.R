@@ -1,6 +1,7 @@
-# GIES algorithm
-# 
-# Author: Alain Hauser <alhauser@ethz.ch>
+## GIES algorithm
+## 
+## Author: Alain Hauser <alhauser@ethz.ch>
+## $Id$
 ###############################################################################
 
 ##################################################

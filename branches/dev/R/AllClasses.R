@@ -1,6 +1,9 @@
 ##################################################
 ## Classes
 ##################################################
+
+## $Id$
+
 setClass("gAlgo",
          representation(call = "call",
                         n	   = "integer",
@@ -106,31 +109,28 @@ setMethod("plot", "pardag",
 #' Virtual base class for all scoring classes
 setRefClass("int.score",
     fields = list(
-        .node.count = "integer",
-        .targets = "list",
-        .target.index = "vector",
-        .data = "matrix",
         decomp = "logical",
         c.fcn = "character",
+        pp.dat = "list",
         .pardag.class = "character"),
     
     validity = function(object) {
       ## Check if targets are valid (i.e., unique)
-      targets.tmp <- object$.targets
+      targets.tmp <- object$pp.dat$targets
       for (i in seq(along = targets.tmp)) {
         targets.tmp[[i]] <- sort(unique(targets.tmp[[i]]))
-        if (length(targets.tmp[[i]]) != length(object$.targets[[i]]))
+        if (length(targets.tmp[[i]]) != length(object$pp.dat$targets[[i]]))
           return("Target variables must not be listed multiple times.")
       }
       if (length(unique(targets.tmp)) != length(targets.tmp))
         return("Targets must not be listed multiple times.")
       
       ## Check whether data is available from all intervention targets
-      if (unique(object$.target.index) != 1:length(object$.targets))
+      if (unique(object$pp.dat$target.index) != 1:length(object$pp.dat$targets))
         return("Data from all intervention targets must be available")
       
       ## Check if dimensions of target.index and data conincide
-      if (length(object$.target.index) != nrow(object$.data))
+      if (length(object$pp.dat$target.index) != nrow(object$pp.dat$data))
         return("Length of target index vector does not coincide with sample size.")
       
       return(TRUE)
@@ -144,11 +144,11 @@ setRefClass("int.score",
             perm <- order(target.index)
           else
             perm <- 1:length(target.index)
-          
-          .targets <<- targets
-          .target.index <<- target.index[perm]
-          .data <<- data[perm, ]
-          .node.count <<- ncol(data)
+
+          pp.dat$targets <<- targets
+          pp.dat$target.index <<- target.index[perm]
+          pp.dat$data <<- data[perm, ]
+          pp.dat$vertex.count <<- ncol(data)
           
           ## Declare scores as not decomposable "by default"
           decomp <<- FALSE
@@ -164,17 +164,21 @@ setRefClass("int.score",
           stop("local.score is not implemented in this class.")
         },
         
-        #' Calculates the global score of a DAG
-        global.score = function(dag) {
-          sum(sapply(1:.node.count,
-                  function(i) local.score(i, dag$.in.edges[[i]])))
-        },
-        
         #' Calculates the global score of a DAG which is only specified
         #' by its list of in-edges
         global.score.int = function(edges) {
-          sum(sapply(1:.node.count,
-                  function(i) local.score(i, edges[[i]])))
+          ## Calculate score in R
+          if (c.fcn == "none")
+            sum(sapply(1:.node.count,
+                    function(i) local.score(i, edges[[i]])))
+          ## Calculate score with the C++ library
+          else
+            .Call("globalScore", c.fcn, pp.dat, edges, PACKAGE = "pcalg")          
+        },
+        
+        #' Calculates the global score of a DAG
+        global.score = function(dag) {
+          global.score.int(dag$.in.edges)
         },
         
         #' Calculates the local MLE for a vertex and its parents
@@ -184,29 +188,30 @@ setRefClass("int.score",
         
         #' Calculates the global MLE
         global.mle = function(dag) {
-          lapply(1:.node.count,
-              function(i) local.mle(i, dag$.in.edges[[i]]))
+          ## Calculate score in R
+          if (c.fcn == "none")
+            lapply(1:.node.count,
+                function(i) local.mle(i, dag$.in.edges[[i]]))
+          ## Calculate score with the C++ library
+          else
+            .Call("globalMLE", c.fcn, pp.dat, dag$.in.edges, PACKAGE = "pcalg")
         }
         ),
+        
     "VIRTUAL")
 
-#' BIC score for Gaussian causal models
-setRefClass("gauss.bic.int.score",
+#' l0-penalized log-likelihood for Gaussian models, with freely
+#' choosable penalty lambda.
+#' Special case: BIC where \lambda = 1/2 \log n (default value for lambda)
+setRefClass("gauss.l0pen.int.score",
     contains = "int.score",
     
-    fields = list(
-        .intercept = "logical",
-        .scatter = "list",
-        .scatter.index = "vector",
-        .data.count = "vector",
-        .total.data.count = "integer"),
-    
     validity = function(object) {
-      if (unique(object$.scatter.index) != 1:length(object$.scatter))
+      if (unique(object$pp.dat$scatter.index) != 1:length(object$pp.dat$scatter))
         return("The index list of distinct scatter matrices has an invalid range.")
-      p <- ncol(object$.data)
-      if (any(sapply(1:length(object$.scatter),
-              function(i) dim(object$.scatter[[i]]) != c(p, p))))
+      p <- ncol(object$pp.dat$data)
+      if (any(sapply(1:length(object$pp.dat$scatter),
+              function(i) dim(object$pp.dat$scatter[[i]]) != c(p, p))))
         return("The scatter matrices have invalid dimensions.")
       
       return(TRUE)
@@ -214,103 +219,128 @@ setRefClass("gauss.bic.int.score",
     
     methods = list(
         #' Constructor
-        initialize = function(targets, target.index, data, intercept = FALSE, ...) {
+        initialize = function(targets, 
+            target.index, 
+            data, 
+            lambda = 0.5*log(nrow(data)), 
+            intercept = FALSE, 
+            use.cpp = FALSE, 
+            ...) {
           ## Store supplied data in sorted form
           callSuper(targets, target.index, data)
-          
-          ## BIC is decomposable
+
+          ## l0-penalty is decomposable
           decomp <<- TRUE
           
           ## Underlying causal model class: Gaussian
           .pardag.class <<- "gauss.pardag"
           
-          ## If an intercept is allowed, add column of ones to data matrix
-          .intercept <<- intercept
-          if (intercept)
-            data <- cbind(data, 1)
+          ## Store penalty constant
+          pp.dat$lambda <<- lambda
+          
+          ## Use C++ functions if requested
+          if (use.cpp)
+            c.fcn <<- "gauss.l0pen"
           
           ## Number of variables
           p <- ncol(data)
-          .total.data.count <<- as.integer(nrow(data))
+          pp.dat$total.data.count <<- as.integer(nrow(data))
+          
+          ## Add column of ones to data matrix; this allows the computation
+          ## of an intercept if requested
+          pp.dat$intercept <<- intercept
+          data <- cbind(data, 1)
           
           ## Create scatter matrices for different targets
-          ti.lb <- c(sapply(1:length(.targets), function(i) match(i, .target.index)), 
-              length(.target.index) + 1)
-          scatter.mat <- lapply(1:length(.targets), 
+          ti.lb <- c(sapply(1:length(pp.dat$targets), function(i) match(i, pp.dat$target.index)), 
+              length(pp.dat$target.index) + 1)
+          scatter.mat <- lapply(1:length(pp.dat$targets), 
               function(i) crossprod(data[ti.lb[i]:(ti.lb[i + 1] - 1), ]))
           
           ## Find all interventions in which the different variables
           ## are _not_ intervened
-          non.ivent <- matrix(FALSE, ncol = p, nrow = length(.targets))
-          .scatter.index <<- integer(p)
-          .data.count <<- integer(p)
+          non.ivent <- matrix(FALSE, ncol = p, nrow = length(pp.dat$targets))
+          pp.dat$scatter.index <<- integer(p)
+          pp.dat$data.count <<- integer(p)
           max.si <- 0
           for (i in 1:p) {
             ## Generate indices of (distinct) scatter matrices
-            non.ivent[ , i] <- sapply(1:length(.targets), 
-                function(j) !(i %in% .targets[[j]]))
-            .scatter.index[i] <<- max.si + 1
+            non.ivent[ , i] <- sapply(1:length(pp.dat$targets), 
+                function(j) !(i %in% pp.dat$targets[[j]]))
+            pp.dat$scatter.index[i] <<- max.si + 1
             j <- 1
             while (j < i) {
               if (all(non.ivent[, i] == non.ivent[, j])) {
-                .scatter.index[i] <<- .scatter.index[j]
+                pp.dat$scatter.index[i] <<- pp.dat$scatter.index[j]
                 j <- i
               }
               j <- j + 1
             }
-            if (.scatter.index[i] == max.si + 1)
+            if (pp.dat$scatter.index[i] == max.si + 1)
               max.si <- max.si + 1
             
             ## Count data samples from "non-interventions" at i
-            .data.count[i] <<- sum(ti.lb[which(non.ivent[, i]) + 1] - ti.lb[which(non.ivent[, i])])
+            pp.dat$data.count[i] <<- sum(ti.lb[which(non.ivent[, i]) + 1] - ti.lb[which(non.ivent[, i])])
           }
                     
           ## Calculate the distinct scatter matrices for the
           ## "non-interventions"
-          .scatter <<- lapply(1:max.si, 
-              function(i) Reduce("+", scatter.mat[non.ivent[, match(i, .scatter.index)]]))
+          pp.dat$scatter <<- lapply(1:max.si, 
+              function(i) Reduce("+", scatter.mat[non.ivent[, match(i, pp.dat$scatter.index)]]))
         },
         
         #' Calculates the local score of a vertex and its parents
         local.score = function(vertex, parents) {
-          ## If an intercept is allowed, add a fake parent node
-          parents <- sort(parents)
-          if (.intercept)
-            parents <- c(.node.count + 1, parents)
-          
-          sigma2 <- .scatter[[.scatter.index[vertex]]][vertex, vertex]
-          if (length(parents) != 0) {
-            b <- .scatter[[.scatter.index[vertex]]][vertex, parents]
-            sigma2 <- sigma2 - as.numeric(b %*% solve(.scatter[[.scatter.index[vertex]]][parents, parents], b))
+          ## Calculate score in R
+          if (c.fcn == "none") {
+            ## If an intercept is allowed, add a fake parent node
+            parents <- sort(parents)
+            if (pp.dat$intercept)
+              parents <- c(.node.count + 1, parents)
+            
+            sigma2 <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, vertex]
+            if (length(parents) != 0) {
+              b <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents]
+              sigma2 <- sigma2 - as.numeric(b %*% solve(pp.dat$scatter[[pp.dat$scatter.index[vertex]]][parents, parents], b))
+            }
+            
+            return(-0.5*pp.dat$data.count[vertex]*(1 + log(sigma2/pp.dat$data.count[vertex])) + pp.dat$lambda*(1 + length(parents)))
           }
-          
-          -0.5*(.data.count[vertex]*(1 + log(sigma2/.data.count[vertex])) + log(.total.data.count)*(1 + length(parents)))
+          ## Calculate score with the C++ library
+          else 
+            return(.Call("localScore", c.fcn, pp.dat, vertex, parents, PACKAGE = "pcalg"))
         },
-        
+                
         #' Calculates the local MLE for a vertex and its parents
         local.mle = function(vertex, parents) {
-          ## If an intercept is allowed, add a fake parent node
-          parents <- sort(parents)
-          if (.intercept)
-            parents <- c(.node.count + 1, parents)
-          
-          sigma2 <- .scatter[[.scatter.index[vertex]]][vertex, vertex]
-          if (length(parents) != 0) {
-            beta <- solve(.scatter[[.scatter.index[vertex]]][parents, parents], 
-                .scatter[[.scatter.index[vertex]]][vertex, parents])
-            sigma2 <- sigma2 - .scatter[[.scatter.index[vertex]]][vertex, parents] %*% beta
+          ## Calculate score in R
+          if (c.fcn == "none") {
+            ## If an intercept is allowed, add a fake parent node
+            parents <- sort(parents)
+            if (pp.dat$intercept)
+              parents <- c(.node.count + 1, parents)
+            
+            sigma2 <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, vertex]
+            if (length(parents) != 0) {
+              beta <- solve(pp.dat$scatter[[pp.dat$scatter.index[vertex]]][parents, parents], 
+                  pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents])
+              sigma2 <- sigma2 - pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents] %*% beta
+            }
+            else
+              beta <- numeric(0)
+            
+            if (pp.dat$intercept)
+              return(c(sigma2/pp.dat$data.count[vertex], beta))
+            else
+              return(c(sigma2/pp.dat$data.count[vertex], 0, beta))
           }
+          ## Calculate score with the C++ library
           else
-            beta <- numeric(0)
-          
-          if (.intercept)
-            return(c(sigma2/.data.count[vertex], beta))
-          else
-            return(c(sigma2/.data.count[vertex], 0, beta))
+            return(.Call("localMLE", c.fcn, pp.dat, vertex, parents, PACKAGE = "pcalg"))
         }
         )
     )
-
+        
 #' Interventional essential graph
 setRefClass("ess.graph",
     fields = list(
@@ -382,16 +412,13 @@ setRefClass("ess.graph",
               backward = "GIES-B",
               turning = "GIES-T")
                     
-          score.fcn <- ifelse(score$decomp, 
-              function(vertex, parents) score$local.score(vertex, parents),
-              function(edges) score$global.score.int(edges))
           substr(direction, 1, 1) <- toupper(substr(direction, 1, 1))
           
           new.graph <- .Call("causalInference", 
               .in.edges,
-              targets,
+              score$pp.dat,
               alg.name,
-              score.fcn, 
+              score$c.fcn, 
               causal.inf.options(caching = FALSE, maxsteps = 1),
               PACKAGE = "pcalg")
           if (new.graph$steps > 0) {
@@ -425,9 +452,9 @@ setRefClass("ess.graph",
           
           new.graph <- .Call("causalInference", 
               .in.edges,
-              targets,
+              score$pp.dat,
               algorithm,
-              score.fcn, 
+              score$c.fcn, 
               causal.inf.options(...),
               PACKAGE = "pcalg")
           

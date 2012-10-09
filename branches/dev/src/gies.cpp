@@ -2,7 +2,7 @@
  * Main file of the Greedy Interventional Equivalence Search library for R
  *
  * @author Alain Hauser
- * $Id: gies.cpp 35 2012-03-11 13:34:35Z alhauser $
+ * $Id$
  */
 
 #include "Rcpp.h"
@@ -21,26 +21,6 @@ typedef unsigned int uint;
 #include "gies_debug.hpp"
 
 using namespace boost::lambda;
-
-/**
- * Extracts intervention targets from a SEXP to a TargetFamily object.
- */
-TargetFamily castTargets(SEXP argTargets)
-{
-	int i;
-	Rcpp::List listIventTargets(argTargets);
-	std::vector<uint> vecTarget;
-	std::vector<uint>::iterator vi;
-	TargetFamily result;
-	result.resize(listIventTargets.size());
-	for (i = 0; i < listIventTargets.size(); i++) {
-		vecTarget = listIventTargets[i];
-		// Adapt indices to C++ convention...
-		for (vi = vecTarget.begin(); vi != vecTarget.end(); ++vi)
-			result[i].insert(*vi - 1);
-	}
-	return result;
-}
 
 /**
  * Reads in a graph from a list of in-edges passed as a SEXP to
@@ -86,23 +66,137 @@ Rcpp::List wrapGraph(EssentialGraph graph)
 }
 
 /**
+ * Yields the local score of a vertex given its parents.
+ *
+ * @param	argScore		name of the score
+ * @param	argPreprocData	preprocessed data; sufficient statistic and all
+ * 							parameters characterizing the score to be calculated
+ * @param 	argVertex		vertex index
+ * @param 	argParents		vector of parents of vertex
+ * @return	local score value
+ */
+RcppExport SEXP localScore(
+		SEXP argScore,
+		SEXP argPreprocData,
+		SEXP argVertex,
+		SEXP argParents)
+{
+	// Initialize automatic exception handling; manual one does not work any more...
+	initUncaughtExceptionHandler();
+
+	// Create appropriate scoring object
+	Rcpp::List data(argPreprocData);
+	TargetFamily targets = castTargets(data["targets"]);
+	Score* score = createScore(Rcpp::as<std::string>(argScore), &targets, data);
+
+	// Calculate local score and delete score object
+	double result = score->local(Rcpp::as<uint>(argVertex), castVertices(argParents));
+	delete score;
+	return Rcpp::wrap(result);
+}
+
+/**
+ * Yields the global score of a DAG.
+ *
+ * @param	argScore		name of the score
+ * @param	argPreprocData	preprocessed data; sufficient statistic and all
+ * 							parameters characterizing the score to be calculated
+ * @param 	argInEdges		list of in-edges characterizing the DAG
+ * @return	global score value
+ */
+RcppExport SEXP globalScore(
+		SEXP argScore,
+		SEXP argPreprocData,
+		SEXP argInEdges)
+{
+	// Initialize automatic exception handling; manual one does not work any more...
+	initUncaughtExceptionHandler();
+
+	// Create appropriate scoring object
+	Rcpp::List data(argPreprocData);
+	TargetFamily targets = castTargets(data["targets"]);
+	Score* score = createScore(Rcpp::as<std::string>(argScore), &targets, data);
+
+	// Calculate local score
+	double result = score->global(castGraph(argInEdges));
+	delete score;
+	return Rcpp::wrap(result);
+}
+
+/**
+ * Yields the local MLE of a vertex given its parents.
+ *
+ * @param	argScore		name of the score
+ * @param	argPreprocData	preprocessed data; sufficient statistic and all
+ * 							parameters characterizing the score to be calculated
+ * @param 	argVertex		vertex index
+ * @param 	argParents		vector of parents of vertex
+ * @return	vector of local MLE
+ */
+RcppExport SEXP localMLE(
+		SEXP argScore,
+		SEXP argPreprocData,
+		SEXP argVertex,
+		SEXP argParents)
+{
+	// Initialize automatic exception handling; manual one does not work any more...
+	initUncaughtExceptionHandler();
+
+	// Create appropriate scoring object
+	Rcpp::List data(argPreprocData);
+	TargetFamily targets = castTargets(data["targets"]);
+	Score* score = createScore(Rcpp::as<std::string>(argScore), &targets, data);
+
+	// Calculate local score
+	std::vector<double> result = score->localMLE(Rcpp::as<uint>(argVertex), castVertices(argParents));
+	delete score;
+	return Rcpp::wrap(result);
+}
+
+/**
+ * Yields the global MLE of a DAG.
+ *
+ * @param	argScore		name of the score
+ * @param	argPreprocData	preprocessed data; sufficient statistic and all
+ * 							parameters characterizing the score to be calculated
+ * @param 	argInEdges		list of in-edges characterizing the DAG
+ * @return	list of MLE vectors
+ */
+RcppExport SEXP globalMLE(
+		SEXP argScore,
+		SEXP argPreprocData,
+		SEXP argInEdges)
+{
+	// Initialize automatic exception handling; manual one does not work any more...
+	initUncaughtExceptionHandler();
+
+	// Create appropriate scoring object
+	Rcpp::List data(argPreprocData);
+	TargetFamily targets = castTargets(data["targets"]);
+	Score* score = createScore(Rcpp::as<std::string>(argScore), &targets, data);
+
+	// Calculate local score
+	std::vector<std::vector<double> > result = score->globalMLE(castGraph(argInEdges));
+	delete score;
+	return Rcpp::wrap(result);
+}
+
+/**
  * Interface to a variety of causal inference algorithms.
  *
  * @param 	argGraph			list of in-edges representing the current
  * 								essential graph
- * @param	argTargets			list of intervention targets, in the counting
- * 								convention of R: smallest vertex has index 1
- * @param 	argTargetIndex		list of intervention target indices, one per data
- * 								row. R counting convention
+ * @param	argPreprocData		preprocessed data; sufficient statistic and all
+ * 								parameters characterizing the score to be calculated
  * @param	argAlgorithm		string indicating the causal inference algorithm
  * 								to be used. Supported options: "GIES", "GDS", "DP"
- * @param	argScore			score objects to be used. Options: "scatter", "data"
- * 								for internal functions, or R function object
+ * @param	argScore			name of score object to be used. Currently supported:
+ * 								"none" (= R object), "gauss.l0pen"
  * @param	argOptions			list of options specific for desired inference algorithm
  */
 RcppExport SEXP causalInference(
 		SEXP argGraph,
-		SEXP argTargets,
+		SEXP argPreprocData,
 		SEXP argAlgorithm,
 		SEXP argScore,
 		SEXP argOptions)
@@ -120,7 +214,8 @@ RcppExport SEXP causalInference(
 
 	// Cast list of targets
 	dout.level(1) << "Casting list of targets...\n";
-	TargetFamily targets = castTargets(argTargets);
+	Rcpp::List data(argPreprocData);
+	TargetFamily targets = castTargets(data["targets"]);
 
 	// Cast algorithm string
 	dout.level(1) << "Casting algorithm and options...\n";
@@ -129,8 +224,7 @@ RcppExport SEXP causalInference(
 	// TODO: cast score type, allow for C++ scoring objects
 	// Up to now, only R functions are allowed for scoring...
 	dout.level(1) << "Casting score...\n";
-	BICScore* score;
-	score = new BICScoreRFunction(graph.getVertexCount(), &targets, Rcpp::Function(argScore), Rcpp::Function(argScore));
+	Score* score = createScore(Rcpp::as<std::string>(argScore), &targets, data);
 
 	graph.setScore(score);
 	graph.setTargets(&targets);

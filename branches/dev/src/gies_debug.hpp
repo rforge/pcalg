@@ -2,7 +2,7 @@
  * Debugging functions for GIES
  *
  * @author Alain Hauser
- * $Id: gies_debug.hpp 24 2012-01-05 13:51:28Z alhauser $
+ * $Id$
  */
 
 #ifndef GIES_DEBUG_HPP_

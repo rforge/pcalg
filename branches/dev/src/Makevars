@@ -1,6 +1,7 @@
 ## Use the R_HOME indirection to support installations of multiple R version
 PKG_CXXFLAGS = $(shell $(R_HOME)/bin/Rscript -e "Rcpp:::CxxFlags()" ) -IboostIncl
 PKG_LIBS = $(shell $(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()" ) $(LAPACK_LIBS) $(BLAS_LIBS)
+# PKG_LIBS = $(shell $(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()" )
 
 ## As an alternative, one can also add this code in a file 'configure'
 ##

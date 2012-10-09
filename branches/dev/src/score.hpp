@@ -3,12 +3,13 @@
  * given some data
  *
  * @author Alain Hauser
- * $Id: score.hpp 35 2012-03-11 13:34:35Z alhauser $
+ * $Id$
  */
 
 #ifndef SCORE_HPP_
 #define SCORE_HPP_
 
+#include "armaLapack.hpp"
 #include <vector>
 #include <set>
 #include <boost/dynamic_bitset.hpp>
@@ -30,18 +31,28 @@ public:
 };
 typedef TargetFamily::iterator TargetIterator;
 
+/**
+ * Extracts intervention targets from a SEXP to a TargetFamily object.
+ */
+TargetFamily castTargets(const SEXP argTargets);
+
+/**
+ * Casts a set of vertices (adapting the indexing convention) from a SEXP object.
+ */
+std::set<uint> castVertices(SEXP argVertices);
+
 // Forward declaration for testing purpuses
-class BICScoreTest;
+class ScoreTest;
 
 // Forward declaration
 class EssentialGraph;
 
 /**
- * Base BIC scoring class
+ * Base scoring class
  */
-class BICScore
+class Score
 {
-	friend class BICScoreTest;
+	friend class ScoreTest;
 protected:
 	/**
 	 * Number of random variables
@@ -56,7 +67,7 @@ public:
 	/**
 	 * Constructors
 	 */
-	BICScore(uint vertexCount, TargetFamily* targets) :
+	Score(uint vertexCount, TargetFamily* targets) :
 		_vertexCount(vertexCount), _targets(targets) {};
 
 	/**
@@ -64,7 +75,7 @@ public:
 	 *
 	 * Needed because of different storage of data.
 	 */
-	virtual ~BICScore() {}
+	virtual ~Score() {}
 
 	/**
 	 * Virtual function yielding the total number of data points
@@ -84,21 +95,28 @@ public:
 	}
 
 	/**
-	 * Virtual function to supply (interventional) data. Must be implemented by
+	 * Virtual function to supply (preprocessed) data. Must be implemented by
 	 * derived classes.
 	 *
-	 * @param	targetIndex		vector of intervention target indices. MUST BE
-	 * 							IN ASCENDING ORDER!
-	 * @param 	data			n x p matrix of data
+	 * @param 	data			preprocessed data as an R data structure.
+	 * 							Exact type depends on type of score.
 	 */
-	// NOTE: no virtual method any more since different types of score objects
-	// may use different type of data matrices (e.g., double, integer, ...)
-	// virtual void setData(const std::vector<uint>& targetIndex, arma::mat& data) = 0;
+	virtual void setData(Rcpp::List& data) = 0;
 
 	/**
-	 * Calculates the partial BIC score of a vertex given its parents.
+	 * Calculates the local score of a vertex given its parents.
 	 */
-	virtual double calcPartial(const uint vertex, std::set<uint> parents) const = 0;
+	virtual double local(const uint vertex, const std::set<uint>& parents) const = 0;
+
+	/**
+	 * Calculates the global score of a DAG.
+	 */
+	virtual double global(const EssentialGraph& dag) const;
+
+	/**
+	 * Calculates the local MLE for a vertex given its parents.
+	 */
+	virtual std::vector<double> localMLE(const uint vertex, const std::set<uint>& parents) const = 0;
 
 	/**
 	 * Calculates the MLE w.r.t. a DAG
@@ -111,49 +129,107 @@ public:
 	 * 					parameters is hence dependent on the chosen model class (i.e.,
 	 * 					Gaussian, binary, ...)
 	 */
-	virtual std::vector< std::vector<double> > calculateMLE(const EssentialGraph& dag) const = 0;
+	virtual std::vector< std::vector<double> > globalMLE(const EssentialGraph& dag) const = 0;
 };
 
-// TODO: add classes for calculating the score in C++
-// (to be copied from the old sources in the GIES library)
+/**
+ * Yields a pointer to a scoring object of appropriate type
+ * @param	name		name of the scoring class; internal, short name used in R
+ *  					library
+ * @param	data		preprocessed data
+ */
+Score* createScore(std::string name, TargetFamily* targets, Rcpp::List data);
 
 /**
- * BIC scoring class that acts as a wrapper to an external R function
+ * Scoring class that acts as a wrapper to an external R function
  * doing the actual calculation
  */
-class BICScoreRFunction : public BICScore
+class ScoreRFunction : public Score
 {
 protected:
 	/**
-	 * Total number of data points
+	 * R function objects used to calculate: local score, global score, local MLE,
+	 * global MLE
 	 */
-	// uint _totalDataCount;
-
-	/**
-	 * R function object used to calculate the partial score
-	 */
-	Rcpp::Function _partialScoreFunction;
-
-
-	/**
-	 * R function object used to calculate the MLE
-	 */
-	Rcpp::Function _mleFunction;
+	Rcpp::Function _localScoreFunction;
+	Rcpp::Function _globalScoreFunction;
+	Rcpp::Function _localMLEFunction;
+	Rcpp::Function _globalMLEFunction;
 public:
-	BICScoreRFunction(uint vertexCount,
-		TargetFamily* targets,
-		const Rcpp::Function partialScoreFunction,
-		const Rcpp::Function mleFunction) :
-		BICScore(vertexCount, targets),
-		_partialScoreFunction(partialScoreFunction),
-		_mleFunction(mleFunction) {};
+	ScoreRFunction(uint vertexCount, TargetFamily* targets) :
+			Score(vertexCount, targets) {};
 
-	// uint getTotalDataCount() const { return _totalDataCount; }
+	void setData(Rcpp::List& data);
 
-	double calcPartial(const uint vertex, std::set<uint> parents) const;
+	double local(const uint vertex, const std::set<uint>& parents) const;
 
-	std::vector< std::vector<double> > calculateMLE(const EssentialGraph& dag) const;
+	double global(const EssentialGraph& dag) const;
+
+	std::vector<double> localMLE(const uint vertex, const std::set<uint>& parents) const;
+
+	std::vector< std::vector<double> > globalMLE(const EssentialGraph& dag) const;
 };
 
+/**
+ * Scoring class calculating a penalized l0-log-likelihood of Gaussian data,
+ * based on precalculated scatter matrices.
+ *
+ * Special case: BIC score
+ */
+class ScoreGaussL0PenScatter : public Score
+{
+protected:
+	/**
+	 * Numbers of data points.
+	 *
+	 * For each vertex, the number of all data points coming from intervention NOT
+	 * including this vertex are stored (n^{(i)}, 1 \leq i \leq p, in the usual
+	 * notation).
+	 */
+	std::vector<int> _dataCount;
+	uint _totalDataCount;
+
+	/**
+	 * Penalty constant
+	 */
+	double _lambda;
+
+	/**
+	 * Indicates whether an intercept should be calculated.
+	 */
+	bool _allowIntercept;
+
+	/**
+	 * Scatter matrices of interventional (or observational) data.
+	 *
+	 * The disjoint "cumulative" scatter matrices are stored, i.e. the sum of the scatter
+	 * matrices of all interventions that do not contain a certain vertex.
+	 * (In the usual notation, those are the matrices S^{(i)}, 1 \leq i \leq p)
+	 */
+	std::vector< arma::mat > _disjointScatterMatrices;
+
+	/**
+	 * Assignment of scatter matrices to vertices
+	 */
+	std::vector< arma::mat* > _scatterMatrices;
+
+public:
+	ScoreGaussL0PenScatter(uint vertexCount, TargetFamily* targets) :
+		Score(vertexCount, targets),
+		_dataCount(vertexCount),
+		_scatterMatrices(vertexCount) {};
+
+	uint getDataCount() const { return _totalDataCount;	}
+
+	void setData(Rcpp::List& data);
+
+	double local(const uint vertex, const std::set<uint>& parents) const;
+
+	double global(const EssentialGraph& dag) const;
+
+	std::vector<double> localMLE(const uint vertex, const std::set<uint>& parents) const;
+
+	std::vector< std::vector<double> > globalMLE(const EssentialGraph& dag) const;
+};
 
 #endif /* SCORE_HPP_ */

@@ -96,7 +96,7 @@ exportClasses("pcAlgo",
               "pardag",
               "gauss.pardag",
               "int.score",
-              "gauss.bic.int.score",
+              "gauss.l0pen.int.score",
               "ess.graph")
 
 exportMethods("summary","show","plot")

@@ -2,7 +2,7 @@
  * Classes for greedy estimation of causal structures
  *
  * @author Alain Hauser
- * $Id: greedy.hpp 25 2012-02-17 13:03:42Z alhauser $
+ * $Id$
  */
 
 #ifndef GREEDY_HPP_
@@ -165,7 +165,7 @@ private:
 	/**
 	 * Pointer to scoring object
 	 */
-	BICScore* _score;
+	Score* _score;
 
 	/**
 	 * Pointer to object representing family of targets
@@ -471,8 +471,8 @@ public:
 	/**
 	 * Sets and gets score object
 	 */
-	void setScore(BICScore* score) { _score = score; }
-	BICScore* getScore() { return _score; }
+	void setScore(Score* score) { _score = score; }
+	Score* getScore() { return _score; }
 
 	/**
 	 * Sets and gets the family of targets

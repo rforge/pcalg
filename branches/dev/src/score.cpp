@@ -1,16 +1,97 @@
 /*
  * @author Alain Hauser
- * $Id: score.cpp 30 2012-02-26 15:04:56Z alhauser $
+ * $Id$
  */
 
 #include "score.hpp"
 #include "greedy.hpp"
 
+#include <algorithm>
 #include <boost/tuple/tuple.hpp>
 #include <limits>
 
+bool TargetFamily::protects(const uint a, const uint b) const
+{
+	int i;
+	bool aInI, bInI;
+	for (i = 0; i < size(); i++) {
+		aInI = (std::find((*this)[i].begin(), (*this)[i].end(), a) != (*this)[i].end());
+		bInI = (std::find((*this)[i].begin(), (*this)[i].end(), b) != (*this)[i].end());
+		if (aInI ^ bInI) return true;
+	}
 
-double BICScoreRFunction::calcPartial(const uint vertex, std::set<uint> parents) const
+	return false;
+}
+
+TargetFamily castTargets(const SEXP argTargets)
+{
+	int i;
+	Rcpp::List listIventTargets(argTargets);
+	std::vector<uint> vecTarget;
+	std::vector<uint>::iterator vi;
+	TargetFamily result;
+	result.resize(listIventTargets.size());
+	for (i = 0; i < listIventTargets.size(); i++) {
+		vecTarget = listIventTargets[i];
+		// Adapt indices to C++ convention...
+		for (vi = vecTarget.begin(); vi != vecTarget.end(); ++vi)
+			result[i].insert(*vi - 1);
+	}
+	return result;
+}
+
+std::set<uint> castVertices(SEXP argVertices)
+{
+	std::set<uint> result;
+	std::vector<uint> vertices = Rcpp::as<std::vector<uint> >(argVertices);
+	std::vector<uint>::iterator vi;
+
+	for (vi = vertices.begin(); vi != vertices.end(); ++vi)
+		result.insert(*vi - 1);
+
+	return result;
+}
+
+double Score::global(const EssentialGraph& dag) const
+{
+	double result = 0.;
+	uint v;
+
+	// Standard for decomposable scores: global score is sum of local scores
+	for (v = 0; v < _vertexCount; ++v)
+		result += local(v, dag.getParents(v));
+
+	return result;
+}
+
+Score* createScore(std::string name, TargetFamily* targets, Rcpp::List data)
+{
+	Score* result;
+
+	if (name == "gauss.l0pen")
+		result = new ScoreGaussL0PenScatter(Rcpp::as<uint>(data["vertex.count"]), targets);
+	else if (name == "none")
+		result = new ScoreRFunction(Rcpp::as<uint>(data["vertex.count"]), targets);
+	// Invalid score name: throw error
+	else throw std::runtime_error(name + ": Invalid score name");
+
+	// Provide preprocessed data to score object
+	result->setData(data);
+
+	return result;
+}
+
+void ScoreRFunction::setData(Rcpp::List& data)
+{
+	// Do not really store "data", but R function object used for the
+	// calculation
+	_localScoreFunction = data["local.score"];
+	_globalScoreFunction = data["global.score"];
+	_localMLEFunction = data["local.mle"];
+	_globalMLEFunction = data["global.mle"];
+}
+
+double ScoreRFunction::local(const uint vertex, const std::set<uint>& parents) const
 {
 	// Adapt indices to R convention...
 	std::vector<uint> shiftParents;
@@ -19,30 +100,188 @@ double BICScoreRFunction::calcPartial(const uint vertex, std::set<uint> parents)
 	for (si = parents.begin(); si != parents.end(); ++si)
 		shiftParents.push_back(*si + 1);
 
-	// Call R function for partial score
-	return Rcpp::as<double>(_partialScoreFunction(vertex + 1, shiftParents));
+	// Call R function for local score
+	return Rcpp::as<double>(_localScoreFunction(vertex + 1, shiftParents));
 }
 
-std::vector< std::vector<double> > BICScoreRFunction::calculateMLE(const EssentialGraph& dag) const
+double ScoreRFunction::global(const EssentialGraph& dag) const
 {
-	std::vector< std::vector<double> > result(_vertexCount);
-
-	uint v;
+	// Create list of in-edges to pass to R function;
+	// adapt indices to R convention...
+	std::vector<std::vector<uint> > inEdges(_vertexCount);
 	std::set<uint> parents;
 	std::set<uint>::iterator si;
-	std::vector<uint> shiftParents;
+	uint v;
+	for (v = 0; v < _vertexCount; ++v) {
+		parents = dag.getParents(v);
+		inEdges[v].reserve(parents.size());
+		for (si = parents.begin(); si != parents.end(); ++si)
+			inEdges[v].push_back(*si + 1);
+	}
+
+	// Call R function for global score
+	return Rcpp::as<double>(_globalScoreFunction(inEdges));
+}
+
+std::vector<double> ScoreRFunction::localMLE(const uint vertex, const std::set<uint>& parents) const
+{
+	// Change parents indices to R convention
+	std::vector<uint> shiftParents(parents.begin(), parents.end());
+	std::vector<uint>::iterator vi;
+	for (vi = shiftParents.begin(); vi != shiftParents.end(); ++vi)
+		(*vi)++;
+
+	// Return local MLE
+	return Rcpp::as< std::vector<double> >(_localMLEFunction(vertex + 1, shiftParents));
+}
+
+std::vector< std::vector<double> > ScoreRFunction::globalMLE(const EssentialGraph& dag) const
+{
+	// Construct list of in-edges
+	uint v, i;
+	std::set<uint> parents;
+	std::set<uint>::iterator si;
+	Rcpp::IntegerVector shiftParents;
+	Rcpp::List inEdges(dag.getVertexCount());
 	for (v = 0; v < _vertexCount; ++v) {
 		// Get parents of vertex v and adapt their indices to the R convention
 		parents = dag.getParents(v);
-		shiftParents.clear();
-		shiftParents.reserve(parents.size());
-		for (si = parents.begin(); si != parents.end(); ++si)
-			shiftParents.push_back(*si + 1);
+		shiftParents = Rcpp::IntegerVector(parents.size());
+		for (si = parents.begin(), i = 0; si != parents.end(); ++si, ++i)
+			shiftParents[i] = *si + 1;
 
-		// Calculate parameters of vertex v using the R function
-		result[v] = Rcpp::as< std::vector<double> >(_mleFunction(v + 1, shiftParents));
+		// Add parents to list of in-edges
+		inEdges[v] = shiftParents;
+	}
+
+	// Calculate (and return) global MLE
+	Rcpp::List listMLE = _globalMLEFunction(inEdges);
+	std::vector< std::vector<double> > result(listMLE.size());
+	for (i = 0; i < listMLE.size(); ++i)
+		result[i] = Rcpp::as<std::vector<double> >(listMLE[i]);
+	return result;
+}
+
+void ScoreGaussL0PenScatter::setData(Rcpp::List& data)
+{
+	std::vector<int>::iterator vi;
+	int i;
+
+	// Cast preprocessed data from R list
+	_dataCount = data["data.count"];
+	_totalDataCount = data["total.data.count"];
+	Rcpp::List scatter = data["scatter"];
+	Rcpp::NumericMatrix scatterMat;
+	_disjointScatterMatrices.resize(scatter.size());
+	for (i = 0; i < scatter.size(); ++i) {
+		scatterMat = Rcpp::as<Rcpp::NumericMatrix>(scatter[i]);
+		_disjointScatterMatrices[i] = arma::mat(scatterMat.begin(), scatterMat.nrow(), scatterMat.ncol(), false);
+	}
+
+	// Cast index of scatter matrices, adjust R indexing convention to C++
+	std::vector<int> scatterIndex = data["scatter.index"];
+	for (i = 0; i < scatterIndex.size(); ++i)
+		_scatterMatrices[i] = &(_disjointScatterMatrices[scatterIndex[i] - 1]);
+
+	// Cast lambda: penalty constant
+	_lambda = data["lambda"];
+
+	// Check whether an intercept should be calculated
+	_allowIntercept = data["intercept"];
+}
+
+double ScoreGaussL0PenScatter::local(const uint vertex, const std::set<uint>& parents) const
+{
+	double a;
+
+	// Cast parents set to Armadillo uvec
+	arma::uvec parVec(_allowIntercept ? parents.size() : parents.size() + 1);
+	std::copy(parents.begin(), parents.end(), parVec.begin());
+	arma::uvec vVec(1);
+	vVec[0] = vertex;
+
+	// If intercept is allowed, add "fake parent" taking care of intercept
+	if (_allowIntercept)
+		parVec[parents.size()] = _vertexCount;
+
+	// Calculate value in the logarithm of maximum likelihood
+	a = (*(_scatterMatrices[vertex]))(vertex, vertex);
+	if (parents.size()) {
+		// TODO: evtl. wieder umschreiben, s.d. keine Cholesky-Zerlegung mehr
+		// gebraucht wird: macht Code nämlich etwas langsamer... (wider Erwarten!)
+		//arma::colvec b = arma::subvec(*(_scatterMatrices[vertex]), parents.begin(), parents.end(), vertex);
+		arma::mat R;
+		if (!arma::chol(R, _scatterMatrices[vertex]->submat(parVec, parVec)))
+			return std::numeric_limits<double>::quiet_NaN();
+		arma::colvec c = arma::solve(arma::trimatl(arma::trans(R)),
+				_scatterMatrices[vertex]->submat(parVec, vVec));
+		//a -= arma::as_scalar(arma::trans(b) * arma::solve(arma::submat(*(_scatterMatrices[vertex]), parents.begin(), parents.end(), parents.begin(), parents.end()), b));
+		a -= arma::dot(c, c);
+	}
+
+	// Finish calculation of partial BIC score
+	return -0.5*(1. + log(a/_dataCount[vertex]))*_dataCount[vertex] - _lambda*(1. + parents.size());
+
+}
+
+double ScoreGaussL0PenScatter::global(const EssentialGraph& dag) const
+{
+	double result = 0.;
+	uint v;
+
+	// L0-penalized score is decomposable => calculate sum of local scores
+	for (v = 0; v < dag.getVertexCount(); ++v)
+		result += local(v, dag.getParents(v));
+
+	return result;
+}
+
+std::vector<double> ScoreGaussL0PenScatter::localMLE(const uint vertex, const std::set<uint>& parents) const
+{
+	std::vector<double> result(parents.size() + 2);
+	uint j;
+	std::set<uint>::iterator pi;
+	arma::colvec b;
+	arma::mat S_papa, S_pav;
+	arma::uvec parVec;
+	arma::uvec vVec(1);
+
+	// Get parents, copy them to Armadillo vector
+	parVec.set_size(_allowIntercept ? parents.size() : parents.size() + 1);
+	std::copy(parents.begin(), parents.end(), parVec.begin());
+	if (_allowIntercept)
+		parVec[parents.size()] = _vertexCount;
+	vVec[0] = vertex;
+
+	// Initialize parameter for variance
+	result[0] = _scatterMatrices[j]->at(j, j) / _dataCount[j];
+
+	// Calculate regression coefficients
+	if (parents.size()) {
+		S_pav = _scatterMatrices[j]->submat(parVec, vVec);
+		S_papa = _scatterMatrices[j]->submat(parVec, parVec);
+		b = arma::solve(S_papa, S_pav);
+
+		// Correct error variance
+		result[0] += (arma::dot(b, S_papa * b) - 2. * arma::dot(S_pav, b)) / _dataCount[j];
+
+		// Store intercept, if requested (otherwise 0)
+		result[1] = (_allowIntercept ? b(b.n_elem - 1) : 0.);
+
+		// Copy coefficients to result vector
+		std::copy(b.memptr(), b.memptr() + (_allowIntercept ? b.n_elem - 1 : b.n_elem), result.begin() + 2);
 	}
 
 	return result;
 }
 
+std::vector< std::vector<double> > ScoreGaussL0PenScatter::globalMLE(const EssentialGraph& dag) const
+{
+	// Calculate local MLE for all vertices
+	std::vector< std::vector<double> > result(_vertexCount);
+	uint v;
+	for (v = 0; v < dag.getVertexCount(); ++v)
+		result[v] = localMLE(v, dag.getParents(v));
+
+	return result;
+}

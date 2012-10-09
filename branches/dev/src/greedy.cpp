@@ -2,7 +2,7 @@
  * greedy.cpp
  *
  * @author Alain Hauser
- * $Id: greedy.cpp 34 2012-03-01 08:32:29Z alhauser $
+ * $Id$
  */
 
 #include "greedy.hpp"
@@ -13,20 +13,6 @@
 #include <stack>
 #include <boost/tuple/tuple.hpp>
 #include <boost/unordered_map.hpp>
-
-
-bool TargetFamily::protects(const uint a, const uint b) const
-{
-	int i;
-	bool aInI, bInI;
-	for (i = 0; i < size(); i++) {
-		aInI = (std::find((*this)[i].begin(), (*this)[i].end(), a) != (*this)[i].end());
-		bInI = (std::find((*this)[i].begin(), (*this)[i].end(), b) != (*this)[i].end());
-		if (aInI ^ bInI) return true;
-	}
-
-	return false;
-}
 
 EssentialGraph::EssentialGraph(const uint vertexCount) :
 	_graph(vertexCount),
@@ -514,22 +500,22 @@ ArrowInsertion EssentialGraph::getOptimalArrowInsertion(const uint v)
 						if (!posterior.test(u) || !existsPath(v, u, C)) {
 							// Calculate BIC score difference for current clique C
 							// Note: if calculation is not possible (too low rank of
-							// submatrices), calcPartial should return NaN; then the
+							// submatrices), local should return NaN; then the
 							// test below fails
 							// Use "localScore" as (additional) cache
 							C_par = set_union(C, parents);
 							hmi = localScore.find(C_par);
 							if (hmi == localScore.end()) {
 								dout.level(3) << "calculating partial score for vertex " << v << ", parents " << C_par << "...\n";
-								diffScore = - _score->calcPartial(v, C_par);
+								diffScore = - _score->local(v, C_par);
 								localScore[C_par] = diffScore;
 							}
 							else
 								diffScore = hmi->second;
 							dout.level(3) << "partial score for vertex " << v << ", parents " << C_par << ": " << -diffScore << "\n";
 							C_par.insert(u);
-							diffScore += _score->calcPartial(v, C_par);
-							dout.level(3) << "partial score for vertex " << v << ", parents " << C_par << ": " << _score->calcPartial(v, C_par) << "\n";
+							diffScore += _score->local(v, C_par);
+							dout.level(3) << "partial score for vertex " << v << ", parents " << C_par << ": " << _score->local(v, C_par) << "\n";
 
 							// If new score is better than previous optimum, and there is no
 							// v-u-path that does not go through C, store (u, v, C) as new optimum
@@ -1042,9 +1028,9 @@ bool EssentialGraph::greedyBackward()
 					// Calculate BIC score difference for current clique C
 					C_par = set_union(C, parents);
 					C_par.insert(*ui);
-					diffScore = - _score->calcPartial(v, C_par);
+					diffScore = - _score->local(v, C_par);
 					C_par.erase(*ui);
-					diffScore += _score->calcPartial(v, C_par);
+					diffScore += _score->local(v, C_par);
 
 					// If new score is better than previous optimum, store (u, v, C) as new optimum
 					if (diffScore > diffScore_opt) {
@@ -1135,13 +1121,13 @@ bool EssentialGraph::greedyTurn()
 						if (!(CminN.empty()) && !existsPath(set_difference(neighbors, set_intersection(C, N)), *(CminN.begin()), set_difference(N, C))) {
 							// Calculate BIC score difference for current clique C
 							C_par = set_union(C, parents);
-							diffScore = - _score->calcPartial(v, C_par);
+							diffScore = - _score->local(v, C_par);
 							C_par.insert(*ui);
-							diffScore += _score->calcPartial(v, C_par);
+							diffScore += _score->local(v, C_par);
 							C_par = set_union(set_intersection(C, N), getParents(*ui));
-							diffScore += _score->calcPartial(*ui, C_par);
+							diffScore += _score->local(*ui, C_par);
 							C_par.insert(v);
-							diffScore -= _score->calcPartial(*ui, C_par);
+							diffScore -= _score->local(*ui, C_par);
 
 							// If new score is better than previous optimum, store (u, v, C) as new optimum
 							if (diffScore > diffScore_opt) {
@@ -1194,13 +1180,13 @@ bool EssentialGraph::greedyTurn()
 							if (!existsPath(v, *ui, set_union(C, getNeighbors(*ui)))) {
 								// Calculate BIC score difference for current clique C
 								C_par = set_union(C, parents);
-								diffScore = - _score->calcPartial(v, C_par);
+								diffScore = - _score->local(v, C_par);
 								C_par.insert(*ui);
-								diffScore += _score->calcPartial(v, C_par);
+								diffScore += _score->local(v, C_par);
 								C_par = getParents(*ui);
-								diffScore -= _score->calcPartial(*ui, C_par);
+								diffScore -= _score->local(*ui, C_par);
 								C_par.erase(v);
-								diffScore += _score->calcPartial(*ui, C_par);
+								diffScore += _score->local(*ui, C_par);
 								dout.level(2) << "  score difference for (u, v, C) = (" << *ui << ", " << v << ", " << C << "): " << diffScore << "\n";
 
 
@@ -1266,9 +1252,9 @@ bool EssentialGraph::greedyDAGForward()
 			if (u != v && !isAdjacent(u, v) && !existsPath(v, u)) {
 				// Calculate BIC score difference for adding edge (u, v)
 				C_new = parents;
-				diffScore = - _score->calcPartial(v, C_new);
+				diffScore = - _score->local(v, C_new);
 				C_new.insert(u);
-				diffScore += _score->calcPartial(v, C_new);
+				diffScore += _score->local(v, C_new);
 
 				// If new score is better than previous optimum
 				if (diffScore > diffScore_opt) {
@@ -1305,9 +1291,9 @@ bool EssentialGraph::greedyDAGBackward()
 		for (ui = parents.begin(); ui != parents.end(); ++ui) {
 			// Calculate BIC score difference when removing edge (u, v)
 			C_new = parents;
-			diffScore = - _score->calcPartial(v, C_new);
+			diffScore = - _score->local(v, C_new);
 			C_new.erase(*ui);
-			diffScore += _score->calcPartial(v, C_new);
+			diffScore += _score->local(v, C_new);
 
 			// If new score is better than previous optimum, store (u, v, C) as new optimum
 			if (diffScore > diffScore_opt) {
@@ -1346,10 +1332,10 @@ bool EssentialGraph::greedyDAGTurn()
 			if (!existsPath(*ui, v)) {
 				C_new = parents;
 				D_new = getParents(*ui);
-				diffScore = - _score->calcPartial(v, C_new) - _score->calcPartial(*ui, D_new);
+				diffScore = - _score->local(v, C_new) - _score->local(*ui, D_new);
 				C_new.erase(*ui);
 				D_new.insert(v);
-				diffScore += _score->calcPartial(v, C_new) + _score->calcPartial(*ui, D_new);
+				diffScore += _score->local(v, C_new) + _score->local(*ui, D_new);
 
 				// If new score is better than previous optimum, store (u, v, C) as new optimum
 				if (diffScore > diffScore_opt) {
@@ -1402,7 +1388,7 @@ void EssentialGraph::dynamicProgrammingSearch()
 		//std::cout << "\n" << i << ":\t";
 
 		for (subset = 0; subset < bestParents[i].size(); subset++) {
-			localScore[i][subset] = _score->calcPartial(i, _bitsToParents(i, subset));
+			localScore[i][subset] = _score->local(i, _bitsToParents(i, subset));
 			//std::cout << "localscore: " << localScore[i][subset] << "\n";
 			bestParents[i][subset] = subset;
 			for (pattern = 1; pattern < bestParents[i].size(); pattern *= 2) {
