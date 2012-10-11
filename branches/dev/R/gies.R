@@ -127,6 +127,17 @@ rmvnorm.ivent <- function(n, object, target = integer(0), target.value = numeric
   t(solve(t(A), Y))
 }
 
+#' Checks whether an argument is a whole number (not necessarily represented
+#' as an integer in R...)
+is.whole <- function(a, tol = .Machine$double.eps^0.5) { 
+  is.eq <- function(x,y) { 
+    r <- all.equal(x,y, tol=tol)
+    is.logical(r) && r 
+  }
+  (is.numeric(a) && is.eq(a, floor(a))) ||
+      (is.complex(a) && {ri <- c(Re(a),Im(a)); is.eq(ri, floor(ri))})
+}
+
 ##################################################
 ## Structure learning algorithms
 ##################################################
@@ -141,6 +152,7 @@ gies <- function(p, targets, score, ...) caus.inf("GIES", p, targets, score, ...
 
 gds <- function(p, targets, score, ...) caus.inf("GDS", p, targets, score, ...)
 
+## TODO: perhaps change name... simy or similar?
 silander <- function(p, targets, score, ...) caus.inf("Silander", p, targets, score, ...)
 
 dag2essgraph <- function(dag, targets = list(integer(0))) {

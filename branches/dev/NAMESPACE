@@ -88,6 +88,9 @@ export(randomDAG,
        r.gauss.pardag,
        rmvnorm.ivent,
        gies,
+       gds,
+       caus.inf,
+       silander,
        dag2essgraph)
 
 exportClasses("pcAlgo",

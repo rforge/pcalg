@@ -12,6 +12,8 @@
 #include "armaLapack.hpp"
 #include <vector>
 #include <set>
+#include <map>
+#include <string>
 #include <boost/dynamic_bitset.hpp>
 #include <Rcpp.h>
 
@@ -141,6 +143,18 @@ public:
 Score* createScore(std::string name, TargetFamily* targets, Rcpp::List data);
 
 /**
+ * Macros for ScoreRFunction: constants for finding the different R functions
+ * in the vector _rfunctions
+ *
+ * TODO: perhaps replace this mechanism by a std::map (without using operator[]!),
+ * or with pointers.
+ */
+#define R_FCN_INDEX_LOCAL_SCORE 0
+#define R_FCN_INDEX_GLOBAL_SCORE 1
+#define R_FCN_INDEX_LOCAL_MLE 2
+#define R_FCN_INDEX_GLOBAL_MLE 3
+
+/**
  * Scoring class that acts as a wrapper to an external R function
  * doing the actual calculation
  */
@@ -150,11 +164,11 @@ protected:
 	/**
 	 * R function objects used to calculate: local score, global score, local MLE,
 	 * global MLE
+	 *
+	 * NOTE: must be a map since "empty" function objects are not supported
+	 * by Rcpp; and the functions itself cannot be provided in the constructor
 	 */
-	Rcpp::Function _localScoreFunction;
-	Rcpp::Function _globalScoreFunction;
-	Rcpp::Function _localMLEFunction;
-	Rcpp::Function _globalMLEFunction;
+	std::vector<Rcpp::Function> _rfunction;
 public:
 	ScoreRFunction(uint vertexCount, TargetFamily* targets) :
 			Score(vertexCount, targets) {};

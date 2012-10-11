@@ -156,45 +156,70 @@ setRefClass("int.score",
           ## No C++ scoring object by default
           c.fcn <<- "none"
 
+          ## R function objects
+          pp.dat$local.score <<- function(vertex, parents) local.score(vertex, parents)
+          pp.dat$global.score <<- function(edges) global.score(vertex, parents)
+          pp.dat$local.mle <<- function(vertex, parents) local.mle(vertex, parents)
+          pp.dat$global.mle <<- function(edges) global.mle(vertex, parents)
+
           callSuper(...)
         },
-                
+            
+        #' Checks whether a vertex is valid
+        validate.vertex = function(vertex) {
+          stopifnot(is.whole(vertex))
+          stopifnot(1 <= vertex && vertex <= pp.dat$vertex.count)
+        },
+        
+        #' Checks whether a vector is a valid list of parents
+        validate.parents = function(parents) {
+          stopifnot(is.whole(parents))
+          stopifnot(length(unique(parents)) == length(parents))
+          stopifnot(1 <= parents, parents <= pp.dat$vertex.count)
+        },
+        
+        #' Creates a list of options for the C++ functions for the internal
+        #' calculation of scores and MLEs
+        c.fcn.options = function(DEBUG.LEVEL = 0) {
+          list(DEBUG.LEVEL = DEBUG.LEVEL)
+        },
+        
         #' Calculates the local score of a vertex and its parents
-        local.score = function(vertex, parents) {
+        local.score = function(vertex, parents, ...) {
           stop("local.score is not implemented in this class.")
         },
         
         #' Calculates the global score of a DAG which is only specified
         #' by its list of in-edges
-        global.score.int = function(edges) {
+        global.score.int = function(edges, ...) {
           ## Calculate score in R
           if (c.fcn == "none")
-            sum(sapply(1:.node.count,
-                    function(i) local.score(i, edges[[i]])))
+            sum(sapply(1:pp.dat$vertex.count,
+                    function(i) local.score(i, edges[[i]], ...)))
           ## Calculate score with the C++ library
           else
-            .Call("globalScore", c.fcn, pp.dat, edges, PACKAGE = "pcalg")          
+            .Call("globalScore", c.fcn, pp.dat, edges, c.fcn.options(...), PACKAGE = "pcalg")          
         },
         
         #' Calculates the global score of a DAG
-        global.score = function(dag) {
-          global.score.int(dag$.in.edges)
+        global.score = function(dag, ...) {
+          global.score.int(dag$.in.edges, ...)
         },
         
         #' Calculates the local MLE for a vertex and its parents
-        local.mle = function(vertex, parents) {
+        local.mle = function(vertex, parents, ...) {
           stop("local.mle is not implemented in this class.")
         },
         
         #' Calculates the global MLE
-        global.mle = function(dag) {
+        global.mle = function(dag, ...) {
           ## Calculate score in R
           if (c.fcn == "none")
-            lapply(1:.node.count,
-                function(i) local.mle(i, dag$.in.edges[[i]]))
+            lapply(1:pp.dat$vertex.count,
+                function(i) local.mle(i, dag$.in.edges[[i]], ...))
           ## Calculate score with the C++ library
           else
-            .Call("globalMLE", c.fcn, pp.dat, dag$.in.edges, PACKAGE = "pcalg")
+            .Call("globalMLE", c.fcn, pp.dat, dag$.in.edges, c.fcn.options(...), PACKAGE = "pcalg")
         }
         ),
         
@@ -255,7 +280,7 @@ setRefClass("gauss.l0pen.int.score",
           ti.lb <- c(sapply(1:length(pp.dat$targets), function(i) match(i, pp.dat$target.index)), 
               length(pp.dat$target.index) + 1)
           scatter.mat <- lapply(1:length(pp.dat$targets), 
-              function(i) crossprod(data[ti.lb[i]:(ti.lb[i + 1] - 1), ]))
+              function(i) crossprod(data[ti.lb[i]:(ti.lb[i + 1] - 1), , drop = FALSE]))
           
           ## Find all interventions in which the different variables
           ## are _not_ intervened
@@ -286,17 +311,21 @@ setRefClass("gauss.l0pen.int.score",
           ## Calculate the distinct scatter matrices for the
           ## "non-interventions"
           pp.dat$scatter <<- lapply(1:max.si, 
-              function(i) Reduce("+", scatter.mat[non.ivent[, match(i, pp.dat$scatter.index)]]))
+             function(i) Reduce("+", scatter.mat[non.ivent[, match(i, pp.dat$scatter.index)]]))
         },
         
         #' Calculates the local score of a vertex and its parents
-        local.score = function(vertex, parents) {
+        local.score = function(vertex, parents, ...) {
+          ## Check validity of arguments
+          validate.vertex(vertex)
+          validate.parents(parents)
+          
           ## Calculate score in R
           if (c.fcn == "none") {
             ## If an intercept is allowed, add a fake parent node
             parents <- sort(parents)
             if (pp.dat$intercept)
-              parents <- c(.node.count + 1, parents)
+              parents <- c(pp.dat$vertex.count + 1, parents)
             
             sigma2 <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, vertex]
             if (length(parents) != 0) {
@@ -304,21 +333,25 @@ setRefClass("gauss.l0pen.int.score",
               sigma2 <- sigma2 - as.numeric(b %*% solve(pp.dat$scatter[[pp.dat$scatter.index[vertex]]][parents, parents], b))
             }
             
-            return(-0.5*pp.dat$data.count[vertex]*(1 + log(sigma2/pp.dat$data.count[vertex])) + pp.dat$lambda*(1 + length(parents)))
+            return(-0.5*pp.dat$data.count[vertex]*(1 + log(sigma2/pp.dat$data.count[vertex])) - pp.dat$lambda*(1 + length(parents)))
           }
           ## Calculate score with the C++ library
           else 
-            return(.Call("localScore", c.fcn, pp.dat, vertex, parents, PACKAGE = "pcalg"))
+            return(.Call("localScore", c.fcn, pp.dat, vertex, parents, c.fcn.options(...), PACKAGE = "pcalg"))
         },
                 
         #' Calculates the local MLE for a vertex and its parents
-        local.mle = function(vertex, parents) {
+        local.mle = function(vertex, parents, ...) {
+          ## Check validity of arguments
+          validate.vertex(vertex)
+          validate.parents(parents)
+          
           ## Calculate score in R
           if (c.fcn == "none") {
             ## If an intercept is allowed, add a fake parent node
             parents <- sort(parents)
             if (pp.dat$intercept)
-              parents <- c(.node.count + 1, parents)
+              parents <- c(pp.dat$vertex.count + 1, parents)
             
             sigma2 <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, vertex]
             if (length(parents) != 0) {
@@ -336,7 +369,7 @@ setRefClass("gauss.l0pen.int.score",
           }
           ## Calculate score with the C++ library
           else
-            return(.Call("localMLE", c.fcn, pp.dat, vertex, parents, PACKAGE = "pcalg"))
+            return(.Call("localMLE", c.fcn, pp.dat, vertex, parents, c.fcn.options(...), PACKAGE = "pcalg"))
         }
         )
     )
@@ -445,11 +478,6 @@ setRefClass("ess.graph",
         #' Performs a causal inference from an arbitrary start DAG
         #' with a specified algorithm
         caus.inf = function(algorithm, ...) {
-          if (score$decomp)
-            score.fcn <- function(vertex, parents) score$local.score(vertex, parents)
-          else
-            score.fcn <- function(edges) score$global.score.int(edges)
-          
           new.graph <- .Call("causalInference", 
               .in.edges,
               score$pp.dat,
@@ -469,7 +497,7 @@ setRefClass("ess.graph",
         gds = function(...) caus.inf("GDS", ...),
         
         #' DP search of Silander and Myllymäki (ignores the start DAG!)
-        silander = function(...) caus.inf("Silander", ...),
+        silander = function(...) caus.inf("DP", ...),
         
         #' Yields a representative (estimating parameters via MLE)
         repr = function() {

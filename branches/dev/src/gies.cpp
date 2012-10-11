@@ -73,24 +73,32 @@ Rcpp::List wrapGraph(EssentialGraph graph)
  * 							parameters characterizing the score to be calculated
  * @param 	argVertex		vertex index
  * @param 	argParents		vector of parents of vertex
+ * @param	argOptions		additional options; at the moment: DEBUG.LEVEL
  * @return	local score value
  */
 RcppExport SEXP localScore(
 		SEXP argScore,
 		SEXP argPreprocData,
 		SEXP argVertex,
-		SEXP argParents)
+		SEXP argParents,
+		SEXP argOptions)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
 	initUncaughtExceptionHandler();
 
+	// Set debug level
+	Rcpp::List options(argOptions);
+	dout.setLevel(Rcpp::as<int>(options["DEBUG.LEVEL"]));
+	dout.level(1) << "Calculating local score...\n";
+
 	// Create appropriate scoring object
 	Rcpp::List data(argPreprocData);
 	TargetFamily targets = castTargets(data["targets"]);
+	dout.level(3) << "# intervention targets: " << targets.size() << "\n";
 	Score* score = createScore(Rcpp::as<std::string>(argScore), &targets, data);
 
 	// Calculate local score and delete score object
-	double result = score->local(Rcpp::as<uint>(argVertex), castVertices(argParents));
+	double result = score->local(Rcpp::as<uint>(argVertex) - 1, castVertices(argParents));
 	delete score;
 	return Rcpp::wrap(result);
 }
@@ -102,15 +110,21 @@ RcppExport SEXP localScore(
  * @param	argPreprocData	preprocessed data; sufficient statistic and all
  * 							parameters characterizing the score to be calculated
  * @param 	argInEdges		list of in-edges characterizing the DAG
+ * @param	argOptions		additional options; at the moment: DEBUG.LEVEL
  * @return	global score value
  */
 RcppExport SEXP globalScore(
 		SEXP argScore,
 		SEXP argPreprocData,
-		SEXP argInEdges)
+		SEXP argInEdges,
+		SEXP argOptions)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
 	initUncaughtExceptionHandler();
+
+	// Set debug level
+	Rcpp::List options(argOptions);
+	dout.setLevel(Rcpp::as<int>(options["DEBUG.LEVEL"]));
 
 	// Create appropriate scoring object
 	Rcpp::List data(argPreprocData);
@@ -131,16 +145,22 @@ RcppExport SEXP globalScore(
  * 							parameters characterizing the score to be calculated
  * @param 	argVertex		vertex index
  * @param 	argParents		vector of parents of vertex
+ * @param	argOptions		additional options; at the moment: DEBUG.LEVEL
  * @return	vector of local MLE
  */
 RcppExport SEXP localMLE(
 		SEXP argScore,
 		SEXP argPreprocData,
 		SEXP argVertex,
-		SEXP argParents)
+		SEXP argParents,
+		SEXP argOptions)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
 	initUncaughtExceptionHandler();
+
+	// Set debug level
+	Rcpp::List options(argOptions);
+	dout.setLevel(Rcpp::as<int>(options["DEBUG.LEVEL"]));
 
 	// Create appropriate scoring object
 	Rcpp::List data(argPreprocData);
@@ -148,7 +168,7 @@ RcppExport SEXP localMLE(
 	Score* score = createScore(Rcpp::as<std::string>(argScore), &targets, data);
 
 	// Calculate local score
-	std::vector<double> result = score->localMLE(Rcpp::as<uint>(argVertex), castVertices(argParents));
+	std::vector<double> result = score->localMLE(Rcpp::as<uint>(argVertex) - 1, castVertices(argParents));
 	delete score;
 	return Rcpp::wrap(result);
 }
@@ -160,15 +180,21 @@ RcppExport SEXP localMLE(
  * @param	argPreprocData	preprocessed data; sufficient statistic and all
  * 							parameters characterizing the score to be calculated
  * @param 	argInEdges		list of in-edges characterizing the DAG
+ * @param	argOptions		additional options; at the moment: DEBUG.LEVEL
  * @return	list of MLE vectors
  */
 RcppExport SEXP globalMLE(
 		SEXP argScore,
 		SEXP argPreprocData,
-		SEXP argInEdges)
+		SEXP argInEdges,
+		SEXP argOptions)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
 	initUncaughtExceptionHandler();
+
+	// Set debug level
+	Rcpp::List options(argOptions);
+	dout.setLevel(Rcpp::as<int>(options["DEBUG.LEVEL"]));
 
 	// Create appropriate scoring object
 	Rcpp::List data(argPreprocData);

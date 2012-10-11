@@ -440,14 +440,12 @@ ArrowInsertion EssentialGraph::getOptimalArrowInsertion(const uint v)
 	std::vector<std::set<uint> > maxCliques;
 	std::set<uint>::iterator si;
 	uint u;
-	int i, j;
+	int i;
 	double diffScore;
 	CliqueStack cliqueStack;
 	boost::dynamic_bitset<> posterior, forbidden;
 	boost::unordered_map<std::set<uint>, double > localScore;
 	boost::unordered_map<std::set<uint>, double >::iterator hmi;
-	bool hasInserted;
-
 
 	// Find maximal cliques in the neighborhood of v
 	neighbors = getNeighbors(v);
@@ -597,7 +595,7 @@ std::set<uint> EssentialGraph::_getOptimalUnrestrTarget()
 
 uint EssentialGraph::_getOptimalSingleVertexTarget()
 {
-	uint u, v_opt, v, v_ind, i;
+	uint u, v_opt, v_ind, i;
 	uint eta, eta_opt, eta_min;
 	std::set<uint> chainComp, chainCompVert, C, C_sub, neighbors;
 	std::set<uint>::iterator si, sj;
@@ -994,7 +992,7 @@ bool EssentialGraph::greedyBackward()
 	std::vector<std::set<uint> > maxCliques;
 	std::set<uint> C, C_par, C_sub, C_opt, N;
 	std::set<uint>::iterator iter, ui;
-	int i, j;
+	int i;
 	uint v, u_opt, v_opt;
 	double diffScore, diffScore_opt;
 	CliqueStack cliqueStack;
@@ -1276,7 +1274,7 @@ bool EssentialGraph::greedyDAGForward()
 
 bool EssentialGraph::greedyDAGBackward()
 {
-	uint u, v, u_opt, v_opt, p;
+	uint v, u_opt, v_opt, p;
 	double diffScore, diffScore_opt;
 	std::set<uint> parents, C_new;
 	std::set<uint>::iterator ui;
@@ -1365,7 +1363,7 @@ void EssentialGraph::dynamicProgrammingSearch()
 	if (getVertexCount() > 31)
 		throw std::length_error("Vertex count must not exceed 31.");
 
-	int i, j;
+	int i;
 	uint32_t subset, subsubset, pattern;
 	bool unset;
 

@@ -240,8 +240,8 @@ private:
 		std::list<std::list<uint> >::iterator si, newSet;
 		std::list<uint>::iterator vi;
 
-		int i, j;
-		uint a, b;
+		int i;
+		uint a;
 
 		while (!sets.empty()) {
 			// Remove the first vertex from the first set, and remove this set
