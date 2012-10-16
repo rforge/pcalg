@@ -611,5 +611,16 @@ setRefClass("gauss.pardag",
         )
     )
 
-
+#' Coercion from a weight matrix
+setAs("matrix", "gauss.pardag",
+    def = function(from) {
+      p <- nrow(from)
+      if (!isAcyclic(from))
+        stop("Input matrix does not correspond to an acyclic DAG.")
+      edgeL <- lapply(1:p, function(i) which(from[, i] != 0))
+      new("gauss.pardag", 
+          nodes = as.character(1:p), 
+          in.edges = edgeL,
+          param = lapply(1:p, function(i) c(0, 0, from[edgeL[[i]], i])))
+    })
     
