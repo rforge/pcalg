@@ -394,7 +394,7 @@ void EssentialGraph::enableCaching()
 	if (!_doCaching) {
 		_doCaching = true;
 		_actualPhase = CP_NONE;
-		_scoreCache = std::vector<ArrowInsertion>(getVertexCount());
+		_scoreCache = std::vector<ArrowChange>(getVertexCount());
 	}
 }
 
@@ -422,13 +422,13 @@ std::set<uint> EssentialGraph::getChainComponent(const uint v) const
 	return chainComp;
 }
 
-ArrowInsertion EssentialGraph::getOptimalArrowInsertion(const uint v)
+ArrowChange EssentialGraph::getOptimalArrowInsertion(const uint v)
 {
 	// For DEBUGGING purposes: print vertex being processed
 	dout.level(2) << "Calculating optimal arrow insertion for vertex " << v << "\n";
 
 	// Initialize optimal score gain
-	ArrowInsertion result;
+	ArrowChange result;
 	result.score = 0.;
 
 	// Respect maximum vertex degree and vertices that can only have children
@@ -537,6 +537,82 @@ ArrowInsertion EssentialGraph::getOptimalArrowInsertion(const uint v)
 				}
 			}
 		}
+
+	return result;
+}
+
+ArrowChange EssentialGraph::getOptimalArrowDeletion(const uint v)
+{
+	std::set<uint> neighbors, parents, candidates;
+	std::vector<std::set<uint> > maxCliques;
+	std::set<uint> C, C_par, C_sub, N;
+	std::set<uint>::iterator iter, ui;
+	int i;
+	double diffScore;
+	CliqueStack cliqueStack;
+	boost::unordered_map<std::set<uint>, double > localScore;
+	boost::unordered_map<std::set<uint>, double >::iterator hmi;
+
+	// For DEBUGGING purposes: print vertex being processed
+	dout.level(2) << "Calculating optimal arrow deletion for vertex " << v << "\n";
+
+	// Initialize optimal score gain
+	ArrowChange result;
+	result.score = 0.;
+
+	// Get neighbors and parents of v (used for calculation of BIC score later on)
+	neighbors = getNeighbors(v);
+	parents = getParents(v);
+	candidates = set_union(neighbors, parents);
+	for (ui = candidates.begin(); ui != candidates.end(); ++ui) {
+		N = set_intersection(neighbors, getAdjacent(*ui));
+
+		// Find all maximal cliques on N
+		maxCliques = getMaxCliques(N.begin(), N.end());
+		cliqueStack.clear_all();
+
+		// Calculate the score difference for all cliques in N
+		for (i = 0; i < maxCliques.size(); ++i) {
+			// Check all subsets of the actual maximal clique
+			cliqueStack.append(maxCliques[i]);
+			while(!cliqueStack.empty()) {
+				C = cliqueStack.back();
+				cliqueStack.pop_back();
+
+				// Calculate BIC score difference for current clique C
+				// Use "localScore" as (additional) cache
+				C_par = set_union(C, parents);
+				C_par.insert(*ui);
+				hmi = localScore.find(C_par);
+				if (hmi == localScore.end()) {
+					dout.level(3) << "calculating partial score for vertex " << v << ", parents " << C_par << "...\n";
+					diffScore = - _score->local(v, C_par);
+					localScore[C_par] = diffScore;
+				}
+				else
+					diffScore = hmi->second;
+				C_par.erase(*ui);
+				diffScore += _score->local(v, C_par);
+
+				// If new score is better than previous optimum, store (u, v, C) as new optimum
+				if (diffScore > result.score) {
+					result.source = *ui;
+					result.clique = C;
+					result.score = diffScore;
+				}
+
+				// Add all subsets of C that differ from C in only one vertex to the stack
+				for (iter = C.begin(); iter != C.end(); ++iter) {
+					C_sub = C;
+					C_sub.erase(*iter);
+					cliqueStack.append(C_sub);
+				}
+			} // while !cliqueStack.empty()
+
+			// Mark the actual maximal set as checked, i.e. add it to the stop sets
+			cliqueStack.stop_sets.insert(maxCliques[i]);
+		} // for i
+	} // for ui
 
 	return result;
 }
@@ -932,9 +1008,9 @@ void EssentialGraph::turn(const uint u, const uint v, const std::set<uint> C)
 bool EssentialGraph::greedyForward()
 {
 	uint v, v_opt;
-	std::vector<ArrowInsertion>::iterator si;
-	ArrowInsertionCmp comp;
-	ArrowInsertion insertion, optInsertion;
+	std::vector<ArrowChange>::iterator si;
+	ArrowChangeCmp comp;
+	ArrowChange insertion, optInsertion;
 
 	// For DEBUGGING purposes: print phase
 	dout.level(3) << "== starting forward phase...\n";
@@ -988,69 +1064,27 @@ bool EssentialGraph::greedyForward()
 
 bool EssentialGraph::greedyBackward()
 {
-	std::set<uint> neighbors, parents, candidates;
-	std::vector<std::set<uint> > maxCliques;
-	std::set<uint> C, C_par, C_sub, C_opt, N;
-	std::set<uint>::iterator iter, ui;
-	int i;
-	uint v, u_opt, v_opt;
-	double diffScore, diffScore_opt;
-	CliqueStack cliqueStack;
+	uint v, v_opt;
+	std::vector<ArrowChange>::iterator si;
+	ArrowChange deletion, optDeletion;
 
 	// For DEBUGGING purposes: print phase
 	dout.level(3) << "== starting backward phase...\n" ;
 
 	// Initialize optimal score gain
-	diffScore_opt = 0.;
+	optDeletion.score = 0.;
 
+	// TODO Allow caching for backward phase. At the moment, assumes no caching.
 	for (v = 0; v < getVertexCount(); v++) {
-		// Get neighbors and parents of v (used for calculation of BIC score later on)
-		neighbors = getNeighbors(v);
-		parents = getParents(v);
-		candidates = set_union(neighbors, parents);
-		for (ui = candidates.begin(); ui != candidates.end(); ++ui) {
-			N = set_intersection(neighbors, getAdjacent(*ui));
+		// Calculate optimal arrow insertion for given target vertex v
+		deletion = getOptimalArrowDeletion(v);
 
-			// Find all maximal cliques on N
-			maxCliques = getMaxCliques(N.begin(), N.end());
-			cliqueStack.clear_all();
-
-			// Calculate the score difference for all cliques in N
-			for (i = 0; i < maxCliques.size(); ++i) {
-				// Check all subsets of the actual maximal clique
-				cliqueStack.append(maxCliques[i]);
-				while(!cliqueStack.empty()) {
-					C = cliqueStack.back();
-					cliqueStack.pop_back();
-
-					// Calculate BIC score difference for current clique C
-					C_par = set_union(C, parents);
-					C_par.insert(*ui);
-					diffScore = - _score->local(v, C_par);
-					C_par.erase(*ui);
-					diffScore += _score->local(v, C_par);
-
-					// If new score is better than previous optimum, store (u, v, C) as new optimum
-					if (diffScore > diffScore_opt) {
-						u_opt = *ui;
-						v_opt = v;
-						C_opt = C;
-						diffScore_opt = diffScore;
-					}
-
-					// Add all subsets of C that differ from C in only one vertex to the stack
-					for (iter = C.begin(); iter != C.end(); ++iter) {
-						C_sub = C;
-						C_sub.erase(*iter);
-						cliqueStack.append(C_sub);
-					}
-				} // while !cliqueStack.empty()
-
-				// Mark the actual maximal set as checked, i.e. add it to the stop sets
-				cliqueStack.stop_sets.insert(maxCliques[i]);
-			} // for i
-		} // for ui
-	} // for v
+		// Look for optimal score
+		if (deletion.score > optDeletion.score) {
+			optDeletion = deletion;
+			v_opt = v;
+		}
+	}
 
 	// If caching is enabled, store current phase...
 	// TODO: Change that to admit actual caching also in the backward phase!!!
@@ -1058,11 +1092,11 @@ bool EssentialGraph::greedyBackward()
 		_actualPhase = CP_BACKWARD;
 
 	// If the score can be augmented, do it
-	if (diffScore_opt > 0.) {
+	if (optDeletion.score > 0.) {
 		// For DEBUGGING purposes
-		dout.level(1) << "  deleting edge (" << u_opt << ", " << v_opt << ") with C = "
-				<< C_opt << ", S = " << diffScore_opt << "\n";
-		remove(u_opt, v_opt, C_opt);
+		dout.level(1) << "  deleting edge (" << optDeletion.source << ", " << v_opt << ") with C = "
+				<< optDeletion.clique << ", S = " << optDeletion.score << "\n";
+		remove(optDeletion.source, v_opt, optDeletion.clique);
 		//getAdjacencyMatrix().print("A = ");
 		return true;
 	}

@@ -112,16 +112,16 @@ public:
 /**
  * Helper classes for storing cached values
  */
-struct ArrowInsertion
+struct ArrowChange
 {
 	uint source;
 	std::set<uint> clique;
 	double score;
 };
 
-struct ArrowInsertionCmp : public std::binary_function<Edge, Edge, bool>
+struct ArrowChangeCmp : public std::binary_function<Edge, Edge, bool>
 {
-	bool operator()(const ArrowInsertion& first, const ArrowInsertion& second) const
+	bool operator()(const ArrowChange& first, const ArrowChange& second) const
 	{
 		return (first.score < second.score);
 	}
@@ -160,7 +160,7 @@ private:
 	/**
 	 * Map of potential edges for which cached values exist
 	 */
-	std::vector<ArrowInsertion> _scoreCache;
+	std::vector<ArrowChange> _scoreCache;
 
 	/**
 	 * Pointer to scoring object
@@ -240,7 +240,6 @@ private:
 		std::list<std::list<uint> >::iterator si, newSet;
 		std::list<uint>::iterator vi;
 
-		int i;
 		uint a;
 
 		while (!sets.empty()) {
@@ -335,7 +334,13 @@ private:
 	 * Calculates the optimal arrow insertion for a given vertex v, that is,
 	 * the best source u, clique C and the corresponding score difference.
 	 */
-	ArrowInsertion getOptimalArrowInsertion(const uint v);
+	ArrowChange getOptimalArrowInsertion(const uint v);
+
+	/**
+	 * Calculates the optimal arrow deletion for a given vertex v, that is,
+	 * the best source u, clique C and the corresponding score difference.
+	 */
+	ArrowChange getOptimalArrowDeletion(const uint v);
 
 	/**
 	 * Yields the parent set of a node given its representation as unsigned integer.
