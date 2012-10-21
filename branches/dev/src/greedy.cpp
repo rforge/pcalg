@@ -393,7 +393,7 @@ void EssentialGraph::enableCaching()
 {
 	if (!_doCaching) {
 		_doCaching = true;
-		_actualPhase = CP_NONE;
+		_actualPhase = SD_NONE;
 		_scoreCache = std::vector<ArrowChange>(getVertexCount());
 	}
 }
@@ -401,7 +401,7 @@ void EssentialGraph::enableCaching()
 void EssentialGraph::disableCaching()
 {
 	_doCaching = false;
-	_actualPhase = CP_NONE;
+	_actualPhase = SD_NONE;
 	_scoreCache.clear();
 }
 
@@ -613,6 +613,149 @@ ArrowChange EssentialGraph::getOptimalArrowDeletion(const uint v)
 			cliqueStack.stop_sets.insert(maxCliques[i]);
 		} // for i
 	} // for ui
+
+	return result;
+}
+
+ArrowChange EssentialGraph::getOptimalArrowTurning(const uint v)
+{
+	std::set<uint> children, neighbors, neighbors2, parents, C, C_par, C_opt, C_sub, CminN, N;
+	std::vector<std::set<uint> > maxCliques;
+	std::set<uint>::iterator iter, ui;
+	int i;
+	double diffScore;
+	CliqueStack cliqueStack;
+
+	// For DEBUGGING purposes: print vertex being processed
+	dout.level(2) << "Calculating optimal arrow turning for vertex " << v << "\n";
+
+	// Initialize optimal score gain
+	ArrowChange result;
+	result.score = 0.;
+
+	// Respect vertices that are not allowed to have parents, but only children
+	if (!_childrenOnly.test(v))  {
+		dout.level(3) << "  checking edges incident to v = " << v << "...\n";
+
+		// Store parents and neighbors of v
+		neighbors = getNeighbors(v);
+		parents = getParents(v);
+
+		// Search over all neighbors of v; turning non-essential arrows
+		for (ui = neighbors.begin(); ui != neighbors.end(); ++ui) {
+			N = set_intersection(neighbors, getNeighbors(*ui));
+
+			// Find all maximal cliques in the neighborhood of v (without u)
+			neighbors2 = neighbors;
+			neighbors2.erase(*ui);
+			maxCliques = getMaxCliques(neighbors2.begin(), neighbors2.end());
+			cliqueStack.clear_all();
+
+			// Calculate the score difference for all (admissible) cliques in the neighborhood of v
+			for (i = 0; i < maxCliques.size(); ++i) {
+				// Check all subsets of the actual maximal clique
+				cliqueStack.append(maxCliques[i]);
+				while(!cliqueStack.empty()) {
+					C = cliqueStack.back();
+					cliqueStack.pop_back();
+
+					// Check if C \ N is not empty, and if C \cap N separates C \ N and N \ C in
+					// the neighborhood of v
+					CminN = set_difference(C, N);
+					if (!(CminN.empty()) && !existsPath(set_difference(neighbors, set_intersection(C, N)), *(CminN.begin()), set_difference(N, C))) {
+						// Calculate BIC score difference for current clique C
+						C_par = set_union(C, parents);
+						diffScore = - _score->local(v, C_par);
+						C_par.insert(*ui);
+						diffScore += _score->local(v, C_par);
+						C_par = set_union(set_intersection(C, N), getParents(*ui));
+						diffScore += _score->local(*ui, C_par);
+						C_par.insert(v);
+						diffScore -= _score->local(*ui, C_par);
+
+						// If new score is better than previous optimum, store (u, v, C) as new optimum
+						if (diffScore > result.score) {
+							result.source = *ui;
+							result.clique = C;
+							result.score = diffScore;
+						}
+					}
+
+					// Add all subsets of C that differ from C in only one vertex to the stack
+					for (iter = C.begin(); iter != C.end(); ++iter) {
+						C_sub = C;
+						C_sub.erase(*iter);
+						cliqueStack.append(C_sub);
+					}
+				} // while !cliqueStack.empty()
+
+				// Mark the actual maximal set as checked, i.e. add it to the stop sets
+				cliqueStack.stop_sets.insert(maxCliques[i]);
+			} // for i
+		} // for ui
+
+		// Find all maximal cliques in the neighborhood of v
+		maxCliques = getMaxCliques(neighbors.begin(), neighbors.end());
+
+		// Search over all children of v; turning essential arrows
+		children = getChildren(v);
+		for (ui = children.begin(); ui != children.end(); ++ui) {
+			dout.level(3) << "  trying to turn arrow (" << v << ", " << *ui << ")...\n";
+			N = set_intersection(neighbors, getParents(*ui));
+
+			// Add N as a set to check, and at the same time as a stop set.
+			// Actually, N will be checked _only_ if it is a clique, i.e. subset
+			// of a maximal clique
+			cliqueStack.clear_all();
+			cliqueStack.push_back(N);
+			cliqueStack.stop_sets.insert(N);
+
+			for (i = 0; i < maxCliques.size(); ++i) {
+				// Only consider maximal cliques that contain N
+				if (std::includes(maxCliques[i].begin(), maxCliques[i].end(), N.begin(), N.end())) {
+					// Check all subsets of the actual maximal clique
+					cliqueStack.append(maxCliques[i]);
+					while(!cliqueStack.empty()) {
+						C = cliqueStack.back();
+						cliqueStack.pop_back();
+
+						// Check if there is no v-u-path (except (v, u)) that does not visit C \cup ne(u)
+						if (!existsPath(v, *ui, set_union(C, getNeighbors(*ui)))) {
+							// Calculate BIC score difference for current clique C
+							C_par = set_union(C, parents);
+							diffScore = - _score->local(v, C_par);
+							C_par.insert(*ui);
+							diffScore += _score->local(v, C_par);
+							C_par = getParents(*ui);
+							diffScore -= _score->local(*ui, C_par);
+							C_par.erase(v);
+							diffScore += _score->local(*ui, C_par);
+							dout.level(3) << "  score difference for (u, v, C) = (" << *ui << ", " << v << ", " << C << "): " << diffScore << "\n";
+
+
+							// If new score is better than previous optimum, and there is no
+							// v-u-path that does not go through C, store (u, v, C) as new optimum
+							if (diffScore > result.score) {
+								result.source = *ui;
+								result.clique = C;
+								result.score = diffScore;
+							}
+						}
+
+						// Add all subsets of C that differ from C in only one vertex to the stack
+						for (iter = C.begin(); iter != C.end(); ++iter) {
+							C_sub = C;
+							C_sub.erase(*iter);
+							cliqueStack.append(C_sub);
+						}
+					}
+
+					// Mark the actual maximal set as checked, i.e. add it to the stop sets
+					cliqueStack.stop_sets.insert(maxCliques[i]);
+				}
+			}
+		} // for ui
+	} // IF !_childrenOnly.test(v)
 
 	return result;
 }
@@ -1036,7 +1179,7 @@ bool EssentialGraph::greedyForward()
 	dout.level(3) << "vertex count: " << getVertexCount() << "\n";
 	if (_doCaching) {
 		// If score has to be initialized (current phase is not forward), do it
-		if (_actualPhase != CP_FORWARD)
+		if (_actualPhase != SD_FORWARD)
 			for (v = 0; v < getVertexCount(); v++)
 				_scoreCache[v] = getOptimalArrowInsertion(v);
 
@@ -1044,7 +1187,7 @@ bool EssentialGraph::greedyForward()
 		si = std::max_element(_scoreCache.begin(), _scoreCache.end(), comp);
 		v_opt = std::distance(_scoreCache.begin(), si);
 		optInsertion = *si;
-		_actualPhase = CP_FORWARD;
+		_actualPhase = SD_FORWARD;
 	}
 
 	// If the score can be augmented, do it
@@ -1065,7 +1208,6 @@ bool EssentialGraph::greedyForward()
 bool EssentialGraph::greedyBackward()
 {
 	uint v, v_opt;
-	std::vector<ArrowChange>::iterator si;
 	ArrowChange deletion, optDeletion;
 
 	// For DEBUGGING purposes: print phase
@@ -1089,7 +1231,7 @@ bool EssentialGraph::greedyBackward()
 	// If caching is enabled, store current phase...
 	// TODO: Change that to admit actual caching also in the backward phase!!!
 	if (_doCaching)
-		_actualPhase = CP_BACKWARD;
+		_actualPhase = SD_BACKWARD;
 
 	// If the score can be augmented, do it
 	if (optDeletion.score > 0.) {
@@ -1106,165 +1248,120 @@ bool EssentialGraph::greedyBackward()
 
 bool EssentialGraph::greedyTurn()
 {
-	std::set<uint> children, neighbors, neighbors2, parents, C, C_par, C_opt, C_sub, CminN, N;
-	std::vector<std::set<uint> > maxCliques;
-	std::set<uint>::iterator iter, ui;
-	uint v, u_opt, v_opt;
-	int i;
-	double diffScore, diffScore_opt;
-	CliqueStack cliqueStack;
+	uint v, v_opt;
+	ArrowChange turning, optTurning;
 
 	// For DEBUGGING purposes: print phase
-	dout.level(3) << "== starting turning phase...\n";
+	dout.level(3) << "== starting turning phase...\n" ;
 
 	// Initialize optimal score gain
-	diffScore_opt = 0.;
+	optTurning.score = 0.;
 
-	for (v = 0; v < getVertexCount(); ++v) 
-		// Respect vertices that are not allowed to have parents, but only children
-		if (!_childrenOnly.test(v))  {
-			dout.level(3) << "  checking edges incident to v = " << v << "...\n";
+	// TODO Allow caching for turning phase. At the moment, assumes no caching.
+	for (v = 0; v < getVertexCount(); v++) {
+		// Calculate optimal arrow insertion for given target vertex v
+		turning = getOptimalArrowTurning(v);
 
-			// Store parents and neighbors of v
-			neighbors = getNeighbors(v);
-			parents = getParents(v);
-
-			// Search over all neighbors of v; turning non-essential arrows
-			for (ui = neighbors.begin(); ui != neighbors.end(); ++ui) {
-				N = set_intersection(neighbors, getNeighbors(*ui));
-
-				// Find all maximal cliques in the neighborhood of v (without u)
-				neighbors2 = neighbors;
-				neighbors2.erase(*ui);
-				maxCliques = getMaxCliques(neighbors2.begin(), neighbors2.end());
-				cliqueStack.clear_all();
-
-				// Calculate the score difference for all (admissible) cliques in the neighborhood of v
-				for (i = 0; i < maxCliques.size(); ++i) {
-					// Check all subsets of the actual maximal clique
-					cliqueStack.append(maxCliques[i]);
-					while(!cliqueStack.empty()) {
-						C = cliqueStack.back();
-						cliqueStack.pop_back();
-
-						// Check if C \ N is not empty, and if C \cap N separates C \ N and N \ C in
-						// the neighborhood of v
-						CminN = set_difference(C, N);
-						if (!(CminN.empty()) && !existsPath(set_difference(neighbors, set_intersection(C, N)), *(CminN.begin()), set_difference(N, C))) {
-							// Calculate BIC score difference for current clique C
-							C_par = set_union(C, parents);
-							diffScore = - _score->local(v, C_par);
-							C_par.insert(*ui);
-							diffScore += _score->local(v, C_par);
-							C_par = set_union(set_intersection(C, N), getParents(*ui));
-							diffScore += _score->local(*ui, C_par);
-							C_par.insert(v);
-							diffScore -= _score->local(*ui, C_par);
-
-							// If new score is better than previous optimum, store (u, v, C) as new optimum
-							if (diffScore > diffScore_opt) {
-								u_opt = *ui;
-								v_opt = v;
-								C_opt = C;
-								diffScore_opt = diffScore;
-							}
-						}
-
-						// Add all subsets of C that differ from C in only one vertex to the stack
-						for (iter = C.begin(); iter != C.end(); ++iter) {
-							C_sub = C;
-							C_sub.erase(*iter);
-							cliqueStack.append(C_sub);
-						}
-					} // while !cliqueStack.empty()
-
-					// Mark the actual maximal set as checked, i.e. add it to the stop sets
-					cliqueStack.stop_sets.insert(maxCliques[i]);
-				} // for i
-			} // for ui
-
-			// Find all maximal cliques in the neighborhood of v
-			maxCliques = getMaxCliques(neighbors.begin(), neighbors.end());
-
-			// Search over all children of v; turning essential arrows
-			children = getChildren(v);
-			for (ui = children.begin(); ui != children.end(); ++ui) {
-				dout.level(2) << "  trying to turn arrow (" << v << ", " << *ui << ")...\n";
-				N = set_intersection(neighbors, getParents(*ui));
-
-				// Add N as a set to check, and at the same time as a stop set.
-				// Actually, N will be checked _only_ if it is a clique, i.e. subset
-				// of a maximal clique
-				cliqueStack.clear_all();
-				cliqueStack.push_back(N);
-				cliqueStack.stop_sets.insert(N);
-
-				for (i = 0; i < maxCliques.size(); ++i) {
-					// Only consider maximal cliques that contain N
-					if (std::includes(maxCliques[i].begin(), maxCliques[i].end(), N.begin(), N.end())) {
-						// Check all subsets of the actual maximal clique
-						cliqueStack.append(maxCliques[i]);
-						while(!cliqueStack.empty()) {
-							C = cliqueStack.back();
-							cliqueStack.pop_back();
-
-							// Check if there is no v-u-path (except (v, u)) that does not visit C \cup ne(u)
-							if (!existsPath(v, *ui, set_union(C, getNeighbors(*ui)))) {
-								// Calculate BIC score difference for current clique C
-								C_par = set_union(C, parents);
-								diffScore = - _score->local(v, C_par);
-								C_par.insert(*ui);
-								diffScore += _score->local(v, C_par);
-								C_par = getParents(*ui);
-								diffScore -= _score->local(*ui, C_par);
-								C_par.erase(v);
-								diffScore += _score->local(*ui, C_par);
-								dout.level(2) << "  score difference for (u, v, C) = (" << *ui << ", " << v << ", " << C << "): " << diffScore << "\n";
-
-
-								// If new score is better than previous optimum, and there is no
-								// v-u-path that does not go through C, store (u, v, C) as new optimum
-								if (diffScore > diffScore_opt) {
-									u_opt = *ui;
-									v_opt = v;
-									C_opt = C;
-									diffScore_opt = diffScore;
-								}
-							}
-
-							// Add all subsets of C that differ from C in only one vertex to the stack
-							for (iter = C.begin(); iter != C.end(); ++iter) {
-								C_sub = C;
-								C_sub.erase(*iter);
-								cliqueStack.append(C_sub);
-							}
-						}
-
-						// Mark the actual maximal set as checked, i.e. add it to the stop sets
-						cliqueStack.stop_sets.insert(maxCliques[i]);
-					}
-				}
-			} // for ui
+		// Look for optimal score
+		if (turning.score > optTurning.score) {
+			optTurning = turning;
+			v_opt = v;
 		}
+	}
 
 	// If caching is enabled, store current phase...
 	// TODO: Change that to admit actual caching also in the turning phase!!!
 	if (_doCaching)
-		_actualPhase = CP_TURNING;
+		_actualPhase = SD_TURNING;
 
 	// Turn the highest-scoring edge
-	if (diffScore_opt > 0.) {
+	// If the score can be augmented, do it
+	if (optTurning.score > 0.) {
 		// For DEBUGGING purposes
-		dout.level(1) << "  turning edge (" << v_opt << ", " << u_opt << ") with C = " << C_opt << ", S = " << diffScore_opt << "\n";
-		turn(u_opt, v_opt, C_opt);
-//		#if DEBUG_OUTPUT_LEVEL >= 2
-//			getAdjacencyMatrix().print("A = ");
-//		#endif
+		dout.level(1) << "  turning edge (" << v_opt << ", " << optTurning.source << ") with C = "
+				<< optTurning.clique << ", S = " << optTurning.score << "\n";
+		turn(optTurning.source, v_opt, optTurning.clique);
+		//getAdjacencyMatrix().print("A = ");
 		return true;
 	}
 	else
 		return false;
+}
 
+step_dir EssentialGraph::greedyStep()
+{
+	uint v, v_opt;
+	step_dir optDir;
+	ArrowChange change, optChange;
+
+	// For DEBUGGING purposes: print phase
+	dout.level(3) << "== looking for optimal step...\n" ;
+
+	// Initialize optimal score gain
+	optChange.score = 0.;
+	optDir = SD_NONE;
+
+	// Look for optimal arrow insertion
+	for (v = 0; v < getVertexCount(); v++) {
+		change = getOptimalArrowInsertion(v);
+
+		// Look for optimal score
+		if (change.score > optChange.score) {
+			optChange = change;
+			v_opt = v;
+			optDir = SD_FORWARD;
+		}
+	}
+
+	// Look for optimal arrow deletion
+	for (v = 0; v < getVertexCount(); v++) {
+		change = getOptimalArrowDeletion(v);
+
+		// Look for optimal score
+		if (change.score > optChange.score) {
+			optChange = change;
+			v_opt = v;
+			optDir = SD_BACKWARD;
+		}
+	}
+
+	// Look for optimal arrow turning
+	for (v = 0; v < getVertexCount(); v++) {
+		change = getOptimalArrowTurning(v);
+
+		// Look for optimal score
+		if (change.score > optChange.score) {
+			optChange = change;
+			v_opt = v;
+			optDir = SD_TURNING;
+		}
+	}
+
+	// If caching is enabled, reset cache since it is not valid any more
+	// after an arbitrary step
+	if (_doCaching)
+		_actualPhase = SD_NONE;
+
+	// If the score can be augmented, perform the optimal step
+	switch(optDir) {
+	case SD_FORWARD :
+		dout.level(3) << "  inserting edge (" << optChange.source << ", " << v_opt << ") with C = "
+				<< optChange.clique << ", S = " << optChange.score << "\n";
+		insert(optChange.source, v_opt, optChange.clique);
+		break;
+	case SD_BACKWARD :
+		dout.level(1) << "  deleting edge (" << optChange.source << ", " << v_opt << ") with C = "
+				<< optChange.clique << ", S = " << optChange.score << "\n";
+		remove(optChange.source, v_opt, optChange.clique);
+		break;
+	case SD_TURNING :
+		dout.level(1) << "  turning edge (" << v_opt << ", " << optChange.source << ") with C = "
+				<< optChange.clique << ", S = " << optChange.score << "\n";
+		turn(optChange.source, v_opt, optChange.clique);
+		break;
+	}
+
+	return optDir;
 }
 
 bool EssentialGraph::greedyDAGForward()

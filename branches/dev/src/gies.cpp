@@ -333,6 +333,27 @@ RcppExport SEXP causalInference(
 			for (; steps.back() < stepLimit && graph.greedyTurn(); steps.back()++);
 	}
 
+	// Single one or several steps of GIES into either direction
+	else if (algName == "GIES-STEP") {
+		dout.level(1) << "Performing " << algName << "...\n";
+
+		// Limit to single step if requested
+		stepLimit = options["maxsteps"];
+		if (stepLimit == 0)
+			stepLimit = graph.getVertexCount()*graph.getVertexCount();
+
+		// TODO: evtl. steps so ändern, dass man daraus ablesen kann, in welcher
+		// Reihenfolge die einzelnen Phasen ausgeführt wurden
+		// Steps: 3 entries, storing number of forward, backward, and turning steps
+		steps.resize(3, 0);
+		step_dir dir = SD_NONE;
+		do {
+			dir = graph.greedyStep();
+			if (dir != SD_NONE)
+				steps[dir - 1]++;
+		} while (steps[0] + steps[1] + steps[2] < stepLimit && dir != SD_NONE);
+	}
+
 	// GDS
 	else if (algName == "GDS") {
 		// TODO: evtl. caching für GDS implementieren...

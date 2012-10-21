@@ -127,7 +127,7 @@ struct ArrowChangeCmp : public std::binary_function<Edge, Edge, bool>
 	}
 };
 
-enum cache_phase { CP_NONE, CP_FORWARD, CP_BACKWARD, CP_TURNING };
+enum step_dir { SD_NONE, SD_FORWARD, SD_BACKWARD, SD_TURNING };
 
 // Forward declaration for testing
 class EssentialGraphTest;
@@ -155,7 +155,7 @@ private:
 	/**
 	 * Indicates whether the cache must be initialized before usage.
 	 */
-	cache_phase _actualPhase;
+	step_dir _actualPhase;
 
 	/**
 	 * Map of potential edges for which cached values exist
@@ -341,6 +341,12 @@ private:
 	 * the best source u, clique C and the corresponding score difference.
 	 */
 	ArrowChange getOptimalArrowDeletion(const uint v);
+
+	/**
+	 * Calculates the optimal arrow turning for a given vertex v, that is,
+	 * the best source u, clique C and the corresponding score difference.
+	 */
+	ArrowChange getOptimalArrowTurning(const uint v);
 
 	/**
 	 * Yields the parent set of a node given its representation as unsigned integer.
@@ -556,6 +562,12 @@ public:
 	 * Does one turning step of the greedy interventional equivalence search
 	 */
 	bool greedyTurn();
+
+	/**
+	 * Does one greedy step, either forward, backward, or turning, the one that
+	 * yields the highest score gain.
+	 */
+	step_dir greedyStep();
 
 	/**
 	 * Does one forward step of the greedy DAG search (i.e., not over interventional
