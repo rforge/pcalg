@@ -90,7 +90,7 @@ export(randomDAG,
        gies,
        gds,
        caus.inf,
-       silander,
+       simy,
        dag2essgraph)
 
 exportClasses("pcAlgo",

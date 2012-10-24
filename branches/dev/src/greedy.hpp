@@ -356,11 +356,6 @@ private:
 	std::set<uint> _bitsToParents(const int vertex, const uint32_t bits);
 
 	/**
-	 * Yields an initial PEO for searching for others later on
-	 */
-	std::vector<uint> _initialPEO(std::set<uint> chainComponent);
-
-	/**
 	 * Yields the "optimal" intervention target (without restriction on
 	 * target size)
 	 */
@@ -593,7 +588,7 @@ public:
 	 * (technically, p <= 32; practically less due to memory and time
 	 * constraints)
 	 */
-	void dynamicProgrammingSearch();
+	void siMySearch();
 
 	/**
 	 * Yields the "optimal" intervention target of size <= q, i.e., the

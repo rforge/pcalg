@@ -378,8 +378,8 @@ RcppExport SEXP causalInference(
 		graph.replaceUnprotected();
 	}
 	// DP
-	else if (algName == "DP") {
-		graph.dynamicProgrammingSearch();
+	else if (algName == "SiMy") {
+		graph.siMySearch();
 		graph.replaceUnprotected();
 	}
 

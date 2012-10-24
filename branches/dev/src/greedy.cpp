@@ -775,11 +775,6 @@ std::set<uint> EssentialGraph::_bitsToParents(const int vertex, const uint32_t b
 	return parents;
 }
 
-std::vector<uint> EssentialGraph::_initialPEO(std::set<uint> chainComponent)
-{
-
-}
-
 std::set<uint> EssentialGraph::_getOptimalUnrestrTarget()
 {
 	std::set<uint> target;
@@ -1486,7 +1481,7 @@ bool EssentialGraph::greedyDAGTurn()
 		return false;
 }
 
-void EssentialGraph::dynamicProgrammingSearch()
+void EssentialGraph::siMySearch()
 {
 	// Check whether DAG is not too large (practically, the algorithm will
 	// only work for substantially smaller graphs than p = 32 due to
@@ -1500,13 +1495,8 @@ void EssentialGraph::dynamicProgrammingSearch()
 
 	// Table of best parents given a variable and a set of candidate parents
 	std::vector< std::vector<uint32_t> > bestParents(getVertexCount(), std::vector<uint32_t>(1 << (getVertexCount() - 1)));
-	// for (i = 0; i < bestParents.size(); i++)
-	//	bestParents[i].resize(1 << (_vertexCount - 1), 0);
 	// Table with corresponding best local scores
 	std::vector< std::vector<double> > localScore(getVertexCount(), std::vector<double>(1 << (getVertexCount() - 1)));
-	// for (i = 0; i < localScore.size(); i++)
-	//	localScore[i].resize(1 << (_vertexCount - 1), 0.);
-
 	// Table of best sinks for all subsets of variables
 	std::vector< int > bestSink(1 << getVertexCount());
 	// Table of corresponding optimal scores

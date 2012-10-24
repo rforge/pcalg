@@ -152,8 +152,7 @@ gies <- function(p, targets, score, ...) caus.inf("GIES", p, targets, score, ...
 
 gds <- function(p, targets, score, ...) caus.inf("GDS", p, targets, score, ...)
 
-## TODO: perhaps change name... simy or similar?
-silander <- function(p, targets, score, ...) caus.inf("Silander", p, targets, score, ...)
+simy <- function(p, targets, score, ...) caus.inf("SiMy", p, targets, score, ...)
 
 dag2essgraph <- function(dag, targets = list(integer(0))) {
   new("ess.graph", 
