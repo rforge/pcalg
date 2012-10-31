@@ -1,13 +1,24 @@
-\documentclass[article]{jss}
-%\documentclass[nojss,article]{jss}
+%\documentclass[article]{jss}
+\documentclass[nojss,article]{jss}
 %              ----- for the package-vignette, don't use JSS logo, etc
 % but when submitting, do
+
+\usepackage[utf8]{inputenc}
+
 % get rid of too much vertical space between R input & output:
 \fvset{listparameters={\setlength{\topsep}{0pt}}}
 %\renewenvironment{Schunk}{\vspace{\topsep}}{\vspace{\topsep}}
 %
 \usepackage{algorithmic}
 \usepackage{algorithm}
+
+%% Mathematics
+\usepackage{amsmath}
+
+%% Graphics
+\usepackage{tikz}
+\usetikzlibrary{snakes,arrows,shapes,decorations.markings}
+\usepackage{xstring}
 
 %%\VignetteIndexEntry{Causal Inference: The R package pcalg}
 %%\VignetteDepends{pcalg, sfsmisc, Rgraphviz}
@@ -42,8 +53,8 @@
   we give a brief overview of the methodology, and demonstrate the
   package's functionality in both toy examples and applications.}
 
-\Keywords{IDA, PC, RFCI, FCI, do-calculus, causality, graphical model, \proglang{R}}
-\Plainkeywords{IDA, PC, RFCI, FCI, do-calculus, causality, graphical models, R} %% without formatting
+\Keywords{IDA, PC, RFCI, FCI, GES, GIES, do-calculus, causality, graphical model, \proglang{R}}
+\Plainkeywords{IDA, PC, RFCI, FCI, GES, GIES, do-calculus, causality, graphical models, R} %% without formatting
 %% at least one keyword must be supplied
 
 %% publication information
@@ -75,6 +86,22 @@
 
 %% end of declarations %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Abbreviations, definitions, etc.
+\DeclareMathOperator{\doop}{do}
+
+%% Different edge types in graphs
+\newlength{\edgelength}
+\setlength{\edgelength}{3.5ex}
+%\DeclareRobustCommand{\gredge}[1]{\mathbin{\tikz[baseline] \draw[\StrSubstitute{#1}{<}{angle 60}] (0pt, 0.7ex) -- (\edgelength, 0.7ex);}}
+\newcommand{\gredge}[1]{%
+  %% Replace arrow headings
+  \def\substarrow{#1}
+  \StrSubstitute{\substarrow}{<}{angle 60}[\substarrow]
+  \StrSubstitute{\substarrow}{>}{angle 60}[\substarrow]
+  %% Print edge
+  \mathbin{\tikz[baseline] \draw[\substarrow] (0pt, 0.7ex) -- (\edgelength, 0.7ex);}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
 
@@ -98,11 +125,14 @@ used to find these relationships. In many settings, however, experiments
 are infeasible because of time, cost or ethical constraints.
 
 We therefore consider the problem of inferring causal information from
-observational data. Under some assumptions, the PC algorithm
-(see \cite{SpirtesEtAl00}), the FCI algorithm (see \cite{SpirtesEtAl00} and
-\cite{SpirtesMeekRichardson99}) and the RFCI algorithm (see \cite{rfci}) can
-infer information about the causal structure from observational data. Thus,
-these algorithms tell us which variables could or could not be a cause of
+observational data. Under some assumptions, the algorithms PC 
+(see \cite{SpirtesEtAl00}), FCI (see \cite{SpirtesEtAl00} and
+\cite{SpirtesMeekRichardson99}), RFCI (see \cite{rfci}) and GES (see 
+\cite{Chickering2002}) can
+infer information about the causal structure from observational data; 
+there also exists a generalization of GES to interventional data, GIES 
+(see \cite{HauserBuhlmann2012}). These
+algorithms tell us which variables could or could not be a cause of
 some variable of interest. They do not, however, give information about the
 size of the causal effects. We therefore developed the IDA method (see
 \cite{BuKaMa09}), which can infer bounds on causal effects based on
@@ -111,7 +141,8 @@ large-scale biological system (see \cite{NatMethods10}).
 
 For broader use of these methods, well documented and easy to use software
 is indispensable. We therefore wrote the R-package \pkg{pcalg}, which
-contains implementations of the PC-, FCI- and RFCI-algorithms, as well as
+contains implementations of the algorithms PC, FCI, RFCI, GES and GIES, 
+as well as
 of the IDA method. The objective of this paper is to introduce the R
 package \pkg{pcalg}, explain the range of functions on simulated data sets
 and summarize some applications.
@@ -197,7 +228,7 @@ As can be seen in Fig.~\ref{fig:intro1}, there are directed and bidirected
 edges in the estimated causal structure. The directed edges show the
 presence and direction of direct causal effects. A bidirected edge means
 that the PC-algorithm was unable to decide whether the edge orientation
-should be $\leftarrow$ or $\rightarrow$. Thus, bidirected edges
+should be $\gredge{<-}$ or $\gredge{->}$. Thus, bidirected edges
 represent some uncertainty in the resulting model. They reflect the fact
 that in general one cannot estimate a unique DAG from observational data,
 not even with an infinite amount of data, since several DAGs can describe
@@ -212,10 +243,10 @@ is the (total) causal effect of $V_1$ on $V_6$. More precisely, the causal
 effect $C(V_1, V_6, \tilde{x})$ of $V_1$ from $V_1 = \tilde{x}$ on $V_6$ is
 defined as
 \begin{eqnarray*}
-C(V_1, V_6, \tilde{x}) &=& E(V_1|do(V_6 = \tilde{x} + 1)) - E(V_1|do(V_6 = \tilde{x})) \ \mbox{or} \\
-C(V_1, V_6, \tilde{x}) &=& \frac{\partial}{\partial x} E(V_1|do(V_6 = x))|_{x=\tilde{x}},
+C(V_1, V_6, \tilde{x}) &=& E(V_1|\doop(V_6 = \tilde{x} + 1)) - E(V_1|\doop(V_6 = \tilde{x})) \ \mbox{or} \\
+C(V_1, V_6, \tilde{x}) &=& \frac{\partial}{\partial x} E(V_1|\doop(V_6 = x))|_{x=\tilde{x}},
 \end{eqnarray*}
-where $do(V_6 = x)$ denotes Pearl's do-operator (see \cite{Pearl00}). If
+where $\doop(V_6 = x)$ denotes Pearl's do-operator (see \cite{Pearl00}). If
 the causal relationships are linear, these two expressions are equivalent
 and do not depend on $\tilde{x}$.
 
@@ -261,11 +292,13 @@ there is a causal effect at all. The third row, corresponding to $V_6$ was
 already discussed above.
 
 \section{Methodological background}
+
 In Section~\ref{sec:gm} we propose methods for estimating the causal
 structure from observational data. In particular, we discuss 
-the PC algorithm
-(see \cite{SpirtesEtAl00})), the FCI algorithm (see \cite{SpirtesEtAl00} and
-\cite{SpirtesMeekRichardson99}) and the RFCI algorithm (see \cite{rfci}).
+the algorithms PC 
+(see \cite{SpirtesEtAl00})), FCI (see \cite{SpirtesEtAl00} and
+\cite{SpirtesMeekRichardson99}), RFCI (see \cite{rfci}), GES (see 
+\cite{Chickering2002}) and GIES (see \cite{HauserBuhlmann2012}).
 In Section~\ref{sec:bounds} we describe the IDA method (see \cite{BuKaMa09}) to
 obtain bounds on causal effects from observational data. This method is
 based on first estimating the causal structure and then applying do-calculus (see \cite{Pearl00}) 
@@ -287,8 +320,8 @@ represent (random) variables and edges represent some kind of dependence.
 
 \subsubsection{Without hidden and selection variables}
 An example of a graphical model is the DAG model. The physical map here is
-a graph consisting of nodes and directed edges ($\leftarrow$ or
-$\rightarrow$). As a further restriction, the edges must be directed in a
+a graph consisting of nodes and directed edges ($\gredge{<-}$ or
+$\gredge{->}$). As a further restriction, the edges must be directed in a
 way, so that it is not possible to trace a cycle when following the
 arrowheads (i.e.,  no directed cycles). The interpretation rule is called
 d-separation. This rule is a bit intricate and we refer the reader to
@@ -296,10 +329,9 @@ d-separation. This rule is a bit intricate and we refer the reader to
 the following way: If two nodes $x$ and $y$ are d-separated by a set of
 nodes $S$, then the corresponding random variables $V_{x}$ and $V_{y}$ are
 conditionally independent given the set of random variables $V_{S}$. For the
-following, we only deal with distributions where the following holds: For
-each distribution, it is possible to find a DAG, whose list of d-separation
-relations perfectly matches the list of conditional independencies of the
-distribution. Such distributions are called faithful. It has been shown
+following, we only deal with distributions whose list of conditional
+independencies perfectly matches the list of d-separation relations of 
+some DAG; such distributions are called faithful. It has been shown
 that the set of distributions that are faithful is the overwhelming
 majority (\cite{Meek95}), so that the assumption does not seem to be very
 strict in practice.
@@ -320,7 +352,7 @@ high-dimensional sparse DAGs (see \cite{KaBu07a}).
 As mentioned before, several DAGs can encode the same list of conditional
 independencies. One can show that such DAGs must share certain
 properties. To be more precise, we have to define a v-structure as the
-subgraph $i \rightarrow j \leftarrow k$ on the nodes $i$, $j$ and $k$ where
+subgraph $i \gredge{->} j \gredge{<-} k$ on the nodes $i$, $j$ and $k$ where
 $i$ and $k$ are not adjacent (i.e., , there is no edge between $i$ and
 $k$). Furthermore, let the skeleton of a DAG be the graph that is obtained
 by removing all arrowheads from the DAG. It was shown that two DAGs encode
@@ -349,8 +381,8 @@ graph is called a completed partially directed acyclic graph (CPDAG).
 \STATE \textbf{Input:} Vertex set V, conditional independence information,
 significance level $\alpha$\\
 \STATE \textbf{Output:} Estimated CPDAG $\hat{G}$, separation sets $\hat{S}$\\
-%\STATE \textbf{EDGE TYPES:} $\rightarrow$, $-$\\
-\hspace*{4em} \textbf{Edge types:} $\rightarrow$, $-$\\
+%\STATE \textbf{EDGE TYPES:} $\gredge{->}$, $-$\\
+\hspace*{4em} \textbf{Edge types:} $\gredge{->}$, $\gredge{-}$\\
 \STATE \textbf{(P1)} Form the complete undirected graph on the vertex
 set V\\
 \STATE \textbf{(P2)} Test conditional independence given subsets of
@@ -388,8 +420,8 @@ $(i,k)$ and $(j,k)$ are each adjacent in the skeleton but $(i,j)$ are not
 (such a triple is called an ``unshielded triple''),
 is oriented based on the information saved in the conditioning sets
 $\hat{S}[i,j]$ and $\hat{S}[j,i]$. More precisely, an unshielded triple
-$i-k-j$ is oriented as $i
-\rightarrow k \leftarrow j$ if $k$ is not in $\hat{S}[j,i] =
+$i \gredge{-} k \gredge{-} j$ is oriented as $i
+\gredge{->} k \gredge{<-} j$ if $k$ is not in $\hat{S}[j,i] =
 \hat{S}[i,j]$. Finally, in \textbf{(P4)} it may be possible to orient some
 of the remaining edges, since one can deduce that one of the two possible
 directions of the edge is invalid because it introduces a new v-structure
@@ -448,8 +480,8 @@ brief introduction.
 
 Ancestral graphs have nodes, which represent random variables and edges
 which represent some kind of dependence. The edges can be either directed
-($\leftarrow$ or $\rightarrow$),
-undirected (-) or bidirected ($\leftrightarrow$) (note that in the context of ancestral graphs,
+($\gredge{<-}$ or $\gredge{->}$),
+undirected ($\gredge{-}$) or bidirected ($\gredge{<->}$) (note that in the context of ancestral graphs,
 undirected and bidirected edges do \emph{not} mean the same). There are two
 rules that restrict the direction of edges in an ancestral graph:
 \begin{description}
@@ -472,10 +504,10 @@ d-separation. Furthermore, part of the causal information in the underlying
 DAG is represented in the MAG. If in the MAG there is an edge between node
 $i$ and node $j$ with an arrowhead at node $i$, then there is no directed
 path from node $i$ to node $j$ nor to any of the selection variables in the
-underlying DAG (i.e., , $i$ is not a cause of $j$ or of the selection
+underlying DAG (i.e., $i$ is not a cause of $j$ or of the selection
 variables). If, on the other hand, there is a tail at node $i$, then there
 is a directed path from node $i$ to node $j$ or to one of the selection
-variables in the underlying DAG (i.e., , $i$ is a cause of $j$ or of a
+variables in the underlying DAG (i.e., $i$ is a cause of $j$ or of a
 selection variable).
 
 Recall that finding a unique DAG from an independence oracle is in general
@@ -487,8 +519,9 @@ in which the true MAG lies.
 
 An equivalence class of a MAG can be uniquely represented by a partial
 ancestral graph (PAG) (see e.g.,   \cite{Zhang08-orientation-rules}). A PAG
-contains the following types of edges: o--o, o--, o-->, -->, <-->,
---. Roughly, the bidirected edges come from hidden variables, and the
+contains the following types of edges: $\gredge{o-o}$, $\gredge{o-}$, 
+$\gredge{o->}$, $\gredge{->}$, $\gredge{<->}$, $\gredge{-}$. 
+Roughly, the bidirected edges come from hidden variables, and the
 undirected edges come from selection variables. The edges have the
 following interpretation: (i) There is an edge between $x$ and $y$ if and
 only if $V_x$ and $V_y$ are conditionally dependent given $V_S$ for all
@@ -525,7 +558,7 @@ this to the value of $V_y$ if $V_x$ is forced to take the value $V_x=x+1$ or
 $V_x=x+\delta$. If $V_x$ and $V_y$ are random variables, forcing $V_x=x$ could have
 the effect of changing the distribution of $V_y$. Following the conventions
 in \cite{Pearl00}, the resulting distribution after manipulation is denoted
-by $P[V_y | do(V_x=x)]$. Note that this is different from the conditional
+by $P[V_y | \doop(V_x=x)]$. Note that this is different from the conditional
 distribution $P[V_y | V_x=x]$. To illustrate this, imagine the following
 simplistic situation. Suppose we observe a particular spot on
 the street during some hour. The random variable $V_x$ denotes whether it rained during that
@@ -538,19 +571,19 @@ end of the hour when it rained during that hour) and $P(V_y=1|V_x=0) = 0.02$
 conditional probability $P(V_x=1|V_y=1) = 0.85$. So, if we observe the street
 to be wet, the probability that there was rain in the last hour is about
 $0.85$. However, if we take a garden hose and force the street to be wet at
-a randomly chosen hour, we get $P(V_x=1|do(V_y=1)) = P(V_x=1) = 0.1$. Thus, the
+a randomly chosen hour, we get $P(V_x=1|\doop(V_y=1)) = P(V_x=1) = 0.1$. Thus, the
 distribution of the random variable describing rain is quite different when
 making an observation versus making an intervention.  
 
 Oftentimes, only the change of the target distribution under intervention
 is reported. We use the change in mean, i.e.,  $\frac{\partial}{\partial x}
-E[V_y|do(V_x=x)]$, as a general measure for the causal effect of $V_x$ on
-$V_y$. For multivariate Gaussian random variables, $E[V_y|do(V_x=x)]$ depends
+E[V_y|\doop(V_x=x)]$, as a general measure for the causal effect of $V_x$ on
+$V_y$. For multivariate Gaussian random variables, $E[V_y|\doop(V_x=x)]$ depends
 linearly on $x$. Therefore, the derivative is constant which means that the
 causal effect does not depend on $x$, and can also be interpreted as
-$E[V_y|do(V_x=x+1)] - E[V_y|do(V_x=x)]$. For binary random variables (with domain
-$\{0,1\}$) we define the causal effect of $V_x$ on $V_y$ as $E(V_y|do(V_x=1)) -
-E(V_y|do(V_x=0)) = P(V_y=1|do(V_x=1)) - P(V_y=1|do(V_x=0))$.
+$E[V_y|\doop(V_x=x+1)] - E[V_y|\doop(V_x=x)]$. For binary random variables (with domain
+$\{0,1\}$) we define the causal effect of $V_x$ on $V_y$ as $E(V_y|\doop(V_x=1)) -
+E(V_y|\doop(V_x=0)) = P(V_y=1|\doop(V_x=1)) - P(V_y=1|\doop(V_x=0))$.
 
 The goal in the remainder of this section is to estimate the effect of an
 intervention if only observational data is available.
@@ -602,7 +635,7 @@ unknown underlying causal DAG. For the individual methods, further
 assumptions are made.
 
 \begin{description}
-\item[PC-algorithm:] No hidden or selection variables; consistent in
+\item[PC algorithm:] No hidden or selection variables; consistent in
   high-dimensional settings (the number of variables grows with the sample
   size) if the underlying DAG is sparse, the data is multivariate Normal
   and satisfies some regularity conditions on the partial correlations, and
@@ -610,7 +643,11 @@ assumptions are made.
   details. Consistency in a standard asymptotic regime with a fixed number
   of variables follows as a special case.
 
-\item[FCI-algorithm:] Allows for hidden and selection variables; consistent
+\item[GES algorithm:] No hidden or selection variables; consistency in 
+  a standard asymptotic regime with a fixed number of variables (see
+  \cite{Chickering2002}).
+
+\item[FCI algorithm:] Allows for hidden and selection variables; consistent
   in high-dimensional settings if the so-called Possible-D-SEP sets (see
   \cite{SpirtesEtAl00}) are sparse, the data is multivariate Normal and
   satisfies some regularity conditions on the partial correlations, and
@@ -618,13 +655,17 @@ assumptions are made.
   details. Consistency in a standard asymptotic regime with a fixed number
   of variables follows as a special case.
   
-\item[RFCI-algorithm:] Allows for hidden and selection variables; consistent
+\item[RFCI algorithm:] Allows for hidden and selection variables; consistent
   in high-dimensional settings if the underlying MAG is sparse (this is a
   much weaker assumption than the one needed for FCI), the data is multivariate Normal and satisfies some regularity
   conditions on the partial correlations, and $\alpha$ is taken to zero
   appropriately. See \cite{rfci} for full details. Consistency in
   a standard asymptotic regime with a fixed number of variables follows as
   a special case.
+
+\item[GIES algorithm:] No hidden or selection variables; mix of observational 
+  and interventional data.  Interventional data alone is sufficient if 
+  there is no variable which is intervened in \emph{all} data points.
 
 \item[IDA:] No hidden or selection variables; all conditional expectations
   are linear; consistent in high-dimensional settings if the underlying DAG
@@ -636,7 +677,7 @@ assumptions are made.
 
 \section{Package pcalg}
 This package has two goals. First, it is intended to provide fast, flexible
-and reliable implementations of the PC, FCI and RFCI algorithms for
+and reliable implementations of the PC, FCI, RFCI, GES and GIES algorithms for
 estimating causal structures and graphical models. Second, it provides an
 implementation of the IDA method, which estimates bounds on causal effects
 from observational data when no causal structure is known and hidden or
@@ -644,7 +685,8 @@ selection variables are absent.
 
 In the following, we describe the main functions of our package for
 achieving these goals. The functions \code{skeleton()}, \code{pc()},
-\code{fci()} and \code{rfci()} are intended for estimating graphical
+\code{fci()}, \code{rfci()}, \code{ges()}, \code{gies()} and \code{simy()}
+are intended for estimating graphical
 models. The functions 
 \code{ida()} and \code{idaFast()} are intended for estimating causal
 effects from observational data.
@@ -773,20 +815,24 @@ where the arguments \code{suffStat}, \code{indepTest}, \code{p},
 \code{m.max} are identical to those of \code{skeleton()}.
 
 Sampling errors (or hidden variables) can lead to conflicting information
-about edge directions. For example, one may find that $a-b-c$ and $b-c-d$
+about edge directions. For example, one may find that 
+$a \gredge{-} b \gredge{-} c$ and $b \gredge{-} c \gredge{-} d$
 should both be oriented as v-structures.  This gives conflicting
-information about the edge $b-c$, since it should be oriented as $b
-\leftarrow c$ in v-structure $a \rightarrow b \leftarrow c$, while it
-should be oriented as $b \rightarrow c$ in v-structure $b \rightarrow c
-\leftarrow d$. In such cases, we simply overwrite the directions of the
+information about the edge $b- \gredge{-} $, since it should be oriented as $b
+\gredge{<-} c$ in v-structure $a \gredge{->} b \gredge{<-} c$, while it
+should be oriented as $b \gredge{->} c$ in v-structure $b \gredge{->} c
+\gredge{<-} d$. In such cases, we simply overwrite the directions of the
 conflicting edge. In the example above this means that we obtain $a
-\rightarrow b \rightarrow c \leftarrow d$ if $a-b-c$ was visited first, and
-$a \rightarrow b \leftarrow c \leftarrow d$ if $b-c-d$ was visited first.
+\gredge{->} b \gredge{->} c \gredge{<-} d$ if 
+$a \gredge{-} b \gredge{-} c$ was visited first, and
+$a \gredge{->} b \gredge{<-} c \gredge{<-} d$ if 
+$b \gredge{-} c \gredge{-} d$ was visited first.
 
 Sampling errors or hidden variables can also lead to invalid CPDAGs,
 meaning that there does not exist a DAG that has the same skeleton and
 v-structures as the graph found by the algorithm. An example of this is an
-undirected cycle consisting of the edges $a-b-c-d$ and $d-a$. In this case it
+undirected cycle consisting of the edges $a \gredge{-} b \gredge{-} c 
+\gredge{-} d$ and $d \gredge{-} a$. In this case it
 is impossible to direct the edges without creating a cycle or a new
 v-structure. The optional argument \code{u2pd} specifies what should be done in such a
 situation. If it is set to \code{"relaxed"}, the algorithm simply
@@ -802,7 +848,8 @@ By setting the argument \code{conservative = TRUE}, the conservative PC
 algorithm (see \cite{Ramsey06}) is chosen. The conservative PC is a slight
 variation of the PC algorithm and is intended to be more robust against
 sampling errors in its edge orientations. After the skeleton is computed,
-all unshielded triplets $a-b-c$ are checked in the following way. We test
+all unshielded triplets $a \gredge{-} b \gredge{-} c$ are checked in 
+the following way. We test
 whether $V_a$ and $V_c$ are conditionally independent given any subset of the
 adjacency set of $a$ or any subset of the adjacency set of $c$. If $b$ is
 in no such conditioning set (and not in the original sepset) or in all such
@@ -812,7 +859,7 @@ others, or if there was no subset $S$ of the adjacency set of $a$ nor of
 $c$ such that $V_a$ and $V_c$ are conditionally independent given $V_S$, the
 triple is marked as \emph{``unfaithful''}. Only faithful triples are
 oriented as v-structures. Furthermore, orientation rules that need to know
-whether $a-b-c$ is a v-structure or not are only applied to faithful
+whether $a \gredge{-} b \gredge{-} c$ is a v-structure or not are only applied to faithful
 triples. (For more details, see the help file of the internal function
 \code{pc.cons.intern()} which is called with the argument \code{version.unf
   = c(2,2)}.)
@@ -855,12 +902,12 @@ observed variables given the selection variables.
 The first part of the FCI algorithm is analogous to the PC algorithm. It
 starts with a complete undirected graph and estimates an initial skeleton
 using the function \code{skeleton()}. All edges of this skeleton are of the
-form o--o. Now, the v-structures are oriented as in the PC
+form $\gredge{o-o}$. Now, the v-structures are oriented as in the PC
 algorithm. However, due to the presence of hidden variables, it is no longer
 sufficient to consider only subsets of the adjacency sets of nodes $x$ and
-$y$ to decide whether the edge $x-y$ should be removed.  Therefore, the
+$y$ to decide whether the edge $x \gredge{-} y$ should be removed.  Therefore, the
 initial skeleton may contain some superfluous edges.  These edges are
-removed in the next step of the algorithm. To decide whether edge $x$ o--o $y$
+removed in the next step of the algorithm. To decide whether edge $x \gredge{o-o} y$
 should be removed, one computes Possible-D-SEP($x$, $y$) and
 Possible-D-SEP($y$, $x$)
 and performs conditional independence tests of $V_x$ and $V_y$ given all
@@ -900,9 +947,10 @@ algorithm which consists of two parts. In the first part (done if
 \code{pc.cons.internal()} with argument \code{version.unf = c(1,2)} after
 computing the skeleton. This is a slight variation of the conservative PC
 algorithm (which used \code{version.unf = c(2,2)}): If $V_a$ is independent
-of $V_c$ given some $V_S$ in the skeleton (i.e., , the edge $a-c$ dropped out),
+of $V_c$ given some $V_S$ in the skeleton (i.e., the edge $a \gredge{-} c$ dropped out),
 but $V_a$ and $V_c$ remain dependent given all subsets of the adjacency set of
-either $a$ or $c$, we call $a-b-c$ \emph{``unambiguous''}. This is because
+either $a$ or $c$, we call $a \gredge{-} b \gredge{-} c$ 
+\emph{``unambiguous''}. This is because
 in the FCI algorithm, the true separating set might be outside the
 adjacency sets of $a$ or $c$. The purpose of this conservative version is
 to speed up the algorithm in the sample version (less v-structures lead to
@@ -1048,13 +1096,15 @@ plot(pc.fit, main = "")
 
 Since there are three undirected edges in the CPDAG, there might be up to
 $2^3 = 8$ DAGs in the corresponding equivalence class. However, the
-undirected edges $2-3-5$ can be oriented as a new v-structure. As
+undirected edges $2 \gredge{-} 3 \gredge{-} 5$ can be oriented as a 
+new v-structure. As
 mentioned in Section~\ref{sec:gm}, DAGs in the equivalence class must have
 exactly the same v-structures as the corresponding CPDAG. Thus,
-$2-3-5$ can only be oriented as $2 \rightarrow 3 \rightarrow
-5$, $2 \leftarrow 3 \leftarrow 5$ or $2 \leftarrow 3
-\rightarrow 5$, and not as $2 \rightarrow 3 \leftarrow 5$. There is
-only one remaining undirected edge ($1-6$), which can be oriented in
+$2 \gredge{-} 3 \gredge{-} 5$ can only be oriented as 
+$2 \gredge{->} 3 \gredge{->} 5$, $2 \gredge{<-} 3 \gredge{<-} 5$ 
+or $2 \gredge{<-} 3
+\gredge{->} 5$, and not as $2 \gredge{->} 3 \gredge{<-} 5$. There is
+only one remaining undirected edge ($1 \gredge{-} 6$), which can be oriented in
 two ways. Thus, there are six valid DAGs (i.e.,  they have no new v-structures
 and no directed cycles) and these form the equivalence class represented by
 the CPDAG. In Fig.~\ref{fig:allDags}, all DAGs in the equivalence class are
@@ -1087,7 +1137,7 @@ Gaussianity, this can be done via a
 simple linear regression: If $y$ is not a parent of $x$, we take the
 regression coefficient of $V_x$ in the regression \code{lm(Vy ~ Vx +
   pa(Vx))}, where \code{pa(Vx)} denotes the parents of $x$ in the DAG G ($z$ is
-called a parent of $x$ if G if G contains the edge $z \rightarrow x$); if
+called a parent of $x$ if G if G contains the edge $z \gredge{->} x$); if
 $y$ is a parent of $x$ in G, we set the estimated causal effect to zero.
 
 If the equivalence class contains $k$ DAGs, this yields $k$ estimated
@@ -1259,7 +1309,7 @@ function.
 
 A simple way to compute the partial correlation of $V_x$ and $V_y$ given $V_S$
 for some data is to solve the two associated linear regression problems
-\code{lm}($Vx \sim VS$) and \code{lm}($Vy \sim VS$), get the residuals, and
+\code{lm}($V_x \sim V_S$) and \code{lm}($V_y \sim V_S$), get the residuals, and
 calculate the correlation between the residuals. Finally, a correlation
 test between the residuals yields a p-value that can be returned. The
 argument \code{suffStat} is an arbitrary object containing several pieces
