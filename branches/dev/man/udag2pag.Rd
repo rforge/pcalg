@@ -42,7 +42,7 @@ udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose = FALSE)
   discovery in the presence of latent confounders and selection bias.
   \emph{Artificial Intelligence} \bold{172} 1873-1896.
 }
-\author{Diego Colombo (\email{colombo@stat.math.ethz.ch})}
+\author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 
 \seealso{\code{\link{pc}}}
 

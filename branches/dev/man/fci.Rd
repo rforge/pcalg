@@ -215,7 +215,7 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   \code{\link{dsepTest}} as examples for \code{indepTest}.
 }
 \author{
-  Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Diego Colombo.
+  Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch}).
 }
 \examples{
 ##################################################
