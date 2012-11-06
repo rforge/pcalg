@@ -138,7 +138,13 @@ setRefClass("int.score",
     
     methods = list(
         #' Constructor
-        initialize = function(targets, target.index, data, ...) {
+        #' 
+        #' Note: all arguments must have a default value for inheritance,
+        #' see ?setRefClass; apart from that, the default values are meaningless
+        initialize = function(targets = list(integer(0)),
+            target.index = as.integer(1), 
+            data = matrix(1, 1, 1), 
+            ...) {
           ## Order by ascending target indices (necessary for certain scoring objects)
           if (is.unsorted(target.index)) 
             perm <- order(target.index)
@@ -244,15 +250,15 @@ setRefClass("gauss.l0pen.int.score",
     
     methods = list(
         #' Constructor
-        initialize = function(targets, 
-            target.index, 
-            data, 
+        initialize = function(targets = list(integer(0)), 
+            target.index = as.integer(1), 
+            data = matrix(1, 1, 1), 
             lambda = 0.5*log(nrow(data)), 
             intercept = FALSE, 
             use.cpp = FALSE, 
             ...) {
           ## Store supplied data in sorted form
-          callSuper(targets, target.index, data)
+          callSuper(targets = targets, target.index = target.index, data = data, ...)
 
           ## l0-penalty is decomposable
           decomp <<- TRUE
@@ -373,7 +379,29 @@ setRefClass("gauss.l0pen.int.score",
         }
         )
     )
-        
+       
+##' Observational score as special case
+setRefClass("gauss.l0pen.obs.score",
+    contains = "gauss.l0pen.int.score",
+    
+    methods = list(
+        #' Constructor
+        initialize = function(data = matrix(1, 1, 1), 
+            lambda = 0.5*log(nrow(data)), 
+            intercept = FALSE, 
+            use.cpp = FALSE, 
+            ...) {
+          callSuper(targets = list(integer(0)), 
+              target.index = rep(as.integer(1), nrow(data)), 
+              data = data, 
+              lambda = lambda, 
+              intercept = intercept, 
+              use.cpp = use.cpp, 
+              ...)
+          }
+        )
+    )
+
 #' Interventional essential graph
 setRefClass("ess.graph",
     fields = list(

@@ -150,6 +150,8 @@ caus.inf <- function(algorithm, p, targets, score, ...)
 
 gies <- function(p, targets, score, ...) caus.inf("GIES", p, targets, score, ...)
 
+ges <- function(p, score, ...) caus.inf("GIES", p, list(integer(0)), score, ...)
+
 gds <- function(p, targets, score, ...) caus.inf("GDS", p, targets, score, ...)
 
 simy <- function(p, targets, score, ...) caus.inf("SiMy", p, targets, score, ...)
