@@ -97,11 +97,12 @@ export(randomDAG,
 exportClasses("pcAlgo",
               "fciAlgo",
               "gAlgo",
-              "pardag",
-              "gauss.pardag",
-              "int.score",
-              "gauss.l0pen.int.score",
-              "ess.graph")
+              "ParDAG",
+              "GaussParDAG",
+              "Score",
+              "GaussL0penIntScore",
+              "GaussL0penObsScore",
+              "EssGraph")
 
 exportMethods("summary","show","plot")
 

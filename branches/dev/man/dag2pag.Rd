@@ -51,7 +51,7 @@ dag2pag(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), verbose = FA
 }
 \references{
   Richardson, T. and Spirtes, P. (2002). Ancestral graph Markov
-  models. \emph{Ann. Statist.} \bold{30}, 962–1030, Theorem 4.2., page 983.
+  models. \emph{Ann. Statist.} \bold{30}, 962--1030, Theorem 4.2., page 983.
 }
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch}).}
 \seealso{\code{\link{fci}}, \code{\link{pc}}}

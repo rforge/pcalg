@@ -29,7 +29,6 @@
 \alias{find.unsh.triple}
 \alias{rfci.vstructures}
 \alias{dep.triple}
-\alias{udag2apag}
 \alias{CheckEdges}
 \alias{min.discr.path}
 %

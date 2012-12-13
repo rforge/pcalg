@@ -28,7 +28,7 @@ setClass("pcAlgo",
 
 #' Virtual base class for all parametric causal models.
 #' The meaning of the "params" depends on the model used.
-setRefClass("pardag",
+setRefClass("ParDAG",
     fields = list(
         .nodes = "vector",
         .in.edges = "list",
@@ -72,13 +72,18 @@ setRefClass("pardag",
         #' Yields the total number of edges in the graph
         edge.count = function() {
           sum(sapply(.in.edges, length))
+        },
+        
+        #' Simulates (draws a sample of) interventional (or observational) data
+        simulate = function(n, target = integer(0), int.level = numeric(0)) {
+          stop("simulate() is not implemented in this class.")
         }
         ),
         
     "VIRTUAL")
 
 #' Coercion to a graphNEL instance
-setAs("pardag", "graphNEL",
+setAs("ParDAG", "graphNEL",
     def = function(from) {
       result <- new("graphNEL", 
           nodes = from$.nodes, 
@@ -88,14 +93,14 @@ setAs("pardag", "graphNEL",
     })
 
 #' Coercion to a (logical) matrix
-setAs("pardag", "matrix",
+setAs("ParDAG", "matrix",
     def = function(from) {
       p <- from$node.count()
       sapply(1:p, function(i) 1:p %in% from$.in.edges[[i]])
     })
 
 #' Plot method (needs Rgraphviz to work!!)
-setMethod("plot", "pardag", 
+setMethod("plot", "ParDAG", 
     function(x, y, ...) {
       if (!validObject(x))
         stop("The parametric DAG model to be plotted is not valid")
@@ -107,7 +112,7 @@ setMethod("plot", "pardag",
 
 
 #' Virtual base class for all scoring classes
-setRefClass("int.score",
+setRefClass("Score",
     fields = list(
         decomp = "logical",
         c.fcn = "character",
@@ -234,8 +239,8 @@ setRefClass("int.score",
 #' l0-penalized log-likelihood for Gaussian models, with freely
 #' choosable penalty lambda.
 #' Special case: BIC where \lambda = 1/2 \log n (default value for lambda)
-setRefClass("gauss.l0pen.int.score",
-    contains = "int.score",
+setRefClass("GaussL0penIntScore",
+    contains = "Score",
     
     validity = function(object) {
       if (unique(object$pp.dat$scatter.index) != 1:length(object$pp.dat$scatter))
@@ -264,7 +269,7 @@ setRefClass("gauss.l0pen.int.score",
           decomp <<- TRUE
           
           ## Underlying causal model class: Gaussian
-          .pardag.class <<- "gauss.pardag"
+          .pardag.class <<- "GaussParDAG"
           
           ## Store penalty constant
           pp.dat$lambda <<- lambda
@@ -381,8 +386,8 @@ setRefClass("gauss.l0pen.int.score",
     )
        
 ##' Observational score as special case
-setRefClass("gauss.l0pen.obs.score",
-    contains = "gauss.l0pen.int.score",
+setRefClass("GaussL0penObsScore",
+    contains = "GaussL0penIntScore",
     
     methods = list(
         #' Constructor
@@ -403,12 +408,12 @@ setRefClass("gauss.l0pen.obs.score",
     )
 
 #' Interventional essential graph
-setRefClass("ess.graph",
+setRefClass("EssGraph",
     fields = list(
         .nodes = "vector",
         .in.edges = "list",
         targets = "list",
-        score = "int.score"
+        score = "Score"
     ),
     
     validity = function(object) {
@@ -527,6 +532,12 @@ setRefClass("ess.graph",
         #' DP search of Silander and Myllymäki (ignores the start DAG!)
         silander = function(...) caus.inf("DP", ...),
         
+        #' Calculates the parameters of a DAG via MLE (wrapper function only)
+        mle.fit = function(dag) {
+          dag$.params <- score$global.mle(dag)
+          return(dag)
+        },
+
         #' Yields a representative (estimating parameters via MLE)
         repr = function() {
           in.edges <- .Call("representative", .in.edges, PACKAGE = "pcalg")
@@ -538,7 +549,7 @@ setRefClass("ess.graph",
         ))
 
 #' Coercion to a graphNEL instance
-setAs("ess.graph", "graphNEL",
+setAs("EssGraph", "graphNEL",
     def = function(from) {
       result <- new("graphNEL", 
           nodes = from$.nodes, 
@@ -548,14 +559,14 @@ setAs("ess.graph", "graphNEL",
     })
 
 #' Coercion to a (logical) matrix
-setAs("ess.graph", "matrix",
+setAs("EssGraph", "matrix",
     def = function(from) {
       p <- from$node.count()
       sapply(1:p, function(i) 1:p %in% from$.in.edges[[i]])
     })
 
 #' Plot method (needs Rgraphviz to work!!)
-setMethod("plot", "ess.graph", 
+setMethod("plot", "EssGraph", 
     function(x, y, ...) {
       if (!validObject(x))
         stop("The parametric DAG model to be plotted is not valid")
@@ -566,8 +577,8 @@ setMethod("plot", "ess.graph",
     })
         
 #' Gaussian causal model
-setRefClass("gauss.pardag",
-    contains = "pardag",
+setRefClass("GaussParDAG",
+    contains = "ParDAG",
     
     validity = function(object) {
       if (any(names(object$.params) != object$.nodes))
@@ -580,7 +591,6 @@ setRefClass("gauss.pardag",
     },
     
     methods = list(
-        
         #' Yields the intercept
         intercept = function() {
           sapply(.params, function(par.vec) par.vec[2])
@@ -603,15 +613,17 @@ setRefClass("gauss.pardag",
             .params[[i]][1] <<- value[i]
         },
         
-        #' Yields the weight matrix
+        #' Yields the weight matrix w.r.t. an intervention target
         #' 
         #' TODO add a method for sparse matrices...
-        weight.mat = function() {
+        weight.mat = function(target = integer(0)) {
           ## Fill in weights
           p <- node.count()
+          target <- as.integer(sort(target))
           result <- matrix(0, p, p)
           for (i in 1:p)
-            result[.in.edges[[i]], i] <- .params[[i]][-c(1, 2)]
+            if (!(as.integer(i) %in% target))
+              result[.in.edges[[i]], i] <- .params[[i]][-c(1, 2)]
           
           ## Set row and column names
           rownames(result) <- .nodes
@@ -635,20 +647,111 @@ setRefClass("gauss.pardag",
           all.var[target] <- ivent.var
           
           return(t(A) %*% diag(all.var) %*% A)
+        },
+                
+        #' Simulates (draws a sample of) interventional (or observational)
+        #' data
+        #' 
+        #' @param   n
+        #' @param   target  
+        #' @param   int.level   intervention level: values of the intervened
+        #'                      variables. Either a vector of the same length 
+        #'                      as "target", or a matrix with dimensions
+        #'                      n x length(target)
+        #' @return  a vector with the simulated values if n = 1, or a matrix
+        #'          with rows corresponding to different samples if n > 1
+        simulate = function(n, target = integer(0), int.level = numeric(0)) {
+          ## Error terms, intercepts, and intervention levels
+          if (n == 1)
+            Y <- rnorm(node.count(), mean = intercept(), sd = sqrt(err.var()))
+          else
+            Y <- matrix(rnorm(n*node.count(), mean = intercept(), sd = sqrt(err.var())), ncol = n)
+          if (length(target) > 0) {
+            if (!(length(int.level) %in% c(length(target), n*length(target))))
+              stop("int.level must either be a vector of the same length as target, or a matrix of dimension n x length(target)")
+            if (is.matrix(int.level))
+              int.level <- t(int.level)
+            if (n == 1)
+              Y[target] <- int.level
+            else
+              Y[target, ] <- int.level
+          }
+          
+          ## Modified weight matrix (w.r.t. intervention target)
+          D <- - weight.mat(target)
+          diag(D) <- 1.
+          
+          ## Calculate results: simulation samples
+          result <- solve(D, Y)
+          if (n == 1)
+            result
+          else
+            t(result)
         }
         )
     )
 
 #' Coercion from a weight matrix
-setAs("matrix", "gauss.pardag",
+setAs("matrix", "GaussParDAG",
     def = function(from) {
       p <- nrow(from)
       if (!isAcyclic(from))
         stop("Input matrix does not correspond to an acyclic DAG.")
       edgeL <- lapply(1:p, function(i) which(from[, i] != 0))
-      new("gauss.pardag", 
+      new("GaussParDAG", 
           nodes = as.character(1:p), 
           in.edges = edgeL,
           param = lapply(1:p, function(i) c(0, 0, from[edgeL[[i]], i])))
     })
+
+#' Coercion from a "graphNEL" object
+setAs("graphNEL", "GaussParDAG",
+    def = function(from) {
+      ## Perform coercion via weight matrix
+      A <- as(from, "matrix")
+      as(A, "GaussParDAG")
+    })
     
+#' Predict interventional or observational data points.  Intervention values 
+#' must be provided, the value of all non-intervened variables is calculated
+#' 
+#' @param   object    an instance of GaussParDAG
+#' @param   newdata   list with two entries:
+#'                    target:     list of intervention targets (or single
+#'                                intervention target)
+#'                    int.level:  list of intervention levels (or single
+#'                                vector of intervention levels)
+#' @return  a matrix with rows containing the predicted values, or a vector,
+#'          if a single prediction is requested
+setMethod("predict", "GaussParDAG", 
+    function(object, newdata) {
+      ## Check validity of parameters
+      if (!validObject(object))
+        stop("The parametric DAG model to be plotted is not valid")
+      if (!is.list(newdata$target)) {
+        if (is.list(newdata$int.level))
+          stop("The two entries of newdata must both be vectors or both be lists.")
+        newdata$target <- list(newdata$target)
+        newdata$int.level <- list(newdata$int.level)
+      }
+      stopifnot(is.list(newdata$target),
+          is.list(newdata$int.level),
+          length(newdata$target) == length(newdata$int.level),
+          all(sapply(newdata$target, length) == sapply(newdata$int.level, length)))
+      
+      if (length(newdata$target > 1))
+        fit <- matrix(0, nrow = length(newdata$target), ncol = object$node.count())
+      for (i in 1:length(newdata$target)) {
+        ## Calculate predition for i-th target
+        y <- object$intercept()
+        y[newdata$target[[i]]] <- newdata$int.level[[i]]
+        D <- -object$weight.mat(newdata$target[[i]])
+        diag(D) <- 1.
+        if (length(newdata$target > 1))
+          fit[i, ] <- solve(D, y)
+        else
+          fit <- solve(D, y)
+      }
+      
+      fit
+    })

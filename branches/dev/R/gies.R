@@ -75,7 +75,7 @@ r.gauss.pardag <- function(p,
   pars[[top.ord[1]]] <- c(pars[[top.ord[1]]], 0)
   
   ## Create new instance of gauss.pardag
-  result <- new("gauss.pardag", nodes = V, in.edges = edL, params = pars)
+  result <- new("GaussParDAG", nodes = V, in.edges = edL, params = pars)
   
   ## Normalize if requested
   if (normalize) {
@@ -143,21 +143,22 @@ is.whole <- function(a, tol = .Machine$double.eps^0.5) {
 ##################################################
 caus.inf <- function(algorithm, p, targets, score, ...)
 {
-  essgraph <- new("ess.graph", nodes = as.character(1:p), targets = targets, score = score)
+  essgraph <- new("EssGraph", nodes = as.character(1:p), targets = targets, score = score)
   essgraph$caus.inf(algorithm, ...)
   return(list(essgraph = essgraph, repr = essgraph$repr()))
 }
 
 gies <- function(p, targets, score, ...) caus.inf("GIES", p, targets, score, ...)
 
-ges <- function(p, score, ...) caus.inf("GIES", p, list(integer(0)), score, ...)
+ges <- function(p, score, turning = TRUE, maxdegree = integer(0), ...) 
+  caus.inf("GIES", p, list(integer(0)), score, turning = turning, maxdegree = maxdegree, ...)
 
 gds <- function(p, targets, score, ...) caus.inf("GDS", p, targets, score, ...)
 
 simy <- function(p, targets, score, ...) caus.inf("SiMy", p, targets, score, ...)
 
 dag2essgraph <- function(dag, targets = list(integer(0))) {
-  new("ess.graph", 
+  new("EssGraph", 
       nodes = dag$.nodes, 
       in.edges = .Call("dagToEssentialGraph", dag$.in.edges, targets),
       targets = targets)

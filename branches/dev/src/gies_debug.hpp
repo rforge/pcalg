@@ -51,7 +51,7 @@ template <typename T> ostream& operator<<(ostream& out, const set<T>& s) {
 
 // Macro for outputting debug messages depending on debug level
 #if DEBUG_OUTPUT_LEVEL >= 1
-#define DBOUT( level, message ) if ( DEBUG_OUTPUT_LEVEL >= level ) std::cout << message << std::endl
+#define DBOUT( level, message ) if ( DEBUG_OUTPUT_LEVEL >= level ) Rcpp::Rcout << message << std::endl
 #else
 #define DBOUT( level, message )
 #endif
@@ -84,7 +84,7 @@ public:
 	std::ostream& level(const int messageLevel)
 	{
 		if (messageLevel <= _level)
-			return std::cout;
+			return Rcpp::Rcout;
 		return _nullstream;
 	}
 };

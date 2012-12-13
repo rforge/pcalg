@@ -41,8 +41,8 @@ pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
     conditional independence tests.}
   \item{pdsep.max}{Maximum size of Possible-D-SEP for which subsets are
     considered as conditioning sets in the conditional independence
-    tests. If the nodes \code {x} and \code{y} are adjacent in the graph
-    and the size of Possible-D-SEP(\code{x})\{\code{x},\code{y}},
+    tests. If the nodes \code{x} and \code{y} are adjacent in the graph
+    and the size of Possible-D-SEP(\code{x})\{\code{x},\code{y}\},
   estimated normally or using biconnected components, see later, is
   bigger than pdsep.max, no conditional independence tests are performed between
     \code{x} and its neighbour \code{y} given subsets of
@@ -105,7 +105,6 @@ p <- 10
 myDAG <- randomDAG(p, prob = 0.2)
 
 ## generate 10000 samples of DAG using gaussian distribution
-library(RGBL)
 n <- 10000
 d.mat <- rmvDAG(n, myDAG, errDist = "normal")
 

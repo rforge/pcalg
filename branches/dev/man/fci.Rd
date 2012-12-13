@@ -46,8 +46,8 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
     conditional independence tests.}
   \item{pdsep.max}{Maximum size of Possible-D-SEP for which subsets are
     considered as conditioning sets in the conditional independence
-    tests. If the nodes \code {x} and \code{y} are adjacent in the graph
-    and the size of Possible-D-SEP(\code{x})\{\code{x},\code{y}},
+    tests. If the nodes \code{x} and \code{y} are adjacent in the graph
+    and the size of Possible-D-SEP(\code{x})\{\code{x},\code{y}\},
   estimated normally or using biconnected components, see later, is
   bigger than pdsep.max, no conditional independence tests are performed between
     \code{x} and its neighbour \code{y} given subsets of
