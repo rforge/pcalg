@@ -9,44 +9,53 @@
   \code{\link{simy}}. 
 }
 \section{Fields}{
+  The fields of \code{Score} are mainly of interest for users who aim at 
+  deriving an own class from this virtual base class, i.e., implementing an own
+  score function.
   \describe{
-     \item{\code{text}:}{Text of the DM}
-     \item{\code{recipient}:}{A \code{user} object representing the
-       recipient of the message} 
-     \item{\code{recipientSN}:}{Screen name of the recipient}
-     \item{\code{recipientID}:}{ID number of the recipient}
-     \item{\code{sender}:}{A \code{user} object representing the sender
-       of the message} 
-     \item{\code{senderSN}:}{Screen name of the sender}
-     \item{\code{senderID}:}{ID number of the sender}
-     \item{\code{created}:}{When the messages was created}
+    \item{\code{decomp}:}{Indicates whether the represented score is
+      decomposable (cf. details)}
+    \item{\code{pp.dat}:}{list representing the preprocessed input data;
+      this is typically a statistic which is sufficient for the 
+      calculation of the score.}
+    \item{\code{.pardag.class}:}{Name of the class of the parametric DAG model
+      corresponding to the score.  This must name a class derived from 
+      \code{ParDAG}.}
+    \item{\code{c.fcn}:}{Only used internally; must remain empty for (user
+      specified) classes derived from \code{Score}.} 
   }
 }
 \section{Methods}{
+  Note that since \code{Score} is a virtual class, its methods cannot be called
+  directly, but only on derived classes.
   \describe{
-     \item{\code{destroy}:}{Deletes this DM from Twitter.  A wrapper
-       around \code{\link{dmDestroy}}}
-     \item{\code{toDataFrame}:}{Converts this into a one row
-       \code{\link{data.frame}}, with each field representing a column.
-       This can also be accomplished by the S4 style
-       \code{as.data.frame(objectName)}.}
+    \item{\code{initialize(data = matrix(1, 1, 1), 
+      targets = list(integer(0)),
+      target.index = rep(as.integer(1), nrow(data)), 
+      ...)}}
+      {Constructor; creates a \code{Score} object.  For the meaning of the 
+      arguments, see details.}
+    \item{\code{local.score(vertex, parents, ...)}}{For decomposable scores,
+      this function calculates the local score of a vertex and its parents.
+      Must throw an error in derived classes that do not represent a 
+      decomposable score.}
+    \item{\code{global.score.int(edges, ...)}}{Calculates the global score of
+      a DAG, represented as a list of in-edges: for each vertex in the DAG,
+      this list contains a vector of parents.}
+    \item{\code{global.score(dag, ...)}}{Calculates the global score of a DAG,
+      represented as object of a class derived from \code{ParDAG}.}
+    \item{\code{local.mle(vertex, parents, ...)}}{Calculates the local MLE of 
+      a vertex and its parents.  The result is a vector of parameters whose 
+      meaning depends on the model class; it matches the convention used in the
+      corresponding causal model (cf. \code{.pardag.class}).}
+    \item{\code{global.mle(dag, ...)}}{Calculates the global MLE of a DAG,
+      represented by an object of the class specified by \code{.pardag.class}.
+      The result is a list of vectors, one per vertex, each in the same format
+      as the result vector of \code{local.mle}.}
   }
 }
 \details{
-  The \code{directMessage} class is implemented as a reference class.
-  As there should be no backwards compatibility issues, there are no S4
-  methods provided as with the \code{user} and \code{status} classes.
-  An instance of a generator for this class is provided as a convenience
-  to the user as it is configured to handle most standard cases.  To
-  access this generator, use the object \code{dmFactory}.  Accessor set
-  & get methods are provided for every field using reference class
-  \code{$accessors()} methodology (see \code{\link{setRefClass}} for
-  more details).  As an example, the \code{sender} field could be
-  accessed using \code{object$getSender()} and \code{object$setSender()}.
 
-  The constructor of this object assumes that the user is passing in a
-  JSON encoded Twitter Direct Message.  It is also possible to directly
-  pass in the arguments. 
 }
 \author{
   Alain Hauser (\email{hauser@stat.math.ethz.ch})

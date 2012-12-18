@@ -146,9 +146,9 @@ setRefClass("Score",
         #' 
         #' Note: all arguments must have a default value for inheritance,
         #' see ?setRefClass; apart from that, the default values are meaningless
-        initialize = function(targets = list(integer(0)),
-            target.index = as.integer(1), 
-            data = matrix(1, 1, 1), 
+        initialize = function(data = matrix(1, 1, 1), 
+            targets = list(integer(0)),
+            target.index = rep(as.integer(1), nrow(data)),
             ...) {
           ## Order by ascending target indices (necessary for certain scoring objects)
           if (is.unsorted(target.index)) 
@@ -255,15 +255,15 @@ setRefClass("GaussL0penIntScore",
     
     methods = list(
         #' Constructor
-        initialize = function(targets = list(integer(0)), 
-            target.index = as.integer(1), 
-            data = matrix(1, 1, 1), 
+        initialize = function(data = matrix(1, 1, 1),
+            targets = list(integer(0)), 
+            target.index = rep(as.integer(1), nrow(data)), 
             lambda = 0.5*log(nrow(data)), 
             intercept = FALSE, 
             use.cpp = FALSE, 
             ...) {
           ## Store supplied data in sorted form
-          callSuper(targets = targets, target.index = target.index, data = data, ...)
+          callSuper(data = data, targets = targets, target.index = target.index, ...)
 
           ## l0-penalty is decomposable
           decomp <<- TRUE
@@ -396,9 +396,9 @@ setRefClass("GaussL0penObsScore",
             intercept = FALSE, 
             use.cpp = FALSE, 
             ...) {
-          callSuper(targets = list(integer(0)), 
+          callSuper(data = data, 
+              targets = list(integer(0)), 
               target.index = rep(as.integer(1), nrow(data)), 
-              data = data, 
               lambda = lambda, 
               intercept = intercept, 
               use.cpp = use.cpp, 
