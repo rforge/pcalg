@@ -70,7 +70,7 @@ public:
 	 * Constructors
 	 */
 	Score(uint vertexCount, TargetFamily* targets) :
-		_vertexCount(vertexCount), _targets(targets) {};
+		_vertexCount(vertexCount), _targets(targets) {}
 
 	/**
 	 * Virtual destructor
@@ -161,6 +161,8 @@ Score* createScore(std::string name, TargetFamily* targets, Rcpp::List data);
 class ScoreRFunction : public Score
 {
 protected:
+	uint _totalDataCount;
+
 	/**
 	 * R function objects used to calculate: local score, global score, local MLE,
 	 * global MLE
@@ -171,17 +173,19 @@ protected:
 	std::vector<Rcpp::Function> _rfunction;
 public:
 	ScoreRFunction(uint vertexCount, TargetFamily* targets) :
-			Score(vertexCount, targets) {};
+			Score(vertexCount, targets) {}
 
-	void setData(Rcpp::List& data);
+	virtual uint getTotalDataCount() const { return _totalDataCount;	}
 
-	double local(const uint vertex, const std::set<uint>& parents) const;
+	virtual void setData(Rcpp::List& data);
 
-	double global(const EssentialGraph& dag) const;
+	virtual double local(const uint vertex, const std::set<uint>& parents) const;
 
-	std::vector<double> localMLE(const uint vertex, const std::set<uint>& parents) const;
+	virtual double global(const EssentialGraph& dag) const;
 
-	std::vector< std::vector<double> > globalMLE(const EssentialGraph& dag) const;
+	virtual std::vector<double> localMLE(const uint vertex, const std::set<uint>& parents) const;
+
+	virtual std::vector< std::vector<double> > globalMLE(const EssentialGraph& dag) const;
 };
 
 /**
@@ -233,17 +237,19 @@ public:
 		_dataCount(vertexCount),
 		_scatterMatrices(vertexCount) {};
 
-	uint getDataCount() const { return _totalDataCount;	}
+	virtual uint getTotalDataCount() const { return _totalDataCount; }
 
-	void setData(Rcpp::List& data);
+	virtual uint getDataCount(const uint vertex) const { return _dataCount[vertex]; }
 
-	double local(const uint vertex, const std::set<uint>& parents) const;
+	virtual void setData(Rcpp::List& data);
 
-	double global(const EssentialGraph& dag) const;
+	virtual double local(const uint vertex, const std::set<uint>& parents) const;
 
-	std::vector<double> localMLE(const uint vertex, const std::set<uint>& parents) const;
+	virtual double global(const EssentialGraph& dag) const;
 
-	std::vector< std::vector<double> > globalMLE(const EssentialGraph& dag) const;
+	virtual std::vector<double> localMLE(const uint vertex, const std::set<uint>& parents) const;
+
+	virtual std::vector< std::vector<double> > globalMLE(const EssentialGraph& dag) const;
 };
 
 #endif /* SCORE_HPP_ */

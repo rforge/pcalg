@@ -163,3 +163,4 @@ dag2essgraph <- function(dag, targets = list(integer(0))) {
       in.edges = .Call("dagToEssentialGraph", dag$.in.edges, targets),
       targets = targets)
 }
+

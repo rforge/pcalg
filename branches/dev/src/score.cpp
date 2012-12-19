@@ -69,6 +69,8 @@ Score* createScore(std::string name, TargetFamily* targets, Rcpp::List data)
 {
 	Score* result;
 
+	dout.level(2) << "Creating score object of type '" << name << "'...\n";
+
 	if (name == "gauss.l0pen")
 		result = new ScoreGaussL0PenScatter(Rcpp::as<uint>(data["vertex.count"]), targets);
 	else if (name == "none")
@@ -84,6 +86,8 @@ Score* createScore(std::string name, TargetFamily* targets, Rcpp::List data)
 
 void ScoreRFunction::setData(Rcpp::List& data)
 {
+	_totalDataCount = data["total.data.count"];
+
 	// Do not really store "data", but R function object used for the
 	// calculation
 	dout.level(2) << "Casting R functions to calculate the score...\n";

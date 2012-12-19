@@ -286,6 +286,12 @@ void EssentialGraph::limitVertexDegree(const uint maxVertexDegree)
 
 void EssentialGraph::limitVertexDegree(const double maxRelativeDegree)
 {
+	// TODO: note that getDataCount() is not implemented at the moment in the class
+	// ScoreRFunction. Either implement it there, or change the behaviour here in
+	// this function: limiting the vertex degree based on the number of data points
+	// does not necessarily make sense since the number of parameters used to
+	// describe the distribution of the child does not necessarily scale linearly
+	// with the number of parents, as it is the case in the Gaussian distribution.
 	for (uint i = 0; i < getVertexCount(); ++i)
 		_maxVertexDegree[i] = static_cast<uint>(maxRelativeDegree * (_score->getDataCount(i)));
 }

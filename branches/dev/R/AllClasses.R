@@ -160,6 +160,7 @@ setRefClass("Score",
           pp.dat$target.index <<- target.index[perm]
           pp.dat$data <<- data[perm, ]
           pp.dat$vertex.count <<- ncol(data)
+          pp.dat$total.data.count <<- as.integer(nrow(data))
           
           ## Declare scores as not decomposable "by default"
           decomp <<- FALSE
@@ -260,7 +261,7 @@ setRefClass("GaussL0penIntScore",
             target.index = rep(as.integer(1), nrow(data)), 
             lambda = 0.5*log(nrow(data)), 
             intercept = FALSE, 
-            use.cpp = FALSE, 
+            use.cpp = TRUE, 
             ...) {
           ## Store supplied data in sorted form
           callSuper(data = data, targets = targets, target.index = target.index, ...)
@@ -280,7 +281,6 @@ setRefClass("GaussL0penIntScore",
           
           ## Number of variables
           p <- ncol(data)
-          pp.dat$total.data.count <<- as.integer(nrow(data))
           
           ## Add column of ones to data matrix; this allows the computation
           ## of an intercept if requested
@@ -545,6 +545,13 @@ setRefClass("EssGraph",
           result$.params <- score$global.mle(result)
           
           return(result)
+        },
+        
+        #' Calculates an optimal intervention target
+        #' 
+        #' @param   max.size    maximum target size; allowed values: 1, p (= # nodes)
+        opt.target = function(max.size) {
+          .Call("optimalTarget", .in.edges, max.size, PACKAGE = "pcalg")
         }
         ))
 

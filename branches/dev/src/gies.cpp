@@ -418,30 +418,20 @@ RcppExport SEXP dagToEssentialGraph(SEXP argGraph, SEXP argTargets)
 	return wrapGraph(graph);
 }
 
-//RcppExport SEXP optimalTarget(SEXP argAdjacency, SEXP argMaxSize)
-//{
-//	try {
-//		// Cast adjacency matrix
-//		Rcpp::IntegerMatrix matAdjacency(argAdjacency);
-//		uint p = matAdjacency.nrow();
-//		arma::imat adjacency(matAdjacency.begin(), matAdjacency.nrow(), matAdjacency.ncol(), false);
-//
-//		// Cast maximal size of intervention target
-//		int maxSize = Rcpp::as<int>(argMaxSize);
-//
-//		// Create EssentialGraph instance
-//		EssentialGraph graph(p);
-//		graph.setAdjacencyMatrix(adjacency);
-//
-//		// Calculate optimal intervention target
-//		std::set<uint> target = graph.getOptimalTarget(maxSize);
-//
-//		// Adapt numbering convention...
-//		std::vector<uint> result(target.begin(), target.end());
-//		std::for_each(result.begin(), result.end(), _1++);
-//		return Rcpp::wrap(result);
-//	} catch (std::exception& ex) {
-//		forward_exception_to_r(ex);
-//	}
-//
-//}
+RcppExport SEXP optimalTarget(SEXP argGraph, SEXP argMaxSize)
+{
+	// Initialize automatic exception handling; manual one does not work any more...
+	initUncaughtExceptionHandler();
+
+	// Cast arguments
+	EssentialGraph graph = castGraph(argGraph);
+	int maxSize = Rcpp::as<int>(argMaxSize);
+
+	// Calculate optimal intervention target
+	std::set<uint> target = graph.getOptimalTarget(maxSize);
+
+	// Adapt numbering convention...
+	std::vector<uint> result(target.begin(), target.end());
+	std::for_each(result.begin(), result.end(), _1++);
+	return Rcpp::wrap(result);
+}
