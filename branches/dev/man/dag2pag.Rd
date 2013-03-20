@@ -1,8 +1,9 @@
 \name{dag2pag}
 \alias{dag2pag}
-\title{Convert a DAG with latent variables to a PAG }
+\encoding{UTF8}
+\title{Convert a DAG with latent variables into a PAG}
 \description{
-Convert a DAG with latent variables to a Partially Ancestral Graph (PAG).
+  Convert a DAG with latent variables to a Partial Ancestral Graph (PAG).
 }
 \usage{
 dag2pag(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), verbose = FALSE)
@@ -22,9 +23,9 @@ dag2pag(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), verbose = FA
     decisions. The return value of \code{indepTest} is the p-value of
     the test for conditional independence.}
   \item{graph}{DAG with \code{p} nodes (graph object). The graph must be
-  topological sorted (for example produced using \code{random.DAG}).}
+  topological sorted (for example produced using \code{randomDAG}).}
   \item{L}{Array containing the labels of the nodes in the \code{graph}
-  corresponding to the latent variables.} 
+  corresponding to the latent variables.}
   \item{alpha}{Significance level for the individual conditional
     independence tests.}
   \item{rules}{Logical vector of length 10 indicating which rules
@@ -37,7 +38,7 @@ dag2pag(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), verbose = FA
   its corresponding (unique) PAG (fciAlgo object), using the ancestors
   information entailed in the true DAG. The output of this function is
   exactly the same as the one using fci(suffStat, indepTest, p, alpha,
-  rules = rep(TRUE, 10), doPdsep = TRUE), using the true correlation
+  rules = rep(TRUE, 10)), using the true correlation
   matrix in the function \code{gaussCItest} with a large "virtual sample
   size" and a large alpha, but much more faster.
 }
@@ -59,8 +60,6 @@ set.seed(78)
 p <- 8
 g <- randomDAG(p, prob = 0.4)
 
-library(RBGL)
-
 ## define nodes 2 and 6 to be latent variables
 L <- c(2,6)
 
@@ -76,7 +75,7 @@ true.corr <- cov2cor(cov.mat)
 ## alpha
 suffStat <- list(C=true.corr, n=10^9)
 indepTest <- gaussCItest
-true.pag <- dag2pag(suffStat, indepTest, g, L, alpha=0.9999)
+true.pag <- dag2pag(suffStat, indepTest, g, L, alpha = 0.9999)
 
 ##find PAG using fci-function
 ## compute the true covariance matrix of g

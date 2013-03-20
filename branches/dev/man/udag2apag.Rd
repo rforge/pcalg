@@ -2,8 +2,8 @@
 \alias{udag2apag}
 \title{Extend a partially oriented skeleton into an RFCI-PAG}
 \description{
-This function extends a skeleton in which the v-structures have already
-been oriented into an RFCI Partial Ancestral Graph (PAG). While
+This function extends a skeleton in which the v-structures have been
+already oriented into an RFCI Partial Ancestral Graph (PAG). While
 orienting the edges, this function performs some additional conditional
 independence tests in rule 4 to ensure correctness of the ancestral
 relationships, and consequently some edges can be deleted. The result is
@@ -15,7 +15,8 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
 10), unfVect = NULL, verbose = FALSE)
 }
 \arguments{
-  \item{apag}{adjacency matrix of the pcAlgo-object of size p*p}
+  \item{apag}{adjacency matrix of the pcAlgo-object of size p*p where
+    the v-structures have already been oriented.}
   \item{suffStat}{Sufficient statistics: List containing all necessary
     elements for the conditional independence decisions in the
     function \code{indepTest}.}
@@ -45,7 +46,7 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
 \details{
-  The partially oriented skeleton (v-structures have already been
+  The partially oriented skeleton (v-structures have been already
   oriented) is extended to an RFCI-PAG using adapted rules by Zhang (see
   References). This function is similar to \link{udag2pag} used to
   orient the skeleton into a PAG in the FCI algorithm. However, it is
@@ -63,10 +64,9 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
   M[j,i]!=0: i*->j; M[i,j]=3, M[j,i]!=0: i*-j.   
 }
 \references{
-  Diego Colombo, Marloes H. Maathuis, Markus Kalisch, Thomas
-  S. Richardson (2012). Learning high-dimensional directed acyclic
-  graphs with latent and selection variables. \emph{Ann. Statist.} 40,
-  294-321. 
+  D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
+  (2012). Learning high-dimensional directed acyclic graphs with latent
+  and selection variables. \emph{Ann. Statist.} \bold{40}, 294-321. 
   
   J. Zhang (2008). On the completeness of orientation rules for causal
   discovery in the presence of latent confounders and selection bias.
@@ -77,8 +77,12 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
 \seealso{\code{\link{pc}}}
 
 \examples{
-## generate and draw random DAG
-## this example is taken from Zhang (2008), Fig. 6, p.1882 (see references)
+##################################################
+## Example with hidden variables
+## Zhang (2008), Fig. 6, p.1882
+##################################################
+
+## draw DAG with latent variables
 amat <- t(matrix(c(0,1,0,0,1, 0,0,1,0,0, 0,0,0,1,0, 0,0,0,0,0, 0,0,0,1,0),5,5))
 colnames(amat) <- rownames(amat) <- as.character(1:5)
 V <- as.character(1:5)
@@ -114,7 +118,7 @@ d.mat <- rmvnorm(n, mean = rep(0,dim(true.corr)[1]), sigma = true.cov)
 ## estimate the skeleton of given data
 suffStat <- list(C = cor(d.mat), n = n)
 indepTest <- gaussCItest
-resD <- skeleton(suffStat, indepTest, dim(true.corr)[2], alpha=alpha,
+resD <- skeleton(suffStat, indepTest, dim(true.corr)[2], alpha = alpha,
 verbose=FALSE)
 
 ## estimate all ordered unshielded triple
@@ -126,12 +130,14 @@ vectM <- tmp$unshVect
  
 ## check and orient v-structures
 vstruct.amat <- rfci.vstructures(suffStat, indepTest, dim(true.corr)[2],
-alpha=alpha, sepset, amat.resD, listM, vectM, verbose = TRUE)
+alpha = alpha, sepset, amat.resD, listM, vectM, verbose = TRUE)
 
 ## estimate the final skeleton and extend it into a PAG using all 10 rules
 rules <- rep(TRUE,10)
-resP <- udag2apag(vstruct.amat$graph, suffStat, indepTest, alpha=alpha,
+resP <- udag2apag(vstruct.amat$graph, suffStat, indepTest, alpha = alpha,
 vstruct.amat$sepset, rules = rules, verbose = TRUE)
+Amat <- resP$graph
+colnames(Amat) <- rownames(Amat) <- as.character(2:5)
 }
 \keyword{multivariate}
 \keyword{models}

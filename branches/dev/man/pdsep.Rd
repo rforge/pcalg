@@ -1,8 +1,8 @@
 \name{pdsep}
 \alias{pdsep}
-\title{Compute Possible-D-Sep for Each Node and Adapt Graph Accordingly}
+\title{Compute Possible-D-SEP for Each Node and Adapt Graph Accordingly}
 \description{
-  Computes the Possible-D-Sep for each node
+  Computes the Possible-D-SEP for each node
   and tests conditional independence given all subsets of
   Possible-D-Sep. The graph is updated accordingly.
 }
@@ -42,10 +42,10 @@ pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
   \item{pdsep.max}{Maximum size of Possible-D-SEP for which subsets are
     considered as conditioning sets in the conditional independence
     tests. If the nodes \code{x} and \code{y} are adjacent in the graph
-    and the size of Possible-D-SEP(\code{x})\{\code{x},\code{y}\},
-  estimated normally or using biconnected components, see later, is
-  bigger than pdsep.max, no conditional independence tests are performed between
-    \code{x} and its neighbour \code{y} given subsets of
+    and the size of Possible-D-SEP(\code{x})\ {\code{x},\code{y}},
+    estimated normally or using biconnected components, see later, is
+    bigger than pdsep.max, no conditional independence tests are
+    performed between \code{x} and its neighbour \code{y} given subsets of
     Possible-D-SEP(\code{x}) and the edge is simply left in the graph.
     Note that if pdsep.max is less than Inf, the final PAG
     may be a supergraph than the one computed with pdsep.max = Inf,
@@ -65,21 +65,21 @@ pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
   \item{G}{Updated adjecency matrix}
   \item{sepset}{Updated sepset}
   \item{pMax}{Updated matrix containing maximal p-values}
-  \item{allPdsep}{Possible-D-SEP for each node}
+  \item{allPdsep}{Possible-D-Sep for each node}
   \item{max.ord}{Maximal order of conditioning sets during independence
     tests}
   \item{n.edgetests}{Number of conditional edgetests performed grouped
     by size of conditioning set.}
 }
 
-\details{For a given graph G, a node y is in Possible-D-Sep(x) if x!=y
+\details{For a given graph G, a node y is in Possible-D-SEP(x) if x!=y
   and there is an undirected path U between x and y in G such that for
   every subpath a,b,c of U either b is a collider on the subpath, or b
-  is not a definite noncollider on U and a,b and c form a trianglein G.
+  is not a definite noncollider on U and a,b and c form a triangle in G.
 
   Each pair of nodes x and y which is connected by
   an edge is tested for conditional independence given every subset in
-  Possible-D-Sep of x or of y. The conditional independence is tested on
+  Possible-D-SEP of x or of y. The conditional independence is tested on
   significance level alpha by using the test given in
   \code{indepTest}. If the pair of nodes is judged to be independent
   given set S, then S is recorded in the sepset of x,y and in the sepset
@@ -97,14 +97,16 @@ pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
   for a given node; \code{\link{fci}} which uses \code{\link{pdsep}}.
 }
 \author{
-  Markus Kalisch (\email{kalisch@stat.math.ethz.ch})
+  Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Diego Colombo
 }
 \examples{
 p <- 10
-## generate and draw random DAG :
+## generate and draw random DAG:
+set.seed(44)
 myDAG <- randomDAG(p, prob = 0.2)
 
 ## generate 10000 samples of DAG using gaussian distribution
+library(RBGL)
 n <- 10000
 d.mat <- rmvDAG(n, myDAG, errDist = "normal")
 
@@ -117,13 +119,11 @@ skel <- skeleton(suffStat, indepTest, p, alpha)
 ## prepare input for pdsep
 sepset <- skel@sepset
 pMax <- skel@pMax
-n.edgetestsSKEL <- skel@n.edgetests
-max.ordSKEL <- skel@max.ord
 
-## call pdsep to find possible d-sep and enhance the skeleton
+## call pdsep to find Possible-D-Sep and enhance the skeleton
 pdsepRes <- pdsep(skel@graph, suffStat, indepTest, p, sepset, alpha,
 pMax, verbose = TRUE)
-## call pdsep with biconnected components to find possible d-sep and enhance the skeleton
+## call pdsep with biconnected components to find Possible-D-Sep and enhance the skeleton
 pdsepResBicc <- pdsep(skel@graph, suffStat, indepTest, p, sepset, alpha,
 pMax, biCC= TRUE, verbose = TRUE)
 }

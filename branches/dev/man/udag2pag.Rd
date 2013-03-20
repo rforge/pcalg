@@ -47,7 +47,12 @@ udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose = FALSE)
 \seealso{\code{\link{pc}}}
 
 \examples{
-## generate and draw random DAG
+##################################################
+## Example with hidden variables
+## Zhang (2008), Fig. 6, p.1882
+##################################################
+
+## draw a DAG with latent variables
 ## this example is taken from Zhang (2008), Fig. 6, p.1882 (see references)
 amat <- t(matrix(c(0,1,0,0,1, 0,0,1,0,0, 0,0,0,1,0, 0,0,0,0,0, 0,0,0,1,0),5,5))
 colnames(amat) <- rownames(amat) <- as.character(1:5)
@@ -84,7 +89,7 @@ d.mat <- rmvnorm(n, mean = rep(0,dim(true.corr)[1]), sigma = true.cov)
 ## estimate the skeleton of given data
 suffStat <- list(C = cor(d.mat), n = n)
 indepTest <- gaussCItest
-resD <- skeleton(suffStat, indepTest, dim(true.corr)[2], alpha=alpha,
+resD <- skeleton(suffStat, indepTest, dim(true.corr)[2], alpha = alpha,
 verbose=FALSE)
 
 ## estimate the final skeleton of given data using Possible-D-Sep
@@ -93,7 +98,9 @@ resD@sepset, alpha = alpha, m.max = Inf, pMax = resD@pMax, verbose = FALSE)
 
 ## extend the skeleton into a PAG using all 10 rules
 rules <- rep(TRUE,10)
-resP <- udag2pag(pag = pdsepRes$G, pdsepRes$sepset, rules = rules, verbose = TRUE)
+resP <- udag2pag(pag = pdsepRes$G, pdsepRes$sepset, rules = rules,
+verbose = TRUE)
+colnames(resP) <- rownames(resP) <- as.character(2:5)
 }
 \keyword{multivariate}
 \keyword{models}

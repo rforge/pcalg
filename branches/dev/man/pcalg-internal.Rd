@@ -3,13 +3,8 @@
 \alias{adj.check}
 \alias{allDags}
 \alias{amat2dag}
-\alias{check.new.coll}
-\alias{checkTriple}
 \alias{ci.test}
-\alias{discr.path}
-\alias{faith.check}
 \alias{find.sink}
-\alias{find.upd}
 \alias{flipEdges}
 \alias{gAlgo-class}%-> *do* document! (FIXME)
 \alias{labelEdges}
@@ -19,18 +14,24 @@
 \alias{orderEdges}
 \alias{pcAlgo.Perfect}
 \alias{reach}
-\alias{triple2numb}% maybe document ?
 \alias{trueCov}
-\alias{ucp}
-\alias{upd}
 \alias{wgtMatrix}
-\alias{combn2}
-\alias{skeleton.rfci}
+\alias{check.new.coll}
+\alias{checkTriple}
+\alias{faith.check}
+\alias{triple2numb}
+\alias{updateList}
+\alias{min.uncov.pd.path}
+\alias{find.min.discr.path}
+\alias{min.uncov.circ.path}
 \alias{find.unsh.triple}
 \alias{rfci.vstructures}
 \alias{dep.triple}
 \alias{CheckEdges}
-\alias{min.discr.path}
+\alias{ancTS}
+\alias{skeleton.dag2pag}
+\alias{new.ord}
+
 %
 \title{Internal Pcalg Functions}
 \description{

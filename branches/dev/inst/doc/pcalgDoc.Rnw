@@ -820,6 +820,13 @@ are considered in the conditional independence tests in (P2) of Algorithm~\ref{a
 Throughout, the function works with the column positions of the
 variables in the adjacency matrix, and not with the names of the variables.
 
+The PC algorithm (Spirtes, Glymour and Scheines, 2000) is known to be
+order-dependent, in the sense that the output depends on the order in which
+the variables are given. Therefore, Colombo and Maathuis (2012) proposed a
+simple modification, called PC-stable, that yields order-independent
+adjacencies in the skeleton. In this function we implement their modified
+algorithm (the old implementation can be found in version 1.1-5).
+
 \subsection{pc} \label{sec:pc}
 
 The function \code{pc()} implements all steps (P1) to (P4) of the PC
@@ -944,10 +951,10 @@ undetermined edge marks (o) as possible are determined using (a subset of) the 1
 orientation rules given by \cite{Zhang08-orientation-rules}.
 
 The function can be called with the following arguments:
-% \code{fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,\\
-%   fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10),\\
-%   doPdsep = TRUE, conservative = c(FALSE, FALSE), biCC = FALSE, \\
-%   cons.rules = FALSE))}
+% \code{fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
+%    fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, pdsep.max = Inf,
+%    rules = rep(TRUE, 10), doPdsep = TRUE, conservative = c(FALSE, FALSE),
+%    biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")}
 \par\vspace*{-1.2ex}
 <<fci-args, echo=FALSE>>=
 showF(fci)
@@ -956,32 +963,47 @@ showF(fci)
 where the arguments \code{suffStat}, \code{indepTest}, \code{p},
 \code{alpha}, \code{fixedGaps}, \code{fixedEdges}, \code{NAdelete} and
 \code{m.max} are identical to those in % function
-\code{skeleton()}. The option \code{rules} contains a logical vector of
+\code{skeleton()}. 
+
+The argument \code{pdsep.max} indicates the maximum size of Possible-D-SEP
+for which subsets are considered as conditioning sets in the conditional
+independence tests. If the nodes \code{x} and \code{y} are adjacent in the
+graph and the size of Possible-D-SEP(\code{x})\ {\code{x},\code{y}},
+estimated normally or using biconnected components, see later, is bigger
+than pdsep.max, no conditional independence tests are performed between
+\code{x} and its neighbour \code{y} given subsets of
+Possible-D-SEP(\code{x}) and the edge is simply left in the graph. Note
+that if pdsep.max is less than Inf, the final PAG may be a supergraph than
+the one computed with pdsep.max = Inf, because less tests may have been
+performed in the former. 
+
+The option \code{rules} contains a logical vector of
 length 10 indicating which rules should be used when directing edges, where
 the order of the rules is taken from \cite{Zhang08-orientation-rules}.
 
 The option \code{doPdsep} indicates whether Possible-D-SEP should be
 computed for all nodes, and all
 subsets of Possible-D-SEP are considered as conditioning sets in the
-conditional independence tests. If FALSE, Possible-D-SEP is not computed,
-so that the algorithm simplifies to the Modified PC algorithm of \cite{SpirtesEtAl00}.
+conditional independence tests, if not defined otherwise in
+\code{pdsep.max}. If FALSE, Possible-D-SEP is not computed, so that the
+algorithm simplifies to the Modified PC algorithm of \cite{SpirtesEtAl00}. 
 
 The argument \code{conservative} can be used to invoke the conservative FCI
 algorithm which consists of two parts. In the first part (done if
 \code{conservative[1]} is \code{TRUE}), we call the internal function
-\code{pc.cons.internal()} with argument \code{version.unf = c(1,2)} after
+\code{pc.cons.internal()} with argument \code{version.unf = c(1,1)} after
 computing the skeleton. This is a slight variation of the conservative PC
-algorithm (which used \code{version.unf = c(2,2)}): If $V_a$ is independent
-of $V_c$ given some $V_S$ in the skeleton (i.e., the edge $a \gredge{-} c$ dropped out),
-but $V_a$ and $V_c$ remain dependent given all subsets of the adjacency set of
-either $a$ or $c$, we call $a \gredge{-} b \gredge{-} c$ 
+algorithm (which used \code{version.unf = c(2,1)}): if $V_a$ is independent
+of $V_c$ given some $V_S$ in the skeleton (i.e., the edge $a \gredge{-} c$
+dropped out), but $V_a$ and $V_c$ remain dependent given all subsets of the
+adjacency set of either $a$ or $c$, we call $a \gredge{-} b \gredge{-} c$ 
 \emph{``unambiguous''}. This is because
 in the FCI algorithm, the true separating set might be outside the
 adjacency sets of $a$ or $c$. The purpose of this conservative version is
 to speed up the algorithm in the sample version (less v-structures lead to
 smaller Possible-D-SEP sets). In the second part (done if
 \code{conservative[2]} is \code{TRUE}), we call \code{pc.cons.internal(...,
-  version.unf = c(1,2))} again after Possible-D-SEP was found and the graph
+  version.unf = c(1,1))} again after Possible-D-SEP was found and the graph
 potentially lost some edges. Therefore, new triples might have occurred. If
 this second part is done, the resulting information on sepset and faithful
 triples overwrites the previous and will be used for the subsequent
@@ -990,7 +1012,7 @@ hope to obtain better edge orientations. See \cite{rfci} for more details.
 
 By setting the argument \code{biCC = TRUE}, Possible-D-SEP($a$, $c$) is
 defined as the intersection of the original Possible-D-SEP($a$, $c$) and
-the set of nodes that lie on a path between $a$ and $c$.  This method uses
+the set of nodes that lie on a path between $a$ and $c$. This method uses
 biconnected components to find all nodes on a path between nodes $a$ and
 $c$. The smaller Possible-D-SEP sets lead to faster computing times, while
 \cite{rfci} showed that the algorithm is identical to the original FCI algorithm
@@ -1005,6 +1027,24 @@ subgraph relevant for the rule does not involve an unfaithful triple.
 Using the argument \code{labels}, one can pass names for the vertices of
 the estimated graph. By default, this argument is set to \code{NA}, in
 which case the node names \code{as.character(1:p)} are used.
+
+The argument \code{type} specifies the version of the FCI that has to be
+used. Per default it is \code{normal} and so the normal FCI algorithm is
+called. If set as \code{anytime}, the Anytime FCI \ref{Spirtes01-anytime}
+is called and in this case \code{m.max} must be pre-specified by the
+user. The Anytime FCI algorithm can be viewed as a modification of the FCI
+algorithm that only performs conditional independence tests up to and
+including order m.max when finding the initial skeleton, using the function
+\code{skeleton}, and the final skeleton, using the function
+\code{pdsep}. Thus, Anytime FCI performs fewer conditional independence
+tests than FCI. If set as \code{adaptive}, the Adaptive Anytime FCI
+\ref{rfci} is called and in this case m.max is not used. The first part of
+the algorithm is identical to the normal FCI described above. But in the
+second part when the final skeleton is estimated using the function
+\code{pdsep}, the Adaptive Anytime FCI algorithm only performs conditional
+independence tests up to and including order m.max, where m.max is the
+maximum size of the conditioning sets that were considered to determine the
+initial skeleton using the function \code{skeleton}.
 
 As an example, we estimate the PAG of a graph with five nodes using the
 function \code{fci()} and the predefined function \code{gaussCItest()} as
@@ -1058,6 +1098,17 @@ where the arguments \code{suffStat}, \code{indepTest}, \code{p},
 \code{m.max} are identical to those in % function
 \code{skeleton()}.
 
+The arguments \code{rules} and \code{cons.rules} are similar to those in
+\code{fci} but modified to produce a PAG with correct ancestral
+relationships, in the oracle version.
+
+The argument \code{conservative} can be used to invoke the conservative RFCI
+algorithm in the same way as setting \code{conservative[1]} is \code{TRUE})
+in the \code{fci()} (it calls the internal function
+\code{pc.cons.internal()} with argument \code{version.unf = c(1,1)} after
+computing the skeleton).
+
+The argument \code{labels} is identical to the one in \code{fci()}.
 
 As an example, we re-run the example from Section~\ref{sec:fci} and show
 the PAG estimated with \code{rfci()} in Figure~\ref{fig:fci}. The PAG
@@ -1479,7 +1530,7 @@ allowing for better insights into causal relations between genes. With $n =
 63$ samples of observational data measuring the expression of $p = 5361$
 genes (see \cite{HughesEtAl00}), the goal was to identify the largest
 intervention effects between all pairs of genes. For the analysis, the
-\pkg{pcalg} package was used.
+\pkg{pcalg} package with version 1.1-5 was used.
 
 \cite{HughesEtAl00} also provide gene expression measurements from 234
 interventional experiments, namely from 234 single-gene deletion mutant
@@ -1492,9 +1543,12 @@ identify. We then check in an ROC curve, how well the ranking of the causal
 effects estimated by applying \code{ida()} to the observational data is
 able to identify effects in the target set. For comparison, the authors
 also used the (conceptually wrong) Lasso and Elastic Net to obtain
-rankings. In Figure~\ref{fig:yeast} one can see that \code{ida()} is
+rankings. In Figure~\ref{fig:yeast} one can see that \code{ida()}, using
+the function \code{skeleton()} with version 1.1-5, is
 clearly superior to the alternative methods (and random guessing) in terms
-of identifying effects in the target set.
+of identifying effects in the target set. In Figure~\ref{fig:yeast.new} one
+can see that \code{ida()} using the stable function \code{skeleton()}
+produces even better results than with the old version.
 
 We note that the yeast data set is very high-dimensional ($n=63$,
 $p=5361$). Thus, unlike the toy examples used to illustrate the package in
@@ -1513,6 +1567,17 @@ extract useful information about causal effects.
     essentially taken from \cite{NatMethods10}.}
 \label{fig:yeast}
 \end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics{Figure2FAT.pdf}
+  \caption{The largest 10\% of the causal effects found in experiments
+    among yeast genes are identified much better from observational data
+    with IDA than with Lasso, Elastic Net or random guessing. The figure is
+    essentially taken from \cite{pc.indep}.}
+\label{fig:yeast.new}
+\end{figure}
+
 
 \section{Discussion}
 Causal structure learning and the estimation of causal effects from

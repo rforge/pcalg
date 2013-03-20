@@ -9,7 +9,7 @@
 \usage{
 rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE,
-10), conservative = FALSE, cons.rules = FALSE)
+10), conservative = FALSE, cons.rules = FALSE, labels = NA)
 }
 
 \arguments{
@@ -50,7 +50,9 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     conservative way.}
   \item{cons.rules}{If \code{TRUE}, an orientation rule that needs information
   on definite non-colliders is only applied, if the corresponding
-  subgraph relevant for the rule does not involve an unfaithful triple.}
+  subgraph relevant for the rule does not involve an unfaithful triple.
+  \item{labels}{Vector of length p with node names. If \code{NA},
+    \code{as.character{1:p}} is used instead.}}
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
  \code{\linkS4class{fciAlgo}}) containing the estimated graph
@@ -60,17 +62,16 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
 }
 
 \details{ This function is rather similar to \link{fci}. However, it
-does not compute any Possible-D-Sep sets and thus does not make tests
+does not compute any Possible-D-SEP sets and thus does not make tests
 conditioning on them. This makes RFCI much faster than FCI. The
 orientation rules for v-structures and rule 4 were modified in order to
 produce a PAG which, in the oracle version, is guaranteed to have the
 correct ancestral relationships.}
 
 \references{
-  Diego Colombo, Marloes H. Maathuis, Markus Kalisch, Thomas
-  S. Richardson (2012). Learning high-dimensional directed acyclic
-  graphs with latent and selection variables. \emph{Ann. Statist.} \bold{40},
-  294-321. 
+  D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
+  (2012). Learning high-dimensional directed acyclic graphs with latent
+  and selection variables. \emph{Ann. Statist.} \bold{40}, 294-321. 
 }
 \seealso{\code{\link{fci}} for estimating a PAG using the FCI algorithm;
   \code{\link{skeleton}} for estimating a skeleton
@@ -86,13 +87,12 @@ correct ancestral relationships.}
 ##################################################
 ## Example without latent variables
 ##################################################
-
 set.seed(42)
 p <- 7
 ## generate and draw random DAG :
 myDAG <- randomDAG(p, prob = 0.4)
 
-## find skeleton and CPDAG using the RFCI algorithm
+## find skeleton and PAG using the RFCI algorithm
 suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
 indepTest <- gaussCItest
 res <- rfci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE)
@@ -134,7 +134,7 @@ suffStat <- list(C = true.corr, n = 10^9)
 indepTest <- gaussCItest
 rfci.pag <- rfci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE)
 
-## define PAG given in paper
+## define PAG given in Zhang (2008), Fig. 6, p.1882
 corr.pag <- matrix(0,4,4)
 corr.pag[1,] <- c(0,1,1,0)
 corr.pag[2,] <- c(1,0,0,2)

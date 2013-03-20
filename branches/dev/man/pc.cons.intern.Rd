@@ -55,9 +55,9 @@ pc.cons.intern(sk, suffStat, indepTest, alpha, verbose = FALSE,
 
   \item{vers}{Vector containing the version (1 or 2) of the
     corresponding triple saved in unfTripl (1=normal unfaithful triple that
-    is, B is in some sepsets but not all or none; 2=triple coming from version.unf[1]==2 that is
-    a and c are indep given the initial sepset but there doesn't exist a
-    subset of the neighbours that d-separates them.)}
+    is, B is in some sepsets but not all or none; 2=triple coming from
+    version.unf[1]==2 that is a and c are indep given the initial sepset
+    but there doesn't exist a subset of the neighbours that d-separates them.)}
 }
 
 \seealso{\code{\link{skeleton}} for estimating a skeleton

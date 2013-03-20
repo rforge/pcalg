@@ -2,7 +2,7 @@
 \alias{skeleton}
 \title{Estimate the skeleton of a DAG using the PC Algorithm}
 \description{
-  Estimate the \dQuote{skeleton} of a directed
+  Estimate the order-independent \dQuote{skeleton} of a directed
   acyclic graph (DAG) from observational data,
   using the PC-algorithm.
 }
@@ -65,23 +65,31 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf)
   (\code{\link{disCItest}}), and binary data (see \code{\link{binCItest}}).
   Users can also specify their own \code{indepTest} function.
 
-  The PC algorithm (Spirtes, Glymour and Scheines, 2000) starts with a
-  complete undirected graph. In each step, it visits
-  all pairs (\code{i},\code{j}) of adjacent nodes in the current graph, and
-  determines based on conditional independence tests whether the edge i-j
-  should be removed. In particular, in step \code{m} (\code{m}=0,1,...)
-  the algorithm visits all
-  pairs (\code{i}, \code{j}) of adjacent nodes in the current
-  graph, and the edge between
+  The PC algorithm (Spirtes, Glymour and Scheines, 2000)
+  is known to be order-dependent, in the sense that the
+  output depends on the order in which the variables are
+  given. Therefore, Colombo and Maathuis (2012) proposed a simple
+  modification, called PC-stable, that yields order-independent
+  adjacencies in the skeleton. In this function we implement their
+  modified algorithm (the old implementation can be found in version
+  1.1-5). The algorithm starts with a complete undirected graph. In each
+  step, it visits all pairs (\code{i},\code{j}) of adjacent nodes in the
+  current graph, and determines based on conditional independence tests
+  whether the edge i-j should be removed. In particular, for each step
+  \code{m} (\code{m}=0,1,...) of the size of the conditioning sets, the
+  algorithm at first estimates the neighbours \code{a(i)} of each node
+  \code{i} in the graph. Then, the algorithm visits all pairs (\code{i},
+  \code{j}) of adjacent nodes in the current graph, and the edge between
   \code{i} and \code{j} is kept if and only if the null hypothesis
   "\code{i} and \code{j} are
   conditionally independent given S" is
   rejected at significance level \code{alpha} for all subsets \code{S} of size
-  \code{m} of the neighbours of \code{i} and of the neighbors of \code{j} in the
-  current graph (as judged by the function \code{indepTest}).
-  The algorithm stops when m is larger than the
-  largest neighbourhood size of all nodes, or when m has reached
-  the limit \code{m.max} defined by the user.
+  \code{m} of \code{a(i)} and of \code{a(j)} (as judged by the function
+  \code{indepTest}). The idea of computing the neighbours at the
+  beginning of each increasing step of \code{m} makes the final skeleton
+  order-independent. The algorithm stops when m is larger than the
+  largest neighbourhood size of all nodes, or when \code{m} has reached the
+  limit \code{m.max} defined by the user. 
 
   The information in \code{fixedGaps} and \code{fixedEdges} is used as follows.
   The gaps given in \code{fixedGaps} are introduced in the very beginning of
@@ -101,7 +109,11 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf)
   M. Kalisch and P. Buehlmann (2007)
   \emph{Estimating high-dimensional
     directed acyclic graphs with the PC-algorithm},
-    JMLR \bold{8} 613-636.
+  JMLR \bold{8} 613-636.
+
+  D. Colombo and M.H. Maathuis (2012)
+  \emph{A modification of the PC algorithm yielding order-independent
+  skeletons}, (arXiv:1211.3295v1)  
 }
 
 \seealso{\code{\link{pc}} for generating a partially directed graph
@@ -128,7 +140,7 @@ indepTest <- gaussCItest
 suffStat <- list(C = cor(gmG$x), n = n)
 ## estimate Skeleton
 alpha <- 0.01
-skeleton.fit <- skeleton(suffStat, indepTest, p, alpha)
+skeleton.fit <- skeleton(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
 ## show estimated Skeleton
 par(mfrow=c(1,2))
@@ -139,17 +151,17 @@ plot(gmG$g, main = "True DAG")
 ## Using d-separation oracle
 ##################################################
 ## define independence test
-indepTest <- dsepTest
+##indepTest <- dsepTest
 ## define sufficient statistics (d-separation oracle)
-suffStat <- list(g = gmG$g, jp = RBGL::johnson.all.pairs.sp(gmG$g))
+##suffStat <- list(g = gmG$g, jp = RBGL::johnson.all.pairs.sp(gmG$g))
 ## estimate Skeleton
-alpha <- 0.01 ## value is irrelevant as dsepTest returns either 0 or 1
-fit <- skeleton(suffStat, indepTest, p, alpha)
-if (require(Rgraphviz)) {
+##alpha <- 0.01 ## value is irrelevant as dsepTest returns either 0 or 1
+##fit <- skeleton(suffStat, indepTest, p, alpha)
+##if (require(Rgraphviz)) {
 ## show estimated Skeleton
-plot(fit, main = "Estimated Skeleton")
-plot(gmG$g, main = "True DAG")
-}
+##plot(fit, main = "Estimated Skeleton")
+##plot(gmG$g, main = "True DAG")
+##}
 ##################################################
 ## Using discrete data
 ##################################################
@@ -185,6 +197,7 @@ alpha <- 0.01
 skeleton.fit <- skeleton(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
 ## show estimated Skeleton
+par(mfrow = c(1,2))
 plot(skeleton.fit, main = "Estimated Skeleton")
 plot(gmB$g, main = "True DAG")
 }

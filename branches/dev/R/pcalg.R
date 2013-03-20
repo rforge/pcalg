@@ -44,8 +44,7 @@ check.Rgraphviz <- function() {
 ##       case.id <- as.character((l.pa[i]!=0)*10+(l.pa[j]!=0))
 ##       switch(case.id,
 ##              "0" = {
-##                ## l.pa[i]=0 & l.pa[j]=0
-##                if (i!=j) {
+##                ## l.pa[i]=0 & l.pa[j]=0##                if (i!=j) {
 ##                  xcov[i,j] <- xcov[j,i] <- 0
 ##                } else {
 ##                  xcov[i,j] <- 1
@@ -2495,33 +2494,29 @@ plotAG <- function(amat)
   Rgraphviz::renderGraph(Rgraphviz::layoutGraph(g))
 }
 
-skeleton <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
-                     fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
-                     m.max = Inf) {
+skeleton <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE) {
 
   ## Purpose: Perform undirected part of PC-Algorithm, i.e.,
   ## estimate skeleton of DAG given data
+  ## Order-independent version! NEU
   ## ----------------------------------------------------------------------
   ## Arguments:
-  ## - dm: Data matrix (rows: samples, cols: nodes)
-  ## - C: correlation matrix (only for continuous)
-  ## - n: sample size
+  ## - suffStat: List containing all necessary elements for the conditional
+  ##             independence decisions in the function "indepTest".
+  ## - indepTest: predefined function for testing conditional independence
   ## - p: number of variables !! NEU
   ## - alpha: Significance level of individual partial correlation tests
-  ## - corMethod: "standard" or "Qn" for standard or robust correlation
-  ##              estimation
   ## - fixedGaps: the adjacency matrix of the graph from which the algorithm
   ##      should start (logical); gaps fixed here are not changed
   ## - fixedEdges: Edges marked here are not changed (logical)
-  ## - datatype: distinguish between discrete and continuous data
   ## - NAdelete: delete edge if pval=NA (for discrete data)
   ## - m.max: maximal size of conditioning set
-  ## - gTrue: Graph object of true DAG
   ## ----------------------------------------------------------------------
   ## Value:
   ## - G, sepset, pMax, ord, n.edgetests
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 09.12.2009
+  ## Modification: Diego Colombo, Date: 16.11.2012
 
   ## x,y,S konstruieren
   ##-   tst <- try(indepTest(x,y,S, obj))
@@ -2530,112 +2525,116 @@ skeleton <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
 
   stopifnot((p <- as.integer(p)) >= 2)
   cl <- match.call()
-  ## start skeleton
-
-  ## fixed gaps
   if (any(is.null(fixedGaps))) {
-    ## G := complete graph :
-    G <- matrix(TRUE, p,p)
+    G <- matrix(rep(TRUE, p * p), nrow = p, ncol = p)
     diag(G) <- FALSE
-  } else {
-    if (!identical(dim(fixedGaps),c(p,p))) {
+  }
+  else {
+    if (!(identical(dim(fixedGaps), c(p, p)))) {
       stop("Dimensions of the dataset and fixedGaps do not agree.")
-    } else {
-      if (!all(fixedGaps == t(fixedGaps)))
+    }
+    else {
+      if (fixedGaps != t(fixedGaps)) {
         stop("fixedGaps must be symmetric")
+      }
       G <- !fixedGaps
     }
-  } ## if(is.null(G))
-
-  ## fixed edges
+  }
   if (any(is.null(fixedEdges))) {
-    fixedEdges <- matrix(FALSE, p,p)
-  } else {
-    if (!(identical(dim(fixedEdges),c(p,p))))
+    fixedEdges <- matrix(rep(FALSE, p * p), nrow = p, ncol = p)
+  }
+  else {
+    if (!(identical(dim(fixedEdges), c(p, p)))) {
       stop("Dimensions of the dataset and fixedEdges do not agree.")
-    if (any(fixedEdges != t(fixedEdges)))
+    }
+    if (fixedEdges != t(fixedEdges)) {
       stop("fixedEdges must be symmetric")
+    }
   }
 
-  seq_p <- seq_len(p)
-  sepset <- pl <- vector("list",p)
-  for (i in seq_p) sepset[[i]] <- pl
-  ## save maximal p value
-  pMax <- matrix(-Inf, p,p)
+  seq_p <- 1:p
+  pval <- NULL
+  sepset <- vector("list", p)
+  for (iList in 1:p) sepset[[iList]] <- vector("list", p)
+  pMax <- matrix(rep(-Inf, p * p), nrow = p, ncol = p)
   diag(pMax) <- 1
-
   done <- FALSE
-  ord <- 0L
-  n.edgetests <- numeric(1)# final length = max { ord}
-
+  ord <- 0
+  n.edgetests <- numeric(1)
   while (!done && any(G) && ord <= m.max) {
-    n.edgetests[ord1 <- ord+1L] <- 0
+    n.edgetests[ord + 1] <- 0
     done <- TRUE
     ind <- which(G, arr.ind = TRUE)
-    ## For comparison with C++ sort according to first row
-    ind <- ind[order(ind[,1]) ,]
+    ind <- ind[order(ind[, 1]), ]
     remainingEdgeTests <- nrow(ind)
-    if(verbose)
-      cat("Order=",ord,"; remaining edges:",remainingEdgeTests,"\n", sep='')
+    if (verbose) 
+      cat("Order=", ord, "; remaining edges:", remainingEdgeTests, 
+          "\n", sep = "")
+    ## Permutation stable version: Compute the adjacency sets for any vertex
+    ## Then don't update when edges are deleted
+    nbrsBool.tmp <- vector("list",p) 
+    for (i in 1:p) {
+      nbrsBool.tmp[[i]] <- G[, i]
+    }
+    ##
     for (i in 1:remainingEdgeTests) {
-      if(verbose) { if(i%%100==0) cat("|i=",i,"|iMax=",nrow(ind),"\n") }
-      x <- ind[i,1]
-      y <- ind[i,2]
-      if (G[y,x] && !fixedEdges[y,x]) {
-        nbrsBool <- G[,x]
+      if (verbose) {
+        if (i%%100 == 0) 
+          cat("|i=", i, "|iMax=", nrow(ind), "\n")
+      }
+      x <- ind[i, 1]
+      y <- ind[i, 2]
+      if (G[y, x] && (!fixedEdges[y, x])) {
+        nbrsBool <- nbrsBool.tmp[[x]]
         nbrsBool[y] <- FALSE
         nbrs <- seq_p[nbrsBool]
         length_nbrs <- length(nbrs)
         if (length_nbrs >= ord) {
-          if (length_nbrs > ord) done <- FALSE
-          S <- seq_len(ord)
-          repeat { ## condition w.r.to all  nbrs[S] of size 'ord'
-            n.edgetests[ord1] <- n.edgetests[ord1]+1
-            pval <- indepTest(x,y, nbrs[S], suffStat)
-            ## pval <- dsepTest(x,y,nbrs[S],gTrue,jp = jp)
-            if (verbose) cat("x=",x," y=",y," S=",nbrs[S],": pval =",pval,"\n")
-            if (is.na(pval)) pval <- if(NAdelete) 1 else 0
-            if (pval > pMax[x,y]) pMax[x,y] <- pval
-            if(pval >= alpha) { # independent
-              G[x,y] <- G[y,x] <- FALSE
+          if (length_nbrs > ord) 
+            done <- FALSE
+          S <- seq(length = ord)
+          repeat {
+            n.edgetests[ord + 1] <- n.edgetests[ord + 1] + 1
+            pval <- indepTest(x, y, nbrs[S], suffStat)
+            if (verbose) 
+              cat("x=", x, " y=", y, " S=", nbrs[S], 
+                  ": pval =", pval, "\n")
+            if (is.na(pval)) 
+              pval <- ifelse(NAdelete, 1, 0)
+            if (pval > pMax[x, y]) 
+              pMax[x, y] <- pval
+            if (pval >= alpha) {
+              G[x, y] <- G[y, x] <- FALSE
               sepset[[x]][[y]] <- nbrs[S]
               break
-            } else {
+            }
+            else {
               nextSet <- getNextSet(length_nbrs, ord, S)
-              if(nextSet$wasLast)
+              if (nextSet$wasLast) 
                 break
               S <- nextSet$nextSet
             }
-          } ## repeat
-        } ## if (length_nbrs >= ord)
-      } ## if(!done)
-
-    } ## for(i in 1:remainingEdgeTests)
-    ord <- ord1
-  } ## while
-
-  for (i in 1:(p-1)) {
-    for (j in 2:p) {
-      pMax[i,j] <- pMax[j,i] <- max(pMax[i,j],pMax[j,i])
-    } ## for (j in 2:p)
-  } ## for (i in 1:(p-1))
-
-  ## transform matrix to graph object :
-  nnms <- as.character(seq_p)
-  Gobject <-
-    if (sum(G) == 0) {
-      new("graphNEL", nodes = nnms)
-    } else {
-      colnames(G) <- rownames(G) <- nnms
-      as(G,"graphNEL")
+          }
+        }
+      }
     }
-
-  ## final object
-  new("pcAlgo",
-      graph = Gobject,
-      call = cl, n = integer(0), max.ord = as.integer(ord-1),
-      n.edgetests = n.edgetests, sepset = sepset,
-      pMax = pMax, zMin = matrix(NA,1,1))
+    ord <- ord + 1
+  }
+  for (i in 1:(p - 1)) {
+    for (j in 2:p) {
+      pMax[i, j] <- pMax[j, i] <- max(pMax[i, j], pMax[j,i])
+    }
+  }
+  if (sum(G) == 0) {
+    Gobject <- new("graphNEL", nodes = as.character(1:p))
+  }
+  else {
+    colnames(G) <- rownames(G) <- as.character(1:p)
+    Gobject <- as(G, "graphNEL")
+  }
+  new("pcAlgo", graph = Gobject, call = cl, n = integer(0), 
+      max.ord = as.integer(ord - 1), n.edgetests = n.edgetests, 
+      sepset = sepset, pMax = pMax, zMin = matrix(NA, 1, 1))
 
 }## end{ skeleton }
 
@@ -4224,7 +4223,7 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
   ##      should start (logical); gaps fixed here are not changed
   ## - fixedEdges: Edges marked here are not changed (logical)
   ## - NAdelete: delete edge if pval=NA (for discrete data)
-  ## - m.max: maximaum size of conditioning set
+  ## - m.max: maximum size of conditioning set
   ## - pdsep.max: maximaum size of conditioning set for Possible-D-SEP
   ## - rules: array of length 10 wich contains TRUE or FALSE corrsponding
   ##          to each rule. TRUE means the rule will be applied.
@@ -4279,7 +4278,7 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
   if (conservative[1]) {
     if (verbose) 
     cat("\nCheck v-structures conservatively\n=================================\n")
-    sk <- pc.cons.intern(skel, suffStat, indepTest, alpha, verbose = verbose, version.unf = c(1, 2))
+    sk <- pc.cons.intern(skel, suffStat, indepTest, alpha, verbose = verbose, version.unf = c(1, 1))
     tripleList <- sk$unfTripl
   }
   if (doPdsep) {
@@ -4300,13 +4299,12 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
     if (conservative[2]) {
       if (verbose) 
         cat("\nCheck v-structures conservatively\n=================================\n")
-      colnames(G) <- rownames(G) <- labels
       Gobject <- as(G, "graphNEL")
       tmp.pdsep <- new("pcAlgo", graph = Gobject, call = cl, 
                        n = integer(0), max.ord = as.integer(max.ordSKEL), 
                        n.edgetests = n.edgetestsSKEL, sepset = sepset, 
                        pMax = pMax, zMin = matrix(NA, 1, 1))
-      sk.pdsep <- pc.cons.intern(tmp.pdsep, suffStat, indepTest, alpha, verbose = verbose, version.unf = c(1, 2))
+      sk.pdsep <- pc.cons.intern(tmp.pdsep, suffStat, indepTest, alpha, verbose = verbose, version.unf = c(1, 1))
       tripleList <- sk.pdsep$unfTripl
     }
   }
@@ -4319,6 +4317,7 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
     cat("\nDirect egdes:\n=============\nUsing rules:", which(rules), 
         "\nCompute collider:\n")
   res <- udag2pag(pag = G, sepset, rules = rules, unfVect = if (cons.rules) tripleList, verbose = verbose)
+  colnames(res) <- rownames(res) <- labels
   fciRes <- new("fciAlgo", amat = res, call = cl, n = integer(0), max.ord = as.integer(max.ordSKEL), max.ordPDSEP = as.integer(max.ordPD), n.edgetests = n.edgetestsSKEL, n.edgetestsPDSEP = n.edgetestsPD, sepset = sepset, pMax = pMax, allPdsep = allPdsep)
   fciRes
 }
@@ -4430,7 +4429,6 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = In
   ## - pdsep.max: maximaum size of conditioning set for Possible-D-SEP
   ## - unfVect: vector containing the unfaithful triples, used for the conservative orientation of the v-structures
   ## - biCC: if the biconnected components have to be used
-  ## - Stop25: block the tests conditioning on sets smaller than 25
   ## ----------------------------------------------------------------------
   ## Value:
   ## - G: Updated boolean adjacency matrix
@@ -4894,6 +4892,7 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
                   ##there is a path ---> orient
                   if (length(tmp.ucp) > 1) {
                     ##orient every edge on the path as --
+                    n <- length(tmp.ucp)
                     pag[tmp.ucp[1], tmp.ucp[n]] <- pag[tmp.ucp[n], tmp.ucp[1]] <- 3 ## a--b
                     for (j in 1:(length(tmp.ucp)-1)) {
                       pag[tmp.ucp[j], tmp.ucp[j + 1]] <- pag[tmp.ucp[j + 1], tmp.ucp[j]] <- 3 ## each edge on the path --
@@ -4991,7 +4990,7 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
               pag[c, a] <- 3
               if (verbose) {
                 cat("\nRule 9", "\n")
-                cat("There exists an uncovered potentially directed between", a, "and", c, ". Orient:", a, " ->",c, "\n")
+                cat("There exists an uncovered potentially directed path between", a, "and", c, ". Orient:", a, " ->",c, "\n")
               }
             }
           }
@@ -5090,11 +5089,12 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
 }
 
 
+
 ################################################################################
 ##RFCI
 ################################################################################
 
-rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10), conservative = FALSE, cons.rules = FALSE) 
+rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10), conservative = FALSE, cons.rules = FALSE, labels = NA) 
 {
   ## Purpose: Perform RFCI-Algorithm, i.e., estimate PAG
   ## ----------------------------------------------------------------------
@@ -5115,9 +5115,17 @@ rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NU
   ##                 the skeleton have to be oriented conservatively or nor
   ## - cons.rules: TRUE or FALSE variable containing if the 10 orientation rules
   ##               are conservative or not
+  ## - labels: names of the variables
   
   ## ----------------------------------------------------------------------
   ## Author: Diego Colombo, 2011
+
+  if (all(!is.na(labels))) {
+    stopifnot(length(labels) == p)
+  }
+  else {
+    labels <- as.character(1:p)
+  }
   
   cl <- match.call()
   if (verbose) { 
@@ -5132,7 +5140,7 @@ rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NU
   vectM <- tmp$unshVect
  
   ##check and orient v-structures recursively
-  tmp1 <- rfci.vstructures(suffStat, indepTest, p, alpha, sepset, g, listM, vectM, conservative=conservative, version.unf=c(1,2), verbose=verbose)
+  tmp1 <- rfci.vstructures(suffStat, indepTest, p, alpha, sepset, g, listM, vectM, conservative=conservative, version.unf=c(1,1), verbose=verbose)
   graph <- tmp1$graph
   sepset <- tmp1$sepset
 
@@ -5150,6 +5158,7 @@ rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NU
   allPdsep <- vector("list", p)
   sepset <- res$sepset
   Amat <- res$graph
+  colnames(Amat) <- rownames(Amat) <- labels
   rfciRes <- new("fciAlgo", amat = Amat, call = cl, n = integer(0), 
         max.ord = as.integer(max.ordSKEL), max.ordPDSEP = as.integer(max.ordPD), 
         n.edgetests = n.edgetestsSKEL, n.edgetestsPDSEP = n.edgetestsPD, 
@@ -5967,6 +5976,7 @@ udag2apag <- function (apag, suffStat, indepTest, alpha, sepset, rules = rep(TRU
                   ##there is a path ---> orient
                   if (length(tmp.ucp) > 1) {
                     ##orient every edge on the path as --
+                    n <- length(tmp.ucp)
                     apag[tmp.ucp[1], tmp.ucp[n]] <- apag[tmp.ucp[n], tmp.ucp[1]] <- 3 ## a--b
                     for (j in 1:(length(tmp.ucp)-1)) {
                       apag[tmp.ucp[j], tmp.ucp[j + 1]] <- apag[tmp.ucp[j + 1], tmp.ucp[j]] <- 3 ## each edge on the path --
@@ -6077,7 +6087,7 @@ udag2apag <- function (apag, suffStat, indepTest, alpha, sepset, rules = rep(TRU
               apag[c, a] <- 3
               if (verbose) {
                 cat("\nRule 9", "\n")
-                cat("There exists an uncovered potentially directed between", a, "and", c, ". Orient:", a, " ->",c, "\n")
+                cat("There exists an uncovered potentially directed path between", a, "and", c, ". Orient:", a, " ->",c, "\n")
               }
             }
           }
@@ -6228,7 +6238,7 @@ dag2pag <- function(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), 
   if (verbose) {
     cat("Compute Skeleton\n================\n")
   }
-  ##find the skelton
+  ##find the skeleton
   skel <- skeleton.dag2pag(suffStat, indepTest, graph, ancList, L, alpha, verbose = verbose)
   G <- as(skel@graph, "matrix")
   sepset <- skel@sepset
@@ -6255,10 +6265,7 @@ dag2pag <- function(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), 
   res <- if (numEdges(skel@graph) > 0) 
     udag2pag(pag = G, sepset, rules = rules, verbose=verbose)
   else G
-  pagRes <- new("fciAlgo", amat = res, call = cl, n = integer(0), max.ord = as.integer(max.ordSKEL), 
-      max.ordPDSEP = as.integer(max.ordPD), n.edgetests = n.edgetestsSKEL, 
-      n.edgetestsPDSEP = n.edgetestsPD, sepset = sepset, pMax = pMax, 
-      allPdsep = allPdsep)
+  pagRes <- new("fciAlgo", amat = res, call = cl, n = integer(0), max.ord = as.integer(max.ordSKEL),  max.ordPDSEP = as.integer(max.ordPD), n.edgetests = n.edgetestsSKEL, n.edgetestsPDSEP = n.edgetestsPD, sepset = sepset, pMax = pMax, allPdsep = allPdsep) 
   pagRes
 }
 

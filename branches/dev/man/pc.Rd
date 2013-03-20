@@ -84,9 +84,16 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
 
   The CPDAG is estimated using the PC algorithm (named after its inventors
   \bold{P}eter Spirtes and \bold{C}lark Glymour). The skeleton is
-  estimated by the function \code{\link{skeleton}} (see the help file
+  estimated by the function \code{\link{skeleton}} which uses a modified
+  version of the original PC algorithm (see Colombo and Maathuis (2012) for
+  details). In fact, the original PC algorithm is known to be
+  order-dependent, in the sense that the output depends on the order in
+  which the variables are given. Therefore, Colombo and Maathuis (2012)
+  proposed a simple modification, called PC-stable, that yields order-independent
+  adjacencies in the skeleton (see the help file
   of this function for details). Subsequently, as many edges as possible
-  are oriented. This is done in two steps.
+  are oriented. This is done in two steps. It is important to note that
+  these two steps still remain order-dependent.
 
   First, the algorithm considers all triples
   \code{(a,b,c)}, where \code{a} and
@@ -138,29 +145,26 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   all potential v-structures a-b-c are checked in the following way. We
   test whether a and c are independent conditioning on any subset of the
   neighbors of a or any subset of the neighbors of c. If b is in no such
-  conditioning set (and not in the original sepset - ???DIEGO: 2nd
-  argument, version 2) or in all such
-  conditioning sets (and in the original sepset), no further action
+  conditioning set or in all such conditioning sets, no further action
   is taken and the usual PC is continued. If, however, b is in only some
   conditioning sets, the triple a-b-c is marked 'unfaithful'. Moreover,
   if in the conservative step there is no subset among the neighbors
-  that makes a and c independent, the triple is marked 'unfaithful'
-  (???DIEGO: 1st argument, version 2). An
+  that makes a and c independent, the triple is marked 'unfaithful'. An
   unfaithful triple is not oriented as a v-structure. Furthermore, no
   later orientation rule that needs to know whether a-b-c is a
   v-structure or not is applied. (The internal function
-  \code{pc.cons.internal} will be called with \code{version.unf = c(2,2)}.)
+  \code{pc.cons.internal} will be called with \code{version.unf = c(2,1)}.)
 
   Notes: (1) Throughout, the algorithm works with the column positions
   of the variables in the adjacency matrix, and not with the names of
   the variables. (2) When plotting the object, undirected and bidirected
-  edges are equivalent.  }
+  edges are equivalent.}
 
 \references{ P. Spirtes, C. Glymour and
   R. Scheines (2000).  \emph{Causation, Prediction, and Search}, 2nd
   edition. The MIT Press.
 
-   Markus Kalisch, Martin Maechler, Diego Colombo, Marloes H. Maathuis,
+  Markus Kalisch, Martin Maechler, Diego Colombo, Marloes H. Maathuis,
   Peter Buehlmann (2012). Causal Inference Using Graphical Models with
   the R Package pcalg. \emph{Journal of Statistical Software}
   \bold{47(11)} 1--26, \url{http://www.jstatsoft.org/v47/i11/}. 
@@ -168,6 +172,10 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   M. Kalisch and P. Buehlmann (2007).
   Estimating high-dimensional directed acyclic graphs with the PC-algorithm.
   \emph{JMLR} \bold{8} 613-636.
+
+  D. Colombo and M.H. Maathuis (2012)
+  \emph{A modification of the PC algorithm yielding order-independent
+  skeletons}, (arXiv:1211.3295v1)  
 }
 \seealso{\code{\link{skeleton}} for estimating a skeleton of a DAG;
   \code{\link{udag2pdag}} for converting the

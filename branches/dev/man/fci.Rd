@@ -47,10 +47,10 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   \item{pdsep.max}{Maximum size of Possible-D-SEP for which subsets are
     considered as conditioning sets in the conditional independence
     tests. If the nodes \code{x} and \code{y} are adjacent in the graph
-    and the size of Possible-D-SEP(\code{x})\{\code{x},\code{y}\},
-  estimated normally or using biconnected components, see later, is
-  bigger than pdsep.max, no conditional independence tests are performed between
-    \code{x} and its neighbour \code{y} given subsets of
+    and the size of Possible-D-SEP(\code{x})\ {\code{x},\code{y}},
+    estimated normally or using biconnected components, see later, is
+    bigger than pdsep.max, no conditional independence tests are
+    performed between \code{x} and its neighbour \code{y} given subsets of
     Possible-D-SEP(\code{x}) and the edge is simply left in the graph.
     Note that if pdsep.max is less than Inf, the final PAG
     may be a supergraph than the one computed with pdsep.max = Inf,
@@ -60,10 +60,11 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
     from Zhang (2009).}
   \item{doPdsep}{If \code{TRUE}, Possible-D-SEP is computed for all nodes,
     and all subsets of Possible-D-SEP are considered as conditioning
-    sets in the conditional independence tests. If \code{FALSE}, Possible-D-SEP
+    sets in the conditional independence tests, if not defined otherwise
+    in \code{pdsep.max}. If \code{FALSE}, Possible-D-SEP
     is not computed, so that the algorithm simplifies to the
     Modified PC algorithm of Spirtes, Glymour and Scheines (2000, page
-    ...).}
+    84).}
   \item{conservative}{If the first argument is \code{TRUE}, the skeleton is
   computed in a conservative way. If the second argument is \code{TRUE}, the
   triples are checked for faithfulness again after possible deletion of
@@ -81,7 +82,7 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   algorithm is called. If set as \code{anytime}, the Anytime FCI is
   called and in this case \code{m.max} must be pre-specified. If set as
   \code{adaptive}, the Adaptive Anytime FCI is called and in this
-  case m.max is not used.} 
+  case m.max is not used. For more information, see Details.} 
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
  \code{\linkS4class{fciAlgo}}) containing the estimated graph
@@ -124,7 +125,7 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   using the function \code{\link{skeleton}}. All edges of this skeleton are of
   the form o-o. Due to the presence of hidden variables, it is no longer
   sufficient to consider only subsets of the neighborhoods of nodes \code{x}
-  and \code{y} to decide whether the edge \code{x-y} should be removed.
+  and \code{y} to decide whether the edge \code{x o-o y} should be removed.
   Therefore, the initial skeleton may contain some superfluous edges.
   These edges are removed in the next step of the algorithm. To decide whether
   edge \code{x o-o y} should be removed, one computes Possible-D-SEP(x) and
@@ -159,32 +160,27 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   The conservative FCI, Anytime FCI, and Adaptive Anytime FCI consist of
   two parts. In the first part (done if the first argument of
   \code{conservative} is \code{TRUE}), we call \code{pc.cons.internal}
-  with option \code{version.unf = c(1,2)} after computing the skeleton. This is a
-  slight variation of the conservative PC (which used \code{version.unf
-  = c(2,2)}): If a is independent of c given some S in the skeleton
-  (i.e., the edge a-c dropped out), but a and c remain dependent given
-  all subsets of neighbors of either a or c, we will call all triples
-  a-b-c 'faithful'. This is because in the FCI, the true separating set
-  might be outside the neighborhood of either a or c. In the second part
-  (done if the second argument of \code{conservative} is \code{TRUE}),
-  we call \code{pc.cons.internal} with option \code{version.unf =
-  c(1,2)} again after Possilbe-D-Sep was found and the graph potentially
-  lost some edges. Therefore, new triples might have occured. If this
-  second part is done, the resulting information on sepset and faithful
-  triples overwrites the previous and will be used for the subsequent
-  orientation rules. } 
+  with option \code{version.unf = c(1,1)} after computing the
+  skeleton. If a is independent of c given some S in the skeleton (i.e.,
+  the edge a-c dropped out), but a and c remain dependent given all
+  subsets of neighbors of either a or c, we will call all triples a-b-c
+  'faithful'. This is because in the FCI, the true separating set might
+  be outside the neighborhood of either a or c. In the second part (done
+  if the second argument of \code{conservative} is \code{TRUE}), we call
+  \code{pc.cons.internal} with option \code{version.unf = c(1,1)} again
+  after Possilbe-D-SEP was found and the graph potentially lost some
+  edges. Therefore, new triples might have occured. If this second part
+  is done, the resulting information on sepset and faithful triples
+  overwrites the previous and will be used for the subsequent
+  orientation rules. }  
 
 \references{
-  Diego Colombo, Marloes H. Maathuis, Markus Kalisch, Thomas
-  S. Richardson (2012). Learning high-dimensional directed acyclic
-  graphs with latent and selection variables. \emph{Ann. Statist.} \bold{40},
-  294-321.
-  
-  T.S. Richardson and P. Spirtes (2002). Ancestral graph Markov models.
-  \emph{Annals of Statistics} \bold{30} 962-1030.
+  D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
+  (2012). Learning high-dimensional directed acyclic graphs with latent
+  and selection variables. \emph{Ann. Statist.} \bold{40}, 294-321.
 
-  Markus Kalisch, Martin Maechler, Diego Colombo, Marloes H. Maathuis,
-  Peter Buehlmann (2012). Causal Inference Using Graphical Models with
+  M.Kalisch, M. Maechler, D. Colombo, M. H. Maathuis,
+  P. Buehlmann (2012). Causal Inference Using Graphical Models with
   the R Package pcalg. \emph{Journal of Statistical Software}
   \bold{47(11)} 1--26, \url{http://www.jstatsoft.org/v47/i11/}.
 
@@ -200,6 +196,9 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   Causation and Discovery}. An algorithm for causal
   inference in the presence of latent variables and selection bias.
   Pages 211-252. MIT Press.
+
+  T.S. Richardson and P. Spirtes (2002). Ancestral graph Markov models.
+  \emph{Annals of Statistics} \bold{30} 962-1030.
 
   J. Zhang (2008). On the completeness of orientation rules for
   causal discovery in the presence of latent confounders and selection bias.
@@ -227,7 +226,7 @@ p <- 7
 ## generate and draw random DAG :
 myDAG <- randomDAG(p, prob = 0.4)
 
-## find skeleton and CPDAG using the FCI algorithm
+## find skeleton and PAG using the FCI algorithm
 suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
 indepTest <- gaussCItest
 res <- fci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE, doPdsep =
@@ -269,7 +268,7 @@ true.corr <- cov2cor(true.cov)
 suffStat <- list(C = true.corr, n = 10^9)
 indepTest <- gaussCItest
 normal.pag <- fci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE,
-doPdsep= TRUE) 
+doPdsep= TRUE, labels = as.character(2:5)) 
 
 ## find PAG with Anytime FCI algorithm with m.max = 1
 ## This means that only conditioning sets of size 0 and 1 are considered.
@@ -277,7 +276,7 @@ doPdsep= TRUE)
 ## function gaussCItest with a large "virtual sample size" and a large
 ## alpha
 anytime.pag <- fci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE,
-m.max = 1, doPdsep = TRUE, type = "anytime")
+m.max = 1, doPdsep = TRUE, labels = as.character(2:5), type = "anytime")
 
 ## find PAG with Adaptive Anytime FCI algorithm.
 ## This means that only conditining sets up to size K are considered
@@ -287,9 +286,9 @@ m.max = 1, doPdsep = TRUE, type = "anytime")
 ## function gaussCItest with a large "virtual sample size" and a large
 ## alpha
 adaptive.pag <- fci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE,
-doPdsep = TRUE, type = "adaptive")
+doPdsep = TRUE, labels = as.character(2:5), type = "adaptive")
 
-## define PAG given in paper
+## define PAG given in Zhang (2008), Fig. 6, p.1882
 corr.pag <- matrix(0,4,4)
 corr.pag[1,] <- c(0,1,1,0)
 corr.pag[2,] <- c(1,0,0,2)
