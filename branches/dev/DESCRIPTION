@@ -15,7 +15,7 @@ Description: Standard and robust estimation of the equivalence class of a
 Depends: methods, abind, corpcor, sfsmisc
 LinkingTo: Rcpp, RcppArmadillo
 Imports: graph, RBGL, ggm, robustbase, graphics, vcd
-Suggests: MASS, Matrix, graph, Rgraphviz, ggm, mvtnorm
+Suggests: MASS, Matrix, graph, Rgraphviz, ggm, mvtnorm, igraph
 License: GPL (>= 2)
 URL: http://pcalg.r-forge.r-project.org/
 

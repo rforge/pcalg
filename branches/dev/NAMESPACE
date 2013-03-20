@@ -92,7 +92,10 @@ export(randomDAG,
        gds,
        caus.inf,
        simy,
-       dag2essgraph)
+       dag2essgraph,
+       showEdgeList,
+       showAmat,
+       iplotPC)
 
 exportClasses("pcAlgo",
               "fciAlgo",

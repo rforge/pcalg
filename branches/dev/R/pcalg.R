@@ -6342,5 +6342,11 @@ new.ord <- function(start, old, L) {
   return(new)
 }
 
-
+iplotPC <- function(pc.fit, labels = NULL) {
+  ## alternative to Rgraphviz (only for pcAlgo objects
+  adjm <- t(wgtMatrix(pc.fit@graph))
+  if ( !is.null(labels) ) colnames(adjm) <- rownames(adjm) <- labels
+  g1 <- graph.adjacency( adjm )
+  plot(g1)
+}
 
