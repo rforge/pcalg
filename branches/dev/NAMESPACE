@@ -93,8 +93,8 @@ export(randomDAG,
        caus.inf,
        simy,
        dag2essgraph,
-       showEdgeList,
-       showAmat,
+       # showEdgeList,
+       # showAmat,
        iplotPC)
 
 exportClasses("pcAlgo",
