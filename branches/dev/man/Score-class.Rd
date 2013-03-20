@@ -32,8 +32,7 @@
     \item{\code{initialize(data = matrix(1, 1, 1), 
       targets = list(integer(0)),
       target.index = rep(as.integer(1), nrow(data)), 
-      ...)}}
-      {Constructor; creates a \code{Score} object.  For the meaning of the 
+      ...)}}{Constructor; creates a \code{Score} object.  For the meaning of the 
       arguments, see details.}
     \item{\code{local.score(vertex, parents, ...)}}{For decomposable scores,
       this function calculates the local score of a vertex and its parents.

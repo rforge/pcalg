@@ -49,10 +49,10 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   \item{conservative}{If \code{TRUE}, the skeleton is computed in a
     conservative way.}
   \item{cons.rules}{If \code{TRUE}, an orientation rule that needs information
-  on definite non-colliders is only applied, if the corresponding
-  subgraph relevant for the rule does not involve an unfaithful triple.
+    on definite non-colliders is only applied, if the corresponding
+    subgraph relevant for the rule does not involve an unfaithful triple.}
   \item{labels}{Vector of length p with node names. If \code{NA},
-    \code{as.character{1:p}} is used instead.}}
+    \code{as.character(1:p)} is used instead.}
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
  \code{\linkS4class{fciAlgo}}) containing the estimated graph

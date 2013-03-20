@@ -17,7 +17,18 @@ ges(p, score, turning = TRUE, maxdegree = integer(0), ...)
   \item{turning}{Boolean indicating whether the function should try to augment
     the score by turning edges (cf. details).}
   \item{maxdegree}{Parameter used to limit the vertex degree of the estimated
-    graph.}
+    graph.  Valid arguments:
+    \enumerate{
+      \item Vector of length 0 (default): vertex degree is not limited.
+      \item Real number \eqn{r}, \eqn{0 < r < 1}: degree of vertex \eqn{v} is 
+        limited to \eqn{r \cdot n_v}, where \eqn{n_v} denotes the number of
+        data points where \eqn{v} was not intervened.
+      \item Single integer: uniform bound of vertex degree for all vertices
+        of the graph.
+      \item Integer vector of length \code{p}: vector of individual bounds
+        for the vertex degrees.
+    }
+    }
   \item{\dots}{Additional arguments for debugging purposes and fine tuning.}
 }
 \details{
@@ -66,7 +77,7 @@ ges(p, score, turning = TRUE, maxdegree = integer(0), ...)
     until the score cannot be augmented any more.}
   }
   GES cycles through these three phases until no augmentation of the score is
-  possible any more.  Not that the turning phase (activated with 
+  possible any more.  Note that the turning phase (activated with 
   \code{turning = TRUE}, the default behaviour) was not part of the original 
   implementation of Chickering (2002), but was introduced by Hauser and 
   Bühlmann (2012) and shown to improve the overall estimation performance.
@@ -81,7 +92,7 @@ ges(p, score, turning = TRUE, maxdegree = integer(0), ...)
 }
 \value{
   \code{ges} returns a list with the following two components:
-  \item{essgraph}{An object of class \code{\link{EssGraph}} containing an 
+  \item{essgraph}{An object of class \code{\linkS4class{EssGraph}} containing an 
     estimate of the equivalence class of the underlying DAG.}
   \item{repr}{An object of a class derived from \code{\linkS4class{ParDAG}}
     containing a (random) representative of the estimated equivalence class.}

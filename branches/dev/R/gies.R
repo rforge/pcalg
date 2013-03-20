@@ -148,7 +148,8 @@ caus.inf <- function(algorithm, p, targets, score, ...)
   return(list(essgraph = essgraph, repr = essgraph$repr()))
 }
 
-gies <- function(p, targets, score, ...) caus.inf("GIES", p, targets, score, ...)
+gies <- function(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
+  caus.inf("GIES", p, targets, score, turning = turning, maxdegree = maxdegree, ...)
 
 ges <- function(p, score, turning = TRUE, maxdegree = integer(0), ...) 
   caus.inf("GIES", p, list(integer(0)), score, turning = turning, maxdegree = maxdegree, ...)
