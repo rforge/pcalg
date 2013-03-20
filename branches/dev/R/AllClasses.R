@@ -1,5 +1,5 @@
 ##################################################
-## Classes
+## Reference classes used by pc and r/fci
 ##################################################
 
 ## $Id$
@@ -21,6 +21,156 @@ setClass("fciAlgo",
 setClass("pcAlgo",
          representation(graph = "graph", zMin = "matrix"), ## zMin for compatibility
          contains = "gAlgo")
+
+## Methods
+setMethod("summary", "pcAlgo",
+          function(object) {
+ 	    cat("\nObject of class 'pcAlgo', from Call: \n",
+                deparse(object@call),
+ 		"\n\nNmb. edgetests during skeleton estimation:\n")
+            cat("===========================================\n")
+            cat("Max. order of algorithm: ",object@max.ord,
+                "\nNumber of edgetests from m = 0 up to m =",object@max.ord,
+                ": ",object@n.edgetests)
+            tmp <- object@graph@edgeL
+            nbrs <- rep(0,length(tmp))
+            for (i in seq_along(tmp)) {
+              nbrs[i] <- length(tmp[[i]]$edges)
+            }
+            cat("\n\nGraphical properties of skeleton:\n")
+            cat("=================================\n")
+            cat("Max. number of neighbours: ",max(nbrs),
+                "at node(s)",which(nbrs==max(nbrs)),
+                "\nAvg. number of neighbours: ",mean(nbrs),"\n")
+          })
+
+setMethod("summary", "fciAlgo",
+          function(object) {
+ 	    cat("Object of class 'fciAlgo'\n\n")
+            cat("Call: \n=====\n", deparse(object@call))
+            cat("\n\nNmb. edgetests during skeleton estimation:\n==========================================")
+            cat("\nMax. order of algorithm: ",object@max.ord,
+                "\nNumber of edgetests from m = 0 up to m =",object@max.ord,
+                ": ",object@n.edgetests)
+            cat("\n\nAdd. nmb. edgetests when using PDSEP:\n=====================================")
+            cat("\nMax. order of algorithm: ",object@max.ordPDSEP,
+                "\nNumber of edgetests from m = 0 up to m =",object@max.ordPDSEP,
+                ": ",object@n.edgetestsPDSEP)
+
+            myfun <- function(x) if(is.null(x)) NA else length(x)
+            cat("\n\nSize distribution of SEPSET:")
+            myTab <- table(sapply(object@sepset,function(x) sapply(x,myfun)),
+                           useNA="always")
+            print(myTab)
+
+            cat("\nSize distribution of PDSEP:")
+            print(table(sapply(object@allPdsep, length)))
+
+
+          })
+
+
+setMethod("show", "pcAlgo",
+	  function(object) {
+	    cat("Object of class 'pcAlgo', from Call: \n", deparse(object@call),"\n")
+            amat <- as(object@graph, "matrix")
+            amat2 <- amat + 2*t(amat)
+            ude <- sum(amat2 == 3)/2
+            de <- sum(amat2 == 1)
+            nEdges <- ude + de
+            cat("Number of undirected edges: ", ude, "\n")
+            cat("Number of directed edges:   ", de, "\n")
+            cat("Total number of edges:      ", de + ude, "\n")
+	    invisible(object)
+	  })
+
+
+setMethod("show", "fciAlgo",
+	  function(object) {
+	    cat("Object of class 'fciAlgo', from Call:", deparse(object@call),
+                "\nAdjacency Matrix G:",
+                "G[i,j] = 1/2/3 if edge mark of edge i-j at j is circle/head/tail.",
+                "", sep="\n")
+	    print(object@amat)
+	    invisible(object)
+	  })
+
+setMethod("plot", signature(x = "pcAlgo"),
+          function(x, y, main = NULL, zvalue.lwd = FALSE,
+                   lwd.max = 7, labels = NULL, ...)
+	{
+          check.Rgraphviz()
+
+          if(is.null(main))
+              main <- deparse(x@call)
+          attrs <- list()
+          nodeAttrs <- list()
+          if (!is.null(labels)) {
+              attrs$node <- list(shape = "ellipse", fixedsize = FALSE)
+              names(labels) <- nodes(x@graph)
+              nodeAttrs$label <- labels
+          }
+
+          if (zvalue.lwd && numEdges(x@graph)!=0) {
+              lwd.Matrix <- x@zMin
+              lwd.Matrix <- ceiling(lwd.max*lwd.Matrix/max(lwd.Matrix))
+              z <- agopen(x@graph,
+                          name="lwdGraph",
+                          nodeAttrs = nodeAttrs,
+                          attrs = attrs)
+              eLength <- length(z@AgEdge)
+              for (i in 1:eLength) {
+                  x <- as.numeric(z@AgEdge[[i]]@head)
+                  y <- as.numeric(z@AgEdge[[i]]@tail)
+                  z@AgEdge[[i]]@lwd <- lwd.Matrix[x,y]
+              }
+              Rgraphviz::plot(z, main = main, ...)
+          } else {
+              Rgraphviz::plot(x@graph, nodeAttrs = nodeAttrs, main = main,
+                              attrs = attrs, ...)
+          }
+      })
+
+setMethod("plot", signature(x = "fciAlgo"),
+          function(x, y, main = NULL, ...)
+      {
+          check.Rgraphviz()
+
+          if(is.null(main))
+	      main <- deparse(x@call)
+	  else ## see also below
+	      warning("main title cannot *not* be set yet [Rgraphviz::plot() deficiency]")
+          amat <- x@amat
+          g <- as(amat,"graphNEL")
+          nn <- nodes(g)
+          p <- numNodes(g)
+          n.edges <- numEdges(g)
+          ah.list <- at.list <- rep("none",n.edges)
+          counter <- 0
+          list.names <- NULL
+          amat[amat==1] <- "odot"
+          amat[amat==2] <- "normal"
+          amat[amat==3] <- "none"
+          for (i in seq_len(p-1)) {
+              for (j in (i+1):p) {
+                  x <- nn[i]
+                  y <- nn[j]
+                  if (amat[x,y]!=0) {
+                      counter <- counter + 1
+                      ah.list[[counter]] <- amat[x,y]
+                      at.list[[counter]] <- amat[y,x]
+                      list.names <- c(list.names,paste(x,"~",y,sep=""))
+                  }
+              }
+          }
+          names(ah.list) <- names(at.list) <- list.names
+	  edgeRenderInfo(g) <- list(arrowhead= ah.list,
+				    arrowtail= at.list)
+	  ## Rgraphviz::plot(g, main = main, ...)
+          ## XXX undid change by MM, since edge marks didn't work anymore
+          ## "known bug in Rgraphviz, but not something they may fix soon"
+          Rgraphviz::renderGraph(Rgraphviz::layoutGraph(g))
+      })
 
 ##################################################
 ## Reference classes used by GIES

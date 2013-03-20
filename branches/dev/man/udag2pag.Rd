@@ -76,7 +76,7 @@ true.cov <- cov.mat[-L,-L]
 true.corr <- cov2cor(true.cov)
 
 ## generate 100000 samples of DAG using standard normal error distribution
-library(mvtnorm)
+require(mvtnorm)
 n <- 100000
 alpha <- 0.01
 d.mat <- rmvnorm(n, mean = rep(0,dim(true.corr)[1]), sigma = true.cov) 

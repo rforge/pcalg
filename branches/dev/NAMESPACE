@@ -15,10 +15,9 @@ importMethodsFrom("graph",
 		  subGraph, ugraph)
 
 importFrom("RBGL",
-	   biConnComp, johnson.all.pairs.sp, separates)
+	   biConnComp, johnson.all.pairs.sp, separates, bfs)
 ## also    sp.between -- but only for deprecated beta.special(), hence RBGL::*
-importMethodsFrom("RBGL",
-		  bfs)
+
 
 
 # importFrom("MASS", mvrnorm)
@@ -62,6 +61,7 @@ export(randomDAG,
        allDags,
        pcAlgo.Perfect,
        reach,
+       dag2pag,
        plotAG,
        skeleton,
        pc,

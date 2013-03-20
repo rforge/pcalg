@@ -1,6 +1,5 @@
 \name{dag2pag}
 \alias{dag2pag}
-
 \title{Convert a DAG with latent variables to a PAG }
 \description{
 Convert a DAG with latent variables to a Partially Ancestral Graph (PAG).
@@ -8,7 +7,6 @@ Convert a DAG with latent variables to a Partially Ancestral Graph (PAG).
 \usage{
 dag2pag(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), verbose = FALSE)
 }
-
 \arguments{
   \item{suffStat}{Sufficient statistics: List containing all necessary
     elements for the conditional independence decisions in the
