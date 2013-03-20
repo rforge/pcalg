@@ -2533,7 +2533,7 @@ skeleton <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
   ## start skeleton
 
   ## fixed gaps
-  if (is.null(fixedGaps)) {
+  if (any(is.null(fixedGaps))) {
     ## G := complete graph :
     G <- matrix(TRUE, p,p)
     diag(G) <- FALSE
@@ -2548,12 +2548,12 @@ skeleton <- function(suffStat, indepTest, p, alpha, verbose = FALSE,
   } ## if(is.null(G))
 
   ## fixed edges
-  if (is.null(fixedEdges)) {
+  if (any(is.null(fixedEdges))) {
     fixedEdges <- matrix(FALSE, p,p)
   } else {
     if (!(identical(dim(fixedEdges),c(p,p))))
       stop("Dimensions of the dataset and fixedEdges do not agree.")
-    if (fixedEdges != t(fixedEdges))
+    if (any(fixedEdges != t(fixedEdges)))
       stop("fixedEdges must be symmetric")
   }
 
