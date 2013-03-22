@@ -7,8 +7,8 @@
   using the PC-algorithm.
 }
 \usage{
-skeleton(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-fixedEdges = NULL, NAdelete = TRUE, m.max = Inf)
+skeleton(suffStat, indepTest, p, alpha, fixedGaps = NULL,
+fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
 }
 \arguments{
   \item{suffStat}{Sufficient statistics: List containing all necessary

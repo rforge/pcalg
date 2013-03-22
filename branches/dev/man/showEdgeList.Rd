@@ -14,8 +14,7 @@ showEdgeList(pc.fit, labels = NULL)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{pc.fit}{
-Object of class pcAlgo (as returned from \code{\link{skeleton}} or \code{\link{p
-c}})
+Object of class pcAlgo (as returned from \code{\link{skeleton}} or \code{\link{pc}})
 }
   \item{labels}{
     Optional labels for nodes; by default, the labels from the pcAlgo

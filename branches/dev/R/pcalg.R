@@ -6357,3 +6357,43 @@ iplotPC <- function(pc.fit, labels = NULL) {
   plot(g1)
 }
 
+showEdgeList <- function(pc.fit, labels = NULL) {
+
+  cat("\nEdge List: \n")
+  g <- pc.fit@graph
+  if (is.null(labels)) labels <- g@nodes
+  
+  wm <- wgtMatrix(g)
+  wmU <- wm + t(wm)
+  wmD <- t(wm - t(wm))
+  u <- which( (wmU == 2) & upper.tri(wmU), arr.ind = TRUE)
+  dTmp <- which( wmD == 1, arr.ind = TRUE)
+  d <- dTmp[order(dTmp[,1]),]
+  cat("\nUndirected Edges:\n")
+  if(!nrow(u)==0){
+  for (i in 1:nrow(u)) {
+    x <- u[i,1]
+    y <- u[i,2]
+    cat(paste(labels[x], " --- ", labels[y], "\n"))
+  }}
+  cat("\nDirected Edges:\n")
+  if(!nrow(d)==0){
+  for (i in 1:nrow(d)) {
+    x <- d[i,1]
+    y <- d[i,2]
+    cat(paste(labels[x], " --> ", labels[y], "\n"))
+  }
+}
+}
+
+showAmat <- function(pc.fit) {
+  cat("\nAdjacency Matrix G:",
+      "G[i,j] = 1/2 if edge mark of edge i-j at j is head/tail.",
+      "", sep="\n")
+  g <- pc.fit@graph
+  wm <- wgtMatrix(g)
+  mTmp <- t(wm - 2*t(wm))
+  mTmp[ mTmp < 0 ] <- 2
+  mTmp
+}
+

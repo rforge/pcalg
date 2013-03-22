@@ -14,8 +14,7 @@ showAmat(pc.fit)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{pc.fit}{
-Object of class pcAlgo (as returned from \code{\link{skeleton}} or \code{\link{p
-c}})
+Object of class pcAlgo (as returned from \code{\link{skeleton}} or \code{\link{pc}})
 }
 }
 \value{

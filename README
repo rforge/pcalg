@@ -1,3 +1,8 @@
+privat:
+- clear object files
+R CMD INSTALL -l /tmp/ --preclean --clean branches/dev/
+
+==================================================
 			R-Forge SVN README
 
 
