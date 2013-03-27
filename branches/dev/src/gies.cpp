@@ -84,7 +84,7 @@ RcppExport SEXP localScore(
 		SEXP argOptions)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
-	initUncaughtExceptionHandler();
+	BEGIN_RCPP
 
 	// Set debug level
 	Rcpp::List options(argOptions);
@@ -101,6 +101,8 @@ RcppExport SEXP localScore(
 	double result = score->local(Rcpp::as<uint>(argVertex) - 1, castVertices(argParents));
 	delete score;
 	return Rcpp::wrap(result);
+
+	END_RCPP
 }
 
 /**
@@ -120,7 +122,7 @@ RcppExport SEXP globalScore(
 		SEXP argOptions)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
-	initUncaughtExceptionHandler();
+	BEGIN_RCPP
 
 	// Set debug level
 	Rcpp::List options(argOptions);
@@ -135,6 +137,8 @@ RcppExport SEXP globalScore(
 	double result = score->global(castGraph(argInEdges));
 	delete score;
 	return Rcpp::wrap(result);
+
+	END_RCPP
 }
 
 /**
@@ -156,7 +160,7 @@ RcppExport SEXP localMLE(
 		SEXP argOptions)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
-	initUncaughtExceptionHandler();
+	BEGIN_RCPP
 
 	// Set debug level
 	Rcpp::List options(argOptions);
@@ -171,6 +175,8 @@ RcppExport SEXP localMLE(
 	std::vector<double> result = score->localMLE(Rcpp::as<uint>(argVertex) - 1, castVertices(argParents));
 	delete score;
 	return Rcpp::wrap(result);
+
+	END_RCPP
 }
 
 /**
@@ -190,7 +196,7 @@ RcppExport SEXP globalMLE(
 		SEXP argOptions)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
-	initUncaughtExceptionHandler();
+	BEGIN_RCPP
 
 	// Set debug level
 	Rcpp::List options(argOptions);
@@ -205,6 +211,8 @@ RcppExport SEXP globalMLE(
 	std::vector<std::vector<double> > result = score->globalMLE(castGraph(argInEdges));
 	delete score;
 	return Rcpp::wrap(result);
+
+	END_RCPP
 }
 
 /**
@@ -228,7 +236,7 @@ RcppExport SEXP causalInference(
 		SEXP argOptions)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
-	initUncaughtExceptionHandler();
+	BEGIN_RCPP
 
 	// Cast debug level from options
 	Rcpp::List options(argOptions);
@@ -387,24 +395,28 @@ RcppExport SEXP causalInference(
 	delete score;
 	return Rcpp::List::create(Rcpp::Named("in.edges") = wrapGraph(graph),
 			Rcpp::Named("steps") = steps);
+
+	END_RCPP
 }
 
 RcppExport SEXP representative(SEXP argGraph)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
-	initUncaughtExceptionHandler();
+	BEGIN_RCPP
 
 	// Cast graph
 	EssentialGraph graph = castGraph(argGraph);
 
 	// Get and return representative
 	return wrapGraph(graph.getRepresentative());
+
+	END_RCPP
 }
 
 RcppExport SEXP dagToEssentialGraph(SEXP argGraph, SEXP argTargets)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
-	initUncaughtExceptionHandler();
+	BEGIN_RCPP
 
 	// Cast arguments
 	EssentialGraph graph = castGraph(argGraph);
@@ -416,12 +428,14 @@ RcppExport SEXP dagToEssentialGraph(SEXP argGraph, SEXP argTargets)
 
 	// Return essential graph
 	return wrapGraph(graph);
+
+	END_RCPP
 }
 
 RcppExport SEXP optimalTarget(SEXP argGraph, SEXP argMaxSize)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
-	initUncaughtExceptionHandler();
+	BEGIN_RCPP
 
 	// Cast arguments
 	EssentialGraph graph = castGraph(argGraph);
@@ -434,4 +448,6 @@ RcppExport SEXP optimalTarget(SEXP argGraph, SEXP argMaxSize)
 	std::vector<uint> result(target.begin(), target.end());
 	std::for_each(result.begin(), result.end(), _1++);
 	return Rcpp::wrap(result);
+
+	END_RCPP
 }
