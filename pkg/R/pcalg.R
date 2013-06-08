@@ -719,7 +719,7 @@ labelEdges <- function(amat) {
   Tail <- edge.df$tail
 
   while(any(ina <- is.na(lab))) {
-    x.y <- which(ina)[1]
+    x.y <- which.max(ina)
     x <- Tail[x.y]
     y <- Head[x.y]
     y.is.head <- Head == y
