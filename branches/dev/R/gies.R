@@ -105,10 +105,9 @@ rmvnorm.ivent <- function(n, object, target = integer(0), target.value = numeric
   ## Error checking
   stopifnot(length(target) == 0 || (1 <= min(target) && max(target) <= object$node.count()))
   stopifnot((is.vector(target.value) && length(target.value) == length(target))
-  || (is.matrix(target.value) && dim(target.value) == c(n, length(target.value))))
+  || (is.matrix(target.value) && dim(target.value) == c(n, length(target))))
   
   p <- object$node.count()
-  result <- matrix(0.0, ncol = p, nrow = n)
   
   ## Simulate error terms
   sigma <- sqrt(object$err.var())

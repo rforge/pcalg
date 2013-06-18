@@ -295,11 +295,19 @@ already discussed above.
 \section{Methodological background}
 
 In Section~\ref{sec:gm} we propose methods for estimating the causal
-structure from observational data. In particular, we discuss 
-the algorithms PC 
-(see \cite{SpirtesEtAl00})), FCI (see \cite{SpirtesEtAl00} and
-\cite{SpirtesMeekRichardson99}), RFCI (see \cite{rfci}), GES (see 
-\cite{Chickering2002}) and GIES (see \cite{HauserBuhlmann2012}).
+structure. In particular, we discuss algorithms for structure learning
+\begin{itemize}
+  \item in the absence of hidden variables from observational data
+    such as PC (see \cite{SpirtesEtAl00})), GES (see 
+    \cite{Chickering2002}), and the dynamic programming approach of \cite{Silander2006},
+  
+  \item from observational data accounting for hidden variables such as 
+    FCI (see \cite{SpirtesEtAl00} and \cite{SpirtesMeekRichardson99})
+    and RFCI (see \cite{rfci}),
+  
+  \item in the absence of hidden variables from jointly observational
+    and interventional data such as GIES (see \cite{HauserBuhlmann2012}).
+\end{itemize}
 In Section~\ref{sec:bounds} we describe the IDA method (see \cite{BuKaMa09}) to
 obtain bounds on causal effects from observational data. This method is
 based on first estimating the causal structure and then applying do-calculus (see \cite{Pearl00}) 
@@ -373,7 +381,8 @@ where all DAGs in the equivalence class have the same directed edge. Edges
 that point into one direction for some DAGs in the equivalence class and in
 the other direction for other DAGs in the equivalence class are visualized
 by bidirected edges (sometimes, undirected edges are used instead). This
-graph is called a completed partially directed acyclic graph (CPDAG).
+graph is called a completed partially directed acyclic graph (CPDAG; 
+\cite{SpirtesEtAl00}) or essential graph (\cite{AnderssonMadiganPerlman97}).
 
 \begin{algorithm}[h]
 \caption{Outline of the PC-algorithm}
@@ -436,8 +445,7 @@ present. If no directed edge is present, all edges are undirected.)
 
 The PC algorithm presented so far is based on conditional independence tests.  Score-based methods form an alternative approach to causal inference.  They try to find a CPDAG that maximizes a \emph{score}, typically a model selection criterion, which is calculated from data.  
 
-One of the most popular scores in the frequentist framework is the Bayesian information criterion (BIC) because its maximization leads to \emph{consistent} model selection in the classical large-sample limit (\cite{Haughton1988, Geiger2001}).  However, computing its maximum is an NP-hard problem (\cite{Chickering1996}).  An exhaustive search is computationally infeasible due to the size of the search space, the space of DAGs or CPDAGs, respective.  \cite{Silander2006} have presented an exact algorithm based on dynamic programming with an exponential time complexity.  Its execution is feasible for models with a few dozen variables; there exist improvements which raise the limit up to approximately $60$ variables.
-%% TODO diese Verbesserungen zitieren, oder Satz weglassen.
+One of the most popular scores in the frequentist framework is the Bayesian information criterion (BIC) because its maximization leads to \emph{consistent} model selection in the classical large-sample limit (\cite{Haughton1988, Geiger2001}).  However, computing its maximum is an NP-hard problem (\cite{Chickering1996}).  An exhaustive search is computationally infeasible due to the size of the search space, the space of DAGs or CPDAGs, respective.  \cite{Silander2006} have presented an exact algorithm based on dynamic programming with an exponential time complexity.  Its execution is feasible for models with a few dozen variables.
 
 The greedy equivalence search (GES) of \cite{Chickering2002} makes the maximization of the BIC computationally feasible for much larger graphs.  As the name of the algorithm implies, GES maximizes the BIC in a \emph{greedy} way, but still guarantees consistency in the large-sample limit.  It still has exponential-time complexity in the worst case, but only polynomial complexity in the average case where the size of the largest clique in a graph grows only logarithmically with the number of nodes.
 
@@ -452,7 +460,7 @@ A key ingredient for the fast exploration of the search space in GES is an evalu
 A causal structure without feedback loops and without hidden or selection
 variable can be visualized using a DAG where the edges indicate direct
 cause-effect relationships.  Under some assumptions, \cite{Pearl00} showed
-(Th. 1.4.1) that there is a link between causal structures and graphical
+(Theorem 1.4.1) that there is a link between causal structures and graphical
 models. Roughly speaking, if the underlying causal structure is a DAG, we
 observe data generated from this DAG and then estimate a DAG model (i.e.,  a
 graphical model) on this data, the estimated CPDAG represents the
@@ -545,7 +553,7 @@ sets $V_S$ consisting of all selection variables and a subset of the
 observed variables; (ii) a tail on an edge means that this tail is present
 in all MAGs in the equivalence class; (iii) an arrowhead on an edge means
 that this arrowhead is present in all MAGs in the equivalence class; (iv) a
-o-edgemark means that there is a at least one MAG in the equivalence class
+$\circ$-edgemark means that there is a at least one MAG in the equivalence class
 where the edgemark is a tail, and at least one where the edgemark is an
 arrowhead.
 
@@ -922,6 +930,34 @@ plot(pc.fit, main = "")
 \label{fig:pcFit1}
 \end{figure}
 
+\subsection{ges} \label{sec:ges}
+
+The PC algorithm presented in the previous section is based on conditional independence tests.  To apply it, we first had to calculate a sufficient statistic and to specify a conditional independence test function.  For the score-based GES algorithm, we have to define a score object before applying the inference algorithm.
+
+A score object is an instance of a class derived from the base class \code{Score}.  This base class is implemented as a virtual reference class.  At the moment, the \pkg{pcalg} package only contains classes derived from \code{Score} for Gaussian data: \code{GaussL0penObsScore} for purely observational data, and \code{GaussL0penIntScore} for a mixture of observational and interventional data; for the GES algorithm, we only need the first one here, but we will encounter the second one in Section \ref{sec:gies} again.  The implementation of score classes for discrete data is planned for future versions of the \pkg{pcalg} package.  However, the flexible implementation using class inheritance allows the user to implement own score classes for different scores.
+
+Once a score object is defined, the GES algorithm is called as follows:
+<<ges-args, echo = FALSE>>=
+showF(ges)
+@
+The argument \code{p} specifies the number of variables in the model, \code{score} is a score object defined before.  The argument \code{turning} indicates whether the novel turning phase (see Section \ref{sec:gm}) not present in the original implementation of \cite{Chickering2002} should be used, and \code{maxdegree} can be used to bound the vertex degree of the estimated graph.  More details can be found in the help file of \code{ges()}.
+
+In Fig.~\ref{fig:gesFit}, we re-analyse the data set used in the example of Fig.~\ref{fig:pcFit1} with the GES algorithm.  The estimated graph is exactly the same in this case.
+
+\begin{figure}
+  \centering
+<<pcExpl-plot, fig=TRUE>>=
+score <- new("GaussL0penObsScore", gmG$x)
+ges.fit <- ges(ncol(gmG$x), score)
+par(mfrow = c(1, 2))
+plot(gmG$g, main = "")
+plot(ges.fit$essgraph, main = "")
+@
+\caption{True underlying DAG (left) and essential graph (right) estimated with the GES algorithm fitted on the
+  simulated Gaussian data set \code{gmG}.}
+\label{fig:gesFit}
+\end{figure}
+
 \subsection{fci}\label{sec:fci}
 
 The FCI algorithm is a generalization of the PC algorithm, in the sense
@@ -1128,35 +1164,11 @@ class \code{pcAlgo} and \code{fciAlgo} (for both \code{fci()} and
 \code{rfci()}), respectively. Both classes extend
 the class (of their ``communalities'') \code{gAlgo}.
 
-\subsection{ges} \label{sec:ges}
-
-For the causal inference algorithms based on conditional independence tests presented so far, you first had to calculate a sufficient statistic and to specify a conditional independence test function.  For the score-based GES algorithm, you have to define a score object instead, and then apply the inference algorithm.
-
-A score object is an instance of a class derived from the base class \code{Score}.  This base class is implemented as a virtual reference class.  At the moment, the \pkg{pcalg} package only contains classes derived from \code{Score} for Gaussian data: \code{GaussL0penObsScore} for purely observational data, and \code{GaussL0penIntScore} for a mixture of observational and interventional data; for the GES algorithm, we only need the first one here, but we will encounter the second one in Section \ref{sec:gies} again.  The implementation of score classes for discrete data is planned for future versions of the \pkg{pcalg} package.  However, the flexible implementation using class inheritance allows the user to implement own score classes for different scores.
-
-Once a score object is defined, the GES algorithm is called as follows:
-<<ges-args, echo = FALSE>>=
-showF(ges)
-@
-The argument \code{p} specifies the number of variables in the model, \code{score} is a score object defined before.  The argument \code{turning} indicates whether the novel turning phase (see Section \ref{sec:gm}) not present in the original implementation of \cite{Chickering2002} should be used, and \code{maxdegree} can be used to bound the vertex degree of the estimated graph.  More details can be found in the help file of \code{ges()}.
-
-In Fig.~\ref{fig:gesFit}, we re-analyse the data set used in the example of Fig.~\ref{fig:pcFit1} with the GES algorithm.  The estimated graph is exactly the same in this case.
-
-\begin{figure}
-  \centering
-<<pcExpl-plot, fig=TRUE>>=
-score <- new("GaussL0penObsScore", gmG$x)
-ges.fit <- ges(ncol(gmG$x), score)
-par(mfrow = c(1, 2))
-plot(gmG$g, main = "")
-plot(ges.fit$essgraph, main = "")
-@
-\caption{True underlying DAG (left) and essential graph (right) estimated with the GES algorithm fitted on the
-  simulated Gaussian data set \code{gmG}.}
-\label{fig:gesFit}
-\end{figure}
-
 \subsection{gies and simy} \label{sec:gies}
+
+As we noted in Section \ref{sec:gm}, the GIES algorithm is a generalization of the GES algorithm to a mix of interventional and observational data.  Hence the usage of \code{gies()} is similar to that of \code{ges()} (see Section \ref{sec:ges}).  Actually, the function \code{ges()} is only an internal wrapper for \code{gies()}: the observational case is a special case for the application of \code{gies()}.
+
+A data set with jointly interventional and observational data points is \emph{not} i.i.d.  In order to use it for causal inference, we must specify the intervention target each data point belongs to.  This is done by specifying the arguments \code{target} and \code{target.index} when generating a score object that accounts for interventional data.
 
 <<def-gmInt, eval=FALSE, echo=FALSE>>=
 ## Used to generate the  'gmInt'  Gaussian data originally:
@@ -1165,9 +1177,65 @@ set.seed(40)
 p <- 8
 n <- 5000
 gGtrue <- randomDAG(p, prob = 0.3)
-gmG <- list(x = rmvDAG(n, gGtrue), g = gGtrue)
+pardag <- as(gGtrue, "GaussParDAG")
+pardag$set.err.var(rep(1, p))
+targets <- list(integer(0), 3, 5)
+target.index <- c(rep(1, 0.6*n), rep(2, n/5), rep(3, n/5))
+
+x1 <- rmvnorm.ivent(0.6*n, pardag)
+x2 <- rmvnorm.ivent(n/5, pardag, targets[[2]], 
+  matrix(rnorm(n/5, mean = 4, sd = 0.02), ncol = 1))
+x3 <- rmvnorm.ivent(n/5, pardag, targets[[3]], 
+  matrix(rnorm(n/5, mean = 4, sd = 0.02), ncol = 1))
+gmInt <- list(x = rbind(x1, x2, x3), 
+  targets = targets, 
+  target.index = target.index, 
+  g = gGtrue)
+@
+<<load-gmInt, echo = FALSE>>=
+data(gmInt)
+n.tot <- length(gmInt$target.index)
+n.obs <- sum(gmInt$target.index == 1)
+n3 <- sum(gmInt$target.index == 2)
+n5 <- sum(gmInt$target.index == 3)
 @
 
+The data set \code{gmInt} consists of \Sexpr{n.tot} data points sampled from the DAG in Figure \ref{fig:skelExpl}, among them \Sexpr{n.obs} observational ones, \Sexpr{n3} originating from an intervention at vertex $3$ and \Sexpr{n5} originating from an intervention at vertex $5$.  With the following lines, we load the data set and generate an interventional score object based on it:
+<<int-score>>=
+data(gmInt)
+score <- new("GaussL0penIntScore", gmInt$x,
+  targets = gmInt$targets, target.index = gmInt$target.index)
+@
+Fitting a causal model to the data set is now very similar to the observational case using \code{ges()}; the only difference is that we have to specify the intervention targets again when calling \code{gies()}:
+<<gies-example>>=
+gies.fit <- gies(ncol(gmInt$x), gmInt$targets, score)
+@
+The result of the estimation is plotted in Figure \ref{fig:giesFit}.
+
+The full list of arguments of \code{gies()} is the following:
+<<gies-args, echo=FALSE>>=
+showF(gies)
+@
+The arguments have the same meaning as those of \code{ges()}.
+
+\begin{figure}
+  \centering
+<<gies-fit-plot, fig = TRUE, echo = FALSE, results = hide>>=
+par(mfrow = c(1, 2))
+plot(gmInt$g, main = "")
+plot(gies.fit$essgraph, main = "")
+@
+  \caption{The underlying DAG (left) and the essential graph (right) estimated with the GIES algorithm applied on the simulated interventional Gaussian data set \code{gmInt}.  This data set contains data from interventions at vertices $3$ and $5$; accordingly, the orientation of all arrows incident to these two vertices becomes identifiable (see also Figure \ref{fig:gesFit} for comparison with the observational case.}
+  \label{fig:giesFit}
+\end{figure}
+
+As an alternative to GIES, we can also use the dynamic programming approach of \citet{Silander2006} to estimate the interventional essential graph from this interventional data set.  This algorithm is implemented in the function \code{simy()}.  As noted in Section \ref{sec:gm}, this approach yields the \emph{exact} optimum of the BIC score on the price of an computational complexity which is exponential in the number of variables.  On the small example based on $8$ variables, using this algorithm is feasible; however, it is not feasible any more for more than $20$ variables.
+
+<<simy-example>>=
+simy.fit <- simy(ncol(gmInt$x), gmInt$targets, score)
+@
+
+In this example, we get exactly the same result as in Figure \ref{fig:giesFit}.
 
 \subsection{ida} \label{sec:ida} 
 
