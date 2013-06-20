@@ -5,7 +5,7 @@
   author = {Steen A. Andersson and David Madigan and Michael D. Perlman},
   title = {{A} characterization of {M}arkov equivalence classes for acyclic
 	digraphs},
-  journal = {The Annals of Statistics},
+  journal = {Annals of Statistics},
   year = {1997},
   volume = {25},
   pages = {505--541},
@@ -39,24 +39,23 @@
   pages = {121--130}
 }
 
-@ARTICLE{rfci,
-  author = {Colombo, D. and Maathuis, Marloes H. and Kalisch, M. and Richardson,
-	Thomas S.},
-  title = {{L}earning {H}igh-{D}imensional drected acyclic graphs with
-                  latent and selection variables},
-  journal = {Annals of Statistics},
-  volume = {40(1)},
-  pages = {294--321},
+@UNPUBLISHED{pc.indep,
+  author = {Colombo, D. and Maathuis, Marloes H.},
+  title = {{A} modification of the {PC} algorithm yielding order-independent
+	skeletons},
+  note = {(arXiv:1211.3295v1)},
   year = {2012}
 }
 
-
-@Unpublished{pc.indep,
-  author = 	 {Colombo, D. and Maathuis, Marloes H.},
-  title = 	 {A modification of the PC algorithm yielding
-                  order-independent skeletons}, 
-  note = 	 {(arXiv:1211.3295v1)},
-  year = 	 {2012},
+@ARTICLE{rfci,
+  author = {Colombo, D. and Maathuis, Marloes H. and Kalisch, M. and Richardson,
+	Thomas S.},
+  title = {{L}earning {H}igh-{D}imensional drected acyclic graphs with latent
+	and selection variables},
+  journal = {Annals of Statistics},
+  year = {2012},
+  volume = {40(1)},
+  pages = {294--321}
 }
 
 @INCOLLECTION{Cooper95,
@@ -88,10 +87,21 @@
   number = {2}
 }
 
+@ARTICLE{Grimmett1975,
+  author = {Grimmett, G. R. and McDiarmid, C. J. H.},
+  title = {{O}n colouring random graphs},
+  journal = {Mathematical Proceedings of the Cambridge Philosophical Society},
+  year = {1975},
+  volume = {77},
+  pages = {313--324},
+  issue = {02},
+  numpages = {12}
+}
+
 @ARTICLE{Haughton1988,
   author = {Dominique D. M. Haughton},
   title = {{O}n the choice of a model to fit data from an exponential family},
-  journal = {The Annals of Statistics},
+  journal = {Annals of Statistics},
   year = {1988},
   volume = {16},
   pages = {342--355},
@@ -157,7 +167,7 @@
 }
 
 @ARTICLE{KaBu07a,
-  author = {Kalisch, M. and B\"uhlmann, P.},
+  author = {Kalisch, M. and Bühlmann, P.},
   title = {{E}stimating {H}igh-{D}imensional {D}irected {A}cyclic {G}raphs with
 	the {PC}-{A}lgorithm},
   journal = {Journal of Machine Learning Research},
@@ -206,8 +216,8 @@
 @INPROCEEDINGS{Meek95,
   author = {C. Meek},
   title = {{S}trong {C}ompleteness and {F}aithfulness in {B}ayesian {N}etworks},
-  booktitle = {{P}roceedings of {E}leventh {C}onference on {U}ncertainty in {A}rtificial
-	{I}ntelligence},
+  booktitle = {{P}roceedings of 11th {C}onference on {U}ncertainty in {A}rtificial
+	{I}ntelligence ({UAI} 1995)},
   year = {1995},
   pages = {411--418},
   publisher = {Morgan Kaufmann}
@@ -241,8 +251,8 @@
 @INPROCEEDINGS{Ramsey06,
   author = {Joseph Ramsey and Jiji Zhang and Peter Spirtes},
   title = {{A}djacency-{F}aithfulness and {C}onservative {C}ausal {I}nference},
-  booktitle = {{P}roceedings of the {T}wenty-{S}econd {C}onference {A}nnual {C}onference
-	on {U}ncertainty in {A}rtificial {I}ntelligence ({UAI}-06)},
+  booktitle = {{P}roceedings of the 22nd {C}onference {A}nnual {C}onference on {U}ncertainty
+	in {A}rtificial {I}ntelligence ({UAI} 2006)},
   year = {2006},
   pages = {401-408},
   address = {Arlington, Virginia},
@@ -304,10 +314,21 @@
   author = {Tomi Silander and Petri Myllymäki},
   title = {{A} simple approach for finding the globally optimal {B}ayesian network
 	structure},
-  booktitle = {{P}roceedings of the {T}wenty-{S}econd {C}onference on {U}ncertainty
-	in {A}rtificial {I}ntelligence ({UAI}-06)},
+  booktitle = {{P}roceedings of the 22nd {C}onference on {U}ncertainty in {A}rtificial
+	{I}ntelligence ({UAI} 2006)},
   year = {2006},
   pages = {445--452}
+}
+
+@INPROCEEDINGS{Spirtes01-anytime,
+  author = {Peter Spirtes},
+  title = {{A}n anytime algorithm for causal inference},
+  booktitle = {{P}roc. of the {E}ighth {I}nternational {W}orkshop on {A}rtificial
+	{I}ntelligence and {S}tatistics},
+  year = {2001},
+  pages = {213--221},
+  address = {San Francisco},
+  publisher = {Morgan Kaufmann}
 }
 
 @BOOK{SpirtesEtAl00,
@@ -339,26 +360,13 @@
   author = {Spirtes, P. and Meek, C. and Richardson, T. S.}
 }
 
-@inproceedings{Spirtes01-anytime,
- author = {Peter Spirtes},
- title = {An anytime algorithm for causal inference},
- booktitle = {Proc. of the Eighth International Workshop on Artificial
-Intelligence and Statistics},
- year = {2001},
- pages = {213--221},
- publisher = {Morgan Kaufmann},
- address = {San Francisco},
-}
-
 @INPROCEEDINGS{VermaPearl90,
   author = {Verma, Thomas and Pearl, Judea},
   title = {{E}quivalence and {S}ynthesis of {C}ausal {M}odels},
-  booktitle = {{UAI} '90: {P}roceedings of the {S}ixth {A}nnual {C}onference on
-	{U}ncertainty in {A}rtificial {I}ntelligence},
+  booktitle = {{P}roceedings of the 6th {C}onference on {U}ncertainty in {A}rtificial
+	{I}ntelligence ({UAI} 1990)},
   year = {1990},
-  pages = {255--270},
-  address = {New York, NY, USA},
-  publisher = {Elsevier Science Inc.}
+  pages = {255--270}
 }
 
 @ARTICLE{Zhang08-causal-reasoning-ancestral-graphs,
