@@ -14,7 +14,9 @@
   score function.
   \describe{
     \item{\code{decomp}:}{Indicates whether the represented score is
-      decomposable (cf. details)}
+      decomposable (cf. details).  At the moment, only decomposable scores are 
+      supported by the implementation of the causal inference algorithms; 
+      support for non-decomposable scores is planned.}
     \item{\code{pp.dat}:}{list representing the preprocessed input data;
       this is typically a statistic which is sufficient for the 
       calculation of the score.}
@@ -32,8 +34,14 @@
     \item{\code{initialize(data = matrix(1, 1, 1), 
       targets = list(integer(0)),
       target.index = rep(as.integer(1), nrow(data)), 
-      ...)}}{Constructor; creates a \code{Score} object.  For the meaning of the 
-      arguments, see details.}
+      ...)}}{Constructor; creates a \code{Score} object.  \code{data} specifies
+      the data matrix with jointly interventional and observational data;
+      \code{targets} is the list of mutually exclusive intervention targets
+      that have been used for data generation; \code{target.index} is a vector
+      whose length corresponds to the number of rows of the data matrix
+      \code{data}; the \eqn{i}-th entry specifies the index of the intervention
+      target in \code{targets} under which the \eqn{i}-th row of \code{data}
+      was measured.}
     \item{\code{local.score(vertex, parents, ...)}}{For decomposable scores,
       this function calculates the local score of a vertex and its parents.
       Must throw an error in derived classes that do not represent a 
@@ -54,7 +62,29 @@
   }
 }
 \details{
-
+  Score-based structure learning algorithms for causal inference such as 
+  Greedy Equivalence Search
+  (GES, implemented in the function \code{\link{ges}}), Greedy Interventional
+  Equivalence Search (GIES, implemented in the function \code{\link{gies}}) and
+  the dynamic programming approach of Silander and Myllymäki (2006)
+  (implemented in the function \code{\link{simy}}) try to find the DAG model which
+  maximizes a scoring criterion for a given data set.  A widely-used scoring 
+  criterion is the Bayesian Information Criterion (BIC).
+  
+  The virtual class \code{Score} is the base class for providing a scoring
+  criterion to the mentioned causal inference algorithms.  It does not 
+  implement a concrete scoring criterion, but it defines the functions that 
+  must be provided by its descendants (cf. methods).
+  
+  Knowledge of this class is only required if you aim to implement an own 
+  scoring criterion.  At the moment, it is recommended to use the predefined
+  scoring criteria for multivariate Gaussian data derived from \code{Score}, 
+  \code{\link{GaussL0penIntScore}} and \code{\link{GaussL0penObsScore}}.
+}
+\references{
+  T. Silander and P. Myllymäki (2006).  A simple approach for finding the 
+  globally optimal Bayesian network structure.  \emph{Proceedings of the 22nd 
+  Conference on Uncertainty in Artificial Intelligence (UAI 2006)}, 445--452
 }
 \author{
   Alain Hauser (\email{hauser@stat.math.ethz.ch})

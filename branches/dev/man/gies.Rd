@@ -82,7 +82,7 @@ gies(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
   of interventional Markov equivalence classes.
 }
 \value{
-  \code{ges} returns a list with the following two components:
+  \code{gies} returns a list with the following two components:
   \item{essgraph}{An object of class \code{\linkS4class{EssGraph}} containing an 
     estimate of the equivalence class of the underlying DAG.}
   \item{repr}{An object of a class derived from \code{\linkS4class{ParDAG}}
@@ -101,6 +101,26 @@ gies(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
 }
 \seealso{
   \code{\link{ges}}, \code{\linkS4class{Score}}, \code{\linkS4class{EssGraph}}
+}
+\examples{
+##################################################
+## Using Gaussian Data
+##################################################
+## Load predefined data
+data(gmInt)
+
+## Define the score (BIC)
+score <- new("GaussL0penIntScore", gmInt$x, gmInt$targets, gmInt$target.index) 
+
+## Estimate the essential graph
+gies.fit <- gies(ncol(gmInt$x), gmInt$targets, score) 
+
+## Plot the estimated essential graph and the true DAG
+if (require(Rgraphviz)) {
+  par(mfrow=c(1,2))
+  plot(gies.fit$essgraph, main = "Estimated ess. graph")
+  plot(gmInt$g, main = "True DAG")
+}
 }
 \keyword{GIES}
 \keyword{greedy}
