@@ -1,4 +1,5 @@
-library(pcalg, lib.loc = "/sfs/u/staff/kalisch/research/packages/dev.Rcheck")
+# library(pcalg, lib.loc = "/sfs/u/staff/kalisch/research/packages/dev.Rcheck")
+library(pcalg)
 
 set.seed(123)
 nreps <- 100

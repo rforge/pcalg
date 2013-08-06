@@ -5,8 +5,7 @@
 
 cat("Testing the calculation of the BIC score... ")
 
-# library(pcalg)
-library(pcalg, lib.loc = "~/R/2.15.1/library")
+library(pcalg)
 
 load("test_bicscore.rda") # in directory tests/ i.e., typically *not* installed
 
@@ -14,7 +13,7 @@ load("test_bicscore.rda") # in directory tests/ i.e., typically *not* installed
 tol <- sqrt(.Machine$double.eps)
 
 for (cpp in c(FALSE, TRUE)) {
-  score <- new("gauss.l0pen.int.score", 
+  score <- new("GaussL0penIntScore", 
       targets = gauss.targets, 
       target.index = gauss.target.index, 
       data = gauss.data,

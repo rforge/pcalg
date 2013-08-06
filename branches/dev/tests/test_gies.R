@@ -6,8 +6,7 @@
 
 cat("Testing the causal inference algorithms for interventional data: ")
 
-# library(pcalg)
-library(pcalg, lib.loc = "~/R/2.15.1/library")
+library(pcalg)
 
 load("test_bicscore.rda") # in directory tests/ i.e., typically *not* installed
 p <- ncol(gauss.data)
@@ -22,7 +21,7 @@ for (fi in 1:length(fcns)) {
   cat(paste(fcn.names[fi], "... ", sep = ""))
   
   for (cpp in c(FALSE, TRUE)) {
-    score <- new("gauss.l0pen.int.score", 
+    score <- new("GaussL0penIntScore", 
       targets = gauss.targets, 
       target.index = gauss.target.index, 
       data = gauss.data,
