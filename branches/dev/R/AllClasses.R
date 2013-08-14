@@ -544,7 +544,7 @@ setRefClass("GaussL0penObsScore",
         initialize = function(data = matrix(1, 1, 1), 
             lambda = 0.5*log(nrow(data)), 
             intercept = FALSE, 
-            use.cpp = FALSE, 
+            use.cpp = TRUE, 
             ...) {
           callSuper(data = data, 
               targets = list(integer(0)), 
