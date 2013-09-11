@@ -96,19 +96,19 @@ resD <- skeleton(suffStat, indepTest, dim(true.corr)[2], alpha = alpha,
 verbose=FALSE)
 
 ## estimate v-structures conservatively
-tmp <- pc.cons.intern(resD, suffStat, indepTest, alpha, verbose = FALSE, version.unf = c(1, 1))
-tripleList <- tmp$unfTripl
-resD <- tmp$sk
+# tmp <- pc.cons.intern(resD, suffStat, indepTest, alpha, verbose = FALSE, version.unf = c(1, 1))
+# tripleList <- tmp$unfTripl
+# resD <- tmp$sk
 
 ## estimate the final skeleton of given data using Possible-D-Sep
-pdsepRes <- pdsep(resD@graph, suffStat, indepTest, dim(true.corr)[2],
-resD@sepset, alpha = alpha, m.max = Inf, pMax = resD@pMax, verbose = FALSE)
+# pdsepRes <- pdsep(resD@graph, suffStat, indepTest, dim(true.corr)[2],
+# resD@sepset, alpha = alpha, m.max = Inf, pMax = resD@pMax, verbose = FALSE)
 
 ## extend the skeleton into a PAG using all 10 rules
-rules <- rep(TRUE,10)
-resP <- udag2pag(pag = pdsepRes$G, pdsepRes$sepset, rules = rules,
-verbose = TRUE)
-colnames(resP) <- rownames(resP) <- as.character(2:5)
+# rules <- rep(TRUE,10)
+# resP <- udag2pag(pag = pdsepRes$G, pdsepRes$sepset, rules = rules,
+# verbose = TRUE)
+# colnames(resP) <- rownames(resP) <- as.character(2:5)
 }
 \keyword{multivariate}
 \keyword{models}
