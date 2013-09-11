@@ -31,6 +31,9 @@ udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose = FALSE)
   The skeleton is extended to a PAG using rules by Zhang (see
   References). Note that the algorithm works with columns' position of the
   adjacency matrix and not with the names of the variables.
+
+  Note that the order-dependence issues on the 10 orientation rules are
+  still present, see Colombo and Maathuis (2013) for more details.
 }
 \value{
   The output is an adjacency matrix M with edge marks. The edge marks are
@@ -91,6 +94,11 @@ suffStat <- list(C = cor(d.mat), n = n)
 indepTest <- gaussCItest
 resD <- skeleton(suffStat, indepTest, dim(true.corr)[2], alpha = alpha,
 verbose=FALSE)
+
+## estimate v-structures conservatively
+tmp <- pc.cons.intern(resD, suffStat, indepTest, alpha, verbose = FALSE, version.unf = c(1, 1))
+tripleList <- tmp$unfTripl
+resD <- tmp$sk
 
 ## estimate the final skeleton of given data using Possible-D-Sep
 pdsepRes <- pdsep(resD@graph, suffStat, indepTest, dim(true.corr)[2],

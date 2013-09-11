@@ -68,7 +68,7 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
   The PC algorithm (Spirtes, Glymour and Scheines, 2000)
   is known to be order-dependent, in the sense that the
   output depends on the order in which the variables are
-  given. Therefore, Colombo and Maathuis (2012) proposed a simple
+  given. Therefore, Colombo and Maathuis (2013) proposed a simple
   modification, called PC-stable, that yields order-independent
   adjacencies in the skeleton. In this function we implement their
   modified algorithm (the old implementation can be found in version
@@ -111,9 +111,9 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
     directed acyclic graphs with the PC-algorithm},
   JMLR \bold{8} 613-636.
 
-  D. Colombo and M.H. Maathuis (2012)
-  \emph{A modification of the PC algorithm yielding order-independent
-  skeletons}, (arXiv:1211.3295v1)  
+  D. Colombo and M.H. Maathuis (2013)
+  \emph{Order-independent constraint-based causal structure learning},
+  (arXiv:1211.3295v1)   
 }
 
 \seealso{\code{\link{pc}} for generating a partially directed graph
@@ -151,17 +151,17 @@ plot(gmG$g, main = "True DAG")
 ## Using d-separation oracle
 ##################################################
 ## define independence test
-##indepTest <- dsepTest
+indepTest <- dsepTest
 ## define sufficient statistics (d-separation oracle)
-##suffStat <- list(g = gmG$g, jp = RBGL::johnson.all.pairs.sp(gmG$g))
+suffStat <- list(g = gmG$g, jp = RBGL::johnson.all.pairs.sp(gmG$g))
 ## estimate Skeleton
-##alpha <- 0.01 ## value is irrelevant as dsepTest returns either 0 or 1
-##fit <- skeleton(suffStat, indepTest, p, alpha)
-##if (require(Rgraphviz)) {
+alpha <- 0.01 ## value is irrelevant as dsepTest returns either 0 or 1
+fit <- skeleton(suffStat, indepTest, p, alpha)
+if (require(Rgraphviz)) {
 ## show estimated Skeleton
-##plot(fit, main = "Estimated Skeleton")
-##plot(gmG$g, main = "True DAG")
-##}
+plot(fit, main = "Estimated Skeleton")
+plot(gmG$g, main = "True DAG")
+}
 ##################################################
 ## Using discrete data
 ##################################################

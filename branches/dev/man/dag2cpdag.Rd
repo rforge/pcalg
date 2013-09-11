@@ -24,7 +24,7 @@ dag2cpdag(dag)
 D.M. Chickering (2002), Learning Equivalence Classes of Bayesian-Network
   Structures, \emph{Journal of Machine Learning Research} 2, 445-398.
 }
-\author{Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
+\author{Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Diego Colombo}
 \seealso{\code{\link{udag2pdag}}, \code{\link{pdag2dag}}}
 \examples{
 p <- 10 # number of random variables

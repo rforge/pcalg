@@ -9,7 +9,7 @@
 \usage{
 fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, pdsep.max = Inf,
-rules = rep(TRUE, 10), doPdsep = TRUE, conservative = c(FALSE, FALSE),
+rules = rep(TRUE, 10), doPdsep = TRUE, conservative = FALSE, maj.rule = FALSE,
 biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
 }
 
@@ -65,16 +65,24 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
     is not computed, so that the algorithm simplifies to the
     Modified PC algorithm of Spirtes, Glymour and Scheines (2000, page
     84).}
-  \item{conservative}{If the first argument is \code{TRUE}, the skeleton is
-  computed in a conservative way. If the second argument is \code{TRUE}, the
-  triples are checked for faithfulness again after possible deletion of
+  \item{conservative}{If \code{TRUE}, the
+  triples are checked for faithfulness after possible deletion of
   edges when finding Possible-D-SEP. For more information, see Details.}
+  \item{maj.rule}{If \code{TRUE}, the
+  triples are checked for faithfulness after possible deletion of
+  edges when finding Possible-D-SEP using the majority rule idea, which
+  is less robust than the standard conservative. Note that to use the
+  majority rule idea, the user has to set \code{conservative = TRUE} as
+  well. For more information, see Details.} 
   \item{biCC}{If \code{TRUE}, only nodes on paths between nodes a and c are
   considered to be in sepset(a,c). Uses biconnected components,
   \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
   \item{cons.rules}{If \code{TRUE}, an orientation rule that needs information
   on definite non-colliders is only applied, if the corresponding
-  subgraph relevant for the rule does not involve an unfaithful triple.}
+  subgraph relevant for the rule does not involve an unfaithful
+  triple. Note that to use the conservative rules, the user has to set
+  either \code{conservative = TRUE} or \code{conservative = TRUE} and
+  \code{maj.rule = TRUE}.}
   \item{labels}{Vector of length p with node names. If \code{NA},
     \code{as.character{1:p}} is used instead.}
   \item{type}{It specifies the version of the FCI that has to be
@@ -127,14 +135,30 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   sufficient to consider only subsets of the neighborhoods of nodes \code{x}
   and \code{y} to decide whether the edge \code{x o-o y} should be removed.
   Therefore, the initial skeleton may contain some superfluous edges.
-  These edges are removed in the next step of the algorithm. To decide whether
-  edge \code{x o-o y} should be removed, one computes Possible-D-SEP(x) and
-  Possible-D-SEP(y) and performs
-  conditional indepedence tests of x and y given all possible
-  subsets of Possible-D-SEP(x) and
-  of Possible-D-SEP(y) (see helpfile of \code{\link{pdsep}}).
-  Subsequently, the v-structures are determined (using information in sepset).
-  Finally, as many as possible
+  These edges are removed in the next step of the algorithm which
+  requires some orientations. Therefore, the v-structures
+  are determined using the conservative method using
+  \code{pc.cons.intern} with option \code{version.unf = c(1,1)}. All
+  potential v-structures a-b-c are checked in the following way. We test
+  whether a and c are independent conditioning on any subset of the
+  neighbors of a or any subset of the neighbors of c. If b is in no such
+  conditioning set or in all such conditioning sets, no further action
+  is taken. If, however, b is in only some conditioning sets, the triple a-b-c is
+  marked 'unfaithful'. If a is independent of c given some S in the
+  skeleton (i.e., the edge a-c dropped out), but a and c remain
+  dependent given all subsets of neighbors of either a or c, we will
+  call all triples a-b-c 'faithful'. This is because in the FCI, the
+  true separating set might be outside the neighborhood of either a or
+  c. An unfaithful triple is not oriented as a v-structure. After the
+  v-structures have been oriented, to decide whether edge \code{x o-o y}
+  should be removed, one computes Possible-D-SEP(x) and
+  Possible-D-SEP(y) and performs conditional indepedence tests of x and
+  y given all possible subsets of Possible-D-SEP(x) and
+  of Possible-D-SEP(y) (see helpfile of \code{\link{pdsep}}). This will
+  produce a fully order-independent final skeleton as explained in Colombo and
+  Maathuis (2013). Subsequently, the v-structures are newly determined
+  on the final skeleton (using
+  information in sepset). Finally, as many as possible
   undetermined edge marks (o) are determined using (a subset of) the 10
   orientation rules given by Zhang (2009).
 
@@ -157,24 +181,30 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   \code{skeleton}. Thus, m.max is chosen adaptively and does not have to
   be specified by the user.
 
-  The conservative FCI, Anytime FCI, and Adaptive Anytime FCI consist of
-  two parts. In the first part (done if the first argument of
-  \code{conservative} is \code{TRUE}), we call \code{pc.cons.internal}
-  with option \code{version.unf = c(1,1)} after computing the
-  skeleton. If a is independent of c given some S in the skeleton (i.e.,
-  the edge a-c dropped out), but a and c remain dependent given all
-  subsets of neighbors of either a or c, we will call all triples a-b-c
-  'faithful'. This is because in the FCI, the true separating set might
-  be outside the neighborhood of either a or c. In the second part (done
-  if the second argument of \code{conservative} is \code{TRUE}), we call
-  \code{pc.cons.internal} with option \code{version.unf = c(1,1)} again
+  The conservative FCI, Anytime FCI, and Adaptive Anytime FCI (done
+  if the argument of \code{conservative} is \code{TRUE}) are computed calling
+  \code{pc.cons.intern} with option \code{version.unf = c(1,1)} again
   after Possilbe-D-SEP was found and the graph potentially lost some
-  edges. Therefore, new triples might have occured. If this second part
-  is done, the resulting information on sepset and faithful triples
-  overwrites the previous and will be used for the subsequent
-  orientation rules. }  
+  edges. Therefore, new triples might have occured. The resulting
+  information on sepset and faithful triples overwrites the previous and
+  will be used for the subsequent orientation rules. Instead of using
+  the conservative version, which is quite robust towards the
+  v-structures, Colombo and Maathuis (2013) introduced a less robust
+  version for the v-structures called majority rule, see
+  \code{pc.cons.intern} for more details. This adaptation can
+  be called using \code{conservative = TRUE} and \code{maj.rule =
+  TRUE}. Colombo and Maathuis (2013) showed that with both these
+  modifications, the final skeleton and the orientation of the
+  v-structures of the FCI algorithm are fully order-independent. 
+
+  Note that the order-dependence issues on the 10 orientation rules are
+  still present, see Colombo and Maathuis (2013) for more details.}  
 
 \references{
+  D. Colombo and M.H. Maathuis (2013). Order-independent
+  constraint-based causal structure learning. arXiv preprint
+  arXiv:1211.3295v1.
+  
   D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
   (2012). Learning high-dimensional directed acyclic graphs with latent
   and selection variables. \emph{Ann. Statist.} \bold{40}, 294-321.

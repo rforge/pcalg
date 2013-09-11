@@ -9,7 +9,7 @@
 \usage{
 pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
    fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "rand",
-   conservative = FALSE)
+   conservative = FALSE, maj.rule = FALSE, solve.confl = FALSE)
 }
 \arguments{
   \item{suffStat}{Sufficient statistics: List containing all necessary
@@ -44,9 +44,21 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     conditional independence tests.}
   \item{u2pd}{Method for dealing with conflicting information when
     trying to orient edges (see details below).}
-  \item{conservative}{If TRUE, the conservative PC is done. In this
+  \item{conservative}{If \code{TRUE}, the conservative PC is done. In this
     case, only option \code{u2pd = relaxed} is supported. Note, that
     therefore the resulting object might not be extendable to a DAG. See details
+    for more information.}
+  \item{maj.rule}{If \code{TRUE}, the
+    triples are checked for faithfulness using the majority rule idea, which
+    is less robust than the standard conservative. Note that to use the
+    majority rule idea, the user has to set \code{conservative = TRUE} as
+    well. For more information, see Details.}
+  \item{solve.confl}{If \code{TRUE}, the orientation of the v-structures and the
+    orientation rules work with lists for candidate sets and allow
+    bi-directed edges to resolve conflicting edge orientations. In this
+    case, only option \code{u2pd = relaxed} is supported. Note, that
+    therefore the resulting object might not be a CPDAG because
+    bi-directed edges might be present. See details
     for more information.}
 }
 \value{An object of \code{\link{class}} \code{"pcAlgo"} (see
@@ -85,10 +97,10 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   The CPDAG is estimated using the PC algorithm (named after its inventors
   \bold{P}eter Spirtes and \bold{C}lark Glymour). The skeleton is
   estimated by the function \code{\link{skeleton}} which uses a modified
-  version of the original PC algorithm (see Colombo and Maathuis (2012) for
+  version of the original PC algorithm (see Colombo and Maathuis (2013) for
   details). In fact, the original PC algorithm is known to be
   order-dependent, in the sense that the output depends on the order in
-  which the variables are given. Therefore, Colombo and Maathuis (2012)
+  which the variables are given. Therefore, Colombo and Maathuis (2013)
   proposed a simple modification, called PC-stable, that yields order-independent
   adjacencies in the skeleton (see the help file
   of this function for details). Subsequently, as many edges as possible
@@ -115,13 +127,23 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
 
   Sampling errors (or hidden variables) can lead to conflicting
   information about edge directions. For example, one may find that
-  a-b-c and b-c-d should both be directed as v-structures.  This gives
+  a-b-c and b-c-d should both be directed as v-structures. This gives
   conflicting information about the edge b-c, since it should be
   directed as b<-c in v-structure a->b<-c, while it should be directed
-  as b->c in v-structure b->c<-d. In such cases, we simply overwrite the
+  as b->c in v-structure b->c<-d. With the option \code{solve.confl =
+  FALSE}, in such cases, we simply overwrite the
   directions of the conflicting edge. In the example above this means
   that we obtain a->b->c<-d if a-b-c was visited first, and a->b<-c<-d
-  if b-c-d was visited first.
+  if b-c-d was visited first. With the option \code{solve.confl =
+  TRUE} (which is only supported with option \code{u2pd = relaxed}), in
+  such cases, we simply allow both directions on the edge b-c, namely we
+  allow the bi-directed edge b <-> c. We denote bi-directed edges in the
+  adjacency matrix M of the graph as M[b,c]=2 and M[c,b]=2. Note that
+  this edge merely represents a conflicting orientation and it has not
+  to be interpreted causally (for more details see Colombo and Maathuis
+  (2013). The useage of this lists for the candidate edges and allowing
+  bi-directed edges resolve the order-dependence issues on the
+  orientation rules, see Colombo and Maathuis (2013) for more details.
 
   Sampling errors or hidden variables can also lead to invalid CPDAGs,
   meaning that there does not exist a DAG
@@ -140,7 +162,7 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   is found, an arbitrary DAG is generated on the skeleton
   as in the option "rand".
 
-  The conservative PC algorithm (\code{"conservative = TRUE"}) is a
+  The conservative PC algorithm (\code{conservative = TRUE}) is a
   slight variation of the PC algorithm. After the skeleton is computed,
   all potential v-structures a-b-c are checked in the following way. We
   test whether a and c are independent conditioning on any subset of the
@@ -153,7 +175,24 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   unfaithful triple is not oriented as a v-structure. Furthermore, no
   later orientation rule that needs to know whether a-b-c is a
   v-structure or not is applied. (The internal function
-  \code{pc.cons.internal} will be called with \code{version.unf = c(2,1)}.)
+  \code{pc.cons.intern} will be called with \code{version.unf =
+  c(2,1)}.) Instead of using the conservative version, which is quite
+  robust towards the v-structures, Colombo and Maathuis (2013)
+  introduced a less robust version for the v-structures called majority
+  rule. This adaptation can be called using \code{conservative = TRUE}
+  and \code{maj.rule = TRUE}. In this case, the triple a-b-c is marked as
+  \dQuote{unfaithful} if b is in exactly 50
+  percent of such conditioning sets, if it is in less than 50 percent it
+  is set as a v-structure, and if in more than 50 percent as a non
+  v-structure (for more details see Colombo and Maathuis (2013)). The
+  useage of both the conservative and the majority rule versions resolve the
+  order-dependence issues of the determination of the v-structures, see
+  Colombo and Maathuis (2013) for more details.
+
+  Note that calling (\code{conservative = TRUE}), or (\code{conservative
+  = TRUE}) and \code{maj.rule = TRUE}, together with \code{solve.confl =
+  TRUE} produces a fully order-independent output, see Colombo and
+  Maathuis (2013). 
 
   Notes: (1) Throughout, the algorithm works with the column positions
   of the variables in the adjacency matrix, and not with the names of
@@ -172,10 +211,10 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   M. Kalisch and P. Buehlmann (2007).
   Estimating high-dimensional directed acyclic graphs with the PC-algorithm.
   \emph{JMLR} \bold{8} 613-636.
-
-  D. Colombo and M.H. Maathuis (2012)
-  \emph{A modification of the PC algorithm yielding order-independent
-  skeletons}, (arXiv:1211.3295v1)  
+  
+  D. Colombo and M.H. Maathuis (2013).
+  Order-independent constraint-based causal structure learning,
+  (arXiv:1211.3295v1). 
 }
 \seealso{\code{\link{skeleton}} for estimating a skeleton of a DAG;
   \code{\link{udag2pdag}} for converting the
@@ -184,7 +223,8 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   \code{\link{dsepTest}} as examples for \code{indepTest}.
 }
 \author{
-  Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Martin Maechler.
+  Markus Kalisch (\email{kalisch@stat.math.ethz.ch}), Martin Maechler,
+  and Diego Colombo.
 }
 \examples{
 ##################################################
@@ -201,6 +241,7 @@ indepTest <- gaussCItest
 suffStat <- list(C = cor(gmG$x), n = n)
 ## estimate CPDAG
 alpha <- 0.01
+library(RBGL)
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
   ## show estimated CPDAG
@@ -235,6 +276,7 @@ indepTest <- disCItest
 suffStat <- list(dm = gmD$x, nlev = c(3,2,3,4,2), adaptDF = FALSE)
 ## estimate CPDAG
 alpha <- 0.01
+library(RBGL)
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
   ## show estimated CPDAG
@@ -255,6 +297,7 @@ indepTest <- binCItest
 suffStat <- list(dm = gmB$x, adaptDF = FALSE)
 ## estimate CPDAG
 alpha <- 0.01
+library(RBGL)
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
   ## show estimated CPDAG

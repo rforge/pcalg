@@ -75,6 +75,7 @@ true.corr <- cov2cor(cov.mat)
 ## alpha
 suffStat <- list(C=true.corr, n=10^9)
 indepTest <- gaussCItest
+library(RBGL)
 true.pag <- dag2pag(suffStat, indepTest, g, L, alpha = 0.9999)
 
 ##find PAG using fci-function

@@ -2,21 +2,27 @@
 \alias{pc.cons.intern}
 \title{Internal function for conservative PC algorithm}
 \description{
-  This function is not intended for direct useage.  Use \code{\link{pc}}
-  or \code{\link{fci}} using options for the conservative version of the
-  algorithms instead.
+  This function is not intended for direct useage. Use \code{\link{pc}},
+  \code{\link{fci}}, or \code{\link{rfci}} using options for the
+  conservative version of the algorithms instead.
 
-For any unshielded triple A-B-C, consider all subsets D of the neighbors
-of A and of the neighbors of C, and record the sets D for which A and C
-are conditionally independent given D. If B is in none of these sets, do
-nothing (it is a v-structure). If B is in all sets, do nothing (it is
-not a v-structure). If B is in some but not all sets, mark the triple as
-\dQuote{unfaithful}.
+  For any unshielded triple A-B-C, consider all subsets D of the neighbors
+  of A and of the neighbors of C, and record the sets D for which A and C
+  are conditionally independent given D. If B is in none of these sets, do
+  nothing (it is a v-structure). If B is in all sets, do nothing (it is
+  not a v-structure). If \code{maj.rule = FALSE}, meaning that the standard
+  conservative method is applied, then the triple is marked as
+  \dQuote{unfaithful} if B is in some but not all sets. If
+  \code{maj.rule = TRUE}, meaning that the majority rule is applied, then
+  the triple is marked as \dQuote{unfaithful} if B is in exactly 50
+  percent of the sets, if it is in less than 50 percent it is set as a
+  v-structure, and if in more than 50 percent as a non v-structure (for
+  more details see Colombo and Maathuis (2013)).
 }
 
 \usage{
 pc.cons.intern(sk, suffStat, indepTest, alpha, verbose = FALSE,
-               version.unf = c(NA, NA))
+version.unf = c(NA, NA), maj.rule = FALSE)
 }
 
 \arguments{
@@ -45,8 +51,10 @@ pc.cons.intern(sk, suffStat, indepTest, alpha, verbose = FALSE,
     outside the neighborhood). If this option is 1 the corresponding triple
     is marked 'faithful'; if this option is 2, the corresponding triple is
     marked unfaithful. Second argument: 1 do not consider the initial sepset,
-    2 also consider the initial sepset.
-  }
+    2 also consider the initial sepset.}
+  \item{maj.rule}{If \code{TRUE}, the triples are checked for
+    faithfulness using the majority rule idea, which is less robust than
+    the standard conservative.}
 }
 
 \value{
@@ -58,6 +66,12 @@ pc.cons.intern(sk, suffStat, indepTest, alpha, verbose = FALSE,
     is, B is in some sepsets but not all or none; 2=triple coming from
     version.unf[1]==2 that is a and c are indep given the initial sepset
     but there doesn't exist a subset of the neighbours that d-separates them.)}
+}
+
+\references{
+  D. Colombo and M.H. Maathuis (2013). Order-independent
+  constraint-based causal structure learning. arXiv preprint
+  arXiv:1211.3295v1.
 }
 
 \seealso{\code{\link{skeleton}} for estimating a skeleton

@@ -9,7 +9,7 @@
 \usage{
 rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE,
-10), conservative = FALSE, cons.rules = FALSE, labels = NA)
+10), conservative = FALSE, maj.rule=FALSE, cons.rules = FALSE, labels = NA)
 }
 
 \arguments{
@@ -46,8 +46,13 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   \item{rules}{Logical vector of length 10 indicating which rules
     should be used when directing edges. The order of the rules is taken
     from Zhang (2009).}
-  \item{conservative}{If \code{TRUE}, the skeleton is computed in a
-    conservative way.}
+  \item{conservative}{If \code{TRUE}, the
+  triples are checked for faithfulness after the skeleton has been found.}
+  \item{maj.rule}{If \code{TRUE}, the
+  triples are checked for faithfulness after the skeleton has been found
+  using the majority rule idea, which
+  is less robust than the standard conservative. Note that to use the
+  majority rule idea, the user has to set conservative = TRUE as well.} 
   \item{cons.rules}{If \code{TRUE}, an orientation rule that needs information
     on definite non-colliders is only applied, if the corresponding
     subgraph relevant for the rule does not involve an unfaithful triple.}
@@ -66,9 +71,15 @@ does not compute any Possible-D-SEP sets and thus does not make tests
 conditioning on them. This makes RFCI much faster than FCI. The
 orientation rules for v-structures and rule 4 were modified in order to
 produce a PAG which, in the oracle version, is guaranteed to have the
-correct ancestral relationships.}
+correct ancestral relationships. In contrast to the FCI algorithm, none
+of the order-dependence issues are fully resolved here, see Colombo and
+Maathuis (2013).}
 
 \references{
+  D. Colombo and M.H. Maathuis (2013). Order-independent
+  constraint-based causal structure learning. arXiv preprint
+  arXiv:1211.3295v1.
+  
   D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
   (2012). Learning high-dimensional directed acyclic graphs with latent
   and selection variables. \emph{Ann. Statist.} \bold{40}, 294-321. 

@@ -87,7 +87,11 @@ pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
   no entry to the sepset is made.
 
   To make the code more efficient, tests that have been done during
-  finding the skeleton are not done again.}
+  finding the skeleton are not done again.
+
+  To make the estimation of Possible-D-SEP order-independent (because
+  some edge deletion can influence sets computed later on), all sets are
+  estimated at once and are not update after possible edge removals.}
 
 \references{
   P. Spirtes, C. Glymour and R. Scheines (2000).
