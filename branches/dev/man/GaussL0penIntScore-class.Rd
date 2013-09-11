@@ -8,8 +8,12 @@
   and observational Gaussian data; it is used in the causal inference functions 
   \code{\link{gies}} and \code{\link{simy}}. 
 }
+%% TODO:
+%% - replace this by \section{Constructor}; see the documentation of graphNEL (package graph)
+%% - include methods and slots, see documentation skeleton produced by promptClass("GaussL0penIntScore")
+%% - include aliases for methods and slots, see documentation of graphNEL
 \usage{
-score <- ges("GaussL0penIntScore",
+new("GaussL0penIntScore",
   data = matrix(1, 1, 1),
   targets = list(integer(0)), 
   target.index = rep(as.integer(1), nrow(data)), 
@@ -65,8 +69,8 @@ score <- ges("GaussL0penIntScore",
   The class implements an \eqn{\ell_0}{ℓ0}-penalized Gaussian maximum 
   likelihood estimator.  The penalization is a constant (specified by
   the argument \code{lambda} in the constructor) times the number of 
-  parameters of the DAG model.  By default, the constant λ is chosen as 
-  \eqn{\log(n)/2}{log(n)/2}, which corresponds to the BIC score.
+  parameters of the DAG model.  By default, the constant \eqn{\lambda}{λ} is 
+  chosen as \eqn{\log(n)/2}{log(n)/2}, which corresponds to the BIC score.
 }
 \author{
   Alain Hauser (\email{hauser@stat.math.ethz.ch})
@@ -92,7 +96,7 @@ score$global.score(as(A, "GaussParDAG"))
 }
 \seealso{
   \code{\link{gies}}, \code{\link{simy}}, 
-  \code{\linkS4class{GaussL0penObsScore}}, 
-  \code{\linkS4class{Score}}
+  \code{\link{GaussL0penObsScore-class}}, 
+  \code{\link{Score-class}}
 }
 \keyword{classes}

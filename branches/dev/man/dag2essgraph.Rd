@@ -36,7 +36,7 @@ dag2essgraph(dag, targets = list(integer(0)))
   although it uses different classes for parameters and return value.
 }
 \value{
-  An instance of \code{\link{EssGraph}} representing the essential graph.
+  An instance of \code{\linkS4class{EssGraph}} representing the essential graph.
 }
 \references{
   A. Hauser and P. Bühlmann (2012).  Characterization and greedy learning of 
@@ -50,7 +50,7 @@ dag2essgraph(dag, targets = list(integer(0)))
   Alain Hauser (\email{hauser@stat.math.ethz.ch})
 }
 \seealso{
-  \code{\link{dag2cpdag}}, \code{\link{Score}}, \code{\link{EssGraph}}
+  \code{\link{dag2cpdag}}, \code{\linkS4class{Score}}, \code{\linkS4class{EssGraph}}
 }
 \examples{
 p <- 10     # Number of random variables

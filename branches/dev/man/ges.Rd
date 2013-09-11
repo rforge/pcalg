@@ -42,17 +42,18 @@ ges(p, score, turning = TRUE, maxdegree = integer(0), ...)
 
   All DAGs in an equivalence class have the same skeleton (i.e., the same 
   adjacency information) and the same v-structures (i.e., the same induced
-  subgraphs of the form a → b ← c).  However, the direction of some edges may 
-  be undetermined, in the sense that they point one way in one DAG in the
-  equivalence class, while they point the other way in another DAG in
-  the equivalence class.
+  subgraphs of the form \eqn{a \longrightarrow b \longleftarrow c}{a → b ← c}).
+  However, the direction of some edges may be undetermined, in the sense that
+  they point one way in one DAG in the equivalence class, while they point the
+  other way in another DAG in the equivalence class.
 
   An equivalence class can be uniquely represented by a partially directed graph
   called (observational) essential graph or CPDAG (completed partially directed 
   acyclic graph).  Its edges have the following interpretation:
   \enumerate{
-    \item a directed edge a → b stands for an arrow that has the same 
-    orientation in all representatives of the Markov equivalence class;
+    \item a directed edge \eqn{a \longrightarrow b}{a → b} stands for an arrow 
+    that has the same orientation in all representatives of the Markov 
+    equivalence class;
     \item an undirected edge a -- b stands for an arrow that is oriented in one 
     way in some representatives of the equivalence class and in the other way 
     in other representatives of the equivalence class.

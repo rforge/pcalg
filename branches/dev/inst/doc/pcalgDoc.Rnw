@@ -36,7 +36,7 @@
   \AUT{Markus Kalisch} \And
   \AUT{Martin Mächler} \And
   \AUT{Diego Colombo} \AND
-  \AUT{Alain Hauser} \And
+  {\normalsize Alain Hauser} \\ {\small University of Bern} \And
   \AUT{Marloes H. Maathuis} \And
   \AUT{Peter Bühlmann}}
 \title{Causal Inference using Graphical Models with the \proglang{R} Package \pkg{pcalg}}

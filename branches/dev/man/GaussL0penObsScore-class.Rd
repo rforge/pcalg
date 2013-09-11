@@ -1,14 +1,14 @@
-\name{GaussL0penIntScore-class}
+\name{GaussL0penObsScore-class}
 \docType{class}
-\alias{GaussL0penIntScore-class}
+\alias{GaussL0penObsScore-class}
 \encoding{UTF-8}
-\title{Class "GaussL0penIntScore"}
+\title{Class "GaussL0penObsScore"}
 \description{
   This class represents a score for causal inference from observational Gaussian
   data; it is used in the causal inference function \code{\link{ges}}. 
 }
 \usage{
-score <- ges("GaussL0penIntScore",
+new("GaussL0penObsScore",
   data = matrix(1, 1, 1),
   lambda = 0.5*log(nrow(data)), 
   intercept = FALSE, 
@@ -27,8 +27,8 @@ score <- ges("GaussL0penIntScore",
     parameter should only be set to \code{FALSE} in the case of problems.}
 }
 \section{Fields}{
-  The class \code{GaussL0penObsScore} has the same fields as \code{\link{Score}}.  
-  They need not be accessed by the user.
+  The class \code{GaussL0penObsScore} has the same fields as 
+  \code{\linkS4class{Score}}.  They need not be accessed by the user.
 }
 \section{Methods}{
   \describe{
@@ -59,8 +59,8 @@ score <- ges("GaussL0penIntScore",
   The class implements an \eqn{\ell_0}{ℓ0}-penalized Gaussian maximum 
   likelihood estimator.  The penalization is a constant (specified by
   the argument \code{lambda} in the constructor) times the number of 
-  parameters of the DAG model.  By default, the constant λ is chosen as 
-  \eqn{\log(n)/2}{log(n)/2}, which corresponds to the BIC score.
+  parameters of the DAG model.  By default, the constant \eqn{\lambda}{λ} is
+  chosen as \eqn{\log(n)/2}{log(n)/2}, which corresponds to the BIC score.
 }
 \author{
   Alain Hauser (\email{hauser@stat.math.ethz.ch})
@@ -86,7 +86,7 @@ score$global.score(as(A, "GaussParDAG"))
 }
 \seealso{
   \code{\link{ges}},
-  \code{\linkS4class{GaussL0penIntScore}}, 
-  \code{\linkS4class{Score}}
+  \code{\link{GaussL0penIntScore-class}}, 
+  \code{\link{Score-class}}
 }
 \keyword{classes}
