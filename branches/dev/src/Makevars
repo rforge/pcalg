@@ -5,7 +5,7 @@ PKG_CXXFLAGS = $(shell $(R_HOME)/bin/Rscript -e "Rcpp:::CxxFlags()" )
 ## Note: the boost headers of the CRAN package BH are very incomplete, unfortunately...
 ## Therefore, use system boost so far...
 ## -I$(shell $(R_HOME)/bin/Rscript -e "cat(system.file('include', package = 'BH', mustWork = TRUE))")
-PKG_LIBS = $(shell $(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()" ) $(LAPACK_LIBS) $(BLAS_LIBS)
+PKG_LIBS = $(shell $(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()" ) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
 # PKG_LIBS = $(shell $(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()" )
 
 ## As an alternative, one can also add this code in a file 'configure'

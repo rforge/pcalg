@@ -6,13 +6,13 @@ Maintainer: Alain Hauser <alain.hauser@biology.unibe.ch>
 Title: Estimation of CPDAG/PAG and causal inference using the IDA algorithm
 Description: Standard and robust estimation of the equivalence class of a
     Directed Acyclic Graph (DAG) via the PC-Algorithm. The equivalence
-    class is represented by its (unique) Completete Partially Directed
+    class is represented by its (unique) Complete Partially Directed
     Acyclic Graph (CPDAG). Furthermore, a PAG instead of a CPDAG can be
     estimated if latent variables and/or selection variables are assumed
     to be present. FCI and RFCI are available for estimating
     PAGs. Functions for causal inference using the IDA 
     algorithm (based on do-calculus of Judea Pearl) are provided for CPDAGs.
-Depends: methods, abind, corpcor, sfsmisc
+Depends: methods, abind, corpcor, sfsmisc, Rcpp
 LinkingTo: Rcpp, RcppArmadillo
 SystemRequirements: Boost library from http://www.boost.org
 Imports: graph, RBGL, ggm, robustbase, graphics, vcd
