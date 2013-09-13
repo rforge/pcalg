@@ -47,15 +47,15 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     should be used when directing edges. The order of the rules is taken
     from Zhang (2009).}
   \item{conservative}{If \code{TRUE}, the
-  triples are checked for faithfulness after the skeleton has been found.}
+  triples are checked for ambiguity after the skeleton has been found.}
   \item{maj.rule}{If \code{TRUE}, the
-  triples are checked for faithfulness after the skeleton has been found
+  triples are checked for ambiguity after the skeleton has been found
   using the majority rule idea, which
   is less strict than the standard conservative. Note that to use the
   majority rule idea, the user has to set conservative = TRUE as well.} 
   \item{cons.rules}{If \code{TRUE}, an orientation rule that needs information
     on definite non-colliders is only applied, if the corresponding
-    subgraph relevant for the rule does not involve an unfaithful triple.}
+    subgraph relevant for the rule does not involve an ambiguous triple.}
   \item{labels}{Vector of length p with node names. If \code{NA},
     \code{as.character(1:p)} is used instead.}
 }

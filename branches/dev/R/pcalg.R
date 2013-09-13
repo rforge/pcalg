@@ -3057,7 +3057,7 @@ skeleton <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL, fixedEdges
 
 pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
                fixedEdges = NULL, NAdelete = TRUE, m.max = Inf,
-               u2pd = "rand", conservative=FALSE, maj.rule=FALSE, solve.confl=FALSE) {
+               u2pd = "relaxed", conservative=FALSE, maj.rule=FALSE, solve.confl=FALSE) {
 
   ## Purpose: Perform PC-Algorithm, i.e., estimate skeleton of DAG given data
   ## ----------------------------------------------------------------------
@@ -7222,7 +7222,7 @@ my.SpecialDag <- function (gm, a, tmp, X, verbose = FALSE)
 }
 
 
-gen.backdoor <- function(amat, x, y, mcov, type = "pag", verbose = FALSE)
+gbc <- function(amat, x, y, mcov, type = "pag", verbose = FALSE)
 {
   ## Purpose: for a given pair of nodes (x,y) and a given graph (DAG, CPDAG,
   ##          MAG, or PAG) estimate the causal effect of x on y using the
@@ -7284,15 +7284,25 @@ gen.backdoor <- function(amat, x, y, mcov, type = "pag", verbose = FALSE)
         ##bi-directed edges
         amat.trunc <- amat
         indD <- which(amat[x,] == 2 & amat[,x] == 3) ## x--> d
-        if (length(indD > 0)) {
-            del.edges <- rep(FALSE, length(indD))
-            for (i in 1:length(indD)) {
-                del.edges[i] <- VisibleEdge(amat, x, indD[i])
+        ##in a CPDAG or DAG every directed edge is visible, then delete them all
+        if (type == "cpdag" | type == "dag") {
+            if (length(indD > 0)) {
+                for (i in 1:length(indD)) {
+                    ##delete visible edges out of x edges
+                    amat.trunc[indD[i],x] <- amat.trunc[x,indD[i]] <- 0
+                }
             }
-            ##delete visible edges out of x edges
-            amat.trunc[indD[del.edges],x] <- amat.trunc[x,indD[del.edges]] <- 0
-            ##transform invisible edges out of x by bi-directed 
-            amat.trunc[indD[!del.edges],x] <- amat.trunc[x,indD[!del.edges]] <- 2
+        } else {
+            if (length(indD > 0)) {
+                del.edges <- rep(FALSE, length(indD))
+                for (i in 1:length(indD)) {
+                    del.edges[i] <- VisibleEdge(amat, x, indD[i])
+                }
+                ##delete visible edges out of x edges
+                amat.trunc[indD[del.edges],x] <- amat.trunc[x,indD[del.edges]] <- 0
+                ##transform invisible edges out of x by bi-directed 
+                amat.trunc[indD[!del.edges],x] <- amat.trunc[x,indD[!del.edges]] <- 2
+            }
         }
 
         ##2. generate a MAG belonging to the equivalence class of the truncated

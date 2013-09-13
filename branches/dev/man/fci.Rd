@@ -66,10 +66,10 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
     Modified PC algorithm of Spirtes, Glymour and Scheines (2000, page
     84).}
   \item{conservative}{If \code{TRUE}, the
-  triples are checked for faithfulness after possible deletion of
+  triples are checked for ambiguity after possible deletion of
   edges when finding Possible-D-SEP. For more information, see Details.}
   \item{maj.rule}{If \code{TRUE}, the
-  triples are checked for faithfulness after possible deletion of
+  triples are checked for ambiguity after possible deletion of
   edges when finding Possible-D-SEP using the majority rule idea, which
   is less strict than the standard conservative. Note that to use the
   majority rule idea, the user has to set \code{conservative = TRUE} as
@@ -80,7 +80,7 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   biconnected components, \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
   \item{cons.rules}{If \code{TRUE}, an orientation rule that needs information
   on definite non-colliders is only applied, if the corresponding
-  subgraph relevant for the rule does not involve an unfaithful
+  subgraph relevant for the rule does not involve an ambiguous
   triple. Note that to use the conservative rules, the user has to set
   either \code{conservative = TRUE}, or \code{conservative = TRUE} and
   \code{maj.rule = TRUE}.}
@@ -122,7 +122,7 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   given S for all sets S consisting of all selection variables
   and a subset of the observed variables; (ii) a tail on an edge means
   that this tail is present in all MAGs in the equivalence class;
-  (iii) an errowhead on an  edge means that this arrowhead is present in
+  (iii) an arrowhead on an edge means that this arrowhead is present in
   all MAGs in the equivalence
   class; (iv) a o-edgemark means that there is a at least one MAG in the
   equivalence class where the edgemark is a tail, and at least one where
@@ -145,12 +145,12 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   neighbors of a or any subset of the neighbors of c. If b is in no such
   conditioning set or in all such conditioning sets, no further action
   is taken. If, however, b is in only some conditioning sets, the triple
-  a-b-c is marked 'unfaithful'. If a is independent of c given some S in the
+  a-b-c is marked 'ambiguous'. If a is independent of c given some S in the
   skeleton (i.e., the edge a-c dropped out), but a and c remain
   dependent given all subsets of neighbors of either a or c, we will
-  call all triples a-b-c 'faithful'. This is because in the FCI, the
+  call all triples a-b-c 'unambiguous'. This is because in the FCI, the
   true separating set might be outside the neighborhood of either a or
-  c. An unfaithful triple is not oriented as a v-structure. After the
+  c. An ambiguous triple is not oriented as a v-structure. After the
   v-structures have been oriented, to decide whether edge \code{x o-o y}
   should be removed, one computes Possible-D-SEP(x) and
   Possible-D-SEP(y) and performs conditional indepedence tests of x and
@@ -158,10 +158,9 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   of Possible-D-SEP(y) (see helpfile of \code{\link{pdsep}}). This will
   produce a fully order-independent final skeleton as explained in Colombo and
   Maathuis (2013). Subsequently, the v-structures are newly determined
-  on the final skeleton (using
-  information in sepset). Finally, as many as possible
-  undetermined edge marks (o) are determined using (a subset of) the 10
-  orientation rules given by Zhang (2009).
+  on the final skeleton (using information in sepset). Finally, as many
+  as possible undetermined edge marks (o) are determined using (a subset
+  of) the 10 orientation rules given by Zhang (2009).
 
   The Anytime FCI algorithm was introduced by Spirtes (2001). It can be
   viewed as a modification of the FCI algorithm that only performs
@@ -187,7 +186,7 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   \code{pc.cons.intern} with option \code{version.unf = c(1,1)} again
   after Possilbe-D-SEP was found and the graph potentially lost some
   edges. Therefore, new triples might have occured. The resulting
-  information on sepset and faithful triples overwrites the previous and
+  information on sepset and unambiguous triples overwrites the previous and
   will be used for the subsequent orientation rules. Instead of using
   the conservative version, which is quite strict towards the
   v-structures, Colombo and Maathuis (2013) introduced a less strict

@@ -12,12 +12,12 @@
   nothing (it is a v-structure). If B is in all sets, do nothing (it is
   not a v-structure). If \code{maj.rule = FALSE}, meaning that the standard
   conservative method is applied (Ramsey et al., 2006), then the triple
-  is marked as \dQuote{unfaithful} if B is in some but not all sets. If
-  \code{maj.rule = TRUE}, meaning that the majority rule is applied, then
-  the triple is marked as \dQuote{unfaithful} if B is in exactly 50
-  percent of the sets, if it is in less than 50 percent it is set as a
-  v-structure, and if in more than 50 percent as a non v-structure (for
-  more details see Colombo and Maathuis, 2013).
+  is marked as \dQuote{ambiguous} if B is in some but not all sets. If
+  \code{maj.rule = TRUE}, meaning that the majority rule is applied
+  (Colombo and Maathuis, 2013), then the triple is marked as
+  \dQuote{ambiguous} if B is in exactly 50 percent of the sets, if it is
+  in less than 50 percent it is set as a v-structure, and if in more
+  than 50 percent as a non v-structure. 
 }
 
 \usage{
@@ -49,20 +49,20 @@ version.unf = c(NA, NA), maj.rule = FALSE)
     conservative step; then, some error must have occured in the pc, but
     not necessarily in the fci (since here sepsets can contain nodes
     outside the neighborhood). If this option is 1 the corresponding triple
-    is marked 'faithful'; if this option is 2, the corresponding triple is
-    marked unfaithful. Second argument: 1 do not consider the initial sepset,
+    is marked 'unambiguous'; if this option is 2, the corresponding triple is
+    marked 'ambiguous'. Second argument: 1 do not consider the initial sepset,
     2 also consider the initial sepset.}
   \item{maj.rule}{If \code{TRUE}, the triples are checked for
-    faithfulness using the majority rule idea, which is less strict than
+    ambiguity using the majority rule idea, which is less strict than
     the standard conservative.}
 }
 
 \value{
   \item{unfTripl}{Vector with triples (coded as number using
-    \code{triple2numb}) that were marked as unfaithful.}
+    \code{triple2numb}) that were marked as ambiguous.}
 
   \item{vers}{Vector containing the version (1 or 2) of the
-    corresponding triple saved in unfTripl (1=normal unfaithful triple that
+    corresponding triple saved in unfTripl (1=normal ambiguous triple that
     is, B is in some sepsets but not all or none; 2=triple coming from
     version.unf[1]==2 that is a and c are indep given the initial sepset
     but there doesn't exist a subset of the neighbours that d-separates

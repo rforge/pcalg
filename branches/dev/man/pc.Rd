@@ -8,7 +8,7 @@
 }
 \usage{
 pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-   fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "rand",
+   fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "relaxed",
    conservative = FALSE, maj.rule = FALSE, solve.confl = FALSE)
 }
 \arguments{
@@ -49,7 +49,7 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     therefore the resulting object might not be extendable to a DAG. See details
     for more information.}
   \item{maj.rule}{If \code{TRUE}, the
-    triples are checked for faithfulness using the majority rule idea, which
+    triples are checked for ambiguity using the majority rule idea, which
     is less strict than the standard conservative. Note that to use the
     majority rule idea, the user has to set \code{conservative = TRUE} as
     well. For more information, see Details.}
@@ -134,9 +134,9 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   neighbors of c. If b is in no such conditioning set or in all such
   conditioning sets, no further action is taken and the usual PC is
   continued. If, however, b is in only some conditioning sets, the
-  triple a-b-c is marked 'unfaithful'. Moreover, if in the conservative
+  triple a-b-c is marked 'ambiguous'. Moreover, if in the conservative
   step there is no subset among the neighbors that makes a and c
-  independent, the triple is marked 'unfaithful'. An unfaithful triple
+  independent, the triple is marked 'ambiguous'. An ambiguous triple
   is not oriented as a v-structure. Furthermore, no later orientation
   rule that needs to know whether a-b-c is a v-structure or not is
   applied. (The internal function \code{pc.cons.intern} will be called
@@ -145,7 +145,7 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   Maathuis (2013) introduced a less strict version for the v-structures
   called majority rule. This adaptation can be called using
   \code{conservative = TRUE} and \code{maj.rule = TRUE}. In this case,
-  the triple a-b-c is marked as 'unfaithful' if b is in exactly 50
+  the triple a-b-c is marked as 'ambiguous' if b is in exactly 50
   percent of such conditioning sets, if it is in less than 50 percent it
   is set as a v-structure, and if in more than 50 percent as a non
   v-structure (for more details see Colombo and Maathuis, 2013). The
@@ -162,16 +162,25 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   FALSE}, in such cases, we simply overwrite the
   directions of the conflicting edge. In the example above this means
   that we obtain a->b->c<-d if a-b-c was visited first, and a->b<-c<-d
-  if b-c-d was visited first. With the option \code{solve.confl =
-  TRUE} (which is only supported with option \code{u2pd = relaxed}), in
-  such cases, we simply allow both directions on the edge b-c, namely we
-  allow the bi-directed edge b <-> c. We denote bi-directed edges in the
-  adjacency matrix M of the graph as M[b,c]=2 and M[c,b]=2. Note that
-  this edge merely represents a conflicting orientation and it has not
-  to be interpreted causally (for more details see Colombo and Maathuis,
-  2013). The useage of this lists for the candidate edges and allowing
+  if b-c-d was visited first, meaning that the final orientation on the
+  edge depends on the ordering in which the edges are oriented. With the
+  option \code{solve.confl = TRUE} (which is only supported with option
+  \code{u2pd = relaxed}), we first generate a list of all (unambiguous)
+  v-strucutres (in the example above a-b-c and b-c-d), and then we
+  simply orient them allow both directions on the edge b-c, namely we
+  allow the bi-directed edge b <-> c resolving the order-dependence
+  issues on the edge orientations. We denote bi-directed edges in the
+  adjacency matrix M of the graph as M[b,c]=2 and M[c,b]=2. In a similar
+  way using lists for the candidate edges for each orientation rule and
+  allowing bi-directed edges, the order-dependence issues in the
+  orientation rules can be solved. Note that bi-directed edges merely
+  represents a conflicting orientation and they have not to be
+  interpreted causally (for more details see Colombo and Maathuis,
+  2013). The useage of these lists for the candidate edges and allowing
   bi-directed edges resolve the order-dependence issues on the
-  orientation rules, see Colombo and Maathuis (2013) for more details.
+  orientation of the v-strucutres and on the edges
+  using the three orientation rules, see Colombo and Maathuis (2013) for
+  more details. 
 
   Note that calling (\code{conservative = TRUE}), or (\code{conservative
   = TRUE}) and \code{maj.rule = TRUE}, together with \code{solve.confl =
@@ -179,21 +188,20 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   Maathuis (2013).
 
   Sampling errors or hidden variables can also lead to invalid CPDAGs,
-  meaning that there does not exist a DAG
-  that has the same skeleton and v-structures as the
-  graph found by the algorithm. An example of this is an undirected cycle
-  consisting of the
-  edges a-b-c-d and d-a. In this case it is impossible to direct the edges
-  without creating a cycle or a new v-structure. The option \code{u2pd}
-  specifies what should be done in such a situation. If the option is set to
+  meaning that there does not exist a DAG that has the same skeleton and
+  v-structures as the graph found by the algorithm. An example of this
+  is an undirected cycle consisting of the edges a-b-c-d and d-a. In
+  this case it is impossible to direct the edges without creating a
+  cycle or a new v-structure. The option \code{u2pd} specifies what
+  should be done in such a situation. If the option is set to
   \code{"relaxed"}, the algorithm simply outputs the invalid CPDAG. If
-  the option is set to \code{"rand"},
-  all direction information is discarded and a random DAG is generated on the
-  skeleton. If the option is set to \code{"retry"}, up to 100 combinations
-  of possible directions of the ambiguous edges are tried, and the first
-  combination that results in a valid CPDAG is chosen. If no valid combination
-  is found, an arbitrary DAG is generated on the skeleton
-  as in the option "rand".
+  the option is set to \code{"rand"}, all direction information is
+  discarded and a random DAG is generated on the skeleton. If the option
+  is set to \code{"retry"}, up to 100 combinations of possible
+  directions of the ambiguous edges are tried, and the first combination
+  that results in a valid CPDAG is chosen. If no valid combination is
+  found, an arbitrary DAG is generated on the skeleton as in the option
+  "rand". 
 
   Notes: (1) Throughout, the algorithm works with the column positions
   of the variables in the adjacency matrix, and not with the names of
