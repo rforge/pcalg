@@ -6889,31 +6889,31 @@ iplotPC <- function(pc.fit, labels = NULL) {
 
 showEdgeList <- function(pc.fit, labels = NULL) {
 
-  cat("\nEdge List: \n")
-  g <- pc.fit@graph
-  if (is.null(labels)) labels <- g@nodes
-  
-  wm <- wgtMatrix(g)
-  wmU <- wm + t(wm)
-  wmD <- t(wm - t(wm))
-  u <- which( (wmU == 2) & upper.tri(wmU), arr.ind = TRUE)
-  dTmp <- which( wmD == 1, arr.ind = TRUE)
-  d <- dTmp[order(dTmp[,1]),]
-  cat("\nUndirected Edges:\n")
-  if(!nrow(u)==0){
-  for (i in 1:nrow(u)) {
-    x <- u[i,1]
-    y <- u[i,2]
-    cat(paste(labels[x], " --- ", labels[y], "\n"))
-  }}
-  cat("\nDirected Edges:\n")
-  if(!nrow(d)==0){
-  for (i in 1:nrow(d)) {
-    x <- d[i,1]
-    y <- d[i,2]
-    cat(paste(labels[x], " --> ", labels[y], "\n"))
-  }
-}
+    cat("\nEdge List: \n")
+    g <- pc.fit@graph
+    if (is.null(labels)) labels <- g@nodes
+    
+    wm <- wgtMatrix(g)
+    wmU <- wm + t(wm)
+    wmD <- t(wm - t(wm))
+    u <- which( (wmU == 2) & upper.tri(wmU), arr.ind = TRUE)
+    dTmp <- which( wmD == 1, arr.ind = TRUE)
+    d <- dTmp[order(dTmp[,1]),]
+    cat("\nUndirected Edges:\n")
+    if(!nrow(u)==0){
+        for (i in 1:nrow(u)) {
+            x <- u[i,1]
+            y <- u[i,2]
+            cat(paste(labels[x], " --- ", labels[y], "\n"))
+        }}
+    cat("\nDirected Edges:\n")
+    if(!nrow(d)==0){
+        for (i in 1:nrow(d)) {
+            x <- d[i,1]
+            y <- d[i,2]
+            cat(paste(labels[x], " --> ", labels[y], "\n"))
+        }
+    }
 }
 
 showAmat <- function(pc.fit) {
@@ -6927,3 +6927,394 @@ showAmat <- function(pc.fit) {
   mTmp
 }
 
+
+#######################################################################
+## Generalized backdoor criterion
+#######################################################################
+
+VisibleEdge <- function(amat, x, z)
+{
+  ## Purpose: check if the directed edge from x to z in a MAG or in a PAG
+  ##          is visible or not
+  ## ----------------------------------------------------------------------
+  ## Arguments: amat, x, z
+  ## ----------------------------------------------------------------------
+  ## Value: T/F
+  ## ----------------------------------------------------------------------
+  ## Author: Diego Colombo, Date: 25 Apr 2012, 14:48
+
+  res <- FALSE
+  ##1. scenario: there exists a vertex not adjacent to z with *---> x
+  indC1 <- which(amat[x,] != 0 & amat[,x] == 2 & amat[z,] == 0) ## c *-> x --> z and c and z not connected
+  ##if there is at least one vertex
+  if (length(indC1) > 0) {
+    ##the edge is visible
+    res <- TRUE
+  } else {
+    ##2. scenario: there exists a collider path that is into x and every vertex on the path is a parent of z
+    indC2 <- which(amat[x,] == 2 & amat[,x] == 2 & amat[z,] == 3 & amat[,z] == 2) ## c <--> x --> z and c is a parent of z
+    if (length(indC2) > 0) {
+      counter.res <- FALSE
+      while ((length(indC2) > 0) & !counter.res) {
+        c <- indC2[1]
+        indC2 <- indC2[-1]
+        path <- c(c,x,z)
+        ##find a minimal discriminating path for c,x,z
+        tmp.path <- find.min.discr.path(pag = amat, path = path)
+        length.path <- length(tmp.path)
+        if (length.path > 1) {
+          ##a path exists
+          counter.res <- TRUE
+          res <- TRUE
+        }
+      }
+    }
+  }
+  return(res)
+}
+
+possibleDe <- function(amat,x)
+{
+    ## Purpose: in a PAG determine which nodes are possible descendants of x
+    ##          on definite status paths
+    ## ----------------------------------------------------------------------
+    ## Arguments:
+    ## - amat: matrix corresponding to the DAG, CPDAG, MAG, or PAG
+    ## - x: node of interest
+    ## ----------------------------------------------------------------------
+    ## Value:
+    ## - de.list: array containing the possible descendants of x
+    ## ----------------------------------------------------------------------
+    ## Author: Diego Colombo, Date: 26 Apr 2012, 16:58
+    
+    p <- as.numeric(dim(amat)[1])
+    res <- rep(0, p)
+    visited <- rep(FALSE, p)
+    ##1. case: x is a possible children of itself
+    res[x] <- 1
+    visited[x] <- TRUE
+    ##2. case: find all the possible children of x
+    indD <- which(amat[x,] != 0  & amat[,x] != 2 & !visited) ## x (o,-)-* d
+    tmp.Q <- indD
+    tmp.P <- rep(x,length(indD))
+    while (length(tmp.Q) > 0) {
+        ##next element in the queue
+        d <- tmp.Q[1]
+        tmp.Q <- tmp.Q[-1]
+        pred <- tmp.P[1]
+        tmp.P <- tmp.P[-1]
+        visited[d] <- TRUE
+        res[d] <- 1
+        ##find all possible children of d not visited yet
+        indR <- which(amat[d,] != 0  & amat[,d] != 2 & !visited) ## d (o,-)-* r
+        if (length(indR) > 0) {
+            ##check that the triple <pred,d,r> is of a definite status
+            ##1. d is a collider on this subpath; this is impossible because the edge between d and r cannot be into d
+            ##2. d is a definite non-collider
+            for(j in 1:length(indR)) {
+                r <- indR[j]
+                if (amat[pred,d] == 3 || amat[r,d] == 3 || (amat[pred,d] == 1 && amat[r,d] == 1 && amat[pred,r] == 0)) {
+                    ##update the queues
+                    tmp.Q <- c(tmp.Q, r)
+                    tmp.P <- c(tmp.P, d)
+                }
+            }
+        }
+    }
+    de.list <- which(res == 1)
+    return(de.list)
+}
+
+dreach <- function(x, y, amat, verbose=FALSE)
+{
+  ## Purpose: Compute d-sep(x,y) ("dsep")
+  ## !! The non-zero entries in amat must be symmetric !!
+  ## !!!!! WE DO NOT ASSUME SELECTION VARIABLES HENCE NO --- EDGES IN A MAG!!!!
+  ## ----------------------------------------------------------------------
+  ## Arguments:
+  ## - x, y: nodes of which dsep must be computed
+  ## - amat: adjacency matrix of a MAG
+  ##         amat[i,j] = 0 iff no edge btw i,j
+  ##         amat[i,j] = 3 iff i *-- j
+  ##         amat[i,j] = 2 iff i *-> j
+  ## - verbose: Show checked node sequence
+  ## ----------------------------------------------------------------------
+  ## Value:
+  ## - DSEP: set containing the nodes in D-SEP(x,y)
+  ## ----------------------------------------------------------------------
+  ## Author: Diego Colombo, Date: 31 Jan 2013, 11:04
+
+  ## check: quadratic; x in V; edgemarks ok; non-zeroes symmetric
+  stopifnot((ncol(amat)==nrow(amat)),x<=ncol(amat),all(amat %in% c(0,2,3)),
+            all((amat!=0)==(t(amat!=0))))
+  
+  ##compute the ancestors of x and y
+  p <- as.numeric(dim(amat)[1])
+  amat.an <- amat
+  amat.t <- amat + t(amat)
+  ##because we have only ---> and <--> edges, in amat.t we have either 5s (--->) or 4s (<-->)
+  ##delete all the bi-directed edges
+  amat.an[which(amat.t == 4)] <- 0
+  ##transform the directed edges from 3 and 2 in 1 and 0
+  amat.an[which(amat.an == 3)] <- 0
+  amat.an[which(amat.an == 2)] <- 1
+  dir.graph <- as(amat.an, "graphNEL")
+  john.pairs <- johnson.all.pairs.sp(dir.graph)
+  anc.y <- anc.x <- rep(FALSE, p)
+  anc.y[which(john.pairs[,y] < Inf)] <- TRUE
+  anc.x[which(john.pairs[,x] < Inf)] <- TRUE
+
+  ##the set containing the ancestors of either x or y
+  anc <- anc.x | anc.y
+  anc[x] <- FALSE
+
+  ##prepare the setting for the search
+  amat.tmp <- amat
+  nb <- which(amat[x,] != 0 & anc)
+  Q <- nb
+  P <- rep(x,length(Q))
+  DSEP <- nb
+
+  amat.tmp[x,nb] <- 0 ## delete edge to nbrs
+
+  while(length(Q) > 0) {
+    ## Invariants:
+    ## ===========
+    ## (A1) length(Q) == length(P) > 0
+    ## (A2) non-zero in amat.tmp -> non-zero in amat [no non-zero added]
+    ## (A3) Q[i] and P[i] are adjacent in amat [using (A2)]
+    if (verbose) {
+      cat("\n-------------","\n")
+      cat("Queue Q:",Q,"\n")
+      cat("Queue P:",P,"\n")
+    }
+    a <- Q[1]
+    Q <- Q[-1]
+    pred <- P[1] ## not empty because of (A1)
+    P <- P[-1]
+    if (verbose) cat("Select",pred,"towards",a,"\n")
+    nb <- which(amat.tmp[a,] != 0 & anc) ## (*)
+
+    if (length(nb)>0) {
+      for (i in seq_along(nb)) {
+        b <- nb[i]
+        ## Guaranteed: pred-a-b are a path because of (A3)
+        ## if a is a collider, b is in D-SEP of x
+        if (amat[pred,a] == 2 && amat[b,a] == 2) {
+          amat.tmp[a,b] <- 0 ## remove b out of adj(a) in amat.tmp (+)
+          Q <- c(Q,b)
+          P <- c(P,a)
+          DSEP <- c(DSEP,b)
+        }
+      }
+    }
+  }
+  sort(unique(DSEP))
+}
+
+pag2mag <- function(amat.pag, x){
+  ## Purpose: transform a PAG into a valid MAG using the arrowhead augmentation
+  ##          from Zhang, without orienting additional edges in to x and then
+  ##          orient any chordal component into a DAG
+  ## ----------------------------------------------------------------------
+  ## Arguments:
+  ## - amat.pag: adjacency matrix of the PAG
+  ## - x: node of interest
+  ## ----------------------------------------------------------------------
+  ## Value:
+  ## - valid.DAG.mat: adjacency matrix corresponding to the valid MAG
+  ## ----------------------------------------------------------------------
+  ## Author: Diego Colombo, Date: 12 Apr 2013, 14:24
+
+
+  ##1. step: arrowhead augmentation
+  ##find all o-> edges in the PAG
+  indA <- which((amat.pag == 2 & t(amat.pag) == 1), arr.ind = TRUE)
+  if (length(indA) > 0) {
+    for (i in 1:dim(indA)[1]) {
+      a <- indA[i, 1]
+      b <- indA[i, 2]
+      amat.pag[b,a] <- 3
+    }
+  }
+  ##find all o-- edges in the PAG
+  indB <- which((amat.pag == 3 & t(amat.pag) == 1), arr.ind = TRUE)
+  if (length(indB) > 0) {
+    for (i in 1:dim(indB)[1]) {
+      a <- indB[i, 1]
+      b <- indB[i, 2]
+      amat.pag[b,a] <- 2
+    }
+  }
+  ##2.step: find all the chordal components in the updated graph
+  ##find the adjacency matrix that contains 
+  amat.undir <- amat.dir <- amat.pag
+  amat.t <- amat.pag + t(amat.pag)
+  ##we are interested only in the o-o edges
+  ##delete all the other edges
+  amat.undir[which(amat.t != 2)] <- 0
+  amat.dir[which(amat.t == 2)] <- 0
+  g.undir <- as(amat.undir,"graphNEL")
+  
+  #Get all connected components
+  conn.comp <- connectedComp(g.undir)
+  for (ll in 1:length(conn.comp)){
+    conn.comp[[ll]] <- as.numeric(conn.comp[[ll]])
+  }
+  
+  
+  valid.DAG.mat <- amat.undir      
+  
+  #get all semilocal extensions of the undirected cpdag
+  for (i in 1:length(conn.comp)){
+    conn.comp.i <- conn.comp[[i]]
+    if (length(conn.comp.i) > 1){
+      #check whether the component is chordal
+      chordal <- is.chordal(igraph.from.graphNEL(as(amat.undir[conn.comp.i,conn.comp.i],"graphNEL")), fillin=TRUE)$chordal
+      if(!chordal | length(conn.comp.i) > 10){
+        return(NULL)
+      } #not extendable or the chordal component is too large to handle
+      output <- my.SpecialDag(amat.undir, amat.undir[conn.comp.i,conn.comp.i], NULL, x)
+      valid.DAG.mat <- valid.DAG.mat*output
+    }   
+  } #end for loop
+  
+  # add directed edges
+  valid.DAG.mat <- valid.DAG.mat + amat.dir
+  return(valid.DAG.mat)
+}
+
+my.SpecialDag <- function (gm, a, tmp, X, verbose = FALSE) 
+{
+    gm2 <- gm
+    while (sum(a) != 0 ) {
+        sinks <- find.sink(a)
+        if (verbose) {
+            cat("Main Call: ################## \n")
+            print(gm)
+            print(a)
+            cat("Sinks: ", sinks, "\n")
+        }
+        for (x in sinks) {
+            if (verbose) 
+                cat("Try removing", x, " in a.\n")
+            if (adj.check(a, x) & as.numeric(row.names(a)[x]) != X) {
+                inc.to.x <- a[, x] == 1 & a[x, ] == 1
+                if (any(inc.to.x)) {
+                    real.inc.to.x <- as.numeric(row.names(a)[inc.to.x])
+                    real.x <- as.numeric(row.names(a)[x])
+                    gm2[real.x, real.inc.to.x] <- 3
+                    gm2[real.inc.to.x, real.x] <- 2
+                }
+                if (verbose) {
+                    cat("Removed sink", as.numeric(row.names(a)[x]), 
+                        "in g (", x, "in a).\n")
+                    cat("New graphs: \n")
+                    print(gm2)
+                    print(a)
+                }
+                a <- a[-x, -x]
+                break
+            }
+        }
+    }
+    gm2
+}
+
+
+gen.backdoor <- function(amat, x, y, mcov, type = "pag", verbose = FALSE)
+{
+  ## Purpose: for a given pair of nodes (x,y) and a given graph (DAG, CPDAG,
+  ##          MAG, or PAG) estimate the causal effect of x on y using the
+  ##          generalized backdoor criterion. In a first step we check if
+  ##          the effect is identifiable or not. If it is identifiable we
+  ##          compute the set W that satisfies the generalized backdoor
+  ##          criterion and we estimate the causal effect. If it is not
+  ##          identifiable the output is NA
+  ## ----------------------------------------------------------------------
+  ## Arguments:
+  ## - amat: adjacency matrix of the corresponding graph
+  ## - x, y: nodes for which we want to estimate the causal effect of x on y
+  ## - mcov: covariance matrix needed to perform the regression
+  ## - type: specifies the type of graph of the adjacency matrix amat. It
+  ##         can be a DAG (type="dag"), a CPDAG (type="cpdag"), a MAG
+  ##         (type="mag"), or a PAG (type="pag")
+  ## ----------------------------------------------------------------------
+  ## Value:
+  ## - cEffect: causal effect of x on y (either NA not identifiable or a number)
+  ## ----------------------------------------------------------------------
+  ## Author: Diego Colombo, Date: 12 Apr 2013, 16:06
+
+    stopifnot (dim(amat)[1] > 0, x!=y)
+    cEffect <- NA
+    if (type == "dag" | type == "cpdag") {
+        ##transfor each directed edge from 0-1 to 2-3 in the adjacency matrix
+        ind <- which((amat == 1 & t(amat) == 0), arr.ind = TRUE) ##a -> b
+        for (i in seq_len(nrow(ind))) {
+            a <- ind[i, 1]
+            b <- ind[i, 2]
+            amat[a,b] <- 2
+            amat[b,a] <- 3
+        }
+    }
+    
+    ##check that x and y belong to the same connected component
+    ##compute the connected components of the whole graph
+    conn.comp <- connectedComp(as(amat, "graphNEL"))
+    for (ll in 1:length(conn.comp)){
+        conn.comp[[ll]] <- as.numeric(conn.comp[[ll]])
+    }
+    index.conncomp <- 0
+    found.conncomp <- FALSE
+    while ((!found.conncomp) & (index.conncomp < length(conn.comp))) {
+        index.conncomp <- index.conncomp + 1
+        if (x %in% conn.comp[[index.conncomp]] & y %in% conn.comp[[index.conncomp]]) {
+            found.conncomp <- TRUE
+        }
+    }
+    
+    ##if x and y are not in the same connected component ---> 0
+    if (!found.conncomp) {
+        cEffect <- 0
+    }
+    else {
+        ##1. compute the truncated graph
+        ##all the paths out of x with a definitely visible edge have to be
+        ##deleted and the invisible edge out of x are replaced by
+        ##bi-directed edges
+        amat.trunc <- amat
+        indD <- which(amat[x,] == 2 & amat[,x] == 3) ## x--> d
+        if (length(indD > 0)) {
+            del.edges <- rep(FALSE, length(indD))
+            for (i in 1:length(indD)) {
+                del.edges[i] <- VisibleEdge(amat, x, indD[i])
+            }
+            ##delete visible edges out of x edges
+            amat.trunc[indD[del.edges],x] <- amat.trunc[x,indD[del.edges]] <- 0
+            ##transform invisible edges out of x by bi-directed 
+            amat.trunc[indD[!del.edges],x] <- amat.trunc[x,indD[!del.edges]] <- 2
+        }
+
+        ##2. generate a MAG belonging to the equivalence class of the truncated
+        ##PAG or a DAG in the truncated CPDAG
+        if (type == "cpdag" | type == "pag") {
+            amat.mag <- pag2mag(amat.trunc, x)
+        } else {
+            amat.mag <- amat.trunc
+        }
+        
+        ##3. compute possible descendants of x along definite status paths
+        list.de <- possibleDe(amat, x)
+        
+        ##4. compute D-SEP(x,y)_path in the truncated MAG or truncated DAG
+        dsep.set <- dreach(x, y, amat.mag, verbose = verbose)
+        
+        ##5. check that no possible descendants of x along definite status
+        ##paths is in D-SEP(x,y,amat.mag) or y is in adj(x, amat.trunc)
+        if (!(amat.trunc[x,y] != 0) && !(any(list.de %in% dsep.set))) {
+            ##D-SEP(x,y,amat.mag) closes all the paths
+            cEffect <- lm.cov(mcov, y, c(x, dsep.set))
+        }
+    }
+    return(cEffect)
+}
