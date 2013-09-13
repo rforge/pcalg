@@ -11,13 +11,13 @@
   are conditionally independent given D. If B is in none of these sets, do
   nothing (it is a v-structure). If B is in all sets, do nothing (it is
   not a v-structure). If \code{maj.rule = FALSE}, meaning that the standard
-  conservative method is applied, then the triple is marked as
-  \dQuote{unfaithful} if B is in some but not all sets. If
+  conservative method is applied (Ramsey et al., 2006), then the triple
+  is marked as \dQuote{unfaithful} if B is in some but not all sets. If
   \code{maj.rule = TRUE}, meaning that the majority rule is applied, then
   the triple is marked as \dQuote{unfaithful} if B is in exactly 50
   percent of the sets, if it is in less than 50 percent it is set as a
   v-structure, and if in more than 50 percent as a non v-structure (for
-  more details see Colombo and Maathuis (2013)).
+  more details see Colombo and Maathuis, 2013).
 }
 
 \usage{
@@ -53,7 +53,7 @@ version.unf = c(NA, NA), maj.rule = FALSE)
     marked unfaithful. Second argument: 1 do not consider the initial sepset,
     2 also consider the initial sepset.}
   \item{maj.rule}{If \code{TRUE}, the triples are checked for
-    faithfulness using the majority rule idea, which is less robust than
+    faithfulness using the majority rule idea, which is less strict than
     the standard conservative.}
 }
 
@@ -65,13 +65,21 @@ version.unf = c(NA, NA), maj.rule = FALSE)
     corresponding triple saved in unfTripl (1=normal unfaithful triple that
     is, B is in some sepsets but not all or none; 2=triple coming from
     version.unf[1]==2 that is a and c are indep given the initial sepset
-    but there doesn't exist a subset of the neighbours that d-separates them.)}
+    but there doesn't exist a subset of the neighbours that d-separates
+    them.)}
+
+  \item{sk}{The updated skeleton-object.}
 }
 
 \references{
   D. Colombo and M.H. Maathuis (2013). Order-independent
   constraint-based causal structure learning. arXiv preprint
   arXiv:1211.3295v1.
+
+  J. Ramsey, J. Zhang and P. Spirtes (2006).
+  Adjacency-faithfulness and conservative causal inference. In
+  \emph{Proceedings of the 22nd Annual Conference on Uncertainty in
+  Artificial Intelligence}, Arlington, VA. AUAI Press.
 }
 
 \seealso{\code{\link{skeleton}} for estimating a skeleton

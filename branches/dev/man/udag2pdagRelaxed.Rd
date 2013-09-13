@@ -18,7 +18,7 @@ udag2pdagRelaxed(gInput, verbose, unfVect=NULL, solve.confl=FALSE)
   \item{verbose}{0: No output; 1: Details}
   \item{unfVect}{Vector containing numbers that encode the unfaithful
     triple (as returned by pc.cons.intern). This is needed in the
-    conservativePC.}
+    conservative PC.}
   \item{solve.confl}{If \code{TRUE}, the orientation of the v-structures and the
     orientation rules work with lists for candidate sets and allow
     bi-directed edges to resolve conflicting edge orientations. Note, that

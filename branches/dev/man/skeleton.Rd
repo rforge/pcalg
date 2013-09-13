@@ -123,7 +123,8 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
   \code{\link{dsepTest}} as examples for \code{indepTest}.
 }
 \author{
-  Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Martin Maechler.
+  Markus Kalisch (\email{kalisch@stat.math.ethz.ch}), Martin Maechler,
+  and Diego Colombo.
 }
 \examples{
 ##################################################

@@ -6,23 +6,30 @@
 Convert a DAG to a Completed Partially Directed Acyclic Graph (CPDAG).
 }
 \usage{
-dag2cpdag(dag)
+dag2cpdag(g)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{dag}{DAG (graph object)}
+  \item{g}{DAG (graph object)}
 }
 \details{
   This function converts a DAG (graph object) to its corresponding
-  (unique) CPDAG (graph object), using the algorithm of
-  Chickering (2002).
+  (unique) CPDAG (graph object) as follows. Because every DAG contained
+  in the Markov equivalence class described by the unique CPDAG shares
+  the same skeleton and the same v-structures, this function takes the
+  skeleton and the v-structures of the given DAG \code{g}. Afterwards it
+  simply uses the 3 orientation rules by Spirtes and Pearl (see
+  references) to orient as many of the remaining undirected edges as
+  possible. 
 }
 \value{
   A graph object containing the CPDAG.
 }
 \references{
-D.M. Chickering (2002), Learning Equivalence Classes of Bayesian-Network
-  Structures, \emph{Journal of Machine Learning Research} 2, 445-398.
+  J. Pearl (2000), \emph{Causality}, Cambridge University Press.
+
+  P. Spirtes, C. Glymour and R. Scheines (2000)
+  \emph{Causation, Prediction, and Search}, 2nd edition, The MIT Press.
 }
 \author{Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Diego Colombo}
 \seealso{\code{\link{udag2pdag}}, \code{\link{pdag2dag}}}

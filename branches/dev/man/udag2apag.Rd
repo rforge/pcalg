@@ -42,7 +42,7 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
     default, all rules are set to \code{TRUE}.}
   \item{unfVect}{Vector containing numbers that encode the unfaithful
     triple (as returned by \code{\link{pc.cons.intern}}). This is needed in the
-    conservative RFCI.}
+    conservative and in the majority rule RFCI.}
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
 \details{

@@ -62,7 +62,7 @@ pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
 \value{A list with several elements:
-  \item{G}{Updated adjecency matrix}
+  \item{G}{Updated adjacency matrix}
   \item{sepset}{Updated sepset}
   \item{pMax}{Updated matrix containing maximal p-values}
   \item{allPdsep}{Possible-D-Sep for each node}
@@ -101,7 +101,7 @@ pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
   for a given node; \code{\link{fci}} which uses \code{\link{pdsep}}.
 }
 \author{
-  Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Diego Colombo
+  Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Diego Colombo.
 }
 \examples{
 p <- 10

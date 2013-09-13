@@ -50,7 +50,7 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     for more information.}
   \item{maj.rule}{If \code{TRUE}, the
     triples are checked for faithfulness using the majority rule idea, which
-    is less robust than the standard conservative. Note that to use the
+    is less strict than the standard conservative. Note that to use the
     majority rule idea, the user has to set \code{conservative = TRUE} as
     well. For more information, see Details.}
   \item{solve.confl}{If \code{TRUE}, the orientation of the v-structures and the
@@ -105,7 +105,8 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   adjacencies in the skeleton (see the help file
   of this function for details). Subsequently, as many edges as possible
   are oriented. This is done in two steps. It is important to note that
-  these two steps still remain order-dependent.
+  if no further actions are taken (see below) these two steps still
+  remain order-dependent. 
 
   First, the algorithm considers all triples
   \code{(a,b,c)}, where \code{a} and
@@ -125,6 +126,33 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   and B\"uhlmann (2007). The algorithm stops if none of the rules is
   applicable to the graph.
 
+  The conservative PC algorithm (\code{conservative = TRUE}) is a
+  slight variation of the PC algorithm (see Ramsey et al. 2006). After
+  the skeleton is computed, all potential v-structures a-b-c are checked
+  in the following way. We test whether a and c are independent
+  conditioning on any subset of the neighbors of a or any subset of the
+  neighbors of c. If b is in no such conditioning set or in all such
+  conditioning sets, no further action is taken and the usual PC is
+  continued. If, however, b is in only some conditioning sets, the
+  triple a-b-c is marked 'unfaithful'. Moreover, if in the conservative
+  step there is no subset among the neighbors that makes a and c
+  independent, the triple is marked 'unfaithful'. An unfaithful triple
+  is not oriented as a v-structure. Furthermore, no later orientation
+  rule that needs to know whether a-b-c is a v-structure or not is
+  applied. (The internal function \code{pc.cons.intern} will be called
+  with \code{version.unf = c(2,1)}.) Instead of using the conservative
+  version, which is quite strict towards the v-structures, Colombo and
+  Maathuis (2013) introduced a less strict version for the v-structures
+  called majority rule. This adaptation can be called using
+  \code{conservative = TRUE} and \code{maj.rule = TRUE}. In this case,
+  the triple a-b-c is marked as 'unfaithful' if b is in exactly 50
+  percent of such conditioning sets, if it is in less than 50 percent it
+  is set as a v-structure, and if in more than 50 percent as a non
+  v-structure (for more details see Colombo and Maathuis, 2013). The
+  useage of both the conservative and the majority rule versions resolve the
+  order-dependence issues of the determination of the v-structures, see
+  Colombo and Maathuis (2013) for more details.
+
   Sampling errors (or hidden variables) can lead to conflicting
   information about edge directions. For example, one may find that
   a-b-c and b-c-d should both be directed as v-structures. This gives
@@ -140,10 +168,15 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   allow the bi-directed edge b <-> c. We denote bi-directed edges in the
   adjacency matrix M of the graph as M[b,c]=2 and M[c,b]=2. Note that
   this edge merely represents a conflicting orientation and it has not
-  to be interpreted causally (for more details see Colombo and Maathuis
-  (2013). The useage of this lists for the candidate edges and allowing
+  to be interpreted causally (for more details see Colombo and Maathuis,
+  2013). The useage of this lists for the candidate edges and allowing
   bi-directed edges resolve the order-dependence issues on the
   orientation rules, see Colombo and Maathuis (2013) for more details.
+
+  Note that calling (\code{conservative = TRUE}), or (\code{conservative
+  = TRUE}) and \code{maj.rule = TRUE}, together with \code{solve.confl =
+  TRUE} produces a fully order-independent output, see Colombo and
+  Maathuis (2013).
 
   Sampling errors or hidden variables can also lead to invalid CPDAGs,
   meaning that there does not exist a DAG
@@ -162,59 +195,32 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   is found, an arbitrary DAG is generated on the skeleton
   as in the option "rand".
 
-  The conservative PC algorithm (\code{conservative = TRUE}) is a
-  slight variation of the PC algorithm. After the skeleton is computed,
-  all potential v-structures a-b-c are checked in the following way. We
-  test whether a and c are independent conditioning on any subset of the
-  neighbors of a or any subset of the neighbors of c. If b is in no such
-  conditioning set or in all such conditioning sets, no further action
-  is taken and the usual PC is continued. If, however, b is in only some
-  conditioning sets, the triple a-b-c is marked 'unfaithful'. Moreover,
-  if in the conservative step there is no subset among the neighbors
-  that makes a and c independent, the triple is marked 'unfaithful'. An
-  unfaithful triple is not oriented as a v-structure. Furthermore, no
-  later orientation rule that needs to know whether a-b-c is a
-  v-structure or not is applied. (The internal function
-  \code{pc.cons.intern} will be called with \code{version.unf =
-  c(2,1)}.) Instead of using the conservative version, which is quite
-  robust towards the v-structures, Colombo and Maathuis (2013)
-  introduced a less robust version for the v-structures called majority
-  rule. This adaptation can be called using \code{conservative = TRUE}
-  and \code{maj.rule = TRUE}. In this case, the triple a-b-c is marked as
-  \dQuote{unfaithful} if b is in exactly 50
-  percent of such conditioning sets, if it is in less than 50 percent it
-  is set as a v-structure, and if in more than 50 percent as a non
-  v-structure (for more details see Colombo and Maathuis (2013)). The
-  useage of both the conservative and the majority rule versions resolve the
-  order-dependence issues of the determination of the v-structures, see
-  Colombo and Maathuis (2013) for more details.
-
-  Note that calling (\code{conservative = TRUE}), or (\code{conservative
-  = TRUE}) and \code{maj.rule = TRUE}, together with \code{solve.confl =
-  TRUE} produces a fully order-independent output, see Colombo and
-  Maathuis (2013). 
-
   Notes: (1) Throughout, the algorithm works with the column positions
   of the variables in the adjacency matrix, and not with the names of
   the variables. (2) When plotting the object, undirected and bidirected
   edges are equivalent.}
 
-\references{ P. Spirtes, C. Glymour and
-  R. Scheines (2000).  \emph{Causation, Prediction, and Search}, 2nd
-  edition. The MIT Press.
+\references{
+  D. Colombo and M.H. Maathuis (2013).
+  Order-independent constraint-based causal structure learning,
+  (arXiv:1211.3295v1).
 
-  Markus Kalisch, Martin Maechler, Diego Colombo, Marloes H. Maathuis,
-  Peter Buehlmann (2012). Causal Inference Using Graphical Models with
-  the R Package pcalg. \emph{Journal of Statistical Software}
-  \bold{47(11)} 1--26, \url{http://www.jstatsoft.org/v47/i11/}. 
-  
+  M. Kalisch, M. Maechler, D. Colombo, M.H. Maathuis and P. Buehlmann
+  (2012). Causal Inference Using Graphical Models with the R Package
+  pcalg. \emph{Journal of Statistical Software} \bold{47(11)} 1--26,
+  \url{http://www.jstatsoft.org/v47/i11/}.
+
   M. Kalisch and P. Buehlmann (2007).
   Estimating high-dimensional directed acyclic graphs with the PC-algorithm.
   \emph{JMLR} \bold{8} 613-636.
+
+  J. Ramsey, J. Zhang and P. Spirtes (2006).
+  Adjacency-faithfulness and conservative causal inference. In
+  \emph{Proceedings of the 22nd Annual Conference on Uncertainty in
+  Artificial Intelligence}, Arlington, VA. AUAI Press.
   
-  D. Colombo and M.H. Maathuis (2013).
-  Order-independent constraint-based causal structure learning,
-  (arXiv:1211.3295v1). 
+  P. Spirtes, C. Glymour and R. Scheines (2000).
+  \emph{Causation, Prediction, and Search}, 2nd edition. The MIT Press.  
 }
 \seealso{\code{\link{skeleton}} for estimating a skeleton of a DAG;
   \code{\link{udag2pdag}} for converting the

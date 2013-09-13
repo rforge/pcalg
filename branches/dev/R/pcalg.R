@@ -828,7 +828,7 @@ dag2cpdag <- function(g)
         }
     }
 
-    ##orient the edges with the 4 orientation rules
+    ##orient the edges with the 3 orientation rules
     repeat {
         old_cpdag <- cpdag
         ##Rule 1
@@ -1706,6 +1706,7 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
   ## - verbose: 0 - no output, 1 - detailed output
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: Sep 2006, 15:03
+  ## Modification: Diego Colombo, Date: Sep 2013
 
 if (numEdges(gInput@graph) == 0) 
         return(gInput)
@@ -2984,7 +2985,7 @@ skeleton <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL, fixedEdges
     if (verbose) 
       cat("Order=", ord, "; remaining edges:", remainingEdgeTests, 
           "\n", sep = "")
-    ## Permutation stable version: Compute the adjacency sets for any vertex
+    ## Stable version: Compute the adjacency sets for any vertex
     ## Then don't update when edges are deleted
     nbrsBool.tmp <- vector("list",p) 
     for (i in 1:p) {
@@ -3088,11 +3089,11 @@ pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   ## Initial Checks
   cl <- match.call()
 
-  if (conservative == TRUE & u2pd != "relaxed") stop("Conservative PC and majority rule conservative PC can only be run with 'u2pd = relaxed'")
+  if (conservative == TRUE & u2pd != "relaxed") stop("Conservative PC and majority rule PC can only be run with 'u2pd = relaxed'")
   
   if (solve.confl == TRUE & u2pd != "relaxed") stop("Versions of PC using lists for the orientation rules (and possibly bi-directed edges) can only be run with 'u2pd = relaxed'")
   
-  if (conservative == FALSE & maj.rule == TRUE) stop("Majority rule conservative PC can only be run with conservative = TRUE")
+  if (conservative == FALSE & maj.rule == TRUE) stop("Majority rule PC can only be run with conservative = TRUE")
   
   ## Skeleton
   skel <- skeleton(suffStat, indepTest, p, alpha, fixedGaps = fixedGaps, fixedEdges = fixedEdges, NAdelete = NAdelete, m.max = m.max, verbose = verbose)
@@ -4392,7 +4393,7 @@ checkTriple <- function(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC, suffStat, indep
             sepsetC <- setdiff(sepsetC,b)
         } else {
             ##normal conservative PC, b is in some sets hence the triple
-            ##in unfaithful
+            ##is unfaithful
             if (!maj.rule) {
                 res <- 3 ## in SOME sets
             } else {
@@ -4553,7 +4554,7 @@ min.uncov.pd.path <- function(p, pag = NA, path = NA, unfVect = NA, verbose = FA
       }
       else {
         ##d and c are either not connected or connected with a "wrong" edge -----> search iteratively
-        ##find all neighbourd of d not visited yet
+        ##find all neighbours of d not visited yet
         indR <- which((pag[d,] == 1 | pag[d,] == 2) & (pag[,d] == 1 | pag[,d] == 3) & !visited)
         if (length(indR) > 0) {
           ##update the queues
@@ -4605,7 +4606,7 @@ find.min.discr.path <- function(pag = NA, path = NA, verbose = FALSE)
       else {
         ##d is connected to c -----> search iteratively
         if (pag[d,c] == 2 && pag[c,d] == 3 && pag[pred,d] == 2) {
-          ##find all neighbourd of d not visited yet
+          ##find all neighbours of d not visited yet
           indR <- which(pag[d,] != 0 & pag[,d] == 2 & !visited) ## r *-> d
           if (length(indR) > 0) {
             ##update the queues
@@ -4686,7 +4687,7 @@ min.uncov.circ.path <- function(p, pag = NA, path = NA, unfVect= NA, verbose = F
       }
       else {
         ##x and d are either not connected or connected with an edge which is not o--o -----> search iteratively
-        ##find all neighbourd of x not visited yet
+        ##find all neighbours of x not visited yet
         indR <- which(pag[x,] == 1 & pag[,x] == 1 & !visited) ## x o--o r
         if (length(indR) > 0) {
           ##update the queues
@@ -4760,11 +4761,11 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
     }
     
     if (conservative == FALSE & maj.rule == TRUE) {
-        stop("Majority rule conservative FCI can only be run with conservative = TRUE") 
+        stop("Majority rule FCI can only be run with conservative = TRUE") 
     }
 
     if (conservative == FALSE & cons.rules == TRUE) {
-        stop("The conservative orientation rules can only be run with either conservative = TRUE or with conservative = TRUE and maj.rule = TRUE") 
+        stop("The conservative orientation rules can only be run with either conservative = TRUE, or with conservative = TRUE and maj.rule = TRUE") 
     }
     
     cl <- match.call()
@@ -4785,13 +4786,13 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
             cat("\nCompute PDSEP\n=============\n")
         }
         tmp <- pc.cons.intern(skel, suffStat, indepTest, alpha, verbose = verbose, version.unf = c(1, 1), maj.rule=FALSE)
-        tripleList <- tmp$unfTripl
+        tripleList.pdsep <- tmp$unfTripl
         ##update the sepsets
         sepset <- tmp$sk@sepset
         if ((type == "normal") || (type == "anytime")) {
-            pdsepRes <- pdsep(skel@graph, suffStat, indepTest, p, sepset, alpha, pMax, m.max = m.max, pdsep.max = pdsep.max, NAdelete, unfVect = tripleList, biCC = biCC, verbose = verbose)
+            pdsepRes <- pdsep(skel@graph, suffStat, indepTest, p, sepset, alpha, pMax, m.max = m.max, pdsep.max = pdsep.max, NAdelete, unfVect = tripleList.pdsep, biCC = biCC, verbose = verbose)
         } else if (type == "adaptive") {
-            pdsepRes <- pdsep(skel@graph, suffStat, indepTest, p, sepset, alpha, pMax, m.max = max.ordSKEL, pdsep.max = pdsep.max, NAdelete, unfVect = tripleList, biCC = biCC, verbose = verbose)
+            pdsepRes <- pdsep(skel@graph, suffStat, indepTest, p, sepset, alpha, pMax, m.max = max.ordSKEL, pdsep.max = pdsep.max, NAdelete, unfVect = tripleList.pdsep, biCC = biCC, verbose = verbose)
         }
         ##update the graph
         G <- pdsepRes$G
@@ -5612,7 +5613,7 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
 ##RFCI
 ################################################################################
 
-rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10), conservative = FALSE, maj.rule=FALSE, cons.rules = FALSE, labels = NA) 
+rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10), conservative = FALSE, maj.rule = FALSE, cons.rules = FALSE, labels = NA) 
 {
   ## Purpose: Perform RFCI-Algorithm, i.e., estimate PAG
   ## ----------------------------------------------------------------------
@@ -5646,7 +5647,12 @@ rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NU
   else {
     labels <- as.character(1:p)
   }
-  if (conservative == FALSE & maj.rule == TRUE) stop("Majority rule conservative RFCI can only be run with conservative = TRUE")
+  if (conservative == FALSE & maj.rule == TRUE) {
+      stop("Majority rule RFCI can only be run with conservative = TRUE")
+  }
+  if (conservative == FALSE & cons.rules == TRUE) {
+      stop("The conservative orientation rules can only be run with either conservative = TRUE, or with conservative = TRUE and maj.rule = TRUE") 
+  }
   cl <- match.call()
   if (verbose) { 
     cat("Compute Skeleton\n================\n")
@@ -5661,14 +5667,14 @@ rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NU
  
   ##check and orient v-structures recursively
   tmp1 <- rfci.vstructures(suffStat, indepTest, p, alpha, sepset, g, listM, vectM, conservative=conservative, version.unf=c(1,1), verbose=verbose, maj.rule=maj.rule)
-  graph <- tmp1$graph
+  g <- tmp1$graph
   sepset <- tmp1$sepset
 
   ##orient as many edge marks as possible
   if (verbose) {
     cat("\nDirect egdes:\n=============\nUsing rules:", which(rules), "\n")
   }
-  res <- udag2apag(graph, suffStat, indepTest, alpha, sepset, rules = rules, unfVect= if (cons.rules) tmp1$unfTripl, verbose=verbose)
+  res <- udag2apag(g, suffStat, indepTest, alpha, sepset, rules = rules, unfVect= if (cons.rules) tmp1$unfTripl, verbose=verbose)
  
   max.ordSKEL <- skel@max.ord  
   max.ordPD <- 0
@@ -5830,7 +5836,7 @@ rfci.vstructures <- function(suffStat, indepTest, p, alpha, sepset, graph, unshT
             if (verbose) {
               cat("\nTriple:",x,y,z,"and sepset by skelet:", unique(sepset[[x]][[z]],sepset[[z]][[x]]),"\n")
             }
-            resTriple <- checkTriple(x, y, z, nbrsX, nbrsZ, sepset[[x]][[z]], sepset[[z]][[x]], suffStat, indepTest, alpha, version.unf=version.unf, verbose=verbose, maj.rule=maj.rule)
+            resTriple <- checkTriple(x, y, z, nbrsX, nbrsZ, sepset[[x]][[z]], sepset[[z]][[x]], suffStat, indepTest, alpha, verbose=verbose, version.unf=version.unf, maj.rule=maj.rule)
             ## 1: in NO set; 2: in ALL sets; 3: in SOME but not all
             ## Take action only if case "3"
             if (resTriple$decision == 3) {
@@ -6148,7 +6154,7 @@ CheckEdges <- function(suffStat, indepTest, p, alpha, apag, sepset, path, unfVec
 {
   ## Purpose: check if every edge on the path should exist in R4 
   ## ----------------------------------------------------------------------
-  ## Values: - updated sepset and apag
+   ## Values: - updated sepset and apag
   ##         - checked==FALSE no edge has been deleted on the path
   ##                  ==TRUE the discriminating path doesn't exist anymore
   ## ----------------------------------------------------------------------
@@ -6402,7 +6408,7 @@ udag2apag <- function (apag, suffStat, indepTest, alpha, sepset, rules = rep(TRU
               else {
                 ##a path exists and needs to be checked and maybe oriented
                 ##first check every single edge for independence
-                tmp.checked <- CheckEdges(suffStat, indepTest, p, alpha, apag, sepset, tmp.path, unfVect=unfVect)
+                tmp.checked <- CheckEdges(suffStat, indepTest, p, alpha, apag, sepset, tmp.path, unfVect=unfVect, verbose = verbose)
                 ##save updated graph, sepset,and UnfVect
                 sepset <- tmp.checked$sepset
                 apag <- tmp.checked$apag
@@ -6727,7 +6733,7 @@ ancTS <- function(g) {
  an <- pa <- vector("list", p)
  for (i in 2:p) {
    pa[[i]] <- which(m[1:(i-1),i] != 0)
-   if (length(pa[[i]])>0) {
+   if (length(pa[[i]]) > 0) {
      tmp <- c(pa[[i]])
      for (j in 1:length(pa[[i]])) {
        tmp <- c(tmp, an[[pa[[i]][j]]])
@@ -6787,7 +6793,7 @@ dag2pag <- function(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), 
         "\nCompute collider:\n")
   }
   res <- if (numEdges(skel@graph) > 0) 
-    udag2pag(pag = G, sepset, rules = rules, verbose=verbose)
+    udag2pag(pag = G, sepset, rules = rules, verbose = verbose)
   else G
   pagRes <- new("fciAlgo", amat = res, call = cl, n = integer(0), max.ord = as.integer(max.ordSKEL),  max.ordPDSEP = as.integer(max.ordPD), n.edgetests = n.edgetestsSKEL, n.edgetestsPDSEP = n.edgetestsPD, sepset = sepset, pMax = pMax, allPdsep = allPdsep) 
   pagRes

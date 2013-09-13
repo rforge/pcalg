@@ -9,7 +9,7 @@
 \usage{
 rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE,
-10), conservative = FALSE, maj.rule=FALSE, cons.rules = FALSE, labels = NA)
+10), conservative = FALSE, maj.rule = FALSE, cons.rules = FALSE, labels = NA)
 }
 
 \arguments{
@@ -51,7 +51,7 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   \item{maj.rule}{If \code{TRUE}, the
   triples are checked for faithfulness after the skeleton has been found
   using the majority rule idea, which
-  is less robust than the standard conservative. Note that to use the
+  is less strict than the standard conservative. Note that to use the
   majority rule idea, the user has to set conservative = TRUE as well.} 
   \item{cons.rules}{If \code{TRUE}, an orientation rule that needs information
     on definite non-colliders is only applied, if the corresponding

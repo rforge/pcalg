@@ -71,17 +71,18 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   \item{maj.rule}{If \code{TRUE}, the
   triples are checked for faithfulness after possible deletion of
   edges when finding Possible-D-SEP using the majority rule idea, which
-  is less robust than the standard conservative. Note that to use the
+  is less strict than the standard conservative. Note that to use the
   majority rule idea, the user has to set \code{conservative = TRUE} as
   well. For more information, see Details.} 
-  \item{biCC}{If \code{TRUE}, only nodes on paths between nodes a and c are
-  considered to be in sepset(a,c). Uses biconnected components,
-  \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
+  \item{biCC}{If \code{TRUE}, only nodes on paths between nodes \code{x}
+  and \code{y} are considered to be in Possible-D-SEP(\code{x}) when
+  testing independence between \code{x} and \code {y}. Uses
+  biconnected components, \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
   \item{cons.rules}{If \code{TRUE}, an orientation rule that needs information
   on definite non-colliders is only applied, if the corresponding
   subgraph relevant for the rule does not involve an unfaithful
   triple. Note that to use the conservative rules, the user has to set
-  either \code{conservative = TRUE} or \code{conservative = TRUE} and
+  either \code{conservative = TRUE}, or \code{conservative = TRUE} and
   \code{maj.rule = TRUE}.}
   \item{labels}{Vector of length p with node names. If \code{NA},
     \code{as.character{1:p}} is used instead.}
@@ -143,8 +144,8 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   whether a and c are independent conditioning on any subset of the
   neighbors of a or any subset of the neighbors of c. If b is in no such
   conditioning set or in all such conditioning sets, no further action
-  is taken. If, however, b is in only some conditioning sets, the triple a-b-c is
-  marked 'unfaithful'. If a is independent of c given some S in the
+  is taken. If, however, b is in only some conditioning sets, the triple
+  a-b-c is marked 'unfaithful'. If a is independent of c given some S in the
   skeleton (i.e., the edge a-c dropped out), but a and c remain
   dependent given all subsets of neighbors of either a or c, we will
   call all triples a-b-c 'faithful'. This is because in the FCI, the
@@ -166,8 +167,8 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   viewed as a modification of the FCI algorithm that only performs
   conditional independence tests up to and including order m.max when
   finding the initial skeleton, using the function \code{skeleton}, and
-  the final skeleton, using the function \code{pdsep}. Thus, Anytime FCI performs
-  fewer conditional independence tests than FCI. To use the Anytime
+  the final skeleton, using the function \code{pdsep}. Thus, Anytime FCI
+  performs fewer conditional independence tests than FCI. To use the Anytime
   algorithm, one must specify m.max, the maximum size
   of the conditioning sets, and set type = "anytime".
 
@@ -188,14 +189,14 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   edges. Therefore, new triples might have occured. The resulting
   information on sepset and faithful triples overwrites the previous and
   will be used for the subsequent orientation rules. Instead of using
-  the conservative version, which is quite robust towards the
-  v-structures, Colombo and Maathuis (2013) introduced a less robust
+  the conservative version, which is quite strict towards the
+  v-structures, Colombo and Maathuis (2013) introduced a less strict
   version for the v-structures called majority rule, see
-  \code{pc.cons.intern} for more details. This adaptation can
-  be called using \code{conservative = TRUE} and \code{maj.rule =
-  TRUE}. Colombo and Maathuis (2013) showed that with both these
-  modifications, the final skeleton and the orientation of the
-  v-structures of the FCI algorithm are fully order-independent. 
+  \code{pc.cons.intern} for more details. This adaptation can be called
+  using \code{conservative = TRUE} and \code{maj.rule = TRUE}. Colombo
+  and Maathuis (2013) showed that with both these modifications, the
+  final skeleton and the orientation of the v-structures of the FCI
+  algorithm are fully order-independent.  
 
   Note that the order-dependence issues on the 10 orientation rules are
   still present, see Colombo and Maathuis (2013) for more details.}  
