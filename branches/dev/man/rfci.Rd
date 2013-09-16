@@ -66,14 +66,31 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
  parameters.
 }
 
-\details{ This function is rather similar to \link{fci}. However, it
-does not compute any Possible-D-SEP sets and thus does not make tests
-conditioning on them. This makes RFCI much faster than FCI. The
-orientation rules for v-structures and rule 4 were modified in order to
-produce a PAG which, in the oracle version, is guaranteed to have the
-correct ancestral relationships. In contrast to the FCI algorithm, none
-of the order-dependence issues are fully resolved here, see Colombo and
-Maathuis (2013).}
+\details{
+  This function is rather similar to \link{fci}. However, it does not
+  compute any Possible-D-SEP sets and thus does not make tests
+  conditioning on them. This makes RFCI much faster than FCI. The
+  orientation rules for v-structures and rule 4 were modified in order
+  to produce a PAG which, in the oracle version, is guaranteed to have
+  the correct ancestral relationships.
+
+  The argument \code{conservative} is used to estimate the conservative
+  RFCI. If \code{conservative = TRUE} it is computed calling
+  \code{pc.cons.intern} with option \code{version.unf = c(1,1)} after
+  the initial skeleton has been computed and the algorithm is performing
+  the additional local tests on the unshielded triples. The resulting
+  information on sepset and unambiguous triples will be used for the
+  subsequent orientation rules. Instead of using the conservative
+  version, which is quite strict towards the v-structures,
+  \cite{pc.indep} introduced a less strict version for the v-structures
+  called majority rule, see \code{pc.cons.intern} for more details. This
+  adaptation can be called using \code{conservative = TRUE} and
+  \code{maj.rule = TRUE}. The purpose of this conservative versions is
+  used in the hope to obtain better edge orientations.
+
+  In contrast to the FCI algorithm,
+  none of the order-dependence issues are fully resolved here, see
+  Colombo and Maathuis (2013).}
 
 \references{
   D. Colombo and M.H. Maathuis (2013). Order-independent

@@ -138,16 +138,24 @@ algorithms tell us which variables could or could not be a cause of
 some variable of interest. They do not, however, give information about the
 size of the causal effects. We therefore developed the IDA method (see
 \cite{BuKaMa09}), which can infer bounds on causal effects based on
-observational data under some assumptions. IDA was validated on a
-large-scale biological system (see \cite{NatMethods10}).
+observational data under some assumptions and in particular that no hidden
+and selection variables are present. IDA is a two step approach that
+combines the PC algorithm and Pearl's backdoor criterion (\citep{Pearl93}),
+whihc has been designed for DAGs without latent variables. IDA was validated on a
+large-scale biological system (see \cite{NatMethods10}). Because the
+assumptions of no latent variables is often violated in practice, we also
+generalized Pearl's backdoor criterion (see \cite{MaCo2013}) to more
+general types of graphs, i.e. CPDAGs, MAGs, and PAGs, that describe Markov
+equivalence classes of DAGs with and without latent variables but without
+selection variables. 
 
 For broader use of these methods, well documented and easy to use software
 is indispensable. We therefore wrote the R-package \pkg{pcalg}, which
 contains implementations of the algorithms PC, FCI, RFCI, GES and GIES, 
-as well as
-of the IDA method. The objective of this paper is to introduce the R
-package \pkg{pcalg}, explain the range of functions on simulated data sets
-and summarize some applications.
+as well as of the IDA method and the generalized Pearl's backdoor
+criterion. The objective of this paper is to introduce the R package
+\pkg{pcalg}, explain the range of functions on simulated data sets and
+summarize some applications. 
 
 To get started, we show how two of the main functions (one for causal
 structure learning and one for estimating causal effects from observational
@@ -309,9 +317,16 @@ structure. In particular, we discuss algorithms for structure learning
   \item in the absence of hidden variables from jointly observational
     and interventional data such as GIES (see \cite{HauserBuhlmann2012}).
 \end{itemize}
-In Section~\ref{sec:bounds} we describe the IDA method (see \cite{BuKaMa09}) to
+In Section~\ref{sec:bounds} we first describe the IDA method (see \cite{BuKaMa09}) to
 obtain bounds on causal effects from observational data. This method is
-based on first estimating the causal structure and then applying do-calculus (see \cite{Pearl00}) 
+based on first estimating the causal structure and then applying
+do-calculus (see \cite{Pearl00}). We then propose the generalized Pearl's
+backdoor criterion (see \cite{MaCo2013}) that works with DAGs, CPDAGs,
+MAGs, and PAGs as input assuming that there are arbitrarly many latent
+variables but no selection variables. This method first checks if the
+causal effect of one variable $X$ on another variables $Y$ is identifiable
+in the given type of graph, and if this is the case the causal effect is
+estimated. 
 
 \subsection{Estimating causal structures with  graphical models} \label{sec:gm}
 Graphical models
@@ -348,9 +363,9 @@ strict in practice.
 
 Since the DAG model encodes conditional independencies, it seems plausible
 that information on the latter helps to infer aspects of the former. This
-intuition is made precise in the PC algorithm (see \cite{SpirtesEtAl00}; PC stands for the
-initials of its inventors Peter Spirtes and Clark Glymour) which was proven
-to reconstruct the structure of the underlying DAG model given a
+intuition is made precise in the PC algorithm (see \cite{SpirtesEtAl00}; PC
+stands for the initials of its inventors Peter Spirtes and Clark Glymour)
+which was proven to reconstruct the structure of the underlying DAG model given a
 conditional independence oracle up to its Markov equivalence class which is
 discussed in more detail below. In practice, the conditional independence oracle is
 replaced by a statistical test for conditional independence. For situations
@@ -444,9 +459,27 @@ directed. (To simplify visual presentation, undirected edges are depicted as
 bidirected edges in the output as soon as at least one directed edge is
 present. If no directed edge is present, all edges are undirected.)
 
-The PC algorithm presented so far is based on conditional independence tests.  Score-based methods form an alternative approach to causal inference.  They try to find a CPDAG that maximizes a \emph{score}, typically a model selection criterion, which is calculated from data.  
+It is known that the PC algorithm is order-dependent in steps
+\textbf{(P2)}-\textbf{(P4)}, meaning that the output depends from the order
+in which the variables are given. \cite{CoMa13} proposed several
+modifications of the PC algorithm (see Sections \ref{sec:skel} and
+\ref{sec:pc}) that partly or fully remove these order-dependence issues in
+each step. 
 
-One of the most popular scores is the Bayesian information criterion (BIC) because its maximization leads to \emph{consistent} model selection in the classical large-sample limit (\cite{Haughton1988, Geiger2001}).  However, computing its maximum is an NP-hard problem (\cite{Chickering1996}).  An exhaustive search is computationally infeasible due to the size of the search space, the space of DAGs or CPDAGs, respectively.  \cite{Silander2006} have presented an exact dynamic programming algorithm with an exponential time complexity.  Its execution is feasible for models with a few dozen variables.
+The PC algorithm presented so far is based on conditional independence
+tests.  Score-based methods form an alternative approach to causal
+inference.  They try to find a CPDAG that maximizes a \emph{score},
+typically a model selection criterion, which is calculated from data.   
+
+One of the most popular scores is the Bayesian information criterion (BIC)
+because its maximization leads to \emph{consistent} model selection in the
+classical large-sample limit (\cite{Haughton1988, Geiger2001}).  However,
+computing its maximum is an NP-hard problem (\cite{Chickering1996}).  An
+exhaustive search is computationally infeasible due to the size of the
+search space, the space of DAGs or CPDAGs, respectively.
+\cite{Silander2006} have presented an exact dynamic programming algorithm
+with an exponential time complexity.  Its execution is feasible for models
+with a few dozen variables. 
 
 The greedy equivalence search (GES) of \cite{Chickering2002} makes the maximization of the BIC computationally feasible for much larger graphs.  As the name of the algorithm implies, GES maximizes the BIC in a \emph{greedy} way, but still guarantees consistency in the large-sample limit.  It still has exponential-time complexity in the worst case, but only polynomial complexity in the average case where the size of the largest clique in a graph grows only logarithmically with the number of nodes \citep{Grimmett1975}.
 
@@ -657,10 +690,23 @@ despite potential violations of the underlying assumptions, the
 method performs well in identifying the most important causal effects in a
 high-dimensional yeast gene expression data set (see \cite{NatMethods10}).
 
-\subsubsection{With hidden and selection variables}
+\subsubsection{With hidden but no selection variables}
 
-At the moment, we can not yet estimate causal effects when hidden variables or
-selection variables are present.
+If the causal DAG is known and no latent and selection variables are
+present, one can estimate causal effects from observational data using for
+example Pearl's backdoor criterion, as done in IDA. 
+
+However, in practice the assumption of no latent variables is often
+violated. Therefore, \cite{MaCo13} generalized Pearl's backdoor
+criterion to more general types of graphs that describe Markov equivalence
+classes of DAGs when allowing arbitrarily many latent but no selection
+variables. This generalization works with DAGs, CPDAGs, MAGs, and PAGs as
+input and it is based on a two step approach. In a first step, the causal
+effect of one variable $X$ on another variable $Y$ under investigation is
+checked to be identifiable, meaning that there exists a set of variables
+$W$ for which the generalized backdoor criterion is satisfied. If the
+effect is indeed identifiable, in a second step the set $W$ is explicitly
+given and the total causal effect of $X$ on $Y$ is computed.  
 
 \subsection{Summary of assumptions}
 For all proposed methods, we assume that the data is faithful to the
@@ -697,7 +743,7 @@ assumptions are made.
   a special case.
 
 \item[GIES algorithm:] No hidden or selection variables; mix of observational 
-  and interventional data.  Interventional data alone is sufficient if 
+  and interventional data. Interventional data alone is sufficient if 
   there is no variable which is intervened in \emph{all} data points.
 
 \item[IDA:] No hidden or selection variables; all conditional expectations
@@ -706,6 +752,10 @@ assumptions are made.
   conditions on the partial correlations and conditional variances, and
   $\alpha$ is taken to zero appropriately. See \cite{BuKaMa09} for full
   details.
+  
+\item[GBC:] allows for arbitrarily many hidden but no selection variables;
+  all conditional expectations are linear; the data is multivariate
+  Normal. See \cite{MaCo2013} for more details. 
 \end{description}
 
 \section{Package pcalg}
@@ -714,15 +764,16 @@ and reliable implementations of the PC, FCI, RFCI, GES and GIES algorithms for
 estimating causal structures and graphical models. Second, it provides an
 implementation of the IDA method, which estimates bounds on causal effects
 from observational data when no causal structure is known and hidden or
-selection variables are absent.  
+selection variables are absent, and it also provides a genralization of
+Pearl's backdoor criterion (GBC) to DAGs, CPDAGs, MAGs, nad PAGs, when hidden but
+no selection variables are allowed..  
 
 In the following, we describe the main functions of our package for
 achieving these goals. The functions \code{skeleton()}, \code{pc()},
 \code{fci()}, \code{rfci()}, \code{ges()}, \code{gies()} and \code{simy()}
 are intended for estimating graphical
-models. The functions 
-\code{ida()} and \code{idaFast()} are intended for estimating causal
-effects from observational data.
+models. The functions \code{ida()}, \code{idaFast()}, and \code{gbc()} are
+intended for estimating causal effects from observational data.
 
 Alternatives to this package for estimating graphical models in
 \proglang{R} include: \cite{bnlearn}, \cite{deal}, \cite{gRain}, \cite{gRbase}
@@ -855,19 +906,69 @@ where the arguments \code{suffStat}, \code{indepTest}, \code{p},
 \code{alpha}, \code{fixedGaps}, \code{fixedEdges}, \code{NAdelete} and
 \code{m.max} are identical to those of \code{skeleton()}.
 
+The conservative PC algorithm (\code{conservative = TRUE}) is a slight
+variation of the PC algorithm and is intended to be more robust against
+sampling errors in its edge orientations (see \citep{Ramsey06}). After the skeleton
+is computed, all unshielded triplets $a \gredge{-} b \gredge{-} c$ are
+checked in the following way. We test whether $V_a$ and $V_c$ are
+independent conditioning on any subset of the neighbors of $a$ or any
+subset of the neighbors of $c$. If $b$ is in no such conditioning set (and
+not in the original sepset) or in all such conditioning sets (and in the
+original sepset), the triple is marked as \emph{unambiguous}, no further
+action is taken and the usual PC is continued. If, however, $b$ is in only some
+conditioning sets, or if there was no subset $S$ of the adjacency set of $a$ nor of
+$c$ such that $V_a$ and $V_c$ are conditionally independent given $V_S$,
+the triple $a \gredge{-} b \gredge{-} c$ is marked as
+\emph{ambiguous}. An ambiguous triple is not oriented as a
+v-structure. Furthermore, no later orientation rule that needs to know
+whether a-b-c is a v-structure or not is applied. (For more details, see
+the help file of the internal function \code{pc.cons.intern()} which is
+called with the argument \code{version.unf = c(2,2)}). Instead of using the
+conservative version, which is quite strict towards the v-structures,
+\cite{pc.indep} introduced a less strict version for the v-structures called majority
+rule. This adaptation can be called using \code{conservative = TRUE} and
+\code{maj.rule = TRUE}. In this case, the triple $a \gredge{-} b \gredge{-}
+c$ is marked as \emph{ambiguous} if $b$ is in exactly 50 percent of such
+conditioning sets, if it is in less than 50 percent it is set as a
+v-structure, and if in more than 50 percent as a non v-structure (for more
+details see \citep{pc.indep}). The useage of both the conservative and the
+majority rule versions resolve the order-dependence issues of the
+determination of the v-structures, see \cite{pc.indep} for more details.
+  
 Sampling errors (or hidden variables) can lead to conflicting information
-about edge directions. For example, one may find that 
-$a \gredge{-} b \gredge{-} c$ and $b \gredge{-} c \gredge{-} d$
-should both be oriented as v-structures.  This gives conflicting
-information about the edge $b \gredge{-} c$, since it should be oriented as $b
+about edge directions. For example, one may find that $a \gredge{-} b
+\gredge{-} c$ and $b \gredge{-} c \gredge{-} d$ 
+should both be directed as v-structures. This gives conflicting information
+about the edge $b \gredge{-} c$, since it should be directed as $b
 \gredge{<-} c$ in v-structure $a \gredge{->} b \gredge{<-} c$, while it
-should be oriented as $b \gredge{->} c$ in v-structure $b \gredge{->} c
-\gredge{<-} d$. In such cases, we simply overwrite the directions of the
-conflicting edge. In the example above this means that we obtain $a
-\gredge{->} b \gredge{->} c \gredge{<-} d$ if 
+should be directed as $b \gredge{->} c$ in v-structure $b \gredge{->} c
+\gredge{<-} d$. With the option \code{solve.confl = FALSE}, in such cases,
+we simply overwrite the directions of the conflicting edge. In the example
+above this means that we obtain $a \gredge{->} b \gredge{->} c \gredge{<-} d$ if 
 $a \gredge{-} b \gredge{-} c$ was visited first, and
 $a \gredge{->} b \gredge{<-} c \gredge{<-} d$ if 
-$b \gredge{-} c \gredge{-} d$ was visited first.
+$b \gredge{-} c \gredge{-} d$ was visited first, meaning that the final
+orientation on the edge depends on the ordering in which the edges are
+oriented. With the option \code{solve.confl = TRUE} (which is only
+supported with option \code{u2pd = relaxed}), we first generate a list of
+all (unambiguous) v-strucutres (in the example above $a \gredge{-} b
+\gredge{-} c$ and $b \gredge{-} c \gredge{-} d$), and then we simply orient them allow
+both directions on the edge $b \gredge{-} c$, namely we allow the
+bi-directed edge $b \gredge{<->} c$ resolving the order-dependence issues
+on the edge orientations. We denote bi-directed edges in the adjacency
+matrix M of the graph as $M[b,c]=2$ and $M[c,b]=2$. In a similar way using
+lists for the candidate edges for each orientation rule and allowing
+bi-directed edges, the order-dependence issues in the orientation rules can
+be solved. Note that bi-directed edges merely represents a conflicting
+orientation and they have not to be interpreted causally (for more details
+see \citep{pc.indep}). The useage of these lists for the
+candidate edges and allowing bi-directed edges resolve the order-dependence
+issues on the orientation of the v-strucutres and on the edges using the
+three orientation rules, see \cite{pc.indep} for more details.
+
+Note that calling (\code{conservative = TRUE}), or (\code{conservative =
+  TRUE}) and \code{maj.rule = TRUE}, together with \code{solve.confl =
+  TRUE} produces a fully order-independent output, see \cite{pc.indep}.
 
 Sampling errors or hidden variables can also lead to invalid CPDAGs,
 meaning that there does not exist a DAG that has the same skeleton and
@@ -884,26 +985,6 @@ corresponding CPDAG is then returned. If
 directions of the ambiguous edges are tried, and the first combination that
 results in a valid CPDAG is chosen. If no valid combination is found, an
 arbitrary CPDAG is generated on the skeleton as with \code{u2pd = "rand"}.
-
-By setting the argument \code{conservative = TRUE}, the conservative PC
-algorithm (see \cite{Ramsey06}) is chosen. The conservative PC is a slight
-variation of the PC algorithm and is intended to be more robust against
-sampling errors in its edge orientations. After the skeleton is computed,
-all unshielded triplets $a \gredge{-} b \gredge{-} c$ are checked in 
-the following way. We test
-whether $V_a$ and $V_c$ are conditionally independent given any subset of the
-adjacency set of $a$ or any subset of the adjacency set of $c$. If $b$ is
-in no such conditioning set (and not in the original sepset) or in all such
-conditioning sets (and in the original sepset), the triple is marked as
-\emph{faithful}. If, however, $b$ is in some conditioning sets but not in
-others, or if there was no subset $S$ of the adjacency set of $a$ nor of
-$c$ such that $V_a$ and $V_c$ are conditionally independent given $V_S$, the
-triple is marked as \emph{``unfaithful''}. Only faithful triples are
-oriented as v-structures. Furthermore, orientation rules that need to know
-whether $a \gredge{-} b \gredge{-} c$ is a v-structure or not are only applied to faithful
-triples. (For more details, see the help file of the internal function
-\code{pc.cons.intern()} which is called with the argument \code{version.unf
-  = c(2,2)}.)
 
 As with the skeleton, the PC algorithm works with the column positions of the
 variables in the adjacency matrix, and not with the names of the
@@ -978,21 +1059,37 @@ observed variables given the selection variables.
 The first part of the FCI algorithm is analogous to the PC algorithm. It
 starts with a complete undirected graph and estimates an initial skeleton
 using the function \code{skeleton()}. All edges of this skeleton are of the
-form $\gredge{o-o}$. Now, the v-structures are oriented as in the PC
-algorithm. However, due to the presence of hidden variables, it is no longer
-sufficient to consider only subsets of the adjacency sets of nodes $x$ and
-$y$ to decide whether the edge $x \gredge{-} y$ should be removed.  Therefore, the
-initial skeleton may contain some superfluous edges.  These edges are
-removed in the next step of the algorithm. To decide whether edge $x \gredge{o-o} y$
-should be removed, one computes Possible-D-SEP($x$, $y$) and
-Possible-D-SEP($y$, $x$)
-and performs conditional independence tests of $V_x$ and $V_y$ given all
- subsets of Possible-D-SEP($x$, $y$) and of Possible-D-SEP($y$, $x$) (see
-helpfile of function \code{pdsep()}). Subsequently, all edges are
-transformed into $\gredge{o-o}$ again and the v-structures are newly
-determined (using information in sepset).  Finally, as many
-undetermined edge marks (o) as possible are determined using (a subset of) the 10
-orientation rules given by \cite{Zhang08-orientation-rules}.
+form $\gredge{o-o}$. However, due to the presence of hidden variables, it
+is no longer sufficient to consider only subsets of the adjacency sets of
+nodes $x$ and $y$ to decide whether the edge $x \gredge{-} y$ should be
+removed. Therefore, the initial skeleton may contain some superfluous
+edges. These edges are removed in the next step of the algorithm which
+requires some orientations. Therefore, the v-structures are determined
+using the conservative method (using \code{pc.cons.intern} with option
+\code{version.unf = c(1,1)}). All potential v-structures $a \gredge{-} b
+\gredge{-} c$ are checked in the following way. We test whether $V_a$ and
+$V_c$ are independent conditioning on any subset of the neighbors of $a$ or
+any subset of the neighbors of $c$. If $b$ is in no such conditioning set
+or in all such conditioning sets, no further action is taken. If, however,
+$b$ is in only some conditioning sets, the triple $a \gredge{-} b
+\gredge{-} c$ is marked as \emph{ambiguous}. If $V_a$ is independent of
+$V_c$ given some $S$ in the skeleton (i.e., the edge $a \gredge{-} c$
+dropped out), but $V_a$ and $V_c$ remain dependent given all subsets of
+neighbors of either $a$ or $c$, we will call all such triples $a \gredge{-} b
+\gredge{-} c$ \emph{unambiguous}. This is because in the FCI, the true
+separating set might be outside the neighborhood of either $a$ or $c$. An
+ambiguous triple is not oriented as a v-structure. After the v-structures
+have been oriented, to decide whether edge $x \gredge{o-o} y$
+should be removed, one computes Possible-D-SEP($x$) and
+Possible-D-SEP($y$) and performs conditional independence tests of $V_x$
+and $V_y$ given all subsets of Possible-D-SEP($x$) and of Possible-D-SEP($y$) (see
+helpfile of function \code{pdsep()}). This will produce a fully
+order-independent final skeleton as explained in
+\cite{pc.indep}. Subsequently, all edges are transformed into
+$\gredge{o-o}$ again and the v-structures are newly determined (using
+information in sepset).  Finally, as many undetermined edge marks (o) as
+possible are determined using (a subset of) the 10 orientation rules given
+by \cite{Zhang08-orientation-rules}. 
 
 The function can be called with the following arguments:
 % \code{fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
@@ -1012,7 +1109,7 @@ where the arguments \code{suffStat}, \code{indepTest}, \code{p},
 The argument \code{pdsep.max} indicates the maximum size of Possible-D-SEP
 for which subsets are considered as conditioning sets in the conditional
 independence tests. If the nodes \code{x} and \code{y} are adjacent in the
-graph and the size of Possible-D-SEP(\code{x})\ {\code{x},\code{y}},
+graph and the size of Possible-D-SEP(\code{x})$\setminus \{$\code{x},\code{y}$\}$,
 estimated normally or using biconnected components, see later, is bigger
 than \code{pdsep.max}, no conditional independence tests are performed between
 \code{x} and its neighbour \code{y} given subsets of
@@ -1032,27 +1129,22 @@ conditional independence tests, if not defined otherwise in
 \code{pdsep.max}. If FALSE, Possible-D-SEP is not computed, so that the
 algorithm simplifies to the Modified PC algorithm of \cite{SpirtesEtAl00}. 
 
-The argument \code{conservative} can be used to invoke the conservative FCI
-algorithm which consists of two parts. In the first part (done if
-\code{conservative[1]} is \code{TRUE}), we call the internal function
-\code{pc.cons.internal()} with argument \code{version.unf = c(1,1)} after
-computing the skeleton. This is a slight variation of the conservative PC
-algorithm (which used \code{version.unf = c(2,1)}): if $V_a$ is independent
-of $V_c$ given some $V_S$ in the skeleton (i.e., the edge $a \gredge{-} c$
-dropped out), but $V_a$ and $V_c$ remain dependent given all subsets of the
-adjacency set of either $a$ or $c$, we call $a \gredge{-} b \gredge{-} c$ 
-\emph{``unambiguous''}. This is because
-in the FCI algorithm, the true separating set might be outside the
-adjacency sets of $a$ or $c$. The purpose of this conservative version is
-to speed up the algorithm in the sample version (less v-structures lead to
-smaller Possible-D-SEP sets). In the second part (done if
-\code{conservative[2]} is \code{TRUE}), we call \code{pc.cons.internal(...,
-  version.unf = c(1,1))} again after Possible-D-SEP was found and the graph
-potentially lost some edges. Therefore, new triples might have occurred. If
-this second part is done, the resulting information on sepset and faithful
-triples overwrites the previous and will be used for the subsequent
-orientation rules. The purpose of this conservative version is used in the
-hope to obtain better edge orientations. See \cite{rfci} for more details.
+The argument \code{conservative} is used to estimate the conservative FCI,
+Anytime FCI, and Adaptive Anytime FCI. If \code{conservative = TRUE} they
+are computed calling \code{pc.cons.intern} with option \code{version.unf =
+  c(1,1)} again after Possilbe-D-SEP was found and the graph potentially lost some
+edges. Therefore, new triples might have occured. The resulting information
+on sepset and unambiguous triples overwrites the previous and will be used
+for the subsequent orientation rules. Instead of
+using the conservative version, which is quite strict towards the
+v-structures, \cite{pc.indep} introduced a less strict version
+for the v-structures called majority rule, see \code{pc.cons.intern} for
+more details. This adaptation can be called using \code{conservative =
+  TRUE} and \code{maj.rule = TRUE}. The purpose of this conservative
+versions is used in the hope to obtain better edge
+orientations. Moreover, \cite{pc.indep} showed that with both these
+modifications, the final skeleton and the orientation of the v-structures
+of the FCI algorithm are fully order-independent.  
 
 By setting the argument \code{biCC = TRUE}, Possible-D-SEP($a$, $c$) is
 defined as the intersection of the original Possible-D-SEP($a$, $c$) and
@@ -1063,10 +1155,10 @@ $c$. The smaller Possible-D-SEP sets lead to faster computing times, while
 given oracle information on the conditional independence relationships.
 
 The argument \code{cons.rules} manages the way in which the information
-about unfaithful triples affects the orientation rules for directing
+about ambiguous triples affects the orientation rules for directing
 edges. If \code{cons.rules = TRUE}, an orientation rule that needs
 information on definite non-colliders is only applied, if the corresponding
-subgraph relevant for the rule does not involve an unfaithful triple.
+subgraph relevant for the rule does not involve an ambiguous triple.
 
 Using the argument \code{labels}, one can pass names for the vertices of
 the estimated graph. By default, this argument is set to \code{NA}, in
@@ -1074,7 +1166,7 @@ which case the node names \code{as.character(1:p)} are used.
 
 The argument \code{type} specifies the version of the FCI that has to be
 used. Per default it is \code{normal} and so the normal FCI algorithm is
-called. If set as \code{anytime}, the Anytime FCI \ref{Spirtes01-anytime}
+called. If set as \code{anytime}, the Anytime FCI \cite{Spirtes01-anytime}
 is called and in this case \code{m.max} must be pre-specified by the
 user. The Anytime FCI algorithm can be viewed as a modification of the FCI
 algorithm that only performs conditional independence tests up to and
@@ -1082,7 +1174,7 @@ including order m.max when finding the initial skeleton, using the function
 \code{skeleton}, and the final skeleton, using the function
 \code{pdsep}. Thus, Anytime FCI performs fewer conditional independence
 tests than FCI. If set as \code{adaptive}, the Adaptive Anytime FCI
-\ref{rfci} is called and in this case m.max is not used. The first part of
+\cite{rfci} is called and in this case m.max is not used. The first part of
 the algorithm is identical to the normal FCI described above. But in the
 second part when the final skeleton is estimated using the function
 \code{pdsep}, the Adaptive Anytime FCI algorithm only performs conditional
@@ -1146,13 +1238,30 @@ The arguments \code{rules} and \code{cons.rules} are similar to those in
 \code{fci} but modified to produce a PAG with correct ancestral
 relationships, in the oracle version.
 
-The argument \code{conservative} can be used to invoke the conservative RFCI
-algorithm in the same way as setting \code{conservative[1]} is \code{TRUE})
-in the \code{fci()} (it calls the internal function
+The argument \code{conservative} is used to estimate the conservative
+RFCI. If \code{conservative = TRUE} it is computed calling
+\code{pc.cons.intern} with option \code{version.unf = c(1,1)} after the
+initial skeleton has been computed and the algorithm is performing the
+additional local tests on the unshielded triples. The resulting information
+on sepset and unambiguous triples will be used for the subsequent
+orientation rules. Instead of using the conservative version, which is
+quite strict towards the v-structures, \cite{pc.indep} introduced a less
+strict version for the v-structures called majority rule, see
+\code{pc.cons.intern} for more details. This adaptation can be called using
+\code{conservative = TRUE} and \code{maj.rule = TRUE}. The purpose of this
+conservative versions is used in the hope to obtain better edge
+orientations.
+
+The arguments \code{conservative} and \code{maj.rule} can be used to invoke
+the conservative RFCI algorithm, using the normal version or the majority
+rule idea, in the same way as in the \code{fci()} (it calls the internal function
 \code{pc.cons.internal()} with argument \code{version.unf = c(1,1)} after
-computing the skeleton).
+computing the initial skeleton).
 
 The argument \code{labels} is identical to the one in \code{fci()}.
+
+In contrast to the FCI algorithm, none of the order-dependence issues are
+fully resolved here, see \cite{pc.indep}. 
 
 As an example, we re-run the example from Section~\ref{sec:fci} and show
 the PAG estimated with \code{rfci()} in Figure~\ref{fig:fci}. The PAG
