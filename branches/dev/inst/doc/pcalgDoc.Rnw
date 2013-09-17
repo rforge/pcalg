@@ -467,8 +467,8 @@ modifications of the PC algorithm (see Sections \ref{sec:skel} and
 each step. 
 
 The PC algorithm presented so far is based on conditional independence
-tests.  Score-based methods form an alternative approach to causal
-inference.  They try to find a CPDAG that maximizes a \emph{score},
+tests. Score-based methods form an alternative approach to causal
+inference. They try to find a CPDAG that maximizes a \emph{score},
 typically a model selection criterion, which is calculated from data.   
 
 One of the most popular scores is the Bayesian information criterion (BIC)
@@ -1587,6 +1587,112 @@ pc.fit <- pc(suffStat, indepTest=gaussCItest, p=ncol(gmI$x), alpha = 0.01)
 
 (eff.estF <- idaFast(2, c(5,6,7), cov(gmI$x), pc.fit@graph))
 @
+
+\subsection{gbc} \label{sec:gbc} 
+
+This function is a generalization of Pearl's backdoor criterion, see
+\cite{Pearl93}, defined for directed acyclic graphs (DAGs), for single
+interventions and single outcome variable to more general
+types of graphs (CPDAGs, MAGs, and PAGs) that describe Markov equivalence
+classes of DAGs with and without latent variables but without selection
+variables, for more details see \cite{MaCo13}.  
+
+It is assumed that we have observational data that are multivariate
+Gaussian and faithful to the true (but unknown) underlying causal DAG
+(possibly with latent variables but without selection variables). Under
+these assumptions, this function first checks if the total causal effect is
+identifiable via the generalized backdoor criterion and if this is the case
+it estimates the possible total causal effects of \code{x} on \code{y},
+where the total causal effect is defined via Pearl's do-calculus as
+\code{E(Y|do(X=z+1))-E(Y|do(X=z))} (this value does not depend on \code{z},
+since Gaussianity implies that conditional expectations are linear).
+
+This function can be called in the following way:
+\par\vspace*{-1.2ex}
+<<gbc-args, echo=FALSE>>=
+showF(gbc)
+@
+\par\vspace*{-1ex}
+
+where \code{amat} is the adjacency matrix of the given graph, \code{x}
+denotes the column position of the cause variable, \code{y} denotes the
+column position of the effect variable, and \code{mcov} is the covariance
+matrix of the original data.
+
+The argument \code{type} specifies the type of graph of the given adjacency
+matrix in \code{amat}. If the input graph is a DAG (\code{type="dag"}), for
+example generated using \code{randomDAG}, this function reduces to
+Pearl's backdoor criterion for single interventions and single outcome
+variable, and the parents of $x$ in the DAG satisfies the backdoor
+criterion unless $y$ is a parent of $x$. Therefore, if $y$ is a parent of
+$x$, the causal effects of $x$ on $y$ is not identifiable via the
+generalized backdoor criterion and NA is output. Otherwise, the causal
+effect is identifiable and it is estimated using a simple
+linear regression: we take the regression coefficient of $x$ in the
+regression \code{lm(y ~ x + pa(x))}, where pa$(x)$ denotes the parents
+of $x$ in the DAG. If the input graph is a CPDAG $C$
+(\code{type="cpdag"}), for example estimated using \code{pc} or
+\code{dag2cpdag}, a MAG $M$, estimated for example using
+\code{pag2mag}, or a PAG $P$, estimated using \code{\link{dag2pag}} or
+\code{fci} but not using \code{rfci}, this function first
+checks if the total causal effect of $x$ on $y$ is identifiable
+via the generalized backdoor criterion (see \citep{MaCo13}, Theorem 4.1,
+page 11). If the effect is not identifiable, the output is NA. Otherwise,
+an explicit set $W$ that satisfies the generalized backdoor criterion is
+found and the total causal effect is estimated using a simple linear
+regression: we take the regression coefficient of $x$ in the regression
+\code{lm(y ~ x + W)}.
+
+At this moment this function is not able to work with PAGs estimated using
+the \code{rfci} Algorithm.  
+
+To illustrate this function, we use as example the CPDAG displayed in
+Figure 4, page 15 of \cite{MaCo13}. The R-code below is used to generate
+a DAG \code{g} that belongs to the required equivalence class which is
+uniquely represented by the estimated CPDAG \code{myCPDAG}. 
+
+<<gbcExCPDAG1>>=
+p <- 6
+amat <- t(matrix(c(0,0,1,1,0,1, 0,0,1,1,0,1, 0,0,0,0,1,0, 0,0,0,0,1,1, 0,0,0,0,0,0, 0,0,0,0,0,0),6,6))
+colnames(amat) <- rownames(amat) <- as.character(1:6)
+V <- as.character(1:6)
+edL <- vector("list",length=6)
+names(edL) <- V
+edL[[1]] <- list(edges=c(3,4,6),weights=c(1,1,1))
+edL[[2]] <- list(edges=c(3,4,6),weights=c(1,1,1))
+edL[[3]] <- list(edges=5,weights=c(1))
+edL[[4]] <- list(edges=c(5,6),weights=c(1,1))
+g <- new("graphNEL", nodes=V, edgeL=edL, edgemode="directed")
+
+cov.mat <- trueCov(g)
+
+myCPDAG <- dag2cpdag(g)
+true.amat <- as(myCPDAG, "matrix")
+true.amat[which(true.amat!=0)] <- 1
+@ 
+
+The DAG \code{g} and the CPDAG \code{myCPDAG} are shown in Figure \ref{fig:gbc}.
+\begin{figure}
+  \centering
+<<gbcExpl, fig=TRUE, echo = FALSE>>=
+par(mfrow = c(1,2))
+plot(g, main = "")
+plot(myCPDAG, main = "")
+@
+\caption{True DAG (left) and estimated CPDAG (right).}
+\label{fig:gbc}
+\end{figure}
+
+Now, we want to compute the effect of $V_6$ on $V_3$ using \code{gbc()} in
+the given CPDAG. As explained in Example 4 in \cite{MaCo13}, the causal
+effect of $V_6$ on $V_3$ in the CPDAG \code{myCPDAG} is identifiable via the
+generalized backdoor criterion and the function \code{gbc} correctly infers
+that:
+
+<<gbcExCPDAG2>>=
+library(igraph)
+gbc(true.amat, 6, 3, cov.mat, type="cpdag")
+@ 
 
 \subsection{Using a user specific conditional independence test}
 
