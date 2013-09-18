@@ -1,11 +1,11 @@
 \name{pag2mag}
 \alias{pag2mag}
 \encoding{UTF8}
-\title{Transform a PAG into a valid MAG in the Markov equivalence class
-  represented by the PAG} 
+\title{Transform a PAG into a MAG in the Markov equivalence class
+  represented by the PAG with no additional edges into node x} 
 \description{
   Transform a Partial Ancestral Graph (PAG) into a valid Maximal
-  Ancestral Graph (MAG) that belongs to the equivalence class
+  Ancestral Graph (MAG) that belongs to the Markov equivalence class
   represented by the given PAG.
 }
 \usage{
@@ -18,13 +18,17 @@ pag2mag(amat.pag, x)
 }
 \details{
   This function converts a PAG (adjacency matrix) to a valid MAG
-  (adjacency matrix) that belongs to the equivalence class
+  (adjacency matrix) that belongs to the Markov equivalence class
   represented by the given PAG. Note that we assume that there are no
   selection variables, meaning that the edges in the PAG can be of the
   following types: ->, <->, o->, and o-o. In a first step, it uses the
   Arrowhead Augmentation of Zhang (2006), i.e. any o-> edge is oriented
-  into ->. Afterwards, it orients any chordal component into a valid DAG
-  without orienting any additional edges into x. 
+  into ->. Afterwards, it orients each chordal component into a valid DAG
+  without orienting any additional edges into x.
+
+  This function is used in the Generalized backdoor criterion
+  \code{\link{gbc}} with \code{type="pag"}, see Maathuis and Colombo
+  (2013) for details.
 }
 \value{
   The output is an adjacency matrix M of a valid MAG with edge
@@ -32,11 +36,14 @@ pag2mag(amat.pag, x)
   no edge; M[i,j]=2, M[j,i]=3: i -> j; M[i,j]=2, M[j,i]=2: i <-> j.
 }
 \references{
+  M.H. Maathuis and D. Colombo (2013). A generalized backdoor
+  criterion. arXiv preprint arXiv:1307.5636.
+  
   Zhang, J. (2006). Causal Inference and Reasoning in Causally
   Insufficient Systems. Ph. D. thesis, Carnegie Mellon University.
 }
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch}).}
-\seealso{\code{\link{fci}}, \code{\link{dag2pag}}}
+\seealso{\code{\link{fci}}, \code{\link{dag2pag}}, \code{\link{gbc}}}
 \examples{
 ## create the graph
 set.seed(78)

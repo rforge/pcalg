@@ -67,13 +67,12 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
     84).}
   \item{conservative}{If \code{TRUE}, the
   triples are checked for ambiguity after possible deletion of
-  edges when finding Possible-D-SEP. For more information, see Details.}
+  edges when finding Possible-D-SEP. For more information, see details.}
   \item{maj.rule}{If \code{TRUE}, the
   triples are checked for ambiguity after possible deletion of
-  edges when finding Possible-D-SEP using the majority rule idea, which
-  is less strict than the standard conservative. Note that to use the
-  majority rule idea, the user has to set \code{conservative = TRUE} as
-  well. For more information, see Details.} 
+  edges when finding Possible-D-SEP using a majority rule idea, which
+  is less strict than the standard conservative. For more information,
+  see details.}  
   \item{biCC}{If \code{TRUE}, only nodes on paths between nodes \code{x}
   and \code{y} are considered to be in Possible-D-SEP(\code{x}) when
   testing independence between \code{x} and \code {y}. Uses
@@ -82,8 +81,7 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   on definite non-colliders is only applied, if the corresponding
   subgraph relevant for the rule does not involve an ambiguous
   triple. Note that to use the conservative rules, the user has to set
-  either \code{conservative = TRUE}, or \code{conservative = TRUE} and
-  \code{maj.rule = TRUE}.}
+  either \code{conservative = TRUE} or \code{maj.rule = TRUE}.}
   \item{labels}{Vector of length p with node names. If \code{NA},
     \code{as.character{1:p}} is used instead.}
   \item{type}{It specifies the version of the FCI that has to be
@@ -192,10 +190,9 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   v-structures, Colombo and Maathuis (2013) introduced a less strict
   version for the v-structures called majority rule, see
   \code{pc.cons.intern} for more details. This adaptation can be called
-  using \code{conservative = TRUE} and \code{maj.rule = TRUE}. Colombo
-  and Maathuis (2013) showed that with both these modifications, the
-  final skeleton and the orientation of the v-structures of the FCI
-  algorithm are fully order-independent.  
+  using \code{maj.rule = TRUE}. Colombo and Maathuis (2013) showed that
+  with both these modifications, the final skeleton and the orientation
+  of the v-structures of the FCI algorithm are fully order-independent.  
 
   Note that the order-dependence issues on the 10 orientation rules are
   still present, see Colombo and Maathuis (2013) for more details.}  

@@ -1,23 +1,29 @@
 \name{pc.cons.intern}
 \alias{pc.cons.intern}
-\title{Internal function for conservative PC algorithm}
+\title{Internal function for conservative and majority rule PC, FCI, and
+  RFCI algorithms}
 \description{
-  This function is not intended for direct useage. Use \code{\link{pc}},
-  \code{\link{fci}}, or \code{\link{rfci}} using options for the
-  conservative version of the algorithms instead.
+  This function is not intended for direct useage. It is used \code{\link{pc}},
+  \code{\link{fci}}, or \code{\link{rfci}} when the options
+  \code{conservative = TRUE} or \code{maj.rule = TRUE} are used.
 
   For any unshielded triple A-B-C, consider all subsets D of the neighbors
-  of A and of the neighbors of C, and record the sets D for which A and C
-  are conditionally independent given D. If B is in none of these sets, do
-  nothing (it is a v-structure). If B is in all sets, do nothing (it is
+  of A and of the neighbors of C, and record the sets for which A and C
+  are conditionally independent given D. We call such sets separating
+  sets. If no separating set is found, then the triple is marked as
+  'ambiguous' if \code{vers.unf = c(2,.)}, for example in
+  \code{\link{pc}} or as 'unambiguous' if \code{vers.unf = c(1,.)}, for
+  example in \code{\link{fci}} and \code{\link{rfci}}. Otherwise, if B
+  is in none of the separating sets, do nothing (it is a
+  v-structure). If B is in all separating sets, do nothing (it is
   not a v-structure). If \code{maj.rule = FALSE}, meaning that the standard
   conservative method is applied (Ramsey et al., 2006), then the triple
-  is marked as \dQuote{ambiguous} if B is in some but not all sets. If
+  is marked as 'ambiguous' if B is in some but not all separating sets. If
   \code{maj.rule = TRUE}, meaning that the majority rule is applied
   (Colombo and Maathuis, 2013), then the triple is marked as
-  \dQuote{ambiguous} if B is in exactly 50 percent of the sets, if it is
-  in less than 50 percent it is set as a v-structure, and if in more
-  than 50 percent as a non v-structure. 
+  'ambiguous' if B is in exactly 50 percent of the sseparating sets. If it is
+  in less than 50 percent it is set as a v-structure, and if it is in more
+  than 50 percent it is set as a non v-structure. 
 }
 
 \usage{

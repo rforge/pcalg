@@ -3,7 +3,8 @@
 \encoding{UTF8}
 \title{Convert a DAG with latent variables into a PAG}
 \description{
-  Convert a DAG with latent variables to a Partial Ancestral Graph (PAG).
+  Convert a DAG with latent variables into its corresponding (unique)
+  Partial Ancestral Graph (PAG). 
 }
 \usage{
 dag2pag(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), verbose = FALSE)
@@ -34,13 +35,13 @@ dag2pag(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), verbose = FA
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
 \details{
-  This function converts a DAG (graph object) with latent variables to
-  its corresponding (unique) PAG (fciAlgo object), using the ancestors
-  information entailed in the true DAG. The output of this function is
-  exactly the same as the one using fci(suffStat, indepTest, p, alpha,
-  rules = rep(TRUE, 10)), using the true correlation
-  matrix in the function \code{gaussCItest} with a large "virtual sample
-  size" and a large alpha, but much more faster.
+  This function converts a DAG (graph object) with latent variables into
+  its corresponding (unique) PAG (fciAlgo object), using the ancestor
+  information and conditional independence tests entailed in the true
+  DAG. The output of this function is exactly the same as the one using
+  fci(suffStat, indepTest, p, alpha, rules = rep(TRUE, 10)), using the
+  true correlation matrix in the function \code{gaussCItest} with a
+  large "virtual sample size" and a large alpha, but it is much faster.
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
  \code{\linkS4class{fciAlgo}}) containing the estimated graph

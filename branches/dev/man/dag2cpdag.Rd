@@ -1,7 +1,7 @@
 \name{dag2cpdag}
 \alias{dag2cpdag}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{Convert a DAG to a CPDAG }
+\title{Convert a DAG to a CPDAG}
 \description{
 Convert a DAG to a Completed Partially Directed Acyclic Graph (CPDAG).
 }
@@ -13,20 +13,22 @@ dag2cpdag(g)
   \item{g}{DAG (graph object)}
 }
 \details{
-  This function converts a DAG (graph object) to its corresponding
-  (unique) CPDAG (graph object) as follows. Because every DAG contained
-  in the Markov equivalence class described by the unique CPDAG shares
-  the same skeleton and the same v-structures, this function takes the
-  skeleton and the v-structures of the given DAG \code{g}. Afterwards it
-  simply uses the 3 orientation rules by Spirtes and Pearl (see
-  references) to orient as many of the remaining undirected edges as
-  possible. 
+  This function converts a DAG (graph object) into its corresponding
+  (unique) CPDAG (graph object) as follows. Because every DAG in the
+  Markov equivalence class described by a CPDAG shares the same skeleton
+  and the same v-structures, this function takes the skeleton and the
+  v-structures of the given DAG \code{g}. Afterwards it simply uses the
+  3 orientation rules of the PC algorithm (see references) to orient as
+  many of the remaining undirected edges as possible. 
 }
 \value{
   A graph object containing the CPDAG.
 }
 \references{
-  J. Pearl (2000), \emph{Causality}, Cambridge University Press.
+  C. Meek (1995). Causal inference and causal explanation with
+  background knowledge. In \emph{Proceedings of the Eleventh Conference on
+  Uncertainty in Artificial Intelligence (UAI-95)}, pp. 403–411. Morgan
+  Kaufmann Publishers, Inc.
 
   P. Spirtes, C. Glymour and R. Scheines (2000)
   \emph{Causation, Prediction, and Search}, 2nd edition, The MIT Press.

@@ -50,9 +50,8 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   triples are checked for ambiguity after the skeleton has been found.}
   \item{maj.rule}{If \code{TRUE}, the
   triples are checked for ambiguity after the skeleton has been found
-  using the majority rule idea, which
-  is less strict than the standard conservative. Note that to use the
-  majority rule idea, the user has to set conservative = TRUE as well.} 
+  using a majority rule idea, which is less strict than the standard
+  conservative.}  
   \item{cons.rules}{If \code{TRUE}, an orientation rule that needs information
     on definite non-colliders is only applied, if the corresponding
     subgraph relevant for the rule does not involve an ambiguous triple.}
@@ -84,13 +83,12 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   version, which is quite strict towards the v-structures,
   \cite{pc.indep} introduced a less strict version for the v-structures
   called majority rule, see \code{pc.cons.intern} for more details. This
-  adaptation can be called using \code{conservative = TRUE} and
-  \code{maj.rule = TRUE}. The purpose of this conservative versions is
-  used in the hope to obtain better edge orientations.
+  adaptation can be called using \code{maj.rule = TRUE}. The purpose of
+  this conservative versions is used in the hope to obtain better edge
+  orientations. 
 
-  In contrast to the FCI algorithm,
-  none of the order-dependence issues are fully resolved here, see
-  Colombo and Maathuis (2013).}
+  In contrast to the FCI algorithm, none of the order-dependence issues
+  are fully resolved here, see Colombo and Maathuis (2013).}
 
 \references{
   D. Colombo and M.H. Maathuis (2013). Order-independent

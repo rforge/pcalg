@@ -22,7 +22,7 @@ udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose = FALSE)
   \item{rules}{array of length 10 containing \code{TRUE} or \code{FALSE}
     for each rule. \code{TRUE} in position i means that rule i (Ri) will
     be used. Per default, all rules are set to TRUE.}
-  \item{unfVect}{Vector containing numbers that encode the unfaithful
+  \item{unfVect}{Vector containing numbers that encode the ambiguous
     triple (as returned by \code{\link{pc.cons.intern}}). This is needed in the
     conservative and majority rule FCI.}
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
@@ -31,6 +31,18 @@ udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose = FALSE)
   The skeleton is extended to a PAG using rules by Zhang (see
   References). Note that the algorithm works with columns' position of the
   adjacency matrix and not with the names of the variables.
+
+  If \code{unfVect = NULL} the v-structures and the ten orientation
+  rules are applied to each eligible structure until no more edges can
+  be oriented. On the other hand if the v-structures have been checked
+  previously in \code{\link{pc.cons.intern}} either using the
+  conservative method or the majority rule, \code{unfVect} contains a
+  list of all ambiguous triples in the graph. In this case, only
+  structures containing unambiguous triples are oriented until no more
+  edges can be oriented.
+
+  Note that the algorithm works with columns' position of the adjacency
+  matrix and not with the names of the variables.
 
   Note that the order-dependence issues on the 10 orientation rules are
   still present, see Colombo and Maathuis (2013) for more details.
@@ -47,7 +59,7 @@ udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose = FALSE)
 }
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 
-\seealso{\code{\link{pc}}}
+\seealso{\code{\link{pc}}, \code{\link{fci}}}
 
 \examples{
 ##################################################

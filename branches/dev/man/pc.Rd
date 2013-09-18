@@ -44,15 +44,14 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     conditional independence tests.}
   \item{u2pd}{Method for dealing with conflicting information when
     trying to orient edges (see details below).}
-  \item{conservative}{If \code{TRUE}, the conservative PC is done. In this
+  \item{conservative}{If \code{TRUE}, conservative PC is used. In this
     case, only option \code{u2pd = relaxed} is supported. Note, that
     therefore the resulting object might not be extendable to a DAG. See details
     for more information.}
   \item{maj.rule}{If \code{TRUE}, the
-    triples are checked for ambiguity using the majority rule idea, which
-    is less strict than the standard conservative. Note that to use the
-    majority rule idea, the user has to set \code{conservative = TRUE} as
-    well. For more information, see Details.}
+    triples are checked for ambiguity using a majority rule idea, which
+    is less strict than the conservative PC algorithm. For more
+    information, see details.} 
   \item{solve.confl}{If \code{TRUE}, the orientation of the v-structures and the
     orientation rules work with lists for candidate sets and allow
     bi-directed edges to resolve conflicting edge orientations. In this
@@ -67,7 +66,7 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
 }
 \details{
   Under the assumption that the distribution of the observed variables
-  is faithful to a DAG, this function estimates the equivalence class of
+  is faithful to a DAG, this function estimates the Markov equivalence class of
   the DAG. We do not estimate the DAG itself, because this is typically
   impossible (even with an infinite amount of data), since different
   DAGs can describe the same conditional independence relationships.
@@ -76,29 +75,29 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   describe the conditional dependence structure that was given as
   input.
 
-  All DAGs in an equivalence class have the same skeleton (i.e.,
+  All DAGs in a Markov equivalence class have the same skeleton (i.e.,
   the same adjacency information) and the same v-structures (see
   definition below). However, the direction of some edges may be
   undetermined, in the sense that they point one way in one DAG in the
   equivalence class, while they point the other way in another DAG in
   the equivalence class.
 
-  An equivalence class can be uniquely represented by a completed
+  A Markov equivalence class can be uniquely represented by a completed
   partially directed acyclic graph (CPDAG). A CPDAG
   contains undirected and directed edges. The edges have the following
   interpretation: (i) there is a (directed or undirected) edge between i
   and j if and only if variables i and j are conditionally dependent
   given S for all possible subsets S of the remaining nodes; (ii) a directed
   edge i->j means that this directed edge is present in all DAGs in the
-  equivalence class; (iii) an undirected edge i-j means that there is at least
-  one DAG in the equivalence class with edge i->j and there is at least one DAG
-  in the equivalence class with edge i<-j.
+  Markov equivalence class; (iii) an undirected edge i-j means that
+  there is at least one DAG in the Markov equivalence class with edge i->j and
+  there is at least one DAG in the Markov equivalence class with edge i<-j.
 
   The CPDAG is estimated using the PC algorithm (named after its inventors
   \bold{P}eter Spirtes and \bold{C}lark Glymour). The skeleton is
   estimated by the function \code{\link{skeleton}} which uses a modified
   version of the original PC algorithm (see Colombo and Maathuis (2013) for
-  details). In fact, the original PC algorithm is known to be
+  details). The original PC algorithm is known to be
   order-dependent, in the sense that the output depends on the order in
   which the variables are given. Therefore, Colombo and Maathuis (2013)
   proposed a simple modification, called PC-stable, that yields order-independent
@@ -108,8 +107,8 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   if no further actions are taken (see below) these two steps still
   remain order-dependent. 
 
-  First, the algorithm considers all triples
-  \code{(a,b,c)}, where \code{a} and
+  The edges are oriented as follows. First, the algorithm considers all
+  triples \code{(a,b,c)}, where \code{a} and
   \code{b} are adjacent, \code{b} and \code{c} are adjacent, but
   \code{a} and \code{c} are not adjacent. For all such triples,
   we direct both edges towards b (a->b<-c) if and only if \code{b} was
@@ -122,36 +121,36 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   one can deduce that one of the two possible directions of the edge is
   invalid because it introduces
   a new v-structure or a directed cycle. Such edges are found by
-  repeatedly applying rules R1-R3 as given in Algorithm 2 of Kalisch
-  and B\"uhlmann (2007). The algorithm stops if none of the rules is
-  applicable to the graph.
+  repeatedly applying rules R1-R3 of the PC algorithm as given in
+  Algorithm 2 of Kalisch and B\"uhlmann (2007). The algorithm stops if
+  none of the rules is applicable to the graph.
 
   The conservative PC algorithm (\code{conservative = TRUE}) is a
   slight variation of the PC algorithm (see Ramsey et al. 2006). After
   the skeleton is computed, all potential v-structures a-b-c are checked
   in the following way. We test whether a and c are independent
-  conditioning on any subset of the neighbors of a or any subset of the
-  neighbors of c. If b is in no such conditioning set or in all such
-  conditioning sets, no further action is taken and the usual PC is
-  continued. If, however, b is in only some conditioning sets, the
-  triple a-b-c is marked 'ambiguous'. Moreover, if in the conservative
-  step there is no subset among the neighbors that makes a and c
-  independent, the triple is marked 'ambiguous'. An ambiguous triple
-  is not oriented as a v-structure. Furthermore, no later orientation
-  rule that needs to know whether a-b-c is a v-structure or not is
-  applied. (The internal function \code{pc.cons.intern} will be called
-  with \code{version.unf = c(2,1)}.) Instead of using the conservative
-  version, which is quite strict towards the v-structures, Colombo and
-  Maathuis (2013) introduced a less strict version for the v-structures
-  called majority rule. This adaptation can be called using
-  \code{conservative = TRUE} and \code{maj.rule = TRUE}. In this case,
-  the triple a-b-c is marked as 'ambiguous' if b is in exactly 50
-  percent of such conditioning sets, if it is in less than 50 percent it
-  is set as a v-structure, and if in more than 50 percent as a non
+  conditioning on all subsets of the neighbors of a and all subsets of the
+  neighbors of c. When a subset makes a and c conditionally independent,
+  we call it a separating set. If b is in no such separating set or in all such
+  separating sets, no further action is taken and the usual PC is
+  continued. If, however, b is in only some separating sets, the
+  triple a-b-c is marked as 'ambiguous'. Moreover, if no separating set is
+  found among the neighbors, the triple is also marked as
+  'ambiguous'. An ambiguous triple is not oriented as a
+  v-structure. Furthermore, no further orientation rule that needs to
+  know whether a-b-c is a v-structure or not is applied. (The internal
+  function \code{pc.cons.intern} will be called with \code{version.unf =
+  c(2,1)}.) Instead of using the conservative version, which is quite
+  strict towards the v-structures, Colombo and Maathuis (2013)
+  introduced a less strict version for the v-structures called majority
+  rule. This adaptation can be called using \code{maj.rule = TRUE}. In
+  this case, the triple a-b-c is marked as 'ambiguous' if and only if b
+  is in exactly 50 percent of such separating sets or no separating set
+  was found. If b is in less than 50 percent of the separating sets it
+  is set as a v-structure, and if in more than 50 percent it is set as a non
   v-structure (for more details see Colombo and Maathuis, 2013). The
-  useage of both the conservative and the majority rule versions resolve the
-  order-dependence issues of the determination of the v-structures, see
-  Colombo and Maathuis (2013) for more details.
+  useage of both the conservative and the majority rule versions resolve
+  the order-dependence issues of the determination of the v-structures.
 
   Sampling errors (or hidden variables) can lead to conflicting
   information about edge directions. For example, one may find that
@@ -163,45 +162,47 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   directions of the conflicting edge. In the example above this means
   that we obtain a->b->c<-d if a-b-c was visited first, and a->b<-c<-d
   if b-c-d was visited first, meaning that the final orientation on the
-  edge depends on the ordering in which the edges are oriented. With the
-  option \code{solve.confl = TRUE} (which is only supported with option
-  \code{u2pd = relaxed}), we first generate a list of all (unambiguous)
-  v-strucutres (in the example above a-b-c and b-c-d), and then we
-  simply orient them allow both directions on the edge b-c, namely we
-  allow the bi-directed edge b <-> c resolving the order-dependence
-  issues on the edge orientations. We denote bi-directed edges in the
-  adjacency matrix M of the graph as M[b,c]=2 and M[c,b]=2. In a similar
-  way using lists for the candidate edges for each orientation rule and
-  allowing bi-directed edges, the order-dependence issues in the
-  orientation rules can be solved. Note that bi-directed edges merely
-  represents a conflicting orientation and they have not to be
-  interpreted causally (for more details see Colombo and Maathuis,
-  2013). The useage of these lists for the candidate edges and allowing
-  bi-directed edges resolve the order-dependence issues on the
-  orientation of the v-strucutres and on the edges
-  using the three orientation rules, see Colombo and Maathuis (2013) for
+  edge depends on the ordering in which the v-structures were
+  considered. With the option \code{solve.confl = TRUE} (which is only
+  supported with option \code{u2pd = relaxed}), we first generate a list
+  of all (unambiguous) v-structures (in the example above a-b-c and
+  b-c-d), and then we simply orient them allowing both directions on the
+  edge b-c, namely we allow the bi-directed edge b <-> c resolving the
+  order-dependence issues on the edge orientations. We denote
+  bi-directed edges in the adjacency matrix M of the graph as M[b,c]=2
+  and M[c,b]=2. In a similar way, using lists for the candidate edges for
+  each orientation rule and allowing bi-directed edges, the
+  order-dependence issues in the orientation rules can be resolved. Note
+  that bi-directed edges merely represent a conflicting orientation and
+  they should not to be interpreted causally. The useage of these lists
+  for the candidate edges and allowing bi-directed edges resolves the
+  order-dependence issues on the orientation of the v-structures and on
+  the orientation rules, see Colombo and Maathuis (2013) for
   more details. 
 
-  Note that calling (\code{conservative = TRUE}), or (\code{conservative
-  = TRUE}) and \code{maj.rule = TRUE}, together with \code{solve.confl =
-  TRUE} produces a fully order-independent output, see Colombo and
-  Maathuis (2013).
+  Note that calling (\code{conservative = TRUE}), or \code{maj.rule =
+  TRUE}, together with \code{solve.confl = TRUE} produces a fully
+  order-independent output, see Colombo and Maathuis (2013).
 
-  Sampling errors or hidden variables can also lead to invalid CPDAGs,
-  meaning that there does not exist a DAG that has the same skeleton and
-  v-structures as the graph found by the algorithm. An example of this
-  is an undirected cycle consisting of the edges a-b-c-d and d-a. In
-  this case it is impossible to direct the edges without creating a
-  cycle or a new v-structure. The option \code{u2pd} specifies what
-  should be done in such a situation. If the option is set to
-  \code{"relaxed"}, the algorithm simply outputs the invalid CPDAG. If
-  the option is set to \code{"rand"}, all direction information is
-  discarded and a random DAG is generated on the skeleton. If the option
-  is set to \code{"retry"}, up to 100 combinations of possible
-  directions of the ambiguous edges are tried, and the first combination
-  that results in a valid CPDAG is chosen. If no valid combination is
-  found, an arbitrary DAG is generated on the skeleton as in the option
-  "rand". 
+  Sampling errors, non faithfulness, or hidden variables can also lead
+  to non-extendable CPDAGs, meaning that there does not exist a DAG that
+  has the same skeleton and v-structures as the graph found by the
+  algorithm. An example of this is an undirected cycle consisting of the
+  edges a-b-c-d and d-a. In this case it is impossible to direct the
+  edges without creating a cycle or a new v-structure. The option
+  \code{u2pd} specifies what should be done in such a situation. If the
+  option is set to \code{"relaxed"}, the algorithm simply outputs the
+  invalid CPDAG. If the option is set to \code{"rand"}, all direction
+  information is discarded and a random DAG is generated on the
+  skeleton, which is then converted into its CPDAG. If the option is set
+  to \code{"retry"}, up to 100 combinations of possible directions of
+  the ambiguous edges are tried, and the first combination that results
+  in an extendable CPDAG is chosen. If no valid combination is found, an
+  arbitrary DAG is generated on the skeleton as in the option "rand",
+  and then converted into its CPDAG. Note that the output can also be an
+  invalid CPDAG, in the sense that it cannot arise from the oracle PC
+  algorithm, but be extendible to a DAG, for example a->b<-c<-d. In this
+  case, \code{u2pd} is not used.  
 
   Notes: (1) Throughout, the algorithm works with the column positions
   of the variables in the adjacency matrix, and not with the names of
@@ -225,7 +226,7 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   J. Ramsey, J. Zhang and P. Spirtes (2006).
   Adjacency-faithfulness and conservative causal inference. In
   \emph{Proceedings of the 22nd Annual Conference on Uncertainty in
-  Artificial Intelligence}, Arlington, VA. AUAI Press.
+  Artificial Intelligence}. AUAI Press, Arlington, VA.
   
   P. Spirtes, C. Glymour and R. Scheines (2000).
   \emph{Causation, Prediction, and Search}, 2nd edition. The MIT Press.  

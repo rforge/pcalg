@@ -52,9 +52,25 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
   orient the skeleton into a PAG in the FCI algorithm. However, it is
   slightly more complicated because while orienting rule 4 additional
   conditional independence tests are performed to ensure correctness of
-  the ancestral relationships and some edges can be deleted. Note that
-  the algorithm works with columns' position of the adjacency matrix and
-  not with the names of the variables.  
+  the ancestral relationships and some edges can be deleted, see Colombo
+  et al. (2012). To this purpose, \code{suffStat}, \code{indepTest}, and
+  \code{alpha} are used as inputs. Note that because some edges can be
+  deleted, the input adjacency matrix \code{apag} and the input
+  separating sets \code{sepset} can change in the run of the algorithm.
+
+  If \code{unfVect = NULL} the ten orientation rules are applied to each
+  eligible structure until no more edges can be oriented. On the other
+  hand if the v-structures have been checked previously in
+  \code{\link{pc.cons.intern}} either using the conservative method or
+  the majority rule, \code{unfVect} contains a list of all ambiguous
+  triples in the graph. In this case, only structures containing
+  unambiguous triples are oriented until no more edges can be oriented.
+
+  Note that the algorithm works with columns' position of the adjacency
+  matrix and not with the names of the variables.
+
+  Note that the order-dependence issues on the 10 orientation rules are
+  still present, see Colombo and Maathuis (2013) for more details.
 }
 \value{
   The outputs are the updated list of sepset and the final adjacency
@@ -74,7 +90,7 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
 }
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 
-\seealso{\code{\link{pc}}}
+\seealso{\code{\link{pc}}, \code{\link{rfci}}}
 
 \examples{
 ##################################################

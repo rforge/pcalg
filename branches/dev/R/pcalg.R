@@ -3057,7 +3057,7 @@ skeleton <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL, fixedEdges
 
 pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
                fixedEdges = NULL, NAdelete = TRUE, m.max = Inf,
-               u2pd = "relaxed", conservative=FALSE, maj.rule=FALSE, solve.confl=FALSE) {
+               u2pd = "relaxed", conservative = FALSE, maj.rule = FALSE, solve.confl=FALSE) {
 
   ## Purpose: Perform PC-Algorithm, i.e., estimate skeleton of DAG given data
   ## ----------------------------------------------------------------------
@@ -3089,17 +3089,17 @@ pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   ## Initial Checks
   cl <- match.call()
 
-  if (conservative == TRUE & u2pd != "relaxed") stop("Conservative PC and majority rule PC can only be run with 'u2pd = relaxed'")
+  if ((conservative == TRUE | maj.rule == TRUE) & u2pd != "relaxed") stop("Conservative PC and majority rule PC can only be run with 'u2pd = relaxed'")
   
   if (solve.confl == TRUE & u2pd != "relaxed") stop("Versions of PC using lists for the orientation rules (and possibly bi-directed edges) can only be run with 'u2pd = relaxed'")
   
-  if (conservative == FALSE & maj.rule == TRUE) stop("Majority rule PC can only be run with conservative = TRUE")
+  if (conservative == TRUE & maj.rule == TRUE) stop("Choose either conservative PC or majority rule PC!")
   
   ## Skeleton
   skel <- skeleton(suffStat, indepTest, p, alpha, fixedGaps = fixedGaps, fixedEdges = fixedEdges, NAdelete = NAdelete, m.max = m.max, verbose = verbose)
 
   ## Orient edges
-  if (!conservative) {
+  if (!conservative & !maj.rule) {
     switch (u2pd,
             "rand" = udag2pdag(skel),
             "retry" = udag2pdagSpecial(skel)$pcObj,
@@ -4703,7 +4703,7 @@ min.uncov.circ.path <- function(p, pag = NA, path = NA, unfVect= NA, verbose = F
 ##FCI
 ###############################################################################
 
-fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, pdsep.max = Inf, rules = rep(TRUE, 10), doPdsep = TRUE, conservative = FALSE, maj.rule=FALSE, biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
+fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, pdsep.max = Inf, rules = rep(TRUE, 10), doPdsep = TRUE, conservative = FALSE, maj.rule = FALSE, biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
 {
   ## Purpose: Perform FCI-Algorithm, i.e., estimate PAG
   ## ----------------------------------------------------------------------
@@ -4760,12 +4760,12 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
         stop("To use the Adaptive Anytime FCI you must not specify m.max.")
     }
     
-    if (conservative == FALSE & maj.rule == TRUE) {
-        stop("Majority rule FCI can only be run with conservative = TRUE") 
+    if (conservative == TRUE & maj.rule == TRUE) {
+        stop("Choose either conservative FCI or majority rule FCI") 
     }
 
-    if (conservative == FALSE & cons.rules == TRUE) {
-        stop("The conservative orientation rules can only be run with either conservative = TRUE, or with conservative = TRUE and maj.rule = TRUE") 
+    if (conservative == FALSE & maj.rule == FALSE & cons.rules == TRUE) {
+        stop("The conservative orientation rules can only be run with either conservative = TRUE or with maj.rule = TRUE")  
     }
     
     cl <- match.call()
@@ -4802,7 +4802,7 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
         allPdsep <- pdsepRes$allPdsep
         n.edgetestsPD <- pdsepRes$n.edgetests
         max.ordPD <- pdsepRes$max.ord
-        if (conservative) {
+        if (conservative | maj.rule) {
             if (verbose) 
                 cat("\nCheck v-structures conservatively\n=================================\n")
             Gobject <- as(G, "graphNEL")
@@ -4820,7 +4820,7 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
         n.edgetestsPD <- 0
         max.ordPD <- 0
         allPdsep <- vector("list", p)
-        if (conservative) {
+        if (conservative | maj.rule) {
             if (verbose) 
                 cat("\nCheck v-structures conservatively\n=================================\n")
             tmp.nopdsep <- pc.cons.intern(skel, suffStat, indepTest, alpha, verbose = verbose, version.unf = c(2, 1), maj.rule = maj.rule)
@@ -4832,7 +4832,7 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
     if (verbose) 
         cat("\nDirect egdes:\n=============\nUsing rules:", which(rules), 
             "\nCompute collider:\n")
-    res <- udag2pag(pag = G, sepset, rules = rules, unfVect = if (cons.rules) tripleList, verbose = verbose)
+    res <- udag2pag(pag = G, sepset, rules = rules, unfVect = if (cons.rules) tripleList, verbose = verbose) 
     colnames(res) <- rownames(res) <- labels
     fciRes <- new("fciAlgo", amat = res, call = cl, n = integer(0), max.ord = as.integer(max.ordSKEL), max.ordPDSEP = as.integer(max.ordPD), n.edgetests = n.edgetestsSKEL, n.edgetestsPDSEP = n.edgetestsPD, sepset = sepset, pMax = pMax, allPdsep = allPdsep)
     fciRes
@@ -5647,11 +5647,11 @@ rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NU
   else {
     labels <- as.character(1:p)
   }
-  if (conservative == FALSE & maj.rule == TRUE) {
-      stop("Majority rule RFCI can only be run with conservative = TRUE")
+  if (conservative == TRUE & maj.rule == TRUE) {
+      stop("Choose either conservative RFCI or majority rule RFCI")
   }
-  if (conservative == FALSE & cons.rules == TRUE) {
-      stop("The conservative orientation rules can only be run with either conservative = TRUE, or with conservative = TRUE and maj.rule = TRUE") 
+  if (conservative == FALSE maj.rule == FALSE & cons.rules == TRUE) {
+      stop("The conservative orientation rules can only be run with either conservative = TRUE or with maj.rule = TRUE") 
   }
   cl <- match.call()
   if (verbose) { 
@@ -5666,7 +5666,11 @@ rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NU
   vectM <- tmp$unshVect
  
   ##check and orient v-structures recursively
-  tmp1 <- rfci.vstructures(suffStat, indepTest, p, alpha, sepset, g, listM, vectM, conservative=conservative, version.unf=c(1,1), verbose=verbose, maj.rule=maj.rule)
+  if (!conservative & !maj.rule) {
+      tmp1 <- rfci.vstructures(suffStat, indepTest, p, alpha, sepset, g, listM, vectM, version.unf=c(1,1), verbose=verbose)
+  } else {
+      tmp1 <- rfci.vstructures(suffStat, indepTest, p, alpha, sepset, g, listM, vectM, conservative=TRUE, version.unf=c(1,1), verbose=verbose, maj.rule=maj.rule)
+  }
   g <- tmp1$graph
   sepset <- tmp1$sepset
 
@@ -5753,7 +5757,7 @@ find.unsh.triple <- function(g,p)
   list(unshTripl=unshTripl, unshVect=unshVect)
 }
 
-rfci.vstructures <- function(suffStat, indepTest, p, alpha, sepset, graph, unshTripl, unshVect, conservative = FALSE, version.unf=c(2,1), verbose = FALSE, maj.rule=FALSE)
+rfci.vstructures <- function(suffStat, indepTest, p, alpha, sepset, graph, unshTripl, unshVect, conservative = FALSE, version.unf=c(2,1), verbose = FALSE, maj.rule = FALSE)
 {
   ## Purpose: check the unshielded triples in unshTripl as v-structures
   ##          recursively check if new unshielded triples have been found
