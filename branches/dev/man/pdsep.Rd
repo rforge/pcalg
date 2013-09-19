@@ -1,6 +1,8 @@
 \name{pdsep}
 \alias{pdsep}
-\title{Compute Possible-D-SEP for Each Node and Adapt Graph Accordingly}
+\title{Compute Possible-D-SEP for each node, perform independence tests
+  for each edge still present in the graph conditioning on all subsets
+  of Possible-D-SEP, and adapt the graph accordingly if edges are deleted.}
 \description{
   Computes the Possible-D-SEP for each node
   and tests conditional independence given all subsets of
@@ -97,7 +99,7 @@ pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
   P. Spirtes, C. Glymour and R. Scheines (2000).
   \emph{Causation, Prediction, and Search}, 2nd edition. The MIT Press.
 }
-\seealso{\code{\link{qreach}} for a fast way of finding Possible-D-Sep
+\seealso{\code{\link{qreach}} for a fast way of finding Possible-D-SEP
   for a given node; \code{\link{fci}} which uses \code{\link{pdsep}}.
 }
 \author{

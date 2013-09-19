@@ -48,10 +48,9 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     case, only option \code{u2pd = relaxed} is supported. Note, that
     therefore the resulting object might not be extendable to a DAG. See details
     for more information.}
-  \item{maj.rule}{If \code{TRUE}, the
-    triples are checked for ambiguity using a majority rule idea, which
-    is less strict than the conservative PC algorithm. For more
-    information, see details.} 
+  \item{maj.rule}{If \code{TRUE}, the triples are checked for ambiguity
+    using a majority rule idea, which is less strict than the
+    conservative PC algorithm. For more information, see details.} 
   \item{solve.confl}{If \code{TRUE}, the orientation of the v-structures and the
     orientation rules work with lists for candidate sets and allow
     bi-directed edges to resolve conflicting edge orientations. In this
@@ -138,19 +137,18 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   found among the neighbors, the triple is also marked as
   'ambiguous'. An ambiguous triple is not oriented as a
   v-structure. Furthermore, no further orientation rule that needs to
-  know whether a-b-c is a v-structure or not is applied. (The internal
-  function \code{pc.cons.intern} will be called with \code{version.unf =
-  c(2,1)}.) Instead of using the conservative version, which is quite
-  strict towards the v-structures, Colombo and Maathuis (2013)
-  introduced a less strict version for the v-structures called majority
-  rule. This adaptation can be called using \code{maj.rule = TRUE}. In
-  this case, the triple a-b-c is marked as 'ambiguous' if and only if b
-  is in exactly 50 percent of such separating sets or no separating set
-  was found. If b is in less than 50 percent of the separating sets it
-  is set as a v-structure, and if in more than 50 percent it is set as a non
-  v-structure (for more details see Colombo and Maathuis, 2013). The
-  useage of both the conservative and the majority rule versions resolve
-  the order-dependence issues of the determination of the v-structures.
+  know whether a-b-c is a v-structure or not is applied. Instead of
+  using the conservative version, which is quite strict towards the
+  v-structures, Colombo and Maathuis (2013) introduced a less strict
+  version for the v-structures called majority rule. This adaptation can
+  be called using \code{maj.rule = TRUE}. In this case, the triple a-b-c
+  is marked as 'ambiguous' if and only if b is in exactly 50 percent of
+  such separating sets or no separating set was found. If b is in less
+  than 50 percent of the separating sets it is set as a v-structure, and
+  if in more than 50 percent it is set as a non v-structure (for more
+  details see Colombo and Maathuis, 2013). The useage of both the
+  conservative and the majority rule versions resolve the
+  order-dependence issues of the determination of the v-structures. 
 
   Sampling errors (or hidden variables) can lead to conflicting
   information about edge directions. For example, one may find that

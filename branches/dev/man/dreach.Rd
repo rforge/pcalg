@@ -28,7 +28,7 @@ dreach(x, y, amat, verbose = FALSE)
   \emph{Causation, Prediction, and Search}, 2nd edition, The MIT Press.
 }
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
-\seealso{\code{\link{gen.backdoor}} uses this function.}
+\seealso{\code{\link{backdoor}} uses this function.; \code{\link{pag2mag}}}
 
 
 

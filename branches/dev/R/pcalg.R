@@ -1699,11 +1699,26 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
 {
   ## Purpose: Transform the Skeleton of a pcAlgo-object to a PDAG using
   ## the rules of Pearl. The output is again a pcAlgo-object. There is
-  ## NO CHECK whether the resulting PDAG is really extendable.
+  ## NO CHECK whether the resulting PDAG is really extendable. This function
+  ## can also work with conservative and majority rule PC (if unfVect is not
+  ## NULL) and can also use lists and bi-directed edges while orienting the
+  ## v-structures and the 3 orientation rules using solve.confl=TRUE (based
+  ## on Colombo and Maathuis 2013 results about order-independent PC). Note
+  ## that using this version the output CPDAG could contain bi-directed edges,
+  ## represented by the number 2 in the adjacency matrix, and therefore the
+  ## output cannot interpreted causally.
   ## ----------------------------------------------------------------------
   ## Arguments:
   ## - gInput: pcAlgo object
   ## - verbose: 0 - no output, 1 - detailed output
+  ## - unfVect: vector containing the numbers corresponding to the ambiguous
+  ##            unshielded triples (conservative and majority rule PC)
+  ## - solve.confl: if FALSE the v-structures and the orientation rules
+  ##                are used as usual; if TRUE it tries to resolve
+  ##                conflicts on the edge orientations using lists for candidate
+  ##                edges eligible for the orientation rules and allows
+  ##                bi-directed edges in the output if a conflict is present
+  ##                on an edge.
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: Sep 2006, 15:03
   ## Modification: Diego Colombo, Date: Sep 2013
@@ -2985,13 +3000,12 @@ skeleton <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL, fixedEdges
     if (verbose) 
       cat("Order=", ord, "; remaining edges:", remainingEdgeTests, 
           "\n", sep = "")
-    ## Stable version: Compute the adjacency sets for any vertex
+    ## Order-independent version: Compute the adjacency sets for any vertex
     ## Then don't update when edges are deleted
     nbrsBool.tmp <- vector("list",p) 
     for (i in 1:p) {
       nbrsBool.tmp[[i]] <- G[, i]
     }
-    ##
     for (i in 1:remainingEdgeTests) {
       if (verbose) {
         if (i%%100 == 0) 
@@ -3055,9 +3069,7 @@ skeleton <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL, fixedEdges
 
 
 
-pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-               fixedEdges = NULL, NAdelete = TRUE, m.max = Inf,
-               u2pd = "relaxed", conservative = FALSE, maj.rule = FALSE, solve.confl=FALSE) {
+pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "relaxed", conservative = FALSE, maj.rule = FALSE, solve.confl=FALSE) { 
 
   ## Purpose: Perform PC-Algorithm, i.e., estimate skeleton of DAG given data
   ## ----------------------------------------------------------------------
@@ -3112,7 +3124,6 @@ pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     tmp <- pc.cons.intern(skel, suffStat, indepTest, alpha, verbose=verbose, version.unf=c(2,1), maj.rule=maj.rule)
     tripleList <- tmp$unfTripl
     skel <- tmp$sk
-    ## vers <- tmp$vers
     udag2pdagRelaxed(gInput=skel, verbose=verbose, unfVect=tripleList, solve.confl=solve.confl)
   }
 }
@@ -4132,28 +4143,6 @@ plotSG <- function(graphObj, y, dist, amat = NA, directed = TRUE,
 ##
 #########################################################################
 
-##For R5 and R9-R10
-######################################################
-faith.check <- function(circle.path, unfVect, p)
-{
-  ## Purpose: check if every triple on the circle.path is faithful
-  ## ----------------------------------------------------------------------
-  ## Arguments: circle.path: circle path to check for faithfulness
-  ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 25 May 2010, 13:57
-  check.tmp <- 0
-  n <- length(circle.path)
-  for (l in 0:(n-1)) {
-    if (!any(unfVect==triple2numb(p,circle.path[(l%%n)+1],circle.path[((l+1)%%n)+1],circle.path[((l+2)%%n)+1]), na.rm=TRUE) && !any(unfVect==triple2numb(p,circle.path[((l+2)%%n)+1],circle.path[((l+1)%%n)+1],circle.path[(l%%n)+1]), na.rm=TRUE)) {
-      check.tmp <- check.tmp
-    }
-    else {
-      check.tmp <- check.tmp + 1
-    }
-  }
-  return(check.tmp)
-}
-
 ##Functions used by all algorithms
 ##########################################################
 pc.cons.intern <- function(sk, suffStat, indepTest, alpha, verbose=FALSE, version.unf=c(NA,NA), maj.rule=FALSE)
@@ -4167,8 +4156,8 @@ pc.cons.intern <- function(sk, suffStat, indepTest, alpha, verbose=FALSE, versio
   ## (it is not a v-structure) and also add B to sepset(A,C) if not present
   ## (so we are sure that a v-structure will not be created). If maj.rule=FALSE
   ## the normal conservative version is applied, hence if B is in
-  ## some but not all sets, mark the triple as "unfaithful". If maj.rule=TRUE
-  ## we mark the triple as "unfaithful" if B is in exactly 50% of the cases,
+  ## some but not all sets, mark the triple as "ambiguous". If maj.rule=TRUE
+  ## we mark the triple as "ambiguous" if B is in exactly 50% of the cases,
   ## if less than 50% define it as a v-structure, and if in more than 50%
   ## no v-structure.
   ## ----------------------------------------------------------------------
@@ -4249,13 +4238,15 @@ pc.cons.intern <- function(sk, suffStat, indepTest, alpha, verbose=FALSE, versio
           ## 1: in NO set; 2: in ALL sets; 3: in SOME but not all
           ## Take action only if case "3"
           if (resTriple$decision == 3) {
-            ## record unfaithful triple
+            ## record ambiguous triple
             counter <- counter + 1
             unfTripl[counter] <- triple2numb(p,a,b,c)
             vers[counter] <- resTriple$version
           }
-          ## can happen the case in Tetrad, so we must save the triple as unfaithful
-          ## a and c independent given S but not given subsets of the adj(a) or adj(c)
+          ## can happen the case in Tetrad, so we must save the triple
+          ## as ambiguous:
+          ## a and c independent given S but not given subsets of the
+          ## adj(a) or adj(c)
           if ((version.unf[1]==2) && (resTriple$version==2) && (resTriple$decision!=3)){
             counter <- counter + 1
             unfTripl[counter] <- triple2numb(p,a,b,c)
@@ -4293,11 +4284,11 @@ checkTriple <- function(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC, suffStat, indep
   ##            - maj.rule: FALSE/TRUE if the majority rule idea is applied
   ## ----------------------------------------------------------------------
   ## Value: - res
-  ##          res = 1: b is in NO sepset (-> collider)
-  ##          res = 2: b is in ALL sepsets (-> non-collider)
-  ##          res = 3: b is in SOME but not all sepsets (-> unfaithful triple)
-  ##        - vers: version (1 or 2) of the unfaithful triple
-  ##                (1=normal unfaithful triple that is b is in some sepsets;
+  ##          res = 1: b is in NO sepset (-> v-structure)
+  ##          res = 2: b is in ALL sepsets (-> no v-structure)
+  ##          res = 3: b is in SOME but not all sepsets (-> ambiguous triple)
+  ##        - vers: version (1 or 2) of the ambiguous triple
+  ##                (1=normal ambiguous triple that is b is in some sepsets;
   ##                2=triple coming from version.unf[1]==2 that is a and c are
   ##                indep given the initial sepset but there doesn't exist a
   ##                subset of the neighbours that d-separates them)
@@ -4434,7 +4425,7 @@ checkTriple <- function(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC, suffStat, indep
         }
     }
     if (verbose && res==3) {
-        cat("Triple unfaithful\n")
+        cat("Triple ambiguous\n")
     }
     ##if you save a variable <- NULL into a list it will delete this element!
     ##set any NULL into integer(0) so it will not be a problem when saving
@@ -4442,6 +4433,28 @@ checkTriple <- function(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC, suffStat, indep
     if (is.null(sepsetA)) sepsetA <- integer(0)
     if (is.null(sepsetC)) sepsetC <- integer(0) 
     list(decision = res, version = vers, SepsetA = sepsetA, SepsetC = sepsetC)
+}
+
+##For R5 and R9-R10
+######################################################
+faith.check <- function(circle.path, unfVect, p)
+{
+  ## Purpose: check if every triple on the circle.path is unambiguous
+  ## ----------------------------------------------------------------------
+  ## Arguments: circle.path: circle path to check for unambiguity
+  ## ----------------------------------------------------------------------
+  ## Author: Diego Colombo, Date: 25 May 2010, 13:57
+  check.tmp <- 0
+  n <- length(circle.path)
+  for (l in 0:(n-1)) {
+    if (!any(unfVect==triple2numb(p,circle.path[(l%%n)+1],circle.path[((l+1)%%n)+1],circle.path[((l+2)%%n)+1]), na.rm=TRUE) && !any(unfVect==triple2numb(p,circle.path[((l+2)%%n)+1],circle.path[((l+1)%%n)+1],circle.path[(l%%n)+1]), na.rm=TRUE)) {
+      check.tmp <- check.tmp
+    }
+    else {
+      check.tmp <- check.tmp + 1
+    }
+  }
+  return(check.tmp)
 }
 
 
@@ -4487,16 +4500,17 @@ updateList <- function(path, set, old.list)
   return(old.list)
 }
 
+##R9-R10
 min.uncov.pd.path <- function(p, pag = NA, path = NA, unfVect = NA, verbose = FALSE)
 {
   ## Purpose: find a minimal uncovered pd path for a,b,c saved in path.
-  ## Check also for the conservative case that it is faithful 
+  ## Check also for the conservative case that it is unambiguous 
   ## If a path exists this is the output, otherwise NA
   ## ----------------------------------------------------------------------
   ## Arguments: - p: number of nodes in the graph
   ##            - pag: adjacency matrix
   ##            - path: a,b,c under interest
-  ##            - unfVect: vector containing the unfaithful triples
+  ##            - unfVect: vector containing the ambiguous triples
   ## ----------------------------------------------------------------------
   ## Author: Diego Colombo, Date: 19 Oct 2011, 14:27
 
@@ -4566,63 +4580,11 @@ min.uncov.pd.path <- function(p, pag = NA, path = NA, unfVect = NA, verbose = FA
   return(min.upd.path)
 }
 
-
-find.min.discr.path <- function(pag = NA, path = NA, verbose = FALSE)
-{
-  ## Purpose: find a minimal discrimating path for a,b,c saved in path.
-  ## If a path exists this is the output, otherwise NA
-  ## ----------------------------------------------------------------------
-  ## Arguments: - pag: adjacency matrix
-  ##            - path: a,b,c under interest
-  ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 25 Jan 2011, 10:49
-
-  p <- as.numeric(dim(pag)[1])
-  visited <- rep(FALSE, p)
-  a <- path[1]
-  b <- path[2]
-  c <- path[3]
-  visited[a] <- visited[b] <- visited[c] <- TRUE
-  min.discr.path <- NA
-  ##find all neighbours of a not visited yet
-  indD <- which(pag[a,] != 0 & pag[,a] == 2 & !visited) ## d *-> a
-  if (length(indD) > 0) {
-    path.list <- updateList(a, indD, NULL)
-    done <- FALSE
-    min.path <- NA
-    while ((length(path.list) > 0) && (!done)) {
-      ##next element in the queue
-      min.path <- path.list[[1]]
-      m <- length(min.path)
-      d <- min.path[m]
-      pred <- min.path[m-1]
-      path.list[[1]] <- NULL
-      visited[d] <- TRUE
-      if (pag[c,d] == 0 & pag[d,c] == 0) {
-        ##discriminating path found
-        min.discr.path <- c(rev(min.path), c(b,c))
-        done <- TRUE
-      }
-      else {
-        ##d is connected to c -----> search iteratively
-        if (pag[d,c] == 2 && pag[c,d] == 3 && pag[pred,d] == 2) {
-          ##find all neighbours of d not visited yet
-          indR <- which(pag[d,] != 0 & pag[,d] == 2 & !visited) ## r *-> d
-          if (length(indR) > 0) {
-            ##update the queues
-            path.list <- updateList(min.path, indR, path.list)
-          }
-        }
-      }
-    }
-  }
-  return(min.discr.path)
-}
-
+##R5
 min.uncov.circ.path <- function(p, pag = NA, path = NA, unfVect= NA, verbose = FALSE)
 {
   ## Purpose: find a minimal uncovered circle path for a,b,c,d saved in path.
-  ## Check also for the conservative case that it is faithful 
+  ## Check also for the conservative case that it is unambiguous
   ## If a path exists this is the output, otherwise NA
   ## ----------------------------------------------------------------------
   ## Arguments: - p: number of nodes in the graph
@@ -4699,11 +4661,65 @@ min.uncov.circ.path <- function(p, pag = NA, path = NA, unfVect= NA, verbose = F
   return(min.ucp.path)
 }
 
+##R4
+find.min.discr.path <- function(pag = NA, path = NA, verbose = FALSE)
+{
+  ## Purpose: find a minimal discrimating path for a,b,c saved in path.
+  ## If a path exists this is the output, otherwise NA
+  ## ----------------------------------------------------------------------
+  ## Arguments: - pag: adjacency matrix
+  ##            - path: a,b,c under interest
+  ## ----------------------------------------------------------------------
+  ## Author: Diego Colombo, Date: 25 Jan 2011, 10:49
+
+  p <- as.numeric(dim(pag)[1])
+  visited <- rep(FALSE, p)
+  a <- path[1]
+  b <- path[2]
+  c <- path[3]
+  visited[a] <- visited[b] <- visited[c] <- TRUE
+  min.discr.path <- NA
+  ##find all neighbours of a not visited yet
+  indD <- which(pag[a,] != 0 & pag[,a] == 2 & !visited) ## d *-> a
+  if (length(indD) > 0) {
+    path.list <- updateList(a, indD, NULL)
+    done <- FALSE
+    min.path <- NA
+    while ((length(path.list) > 0) && (!done)) {
+      ##next element in the queue
+      min.path <- path.list[[1]]
+      m <- length(min.path)
+      d <- min.path[m]
+      pred <- min.path[m-1]
+      path.list[[1]] <- NULL
+      visited[d] <- TRUE
+      if (pag[c,d] == 0 & pag[d,c] == 0) {
+        ##discriminating path found
+        min.discr.path <- c(rev(min.path), c(b,c))
+        done <- TRUE
+      }
+      else {
+        ##d is connected to c -----> search iteratively
+        if (pag[d,c] == 2 && pag[c,d] == 3 && pag[pred,d] == 2) {
+          ##find all neighbours of d not visited yet
+          indR <- which(pag[d,] != 0 & pag[,d] == 2 & !visited) ## r *-> d
+          if (length(indR) > 0) {
+            ##update the queues
+            path.list <- updateList(min.path, indR, path.list)
+          }
+        }
+      }
+    }
+  }
+  return(min.discr.path)
+}
+
+
 ###############################################################################
 ##FCI
 ###############################################################################
 
-fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, pdsep.max = Inf, rules = rep(TRUE, 10), doPdsep = TRUE, conservative = FALSE, maj.rule = FALSE, biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
+fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, pdsep.max = Inf, rules = rep(TRUE, 10), doPdsep = TRUE, biCC = FALSE, conservative = FALSE, maj.rule = FALSE, labels = NA, type = "normal")
 {
   ## Purpose: Perform FCI-Algorithm, i.e., estimate PAG
   ## ----------------------------------------------------------------------
@@ -4722,15 +4738,13 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
   ##          to each rule. TRUE means the rule will be applied.
   ##          If rules==FALSE only R0 (minimal pattern) will be used
   ## - doPdsep: compute possible dsep
+  ## - biCC: TRUE or FALSE variable containing if biconnected components are
+  ##         used to compute pdsep
   ## - conservative: TRUE or FALSE defining if
   ##          the v-structures after the pdsep
   ##          have to be oriented conservatively or nor
   ## - maj.rule: TRUE or FALSE variable containing if the majority rule is
   ##             used instead of the normal conservative
-  ## - biCC: TRUE or FALSE variable containing if biconnected components are
-  ##         used to compute pdsep
-  ## - cons.rules: TRUE or FALSE variable containing if the 10 orientation rules
-  ##               are conservative or not
   ## - labels: names of the variables
   ## - type: it specifies the version of the FCI that has to be used.
   ##         Per default it is normal, the normal FCI algorithm. It can also be
@@ -4760,12 +4774,8 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
         stop("To use the Adaptive Anytime FCI you must not specify m.max.")
     }
     
-    if (conservative == TRUE & maj.rule == TRUE) {
+    if (conservative == TRUE && maj.rule == TRUE) {
         stop("Choose either conservative FCI or majority rule FCI") 
-    }
-
-    if (conservative == FALSE & maj.rule == FALSE & cons.rules == TRUE) {
-        stop("The conservative orientation rules can only be run with either conservative = TRUE or with maj.rule = TRUE")  
     }
     
     cl <- match.call()
@@ -4832,7 +4842,7 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
     if (verbose) 
         cat("\nDirect egdes:\n=============\nUsing rules:", which(rules), 
             "\nCompute collider:\n")
-    res <- udag2pag(pag = G, sepset, rules = rules, unfVect = if (cons.rules) tripleList, verbose = verbose) 
+    res <- udag2pag(pag = G, sepset, rules = rules, unfVect = tripleList, verbose = verbose) 
     colnames(res) <- rownames(res) <- labels
     fciRes <- new("fciAlgo", amat = res, call = cl, n = integer(0), max.ord = as.integer(max.ordSKEL), max.ordPDSEP = as.integer(max.ordPD), n.edgetests = n.edgetestsSKEL, n.edgetestsPDSEP = n.edgetestsPD, sepset = sepset, pMax = pMax, allPdsep = allPdsep)
     fciRes
@@ -4932,7 +4942,8 @@ qreach <- function(x,amat,verbose=FALSE)
 
 pdsep <- function (skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = Inf, pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
 {
-  ## Purpose: Compute possible D-sep for each node and adapt graph accordingly
+  ## Purpose: Compute Possible-D-SEP for each node, perform the condittional
+  ##          independent tests and adapt graph accordingly
   ## ----------------------------------------------------------------------
   ## Arguments:
   ## - skel: Graph object returned by function skeleton
@@ -5012,8 +5023,7 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = In
     while (x<p) {
       x <- x + 1
       if (verbose) {
-          cat("\nPossible D-Sep of", x, "is:", allPdsep[[x]], 
-              "\n")
+          cat("\nPossible D-Sep of", x, "is:", allPdsep[[x]], "\n")
       }
       if (any(amat[x, ] != 0)) {
         tf1 <- setdiff(allPdsep[[x]], x)
@@ -5035,7 +5045,7 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = In
             tmp.tf <- intersect(tf,bi.conn.comp)
             tf <- tmp.tf
             if (verbose) {
-              cat("There is an edge in the graph between",x,"and",y,"\n")
+              cat("There is an edge between",x,"and",y,"\n")
               cat("Possible D-Sep of", x,"intersected with the biconnected component of",x,"and",y,"is:", tf, "\n")
             }
           }
@@ -5149,7 +5159,7 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
   ## - rules: array of length 10 wich contains TRUE or FALSE corrsponding
   ##          to each rule. TRUE means the rule will be applied.
   ##          If rules==FALSE only R0 (minimal pattern) will be used
-  ## - unfVect: Vector with unfaithful triples (coded as number using triple2numb)
+  ## - unfVect: Vector with ambiguous triples (coded as number using triple2numb)
   ## - verbose: 0 - no output, 1 - detailed output
   ## ----------------------------------------------------------------------
   ## Author: Diego Colombo, Date: 6 Mar 2009; cleanup: Martin Maechler, 2010
@@ -5613,7 +5623,7 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
 ##RFCI
 ################################################################################
 
-rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10), conservative = FALSE, maj.rule = FALSE, cons.rules = FALSE, labels = NA) 
+rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10), conservative = FALSE, maj.rule = FALSE, labels = NA) 
 {
   ## Purpose: Perform RFCI-Algorithm, i.e., estimate PAG
   ## ----------------------------------------------------------------------
@@ -5632,8 +5642,6 @@ rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NU
   ##          If rules==FALSE only R0 (minimal pattern) will be used
   ## - conservative: TRUE or FALSE defining if the v-structures after
   ##                 the skeleton have to be oriented conservatively or nor
-  ## - cons.rules: TRUE or FALSE variable containing if the 10 orientation rules
-  ##               are conservative or not
   ## - maj.rule: TRUE or FALSE variable containing if the majority rule is
   ##             used instead of the normal conservative
   ## - labels: names of the variables
@@ -5678,7 +5686,7 @@ rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NU
   if (verbose) {
     cat("\nDirect egdes:\n=============\nUsing rules:", which(rules), "\n")
   }
-  res <- udag2apag(g, suffStat, indepTest, alpha, sepset, rules = rules, unfVect= if (cons.rules) tmp1$unfTripl, verbose=verbose)
+  res <- udag2apag(g, suffStat, indepTest, alpha, sepset, rules = rules, unfVect=tmp1$unfTripl, verbose=verbose)
  
   max.ordSKEL <- skel@max.ord  
   max.ordPD <- 0
@@ -5704,8 +5712,9 @@ find.unsh.triple <- function(g,p)
   ## Arguments: g: adjacency matrix
   ## ----------------------------------------------------------------------
   ## Values: - unshTripl: matrix with 3 rows containing in each column
-  ##                    an unshielded triple
-  ##         - unshVect: containing the unique number for each column in unshTripl
+  ##                      an unshielded triple
+  ##         - unshVect: containing the unique number for each column
+  ##                     in unshTripl
   ## ----------------------------------------------------------------------
   ## Author: Diego Colombo, Date: 21 Oct 2010, 14:05
 
@@ -5885,9 +5894,10 @@ rfci.vstructures <- function(suffStat, indepTest, p, alpha, sepset, graph, unshT
 dep.triple <- function(suffStat, indepTest, p, alpha, sepset, apag, unshTripl, unshVect, trueVstruct, verbose = FALSE)
 {
   ## Purpose: test the two edges of any unshielded triple in unshTripl (column)
-  ##          for dependence given SepSet. If independent find the minimal sepset,
-  ##          delete the edge, define the triple as FALSE in trueVstruct and search
-  ##          in the graph for new triple or destroyed ones. Otherwise do nothing. 
+  ##          for dependence given sepset. If independent find the minimal
+  ##          sepset, delete the edge, define the triple as FALSE in
+  ##          trueVstruct and search in the graph for new triple or destroyed
+  ##          ones. Otherwise do nothing. 
   ## ----------------------------------------------------------------------
   ## Arguments: - suffStat, indepTest, p, alpha, sepset, apag: skeleton
   ##              parameters
@@ -6255,11 +6265,21 @@ CheckEdges <- function(suffStat, indepTest, p, alpha, apag, sepset, path, unfVec
 
 udag2apag <- function (apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE, 10), unfVect=NULL, verbose = FALSE) 
 {
-  ## Purpose: use the 10 orientation rules to orient the skeleton.
+  ## Purpose: use the 10 orientation rules to orient the skeleton. R4 about
+  ##          discriminating paths also checks every edge for dependence
+  ##          given all subsets of the separating set.
   ##          Note that the preliminaries v-structures are already oriented
   ##          in apag
   ## ----------------------------------------------------------------------
-  ## Arguments: outputs of the function rfci.vstructures
+  ## Arguments:
+  ## - apag: adjacency matrix outputs of the function rfci.vstructures
+  ## - suffStat, indepTest, alpha: arguments required for the tests in R4
+  ## - sepset: list of all separation sets
+  ## - rules: array of length 10 wich contains TRUE or FALSE corrsponding
+  ##          to each rule. TRUE means the rule will be applied.
+  ##          If rules==FALSE only R0 (minimal pattern) will be used
+  ## - unfVect: Vector with ambiguous triples (coded as number using triple2numb)
+  ## - verbose: 0 - no output, 1 - detailed output
   ## ----------------------------------------------------------------------
   ## Values: updated apag (oriented) and sepset
   ## ----------------------------------------------------------------------
@@ -6979,8 +6999,8 @@ VisibleEdge <- function(amat, x, z)
 
 possibleDe <- function(amat,x)
 {
-    ## Purpose: in a PAG determine which nodes are possible descendants of x
-    ##          on definite status paths
+    ## Purpose: in a DAG, CPDAG, MAG, or PAG determine which nodes are
+    ##          possible descendants of x on definite status paths
     ## ----------------------------------------------------------------------
     ## Arguments:
     ## - amat: matrix corresponding to the DAG, CPDAG, MAG, or PAG
@@ -7226,20 +7246,19 @@ my.SpecialDag <- function (gm, a, tmp, X, verbose = FALSE)
 }
 
 
-gbc <- function(amat, x, y, mcov, type = "pag", verbose = FALSE)
+backdoor <- function(amat, x, y, type = "pag")
 {
   ## Purpose: for a given pair of nodes (x,y) and a given graph (DAG, CPDAG,
-  ##          MAG, or PAG) estimate the causal effect of x on y using the
-  ##          generalized backdoor criterion. In a first step we check if
-  ##          the effect is identifiable or not. If it is identifiable we
-  ##          compute the set W that satisfies the generalized backdoor
-  ##          criterion and we estimate the causal effect. If it is not
-  ##          identifiable the output is NA
+  ##          MAG, or PAG) estimate if the causal effect of x on y using the
+  ##          generalized backdoor criterion is identifiable or not. In a
+  ##          first step we check if the effect is identifiable or not. If
+  ##          it is identifiable we compute the set W that satisfies the
+  ##          generalized backdoor criterion. If it is not identifiable
+  ##          the output is NA
   ## ----------------------------------------------------------------------
   ## Arguments:
   ## - amat: adjacency matrix of the corresponding graph
   ## - x, y: nodes for which we want to estimate the causal effect of x on y
-  ## - mcov: covariance matrix needed to perform the regression
   ## - type: specifies the type of graph of the adjacency matrix amat. It
   ##         can be a DAG (type="dag"), a CPDAG (type="cpdag"), a MAG
   ##         (type="mag"), or a PAG (type="pag")
@@ -7250,7 +7269,7 @@ gbc <- function(amat, x, y, mcov, type = "pag", verbose = FALSE)
   ## Author: Diego Colombo, Date: 12 Apr 2013, 16:06
 
     stopifnot (dim(amat)[1] > 0, x!=y)
-    cEffect <- NA
+    set.w <- NA
     if (type == "dag" | type == "cpdag") {
         ##transfor each directed edge from 0-1 to 2-3 in the adjacency matrix
         ind <- which((amat == 1 & t(amat) == 0), arr.ind = TRUE) ##a -> b
@@ -7279,7 +7298,7 @@ gbc <- function(amat, x, y, mcov, type = "pag", verbose = FALSE)
     
     ##if x and y are not in the same connected component ---> 0
     if (!found.conncomp) {
-        cEffect <- 0
+        set.w <- NULL
     }
     else {
         ##1. compute the truncated graph
@@ -7327,8 +7346,8 @@ gbc <- function(amat, x, y, mcov, type = "pag", verbose = FALSE)
         ##paths is in D-SEP(x,y,amat.mag) or y is in adj(x, amat.trunc)
         if (!(amat.trunc[x,y] != 0) && !(any(list.de %in% dsep.set))) {
             ##D-SEP(x,y,amat.mag) closes all the paths
-            cEffect <- lm.cov(mcov, y, c(x, dsep.set))
+            set.w <- dsep.set
         }
     }
-    return(cEffect)
+    return(set.w)
 }

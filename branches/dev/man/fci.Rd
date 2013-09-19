@@ -1,16 +1,15 @@
 \name{fci}
 \alias{fci}
-\title{Estimate the equivalence class of a MAG (PAG) using the FCI Algorithm}
+\title{Estimate a Partial Ancestral Graph (PAG) using the FCI Algorithm}
 \description{
-  Estimate the equivalence class of a maximal ancestral graph (MAG) from
-  observational data, using the FCI-algorithm.
+  Estimate a PAG from observational data, using the FCI-algorithm.
 }
 
 \usage{
 fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-    fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, pdsep.max = Inf,
-rules = rep(TRUE, 10), doPdsep = TRUE, conservative = FALSE, maj.rule = FALSE,
-biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
+fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, pdsep.max = Inf, rules
+= rep(TRUE, 10), doPdsep = TRUE, biCC = FALSE, conservative = FALSE,
+maj.rule = FALSE, labels = NA, type = "normal")
 }
 
 \arguments{
@@ -47,14 +46,11 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   \item{pdsep.max}{Maximum size of Possible-D-SEP for which subsets are
     considered as conditioning sets in the conditional independence
     tests. If the nodes \code{x} and \code{y} are adjacent in the graph
-    and the size of Possible-D-SEP(\code{x})\ {\code{x},\code{y}},
-    estimated normally or using biconnected components, see later, is
-    bigger than pdsep.max, no conditional independence tests are
-    performed between \code{x} and its neighbour \code{y} given subsets of
-    Possible-D-SEP(\code{x}) and the edge is simply left in the graph.
+    and the size of Possible-D-SEP(\code{x})\ {\code{x},\code{y}}, is
+    bigger than pdsep.max, the edge is simply left in the graph.
     Note that if pdsep.max is less than Inf, the final PAG
-    may be a supergraph than the one computed with pdsep.max = Inf,
-    because less tests may have been performed in the former.}
+    may be a supergraph of the one computed with pdsep.max = Inf,
+    because fewer tests may have been performed in the former.}
   \item{rules}{Logical vector of length 10 indicating which rules
     should be used when directing edges. The order of the rules is taken
     from Zhang (2009).}
@@ -65,29 +61,23 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
     is not computed, so that the algorithm simplifies to the
     Modified PC algorithm of Spirtes, Glymour and Scheines (2000, page
     84).}
-  \item{conservative}{If \code{TRUE}, the
-  triples are checked for ambiguity after possible deletion of
-  edges when finding Possible-D-SEP. For more information, see details.}
-  \item{maj.rule}{If \code{TRUE}, the
-  triples are checked for ambiguity after possible deletion of
-  edges when finding Possible-D-SEP using a majority rule idea, which
-  is less strict than the standard conservative. For more information,
-  see details.}  
   \item{biCC}{If \code{TRUE}, only nodes on paths between nodes \code{x}
-  and \code{y} are considered to be in Possible-D-SEP(\code{x}) when
-  testing independence between \code{x} and \code {y}. Uses
-  biconnected components, \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
-  \item{cons.rules}{If \code{TRUE}, an orientation rule that needs information
-  on definite non-colliders is only applied, if the corresponding
-  subgraph relevant for the rule does not involve an ambiguous
-  triple. Note that to use the conservative rules, the user has to set
-  either \code{conservative = TRUE} or \code{maj.rule = TRUE}.}
+    and \code{y} are considered to be in Possible-D-SEP(\code{x}) when
+    testing independence between \code{x} and \code {y}. Uses
+    biconnected components, \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
+  \item{conservative}{If \code{TRUE}, the unshielded triples are checked
+    for ambiguity the second time when v-structures are determined. For
+    more information, see details.} 
+  \item{maj.rule}{If \code{TRUE}, the unshielded triples are checked for
+    ambiguity the second time when v-structures are determined using a
+    majority rule idea, which is less strict than the standard
+    conservative. For more information, see details.}  
   \item{labels}{Vector of length p with node names. If \code{NA},
     \code{as.character{1:p}} is used instead.}
-  \item{type}{It specifies the version of the FCI that has to be
+  \item{type}{It specifies the version of the FCI algorithm that has to be
   used. Per default it is \code{normal} and so the normal FCI
   algorithm is called. If set as \code{anytime}, the Anytime FCI is
-  called and in this case \code{m.max} must be pre-specified. If set as
+  called and in this case \code{m.max} must be specified. If set as
   \code{adaptive}, the Adaptive Anytime FCI is called and in this
   case m.max is not used. For more information, see Details.} 
 }
@@ -103,9 +93,10 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   \code{\link{pc}}), in the sense that it allows arbitrarily many
   latent and selection variables. Under the assumption that the data
   are faithful to a DAG that includes all latent and selection variables,
-  the FCI algorithm (Fast Causal Inference algorithm)
-  estimates the equivalence class of MAGs that describe
-  the conditional independence relationships between the observed variables.
+  the FCI algorithm (Fast Causal Inference algorithm) (Spirtes, Glymour
+  and Scheines, 2000) estimates the Markov equivalence class of MAGs
+  that describe the conditional independence relationships between the
+  observed variables. 
 
   We estimate an equivalence class of MAGs instead of DAGs, since DAGs are
   not closed under marginalization and conditioning
@@ -119,46 +110,39 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   and \code{y} if and only if variables {x} and {y} are conditionally dependent
   given S for all sets S consisting of all selection variables
   and a subset of the observed variables; (ii) a tail on an edge means
-  that this tail is present in all MAGs in the equivalence class;
+  that this tail is present in all MAGs in the Markov equivalence class;
   (iii) an arrowhead on an edge means that this arrowhead is present in
-  all MAGs in the equivalence
-  class; (iv) a o-edgemark means that there is a at least one MAG in the
-  equivalence class where the edgemark is a tail, and at least one where
-  the edgemark is an arrowhead. Information on the interpretation of edges
-  in a MAG can be found in the references given below.
+  all MAGs in the Markov equivalence class; (iv) a o-edgemark means that
+  there is a at least one MAG in the Markov equivalence class where the
+  edgemark is a tail, and at least one where the edgemark is an
+  arrowhead. Information on the interpretation of edges in a MAG can be
+  found in the references given below. 
 
   The first part of the FCI algorithm is analogous to the PC algorithm. It
   starts with a complete undirected graph and estimates an initial skeleton
-  using the function \code{\link{skeleton}}. All edges of this skeleton are of
+  using the function \code{\link{skeleton}}, which
+  produces an initial order-independent skeleton, see
+  \code{\link{skeleton}} for more details. All edges of this skeleton are of
   the form o-o. Due to the presence of hidden variables, it is no longer
   sufficient to consider only subsets of the neighborhoods of nodes \code{x}
   and \code{y} to decide whether the edge \code{x o-o y} should be removed.
   Therefore, the initial skeleton may contain some superfluous edges.
   These edges are removed in the next step of the algorithm which
   requires some orientations. Therefore, the v-structures
-  are determined using the conservative method using
-  \code{pc.cons.intern} with option \code{version.unf = c(1,1)}. All
-  potential v-structures a-b-c are checked in the following way. We test
-  whether a and c are independent conditioning on any subset of the
-  neighbors of a or any subset of the neighbors of c. If b is in no such
-  conditioning set or in all such conditioning sets, no further action
-  is taken. If, however, b is in only some conditioning sets, the triple
-  a-b-c is marked 'ambiguous'. If a is independent of c given some S in the
-  skeleton (i.e., the edge a-c dropped out), but a and c remain
-  dependent given all subsets of neighbors of either a or c, we will
-  call all triples a-b-c 'unambiguous'. This is because in the FCI, the
-  true separating set might be outside the neighborhood of either a or
-  c. An ambiguous triple is not oriented as a v-structure. After the
-  v-structures have been oriented, to decide whether edge \code{x o-o y}
-  should be removed, one computes Possible-D-SEP(x) and
-  Possible-D-SEP(y) and performs conditional indepedence tests of x and
-  y given all possible subsets of Possible-D-SEP(x) and
-  of Possible-D-SEP(y) (see helpfile of \code{\link{pdsep}}). This will
-  produce a fully order-independent final skeleton as explained in Colombo and
-  Maathuis (2013). Subsequently, the v-structures are newly determined
-  on the final skeleton (using information in sepset). Finally, as many
-  as possible undetermined edge marks (o) are determined using (a subset
-  of) the 10 orientation rules given by Zhang (2009).
+  are determined using the conservative (see discussion on
+  \code{conservative} below).
+  
+  After the v-structures have been oriented, Possible-D-SEP sets for each
+  node in the graph are computed at once. To decide whether edge
+  \code{x o-o y} should be removed, one performs conditional indepedence
+  tests of x and y given all possible subsets of Possible-D-SEP(x) and
+  of Possible-D-SEP(y). The edge is removed if a conditional
+  independence is found. This produces a fully order-independent final
+  skeleton as explained in Colombo and Maathuis (2013). Subsequently,
+  the v-structures are newly determined on the final skeleton (using
+  information in sepset). Finally, as many as possible undetermined edge
+  marks (o) are determined using (a subset of) the 10 orientation rules
+  given by Zhang (2009). 
 
   The Anytime FCI algorithm was introduced by Spirtes (2001). It can be
   viewed as a modification of the FCI algorithm that only performs
@@ -179,20 +163,36 @@ biCC = FALSE, cons.rules = FALSE, labels = NA, type = "normal")
   \code{skeleton}. Thus, m.max is chosen adaptively and does not have to
   be specified by the user.
 
-  The conservative FCI, Anytime FCI, and Adaptive Anytime FCI (done
-  if the argument of \code{conservative} is \code{TRUE}) are computed calling
-  \code{pc.cons.intern} with option \code{version.unf = c(1,1)} again
-  after Possilbe-D-SEP was found and the graph potentially lost some
-  edges. Therefore, new triples might have occured. The resulting
-  information on sepset and unambiguous triples overwrites the previous and
-  will be used for the subsequent orientation rules. Instead of using
-  the conservative version, which is quite strict towards the
-  v-structures, Colombo and Maathuis (2013) introduced a less strict
-  version for the v-structures called majority rule, see
-  \code{pc.cons.intern} for more details. This adaptation can be called
-  using \code{maj.rule = TRUE}. Colombo and Maathuis (2013) showed that
-  with both these modifications, the final skeleton and the orientation
-  of the v-structures of the FCI algorithm are fully order-independent.  
+  Conservative versions of FCI, Anytime FCI, and Adaptive Anytime FCI
+  are computed if the argument of \code{conservative} is
+  \code{TRUE}. After the final skeleton is computed, all potential
+  v-structures a-b-c are checked in the following way. We test whether a
+  and c are independent conditioning on any subset of the neighbors of a
+  or any subset of the neighbors of c. When a subset makes a and c
+  conditionally independent, we call it a separating set. If b is in no
+  such separating set or in all such separating sets, no further action
+  is taken and the normal version of the FCI, Anytime FCI, or Adaptive
+  Anytime FCI algorithm is continued. If, however, b is in only some
+  separating sets, the triple a-b-c is marked 'ambiguous'. If a is
+  independent of c given some S in the skeleton (i.e., the edge a-c
+  dropped out), but a and c remain dependent given all subsets of
+  neighbors of either a or c, we will call all triples a-b-c
+  'unambiguous'. This is because in the FCI algorithm, the true separating set
+  might be outside the neighborhood of either a or c. An ambiguous
+  triple is not oriented as a v-structure. Furthermore, no further
+  orientation rule that needs to know whether a-b-c is a v-structure or
+  not is applied. Instead of using the conservative version, which is
+  quite strict towards the v-structures, Colombo and Maathuis (2013)
+  introduced a less strict version for the v-structures called majority
+  rule. This adaptation can be called using \code{maj.rule = TRUE}. In
+  this case, the triple a-b-c is marked as 'ambiguous' if and only if b
+  is in exactly 50 percent of such separating sets or no separating set
+  was found. If b is in less than 50 percent of the separating sets it
+  is set as a v-structure, and if in more than 50 percent it is set as a
+  non v-structure (for more details see Colombo and Maathuis,
+  2013). Colombo and Maathuis (2013) showed that with both these
+  modifications, the final skeleton and the decisions about the
+  v-structures of the FCI algorithm are fully order-independent. 
 
   Note that the order-dependence issues on the 10 orientation rules are
   still present, see Colombo and Maathuis (2013) for more details.}  

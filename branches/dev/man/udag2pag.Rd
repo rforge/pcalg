@@ -59,7 +59,7 @@ udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose = FALSE)
 }
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 
-\seealso{\code{\link{pc}}, \code{\link{fci}}}
+\seealso{\code{\link{fci}}}
 
 \examples{
 ##################################################

@@ -1,17 +1,16 @@
 \name{qreach}
 \alias{qreach}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{Compute possible d-sep of node x}
+\title{Compute Possible-D-SEP set of node x}
 \description{
-  This function computes the Possible-D-Sep of node x in a partially
-  directed acyclic graph (PDAG). It is intended
-  for internal use only.
+  This function computes the Possible-D-SEP set of node x in a partially
+  directed acyclic graph (PDAG). It is intended for internal use only.
 }
 \usage{
 qreach(x, amat, verbose = FALSE)
 }
 \arguments{
-\item{x}{Column of node in adjacency matrix, of which possible d-sep is
+\item{x}{Column of node in adjacency matrix, of which Possible-D-SEP set is
   to be computed}
 \item{amat}{Adjacency matrix as returned by
   amat[i,j] = 0 iff no edge btw i,j
@@ -21,7 +20,7 @@ qreach(x, amat, verbose = FALSE)
 }
 
 \value{
-  Vector of column positions indicating the nodes in Possible-D-Sep of x.
+  Vector of column positions indicating the nodes in Possible-D-SEP of x.
 }
 \references{
   P. Spirtes, C. Glymour and R. Scheines (2000)

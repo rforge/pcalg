@@ -26,8 +26,8 @@ pag2mag(amat.pag, x)
   into ->. Afterwards, it orients each chordal component into a valid DAG
   without orienting any additional edges into x.
 
-  This function is used in the Generalized backdoor criterion
-  \code{\link{gbc}} with \code{type="pag"}, see Maathuis and Colombo
+  This function is used in the Generalized Backdoor Criterion
+  \code{\link{backdoor}} with \code{type="pag"}, see Maathuis and Colombo
   (2013) for details.
 }
 \value{
@@ -43,7 +43,7 @@ pag2mag(amat.pag, x)
   Insufficient Systems. Ph. D. thesis, Carnegie Mellon University.
 }
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch}).}
-\seealso{\code{\link{fci}}, \code{\link{dag2pag}}, \code{\link{gbc}}}
+\seealso{\code{\link{fci}}, \code{\link{dag2pag}}, \code{\link{backdoor}}}
 \examples{
 ## create the graph
 set.seed(78)

@@ -1,10 +1,17 @@
 \name{skeleton}
 \alias{skeleton}
-\title{Estimate the skeleton of a DAG using the PC Algorithm}
+\title{Estimate the skeleton of a DAG without latent and selection
+  variables using the PC Algorithm and estimate an initial skeleton of a
+  DAG with arbitrarily many latent and selection variables using the FCI
+  and the RFCI algorithms.}
 \description{
-  Estimate the order-independent \dQuote{skeleton} of a directed
-  acyclic graph (DAG) from observational data,
-  using the PC-algorithm.
+  If used in the PC algorithm, it estimates the order-independent
+  \dQuote{skeleton} of a directed acyclic graph (DAG) from observational
+  data. When used in the FCI and RFCI algorithms, this function estimates
+  only an initial order-independent \dQuote{skeleton}. Because of the presence
+  of latent and selection variables, to find the final skeleton those
+  algorithms need to perform additional tests later on and consequently
+  some edges can be further deleted. 
 }
 \usage{
 skeleton(suffStat, indepTest, p, alpha, fixedGaps = NULL,
@@ -44,26 +51,34 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
 }
 \value{An object of \code{\link{class}} \code{"pcAlgo"} (see
   \code{\linkS4class{pcAlgo}}) containing an estimate of the skeleton of
-  the underlying DAG,
-  the conditioning sets that led to edge removals (sepset) and several
-  other parameters.
+  the underlying DAG, the conditioning sets that led to edge removals
+  (sepset) and several other parameters.
 }
 \details{
   Under the assumption that the distribution of the observed variables
-  is faithful to a DAG, this function estimates the skeleton
-  of the DAG. The skeleton of a DAG is the undirected graph
-  resulting from removing all arrowheads from the DAG. Edges in the skeleton of
-  a DAG have the following interpretation: there is an edge between i and j
-  if and only if variables i and j are conditionally dependent given S for
-  all possible subsets S of the remaining nodes.
+  is faithful to a DAG and that there are no latent and selection
+  variables, this function estimates the skeleton of the DAG. The
+  skeleton of a DAG is the undirected graph resulting from removing all
+  arrowheads from the DAG. Edges in the skeleton of a DAG have the
+  following interpretation: there is an edge between i and j if and only
+  if variables i and j are conditionally dependent given S for all
+  possible subsets S of the remaining nodes.
+
+  Under the assumption that the distribution of the observed variables
+  is faithful to a DAG with arbitrarily many latent and selection
+  variables, this function estimates the initial skeleton of the
+  DAG. Edges in this initial skeleton of a DAG have the
+  following interpretation: there is an edge between i and j if and only
+  if variables i and j are conditionally dependent given S for all
+  possible subsets S of the neighbours of i and of the neighbours of j.
 
   The data are not required to follow a specific distribution,
-  but one should make
-  sure that the conditional indepedence test used in \code{indepTest}
-  is appropriate for the data. Pre-programmed versions of \code{indepTest}
-  are available for Gaussian data (\code{\link{gaussCItest}}), discrete data
-  (\code{\link{disCItest}}), and binary data (see \code{\link{binCItest}}).
-  Users can also specify their own \code{indepTest} function.
+  but one should make sure that the conditional indepedence test used in
+  \code{indepTest} is appropriate for the data. Pre-programmed versions
+  of \code{indepTest} are available for Gaussian data
+  (\code{\link{gaussCItest}}), discrete data (\code{\link{disCItest}}),
+  and binary data (see \code{\link{binCItest}}). Users can also specify
+  their own \code{indepTest} function. 
 
   The PC algorithm (Spirtes, Glymour and Scheines, 2000)
   is known to be order-dependent, in the sense that the
@@ -71,13 +86,15 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
   given. Therefore, Colombo and Maathuis (2013) proposed a simple
   modification, called PC-stable, that yields order-independent
   adjacencies in the skeleton. In this function we implement their
-  modified algorithm (the old implementation can be found in version
-  1.1-5). The algorithm starts with a complete undirected graph. In each
+  modified algorithm (the old order-dependent implementation can be
+  found in version 1.1-5).
+
+  The algorithm starts with a complete undirected graph. In each
   step, it visits all pairs (\code{i},\code{j}) of adjacent nodes in the
   current graph, and determines based on conditional independence tests
   whether the edge i-j should be removed. In particular, for each step
   \code{m} (\code{m}=0,1,...) of the size of the conditioning sets, the
-  algorithm at first estimates the neighbours \code{a(i)} of each node
+  algorithm at first determines the neighbours \code{a(i)} of each node
   \code{i} in the graph. Then, the algorithm visits all pairs (\code{i},
   \code{j}) of adjacent nodes in the current graph, and the edge between
   \code{i} and \code{j} is kept if and only if the null hypothesis
@@ -85,11 +102,21 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
   conditionally independent given S" is
   rejected at significance level \code{alpha} for all subsets \code{S} of size
   \code{m} of \code{a(i)} and of \code{a(j)} (as judged by the function
-  \code{indepTest}). The idea of computing the neighbours at the
-  beginning of each increasing step of \code{m} makes the final skeleton
-  order-independent. The algorithm stops when m is larger than the
-  largest neighbourhood size of all nodes, or when \code{m} has reached the
-  limit \code{m.max} defined by the user. 
+  \code{indepTest}). The difference with the original PC algorithm is
+  that the neighborhoods \code{a(i)} are kept fixed within each value of
+  \code{m}, and this makes the algorithm order-independent. The
+  algorithm stops when \code{m} is larger than the largest neighbourhood
+  size of all nodes, or when \code{m} has reached the limit \code{m.max}
+  defined by the user. 
+
+  Since the FCI (Spirtes, Glymour and Scheines, 2000) and RFCI (Colombo
+  et al., 2012) algorithms are build up from the PC algorithm, they are also
+  order-dependent in the skeleton. To resolve their order-dependence
+  issues in the skeleton is more involved, see Colombo and Maathuis
+  (2013). However, from the description above, this function estimates an
+  initial order-independent skeleton in these algorithms (for additional
+  details on how to make the final skeleton of FCI fully
+  order-independent see \code{\link{fci}} and Colombo and Maathuis (2013)).   
 
   The information in \code{fixedGaps} and \code{fixedEdges} is used as follows.
   The gaps given in \code{fixedGaps} are introduced in the very beginning of
@@ -103,24 +130,29 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
   the variables.
 }
 \references{
-  P. Spirtes, C. Glymour and R. Scheines (2000)
-  \emph{Causation, Prediction, and Search}, 2nd edition, MIT Press.
-
-  M. Kalisch and P. Buehlmann (2007)
-  \emph{Estimating high-dimensional
-    directed acyclic graphs with the PC-algorithm},
-  JMLR \bold{8} 613-636.
-
-  D. Colombo and M.H. Maathuis (2013)
+  D. Colombo and M.H. Maathuis (2013).
   \emph{Order-independent constraint-based causal structure learning},
-  (arXiv:1211.3295v1)   
+  (arXiv:1211.3295v1)
+
+  D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
+  (2012). Learning high-dimensional directed acyclic graphs with latent
+  and selection variables. \emph{Ann. Statist.} \bold{40}, 294-321. 
+
+  M. Kalisch and P. Buehlmann (2007).
+  \emph{Estimating high-dimensional directed acyclic graphs with the
+  PC-algorithm}, JMLR \bold{8} 613-636.
+  
+  P. Spirtes, C. Glymour and R. Scheines (2000).
+  \emph{Causation, Prediction, and Search}, 2nd edition, MIT Press.     
 }
 
 \seealso{\code{\link{pc}} for generating a partially directed graph
-  using the PC algorithm; \code{\link{udag2pdag}} for converting the
-  skeleton to a CPDAG; \code{\link{gaussCItest}},
-  \code{\link{disCItest}}, \code{\link{binCItest}} and
-  \code{\link{dsepTest}} as examples for \code{indepTest}.
+  using the PC algorithm; \code{\link{fci}} for generating a partial
+  ancestral graph using the FCI algorithm; \code{\link{rfci}} for
+  generating a partial ancestral graph using the RFCI
+  algorithm;\code{\link{gaussCItest}}, \code{\link{disCItest}},
+  \code{\link{binCItest}} and \code{\link{dsepTest}} as examples for
+  \code{indepTest}. 
 }
 \author{
   Markus Kalisch (\email{kalisch@stat.math.ethz.ch}), Martin Maechler,

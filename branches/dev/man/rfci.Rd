@@ -8,8 +8,8 @@
 
 \usage{
 rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-    fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE,
-10), conservative = FALSE, maj.rule = FALSE, cons.rules = FALSE, labels = NA)
+fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10),
+conservative = FALSE, maj.rule = FALSE, labels = NA) 
 }
 
 \arguments{
@@ -46,15 +46,12 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   \item{rules}{Logical vector of length 10 indicating which rules
     should be used when directing edges. The order of the rules is taken
     from Zhang (2009).}
-  \item{conservative}{If \code{TRUE}, the
-  triples are checked for ambiguity after the skeleton has been found.}
-  \item{maj.rule}{If \code{TRUE}, the
-  triples are checked for ambiguity after the skeleton has been found
-  using a majority rule idea, which is less strict than the standard
-  conservative.}  
-  \item{cons.rules}{If \code{TRUE}, an orientation rule that needs information
-    on definite non-colliders is only applied, if the corresponding
-    subgraph relevant for the rule does not involve an ambiguous triple.}
+  \item{conservative}{If \code{TRUE}, the unshielded triples are checked
+  for ambiguity after the skeleton has been found, similar to the
+  conservative PC algorithm.}   
+  \item{maj.rule}{If \code{TRUE}, the unshielded triples are checked for
+  ambiguity after the skeleton has been found using a majority rule
+  idea, which is less strict than the conservative.}  
   \item{labels}{Vector of length p with node names. If \code{NA},
     \code{as.character(1:p)} is used instead.}
 }
@@ -68,40 +65,100 @@ rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
 \details{
   This function is rather similar to \link{fci}. However, it does not
   compute any Possible-D-SEP sets and thus does not make tests
-  conditioning on them. This makes RFCI much faster than FCI. The
-  orientation rules for v-structures and rule 4 were modified in order
-  to produce a PAG which, in the oracle version, is guaranteed to have
-  the correct ancestral relationships.
+  conditioning on subsets of Possible-D-SEP. This makes RFCI much faster
+  than FCI. The orientation rules for v-structures and rule 4 were
+  modified in order to produce an RFCI-PAG which, in the oracle version,
+  is guaranteed to have the correct ancestral relationships.
 
-  The argument \code{conservative} is used to estimate the conservative
-  RFCI. If \code{conservative = TRUE} it is computed calling
-  \code{pc.cons.intern} with option \code{version.unf = c(1,1)} after
-  the initial skeleton has been computed and the algorithm is performing
-  the additional local tests on the unshielded triples. The resulting
-  information on sepset and unambiguous triples will be used for the
-  subsequent orientation rules. Instead of using the conservative
-  version, which is quite strict towards the v-structures,
-  \cite{pc.indep} introduced a less strict version for the v-structures
-  called majority rule, see \code{pc.cons.intern} for more details. This
-  adaptation can be called using \code{maj.rule = TRUE}. The purpose of
-  this conservative versions is used in the hope to obtain better edge
-  orientations. 
+  The first part of the RFCI algorithm is analogous to the PC and FCI
+  algorithm. It starts with a complete undirected graph and estimates an
+  initial skeleton using the function \code{\link{skeleton}}, which
+  produces an initial order-independent skeleton, see
+  \code{\link{skeleton}} for more details. All edges
+  of this skeleton are of the form o-o. Due to the presence of hidden
+  variables, it is no longer sufficient to consider only subsets of the
+  neighborhoods of nodes \code{x} and \code{y} to decide whether the
+  edge \code{x o-o y} should be removed. The FCI algorithm performs
+  independence tests conditioning on subsets of Possible-D-SEP to remove
+  those edges. Since this procedure is computationally infeasible, the
+  RFCI algorithm uses a different approach to remove some of those
+  superfluous edges before orienting the v-structures and the
+  discriminating paths in orientation rule 4.
 
-  In contrast to the FCI algorithm, none of the order-dependence issues
-  are fully resolved here, see Colombo and Maathuis (2013).}
+  Before orienting the v-structures, we perform the following additional
+  conditional independence tests. For each unshielded triple a-b-c in
+  the initial skeleton, we check if both a and b and b and c are
+  conditionally dependent given the separating of a and c
+  (sepset(a,c)). These conditional dependencies may not have been
+  checked while estimating the initial skeleton, since sepset(a,c) does
+  not need to be a subset of the neighbors of a nor of the neighbors of
+  c. If both conditional dependencies hold and b is not in the
+  sepset(a,c), the triple is oriented as a v-structure a->b<-c. On the
+  other hand, if an additional conditional independence relationship may
+  be detected, say a is independent from b given the sepset(a,c), the
+  edge between a nd c is removed from the graph and the set responsible
+  for that is saved in sepset(a,b). The removal of an edge can destroy
+  or create new unshielded triples in the graph. To solve this problem
+  we work with lists (for details see Colombo et al., 2012).
+
+  Before orienting discriminating paths, we perform the following additional
+  conditional independence tests. For each triple a <-* b o- *c with a
+  -> c ,  the algorithm searches for a discriminating path p = <d,
+  . . . , a,b,c> for b of minimal length, and checks that the vertices
+  in every consecutive pair (f1,f2) on p are conditionally dependent
+  given all subsets of sepset(d,c) \ {f1,f2 }. If we do not find any
+  conditional independence relationship, the path is oriented as in rule
+  (R4). If one or more conditional independence relationships are found,
+  the corresponding edges are removed, their minimal separating sets are
+  stored.
+
+  Conservative RFCI can be computed if the argument of \code{conservative} is
+  \code{TRUE}. After the final skeleton is computed and the
+  additional local tests on all unshielded triples, as described above,
+  have been done, all potential v-structures a-b-c are checked
+  in the following way. We test whether a and c are independent
+  conditioning on any subset of the neighbors of a or any subset of the
+  neighbors of c. When a subset makes a and c conditionally independent,
+  we call it a separating set. If b is in no such separating set or in
+  all such separating sets, no further action is taken and the normal
+  version of the RFCI algorithm is continued. If, however, b is in only
+  some separating sets, the triple a-b-c is marked 'ambiguous'. If a is
+  independent of c given some S in the skeleton (i.e., the edge a-c
+  dropped out), but a and c remain dependent given all subsets of
+  neighbors of either a or c, we will call all triples a-b-c
+  'unambiguous'. This is because in the RFCI algorithm, the true
+  separating set might be outside the neighborhood of either a or c. An
+  ambiguous triple is not oriented as a v-structure. Furthermore, no further
+  orientation rule that needs to know whether a-b-c is a v-structure or
+  not is applied. Instead of using the conservative version, which is
+  quite strict towards the v-structures, Colombo and Maathuis (2013)
+  introduced a less strict version for the v-structures called majority
+  rule. This adaptation can be called using \code{maj.rule = TRUE}. In
+  this case, the triple a-b-c is marked as 'ambiguous' if and only if b
+  is in exactly 50 percent of such separating sets or no separating set
+  was found. If b is in less than 50 percent of the separating sets it
+  is set as a v-structure, and if in more than 50 percent it is set as a
+  non v-structure (for more details see Colombo and Maathuis,
+  2013). 
+
+  The implementation uses the stabilized skeleton
+  \code{\link{skeleton}}, which produces an initial order-independent
+  skeleton. The final skeleton and edge orientations can still be
+  order-dependent, see Colombo and Maathuis (2013).
+}
 
 \references{
-  D. Colombo and M.H. Maathuis (2013). Order-independent
-  constraint-based causal structure learning. arXiv preprint
-  arXiv:1211.3295v1.
+  D. Colombo and M.H. Maathuis (2013).
+  Order-independent constraint-based causal structure learning. arXiv
+  preprint arXiv:1211.3295v1.
   
-  D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
-  (2012). Learning high-dimensional directed acyclic graphs with latent
-  and selection variables. \emph{Ann. Statist.} \bold{40}, 294-321. 
+  D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson (2012).
+  Learning high-dimensional directed acyclic graphs with latent and
+  selection variables. \emph{Ann. Statist.} \bold{40}, 294-321.  
 }
 \seealso{\code{\link{fci}} for estimating a PAG using the FCI algorithm;
-  \code{\link{skeleton}} for estimating a skeleton
-  using the PC algorithm; \code{\link{pc}} for estimating a CPDAG using
+  \code{\link{skeleton}} for estimating an initial skeleton
+  using the RFCI algorithm; \code{\link{pc}} for estimating a CPDAG using
   the PC algorithm; \code{\link{gaussCItest}},
   \code{\link{disCItest}}, \code{\link{binCItest}} and
   \code{\link{dsepTest}} as examples for \code{indepTest}.
