@@ -630,148 +630,6 @@ corGraph <- function(dm, alpha = 0.05, Cmethod = "pearson")
 ## dag2cpdag
 ##################################################
 
-make.edge.df <- function(amat) {
-  ## Purpose: Generate a data frame describing some properties of a DAG
-  ## (for extending to a CPDAG)
-  ## The output contains xmin,xmax,head,tail,order (NA or number),
-  ## type (1="d",0="u") in lexikographic order
-  ## ----------------------------------------------------------------------
-  ## Arguments:
-  ## - amat: Adjacency matrix of DAG [x_ij=1 means i->j]
-  ## ----------------------------------------------------------------------
-  ## Author: Markus Kalisch, Date: 31 Oct 2006, 15:43
-
-  ## INPUT: Adjacency matrix
-  stopifnot(sum(amat)>0)
-  e <- which(amat==1,arr.ind=TRUE)
-  e.dup <- duplicated(t(apply(e,1,sort)))
-  nmb.edges <- sum(!e.dup)
-  res <- data.frame(xmin=rep(NA,nmb.edges),xmax=rep(NA,nmb.edges),
-                    tail=rep(NA,nmb.edges),head=rep(NA,nmb.edges),
-                    order=rep(NA,nmb.edges),type=rep(1,nmb.edges))
-  pure.edges <- e[!e.dup,]
-  if(length(pure.edges)==2) dim(pure.edges) <- c(1,2)
-  for (i in 1:dim(pure.edges)[1]) {
-    if (all(amat[pure.edges[i,1],pure.edges[i,2]]==
-            amat[pure.edges[i,2],pure.edges[i,1]])) {
-      res$type[i] <- 0
-      res$head[i] <- NA
-      res$tail[i] <- NA
-    } else {
-      res$head[i] <- pure.edges[i,2]
-      res$tail[i] <- pure.edges[i,1]
-    }
-  }
-  s.pure.edges <- t(apply(pure.edges,1,sort))
-  ii <- order(s.pure.edges[,1],s.pure.edges[,2])
-  res <- res[ii,]
-  res$xmin <- s.pure.edges[ii,1]
-  res$xmax <- s.pure.edges[ii,2]
-  res
-}
-
-orderEdges <- function(amat) {
-  ## Purpose: Order the edges of a DAG according to Chickering
-  ## (for extension to CPDAG)
-  ## ----------------------------------------------------------------------
-  ## Arguments:
-  ## - amat: Adjacency matrix of DAG
-  ## ----------------------------------------------------------------------
-  ## Author: Markus Kalisch, Date: 31 Oct 2006, 15:42
-
-  stopifnot(isAcyclic(amat))
-  ordered.nodes <- topOrder(amat) ## parents before children
-  edge.df <- make.edge.df(amat)
-
-  eOrder <- 0
-  while(any(unOrdered <- is.na(edge.df$order))) {
-    counter <- 0
-    ## find y
-    y <- NA
-    found <- FALSE
-    while(!found) {
-      counter <- counter+1
-      node <- ordered.nodes[counter]
-      ## which edges are incident to node?
-      nbr.nodes <- which(amat[,node]==1)
-      if(length(nbr.nodes)>0) {
-        unlabeled <- rep.int(FALSE, length(nbr.nodes))
-        for(i in seq_along(nbr.nodes)) {
-          x <- nbr.nodes[i]
-          ## is edge edge x-y unlabeled?
-	  unlabeled[i] <- length(intersect(which(edge.df$xmin==min(node,x) &
-						 edge.df$xmax==max(node,x)),
-					   which(unOrdered))) > 0
-        }
-        ## choose unlabeled edge with highest order node
-        if(any(unlabeled)) {
-          nbr.unlab <- nbr.nodes[unlabeled] #nbrnodes w. unlabeled edges
-          tmp <- ordered.nodes[ordered.nodes %in% nbr.unlab]
-          y <- tmp[length(tmp)]
-          ## y <- last(ordered.nodes[which(ordered.nodes %in% nbr.unlab)])
-          edge.df$order[edge.df$xmin==min(node,y) &
-                        edge.df$xmax==max(node,y)] <- eOrder
-          eOrder <- eOrder+1
-          found <- TRUE
-        }
-      }
-
-    } ## while !found
-
-  } ## while any(unOrdered)
-  edge.df
-}
-
-
-labelEdges <- function(amat) {
-  ## Purpose: Label the edges in a DAG with "compelled" and "reversible"
-  ## (for extension to a CPDAG)
-  ## ----------------------------------------------------------------------
-  ## Arguments:
-  ## - amat: Adjacency matrix of DAG
-  ## ----------------------------------------------------------------------
-  ## Author: Markus Kalisch, Date: 31 Oct 2006;  prettified: MMaechler
-
-  ## label=TRUE -> compelled
-  ## label=FALSE -> reversible
-  edge.df <- orderEdges(amat)
-  lab <- rep(NA,dim(edge.df)[1])
-  edge.df <- edge.df[order(edge.df$order),]
-  Head <- edge.df$head
-  Tail <- edge.df$tail
-
-  while(any(ina <- is.na(lab))) {
-    x.y <- which(ina)[1]
-    x <- Tail[x.y]
-    y <- Head[x.y]
-    y.is.head <- Head == y
-    e1 <- which(Head == x & lab)
-    for(ee in e1) {
-      w <- Tail[ee]
-      if (any(wt.yh <- w == Tail & y.is.head))
-        lab[wt.yh] <- TRUE
-      else {
-        lab[y.is.head] <- TRUE
-        break
-      }
-    }
-    ## edges going to y not starting from x
-    cand <- which(y.is.head  &  Tail != x)
-    if (length(cand) > 0) {
-      valid.cand <- rep(FALSE,length(cand))
-      for (iz in seq_along(cand)) {
-        z <- Tail[cand[iz]]
-        if (!any(Tail==z & Head==x)) ## NOT.parent.of.x :
-          valid.cand[iz] <- TRUE
-      }
-      cand <- cand[valid.cand]
-    }
-    lab[which(y.is.head & is.na(lab))] <- (length(cand) > 0)
-  }
-  edge.df$label <- lab
-  edge.df
-}
-
 dag2cpdag <- function(g)
 {
   ## Purpose: Compute the (unique) completed partially directed graph (CPDAG)
@@ -916,6 +774,148 @@ dag2cpdag <- function(g)
 ##    cpdag.res <- as(cpdag,"graphNEL")
 ##  }
 ##  cpdag.res
+##}
+
+##make.edge.df <- function(amat) {
+  ## Purpose: Generate a data frame describing some properties of a DAG
+  ## (for extending to a CPDAG)
+  ## The output contains xmin,xmax,head,tail,order (NA or number),
+  ## type (1="d",0="u") in lexikographic order
+  ## ----------------------------------------------------------------------
+  ## Arguments:
+  ## - amat: Adjacency matrix of DAG [x_ij=1 means i->j]
+  ## ----------------------------------------------------------------------
+  ## Author: Markus Kalisch, Date: 31 Oct 2006, 15:43
+
+  ## INPUT: Adjacency matrix
+##  stopifnot(sum(amat)>0)
+##  e <- which(amat==1,arr.ind=TRUE)
+##  e.dup <- duplicated(t(apply(e,1,sort)))
+##  nmb.edges <- sum(!e.dup)
+##  res <- data.frame(xmin=rep(NA,nmb.edges),xmax=rep(NA,nmb.edges),
+##                    tail=rep(NA,nmb.edges),head=rep(NA,nmb.edges),
+##                    order=rep(NA,nmb.edges),type=rep(1,nmb.edges))
+##  pure.edges <- e[!e.dup,]
+##  if(length(pure.edges)==2) dim(pure.edges) <- c(1,2)
+##  for (i in 1:dim(pure.edges)[1]) {
+##    if (all(amat[pure.edges[i,1],pure.edges[i,2]]==
+##            amat[pure.edges[i,2],pure.edges[i,1]])) {
+##      res$type[i] <- 0
+##      res$head[i] <- NA
+##      res$tail[i] <- NA
+##    } else {
+##      res$head[i] <- pure.edges[i,2]
+##      res$tail[i] <- pure.edges[i,1]
+##    }
+##  }
+##  s.pure.edges <- t(apply(pure.edges,1,sort))
+##  ii <- order(s.pure.edges[,1],s.pure.edges[,2])
+##  res <- res[ii,]
+##  res$xmin <- s.pure.edges[ii,1]
+##  res$xmax <- s.pure.edges[ii,2]
+##  res
+#}
+
+##orderEdges <- function(amat) {
+  ## Purpose: Order the edges of a DAG according to Chickering
+  ## (for extension to CPDAG)
+  ## ----------------------------------------------------------------------
+  ## Arguments:
+  ## - amat: Adjacency matrix of DAG
+  ## ----------------------------------------------------------------------
+  ## Author: Markus Kalisch, Date: 31 Oct 2006, 15:42
+
+##  stopifnot(isAcyclic(amat))
+##  ordered.nodes <- topOrder(amat) ## parents before children
+##  edge.df <- make.edge.df(amat)
+
+##  eOrder <- 0
+##  while(any(unOrdered <- is.na(edge.df$order))) {
+##    counter <- 0
+    ## find y
+##    y <- NA
+##    found <- FALSE
+##    while(!found) {
+##      counter <- counter+1
+##      node <- ordered.nodes[counter]
+      ## which edges are incident to node?
+##      nbr.nodes <- which(amat[,node]==1)
+##      if(length(nbr.nodes)>0) {
+##        unlabeled <- rep.int(FALSE, length(nbr.nodes))
+##        for(i in seq_along(nbr.nodes)) {
+##          x <- nbr.nodes[i]
+          ## is edge edge x-y unlabeled?
+##	  unlabeled[i] <- length(intersect(which(edge.df$xmin==min(node,x) &
+##						 edge.df$xmax==max(node,x)),
+##					   which(unOrdered))) > 0
+##        }
+        ## choose unlabeled edge with highest order node
+##        if(any(unlabeled)) {
+##          nbr.unlab <- nbr.nodes[unlabeled] #nbrnodes w. unlabeled edges
+##          tmp <- ordered.nodes[ordered.nodes %in% nbr.unlab]
+##          y <- tmp[length(tmp)]
+          ## y <- last(ordered.nodes[which(ordered.nodes %in% nbr.unlab)])
+##          edge.df$order[edge.df$xmin==min(node,y) &
+##                        edge.df$xmax==max(node,y)] <- eOrder
+##          eOrder <- eOrder+1
+##          found <- TRUE
+##        }
+##      }
+
+##    } ## while !found
+
+##  } ## while any(unOrdered)
+##  edge.df
+##}
+
+
+##labelEdges <- function(amat) {
+  ## Purpose: Label the edges in a DAG with "compelled" and "reversible"
+  ## (for extension to a CPDAG)
+  ## ----------------------------------------------------------------------
+  ## Arguments:
+  ## - amat: Adjacency matrix of DAG
+  ## ----------------------------------------------------------------------
+  ## Author: Markus Kalisch, Date: 31 Oct 2006;  prettified: MMaechler
+
+  ## label=TRUE -> compelled
+  ## label=FALSE -> reversible
+##  edge.df <- orderEdges(amat)
+##  lab <- rep(NA,dim(edge.df)[1])
+##  edge.df <- edge.df[order(edge.df$order),]
+##  Head <- edge.df$head
+##  Tail <- edge.df$tail
+
+##  while(any(ina <- is.na(lab))) {
+##    x.y <- which(ina)[1]
+##    x <- Tail[x.y]
+##    y <- Head[x.y]
+##    y.is.head <- Head == y
+##    e1 <- which(Head == x & lab)
+##    for(ee in e1) {
+##      w <- Tail[ee]
+##      if (any(wt.yh <- w == Tail & y.is.head))
+##        lab[wt.yh] <- TRUE
+##      else {
+##        lab[y.is.head] <- TRUE
+##        break
+##      }
+##    }
+    ## edges going to y not starting from x
+##    cand <- which(y.is.head  &  Tail != x)
+##    if (length(cand) > 0) {
+##      valid.cand <- rep(FALSE,length(cand))
+##      for (iz in seq_along(cand)) {
+##        z <- Tail[cand[iz]]
+##        if (!any(Tail==z & Head==x)) ## NOT.parent.of.x :
+##          valid.cand[iz] <- TRUE
+##      }
+##      cand <- cand[valid.cand]
+##    }
+##    lab[which(y.is.head & is.na(lab))] <- (length(cand) > 0)
+##  }
+##  edge.df$label <- lab
+##  edge.df
 ##}
 
 ##################################################
