@@ -1,5 +1,5 @@
-\name{gbc}
-\alias{gbc}
+\name{backdoor}
+\alias{backdoor}
 \title{Determine a set that satisfies the Generalized Backdoor Criterion
 relative to x and y}
 \description{

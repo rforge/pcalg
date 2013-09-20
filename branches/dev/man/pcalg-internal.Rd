@@ -31,7 +31,14 @@
 \alias{ancTS}
 \alias{skeleton.dag2pag}
 \alias{new.ord}
-
+\alias{udag2pdagRelaxed}
+\alias{udag2pdagSpecial}
+\alias{pc.cons.intern}
+\alias{pdsep}
+\alias{dreach}
+\alias{qreach}
+\alias{udag2pag}
+\alias{udag2apag}
 %
 \title{Internal Pcalg Functions}
 \description{
