@@ -6,7 +6,7 @@
 \description{
   Computes the Possible-D-SEP for each node
   and tests conditional independence given all subsets of
-  Possible-D-Sep. The graph is updated accordingly.
+  Possible-D-SEP. The graph is updated accordingly.
 }
 \usage{
 pdsep(skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = Inf,
@@ -44,14 +44,11 @@ pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
   \item{pdsep.max}{Maximum size of Possible-D-SEP for which subsets are
     considered as conditioning sets in the conditional independence
     tests. If the nodes \code{x} and \code{y} are adjacent in the graph
-    and the size of Possible-D-SEP(\code{x})\ {\code{x},\code{y}},
-    estimated normally or using biconnected components, see later, is
-    bigger than pdsep.max, no conditional independence tests are
-    performed between \code{x} and its neighbour \code{y} given subsets of
-    Possible-D-SEP(\code{x}) and the edge is simply left in the graph.
+    and the size of Possible-D-SEP(\code{x})\ {\code{x},\code{y}}, is
+    bigger than pdsep.max, the edge is simply left in the graph.
     Note that if pdsep.max is less than Inf, the final PAG
-    may be a supergraph than the one computed with pdsep.max = Inf,
-    because less tests may have been performed in the former.}
+    may be a supergraph of the one computed with pdsep.max = Inf,
+    because fewer tests may have been performed in the former.}
   \item{NAdelete}{If indepTest returns \code{NA} and this option is
     \code{TRUE}, the corresponding edge is deleted. If this option is
     \code{FALSE}, the edge is not deleted.}
@@ -79,7 +76,8 @@ pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
   every subpath a,b,c of U either b is a collider on the subpath, or b
   is not a definite noncollider on U and a,b and c form a triangle in G.
 
-  Each pair of nodes x and y which is connected by
+  First, Possible-D-SEP sets for each node in the graph are computed at
+  once. Then, each pair of nodes x and y which is connected by
   an edge is tested for conditional independence given every subset in
   Possible-D-SEP of x or of y. The conditional independence is tested on
   significance level alpha by using the test given in
@@ -100,7 +98,7 @@ pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
   \emph{Causation, Prediction, and Search}, 2nd edition. The MIT Press.
 }
 \seealso{\code{\link{qreach}} for a fast way of finding Possible-D-SEP
-  for a given node; \code{\link{fci}} which uses \code{\link{pdsep}}.
+  for a given node; \code{\link{fci}}}.
 }
 \author{
   Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Diego Colombo.

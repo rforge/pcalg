@@ -53,6 +53,10 @@ udag2pdagRelaxed(gInput, verbose, unfVect=NULL, solve.confl=FALSE)
   \item{pcObj}{Oriented pc-Object}
 }
 \references{
+  D. Colombo and M.H. Maathuis (2013).
+  \emph{Order-independent constraint-based causal structure learning},
+  (arXiv:1211.3295v2).
+  
   C. Meek (1995). Causal inference and causal explanation with
   background knowledge. In \emph{Proceedings of the Eleventh Conference
     on Uncertainty in Artificial Intelligence (UAI-95)},
@@ -60,10 +64,6 @@ udag2pdagRelaxed(gInput, verbose, unfVect=NULL, solve.confl=FALSE)
 
   P. Spirtes, C. Glymour and R. Scheines (2000)
   \emph{Causation, Prediction, and Search}, 2nd edition, The MIT Press.
-
-  D. Colombo and M.H. Maathuis (2013).
-  \emph{Order-independent constraint-based causal structure learning},
-  (arXiv:1211.3295v1).
 }
 \author{Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Diego Colombo}
 \seealso{\code{\link{pdag2dag}}, \code{\link{dag2cpdag}},

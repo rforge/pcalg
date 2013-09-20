@@ -121,7 +121,7 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
   The information in \code{fixedGaps} and \code{fixedEdges} is used as follows.
   The gaps given in \code{fixedGaps} are introduced in the very beginning of
   the algorithm by removing the corresponding edges from the complete
-  undirected graph. Pairs  (\code{i},\code{j}) in \code{fixedEdges} are
+  undirected graph. Pairs (\code{i},\code{j}) in \code{fixedEdges} are
   skipped in all steps of the algorithm, so that these edges remain in the
   graph.
 
@@ -132,7 +132,7 @@ fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
 \references{
   D. Colombo and M.H. Maathuis (2013).
   \emph{Order-independent constraint-based causal structure learning},
-  (arXiv:1211.3295v1)
+  (arXiv:1211.3295v2)
 
   D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
   (2012). Learning high-dimensional directed acyclic graphs with latent

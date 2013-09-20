@@ -210,7 +210,7 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
 \references{
   D. Colombo and M.H. Maathuis (2013).
   Order-independent constraint-based causal structure learning,
-  (arXiv:1211.3295v1).
+  (arXiv:1211.3295v2).
 
   M. Kalisch, M. Maechler, D. Colombo, M.H. Maathuis and P. Buehlmann
   (2012). Causal Inference Using Graphical Models with the R Package

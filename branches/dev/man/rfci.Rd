@@ -1,9 +1,8 @@
 \name{rfci}
 \alias{rfci}
-\title{Estimate the equivalence class of a MAG (PAG) using the RFCI Algorithm}
+\title{Estimate an RFCI-PAG using the RFCI Algorithm}
 \description{
-  Estimate the equivalence class of a maximal ancestral graph (MAG) from
-  observational data, using the RFCI-algorithm.
+  Estimate an RFCI-PAG from observational data, using the RFCI-algorithm.
 }
 
 \usage{
@@ -150,7 +149,7 @@ conservative = FALSE, maj.rule = FALSE, labels = NA)
 \references{
   D. Colombo and M.H. Maathuis (2013).
   Order-independent constraint-based causal structure learning. arXiv
-  preprint arXiv:1211.3295v1.
+  preprint arXiv:1211.3295v2.
   
   D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson (2012).
   Learning high-dimensional directed acyclic graphs with latent and

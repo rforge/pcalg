@@ -3101,17 +3101,17 @@ pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   ## Initial Checks
   cl <- match.call()
 
-  if ((conservative == TRUE | maj.rule == TRUE) & u2pd != "relaxed") stop("Conservative PC and majority rule PC can only be run with 'u2pd = relaxed'")
+  if ((conservative == TRUE || maj.rule == TRUE) & u2pd != "relaxed") stop("Conservative PC and majority rule PC can only be run with 'u2pd = relaxed'")
   
-  if (solve.confl == TRUE & u2pd != "relaxed") stop("Versions of PC using lists for the orientation rules (and possibly bi-directed edges) can only be run with 'u2pd = relaxed'")
+  if (solve.confl == TRUE && u2pd != "relaxed") stop("Versions of PC using lists for the orientation rules (and possibly bi-directed edges) can only be run with 'u2pd = relaxed'")
   
-  if (conservative == TRUE & maj.rule == TRUE) stop("Choose either conservative PC or majority rule PC!")
+  if (conservative == TRUE && maj.rule == TRUE) stop("Choose either conservative PC or majority rule PC!")
   
   ## Skeleton
   skel <- skeleton(suffStat, indepTest, p, alpha, fixedGaps = fixedGaps, fixedEdges = fixedEdges, NAdelete = NAdelete, m.max = m.max, verbose = verbose)
 
   ## Orient edges
-  if (!conservative & !maj.rule) {
+  if (!conservative && !maj.rule) {
     switch (u2pd,
             "rand" = udag2pdag(skel),
             "retry" = udag2pdagSpecial(skel)$pcObj,
@@ -4812,7 +4812,7 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
         allPdsep <- pdsepRes$allPdsep
         n.edgetestsPD <- pdsepRes$n.edgetests
         max.ordPD <- pdsepRes$max.ord
-        if (conservative | maj.rule) {
+        if (conservative || maj.rule) {
             if (verbose) 
                 cat("\nCheck v-structures conservatively\n=================================\n")
             Gobject <- as(G, "graphNEL")
@@ -5655,11 +5655,8 @@ rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NU
   else {
     labels <- as.character(1:p)
   }
-  if (conservative == TRUE & maj.rule == TRUE) {
+  if (conservative == TRUE && maj.rule == TRUE) {
       stop("Choose either conservative RFCI or majority rule RFCI")
-  }
-  if (conservative == FALSE maj.rule == FALSE & cons.rules == TRUE) {
-      stop("The conservative orientation rules can only be run with either conservative = TRUE or with maj.rule = TRUE") 
   }
   cl <- match.call()
   if (verbose) { 
@@ -5674,7 +5671,7 @@ rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NU
   vectM <- tmp$unshVect
  
   ##check and orient v-structures recursively
-  if (!conservative & !maj.rule) {
+  if (!conservative && !maj.rule) {
       tmp1 <- rfci.vstructures(suffStat, indepTest, p, alpha, sepset, g, listM, vectM, version.unf=c(1,1), verbose=verbose)
   } else {
       tmp1 <- rfci.vstructures(suffStat, indepTest, p, alpha, sepset, g, listM, vectM, conservative=TRUE, version.unf=c(1,1), verbose=verbose, maj.rule=maj.rule)
@@ -7340,7 +7337,7 @@ backdoor <- function(amat, x, y, type = "pag")
         list.de <- possibleDe(amat, x)
         
         ##4. compute D-SEP(x,y)_path in the truncated MAG or truncated DAG
-        dsep.set <- dreach(x, y, amat.mag, verbose = verbose)
+        dsep.set <- dreach(x, y, amat.mag)
         
         ##5. check that no possible descendants of x along definite status
         ##paths is in D-SEP(x,y,amat.mag) or y is in adj(x, amat.trunc)

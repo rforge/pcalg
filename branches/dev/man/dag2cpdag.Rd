@@ -19,7 +19,12 @@ dag2cpdag(g)
   and the same v-structures, this function takes the skeleton and the
   v-structures of the given DAG \code{g}. Afterwards it simply uses the
   3 orientation rules of the PC algorithm (see references) to orient as
-  many of the remaining undirected edges as possible. 
+  many of the remaining undirected edges as possible.
+
+  The output of this function is exactly the same as the one using
+  pc(suffStat, indepTest, p, alpha), using the
+  true correlation matrix in the function \code{gaussCItest} with a
+  large "virtual sample size" and a large alpha, but it is much faster.
 }
 \value{
   A graph object containing the CPDAG.
@@ -34,16 +39,31 @@ dag2cpdag(g)
   \emph{Causation, Prediction, and Search}, 2nd edition, The MIT Press.
 }
 \author{Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Diego Colombo}
-\seealso{\code{\link{udag2pdag}}, \code{\link{pdag2dag}}}
+\seealso{\code{\link{randomDAG}}, \code{\link{pc}}}
 \examples{
-p <- 10 # number of random variables
-s <- 0.4 # sparseness of the graph
+## number of random variables
+p <- 10
+## sparseness of the graph
+s <- 0.4 
 
-## generate random data
+## generate a random DAG
 set.seed(42)
-g <- randomDAG(p,s) # generate a random DAG
+g <- randomDAG(p,s) 
 
+## compute its unique CPDAG
 res <- dag2cpdag(g)
+
+## find CPDAG with PC algorithm
+## as dependence "oracle", we use the true correlation matrix in the
+## function gaussCItest with a large "virtual sample size" and a large
+## alpha
+## compute the true covariance matrix of g
+library(RBGL)
+true.cov <- trueCov(g)
+true.corr <- cov2cor(true.cov)
+suffStat <- list(C = true.corr, n = 10^9)
+indepTest <- gaussCItest
+res1 <- pc(suffStat, indepTest, p, alpha = 0.9999)
 }
 \keyword{multivariate}
 \keyword{models}

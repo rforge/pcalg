@@ -200,7 +200,7 @@ maj.rule = FALSE, labels = NA, type = "normal")
 \references{
   D. Colombo and M.H. Maathuis (2013). Order-independent
   constraint-based causal structure learning. arXiv preprint
-  arXiv:1211.3295v1.
+  arXiv:1211.3295v2.
   
   D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
   (2012). Learning high-dimensional directed acyclic graphs with latent
@@ -234,8 +234,8 @@ maj.rule = FALSE, labels = NA, type = "normal")
 \seealso{\code{\link{skeleton}} for estimating a skeleton
   using the PC algorithm; \code{\link{pc}} for estimating a CPDAG using
   the PC algorithm; \code{\link{pdsep}} for computing
-  Possible-D-Sep for each node and testing and adapting the graph
-  accordingly; \code{\link{qreach}} for a fast way of finding possible d-sep
+  Possible-D-SEP for each node and testing and adapting the graph
+  accordingly; \code{\link{qreach}} for a fast way of finding Possible-D-SEP
     for a given node; \code{\link{gaussCItest}},
   \code{\link{disCItest}}, \code{\link{binCItest}} and
   \code{\link{dsepTest}} as examples for \code{indepTest}.
@@ -256,8 +256,7 @@ myDAG <- randomDAG(p, prob = 0.4)
 ## find skeleton and PAG using the FCI algorithm
 suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
 indepTest <- gaussCItest
-res <- fci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE, doPdsep =
-FALSE)
+res <- fci(suffStat, indepTest, p, alpha = 0.9999, doPdsep = FALSE)
 
 
 ##################################################

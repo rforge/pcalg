@@ -41,8 +41,7 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
     rule. \code{TRUE} in position i means that rule i (Ri) will be used. Per
     default, all rules are set to \code{TRUE}.}
   \item{unfVect}{Vector containing numbers that encode the unfaithful
-    triple (as returned by \code{\link{pc.cons.intern}}). This is needed in the
-    conservative and in the majority rule RFCI.}
+    triple. This is needed in the conservative and in the majority rule RFCI.}
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
 \details{
@@ -60,11 +59,11 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
 
   If \code{unfVect = NULL} the ten orientation rules are applied to each
   eligible structure until no more edges can be oriented. On the other
-  hand if the v-structures have been checked previously in
-  \code{\link{pc.cons.intern}} either using the conservative method or
-  the majority rule, \code{unfVect} contains a list of all ambiguous
-  triples in the graph. In this case, only structures containing
-  unambiguous triples are oriented until no more edges can be oriented.
+  hand if the v-structures have been checked previously in either using
+  the conservative method or the majority rule, \code{unfVect} contains
+  a list of all ambiguous triples in the graph. In this case, only
+  structures containing unambiguous triples are oriented until no more
+  edges can be oriented. 
 
   Note that the algorithm works with columns' position of the adjacency
   matrix and not with the names of the variables.
@@ -80,6 +79,10 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
   M[j,i]!=0: i*->j; M[i,j]=3, M[j,i]!=0: i*-j.   
 }
 \references{
+  D. Colombo and M.H. Maathuis (2013).
+  \emph{Order-independent constraint-based causal structure learning},
+  (arXiv:1211.3295v2)
+  
   D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
   (2012). Learning high-dimensional directed acyclic graphs with latent
   and selection variables. \emph{Ann. Statist.} \bold{40}, 294-321. 
@@ -90,7 +93,7 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
 }
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 
-\seealso{\code{\link{pc}}, \code{\link{rfci}}}
+\seealso{\code{\link{rfci}}}
 
 \examples{
 ##################################################
