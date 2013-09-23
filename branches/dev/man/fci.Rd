@@ -63,7 +63,7 @@ maj.rule = FALSE, labels = NA, type = "normal")
     84).}
   \item{biCC}{If \code{TRUE}, only nodes on paths between nodes \code{x}
     and \code{y} are considered to be in Possible-D-SEP(\code{x}) when
-    testing independence between \code{x} and \code {y}. Uses
+    testing independence between \code{x} and \code{y}. Uses
     biconnected components, \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
   \item{conservative}{If \code{TRUE}, the unshielded triples are checked
     for ambiguity the second time when v-structures are determined. For

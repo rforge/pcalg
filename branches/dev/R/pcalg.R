@@ -7178,6 +7178,7 @@ pag2mag <- function(amat.pag, x){
   g.undir <- as(amat.undir,"graphNEL")
   
   #Get all connected components
+  require(RBGL)
   conn.comp <- connectedComp(g.undir)
   for (ll in 1:length(conn.comp)){
     conn.comp[[ll]] <- as.numeric(conn.comp[[ll]])
@@ -7280,6 +7281,7 @@ backdoor <- function(amat, x, y, type = "pag")
     
     ##check that x and y belong to the same connected component
     ##compute the connected components of the whole graph
+    require(RBGL)
     conn.comp <- connectedComp(as(amat, "graphNEL"))
     for (ll in 1:length(conn.comp)){
         conn.comp[[ll]] <- as.numeric(conn.comp[[ll]])
