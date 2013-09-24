@@ -12,6 +12,7 @@ showProc.time <- local({
 ##################################################
 ## Standard PC
 ##################################################
+library(RBGL)
 nreps <- 10
 
 set.seed(234)
@@ -112,8 +113,7 @@ amat.tetrad2[8,5] <- amat.tetrad2[8,12] <- 1
 amat.tetrad2[10,11] <- 1
 
 correctEst2 <- all(dag2.amat == amat.tetrad2)
-## TODO Markus: this always fails; please fix it...
-## if (!correctEst2) stop("Test sample conservative PC wrong: example 2!")
+if (!correctEst2) stop("Test sample conservative PC wrong: example 2!")
 showProc.time()
 
 

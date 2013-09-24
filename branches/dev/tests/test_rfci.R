@@ -38,15 +38,12 @@ true.corr <- cov2cor(true.cov)
 suffStat <- list(C=true.corr, n=10^9)
 indepTest <- gaussCItest
 
-pop.fci <- fci(suffStat, indepTest, dim(true.corr)[1], alpha=0.9999, doPdsep=TRUE,verbose=FALSE)@amat
-pop.rfci <- rfci(suffStat, indepTest, dim(true.corr)[1], alpha=0.9999, verbose=FALSE)@amat
+pop.fci1 <- fci(suffStat, indepTest, dim(true.corr)[1], alpha=0.9999, doPdsep=TRUE,verbose=FALSE)@amat
+pop.rfci1 <- rfci(suffStat, indepTest, dim(true.corr)[1], alpha=0.9999, verbose=FALSE)@amat
 
-if (any(pop.fci!=pop.rfci)) {
+if (any(pop.fci1!=pop.rfci1)) {
   stop("Test of RFCI wrong: small example!")
 }
-
-###################################################################################
-##################################################################################
 
 ##Thomas' example (version numer 8) about discriminating path orientation rule
 
@@ -93,10 +90,10 @@ true.corr <- cov2cor(true.cov)
 suffStat <- list(C=true.corr, n=10^9)
 indepTest <- gaussCItest
 
-pop.fci <- fci(suffStat, indepTest, dim(true.corr)[1], alpha=0.9999, doPdsep=TRUE,verbose=FALSE)@amat
-pop.rfci <- rfci(suffStat, indepTest, dim(true.corr)[1], alpha=0.9999, verbose=FALSE)@amat
+pop.fci2 <- fci(suffStat, indepTest, dim(true.corr)[1], alpha=0.9999, doPdsep=TRUE,verbose=FALSE)@amat
+pop.rfci2 <- rfci(suffStat, indepTest, dim(true.corr)[1], alpha=0.9999, verbose=FALSE)@amat
 
-if (any(pop.fci!=pop.rfci)) {
+if (any(pop.fci2!=pop.rfci2)) {
   stop("Test of RFCI wrong: big example!")
 }
 
