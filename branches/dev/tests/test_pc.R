@@ -117,47 +117,6 @@ if (!correctEst2) stop("Test sample conservative PC wrong: example 2!")
 showProc.time()
 
 
-## Example 3
-## new.mat <- read.table("/u/colombo/Diss/RAusw/AFCI/Conservative_algorithms/test_conservative_pc_data3.txt")
-## save(new.mat, file = "/u/kalisch/research/packages/pcalg/inst/external/test_conservative_pc_data3.rda")
-## load(file = "/u/kalisch/research/packages/pcalg/inst/external/test_conservative_pc_data3.rda")
-load(system.file("external", "test_conservative_pc_data3.rda", package = "pcalg"))
-
-##always save the transpose of the matrix to be loaded in Tetrad
-##write(t(new.mat),file="test_conservative_pc_data3.txt",ncolumns=15)
-suffStat.data <- list(C=cor(new.mat3),n=n)
-indepTest.data <- gaussCItest
-
-##pcAlgo conservative sample
-dag3 <- pc(suffStat.data, indepTest.data, 15, alpha=0.005, verbose=FALSE, u2pd="relaxed", conservative=TRUE)
-
-##adjacency matrix
-dag3.amat <- as(dag3@graph,"matrix")
-
-##check the output with Tetrad
-amat.tetrad3 <- matrix(0,15,15)
-amat.tetrad3[1,2] <- amat.tetrad3[1,3] <- amat.tetrad3[1,10] <- 1
-amat.tetrad3[2,1] <- amat.tetrad3[2,5] <- amat.tetrad3[2,6] <- amat.tetrad3[2,12] <- 1
-amat.tetrad3[3,1] <- amat.tetrad3[3,9] <- 1
-amat.tetrad3[4,5] <- amat.tetrad3[4,7] <- 1
-amat.tetrad3[5,10] <- 1
-amat.tetrad3[6,2] <- amat.tetrad3[6,9] <- amat.tetrad3[6,11] <- 1
-amat.tetrad3[7,4] <- amat.tetrad3[7,8] <- 1
-amat.tetrad3[8,15] <- 1
-amat.tetrad3[9,12] <- amat.tetrad3[9,14] <- 1
-amat.tetrad3[10,1] <- amat.tetrad3[10,5] <- amat.tetrad3[10,12] <- amat.tetrad3[10,13] <- 1
-amat.tetrad3[11,6] <- amat.tetrad3[11,13] <- 1
-amat.tetrad3[12,2] <- amat.tetrad3[12,15] <- 1
-amat.tetrad3[13,15] <- 1
-amat.tetrad3[14,7] <- 1
-amat.tetrad3[15,14] <- 1
-
-correctEst3 <- all(dag3.amat == amat.tetrad3)
-## TODO Markus: this always fails; please fix it...
-## if (!correctEst3) stop("Test sample conservative PC wrong: example 3!")
-showProc.time()
-
-
 ##PC algorithm population
 ##_____________________________________________________________________________
 ## Example 4

@@ -1691,7 +1691,7 @@ that:
 
 <<backdoorExCPDAG2>>=
 library(igraph)
-backdoor(true.amat, 6, 3, cov.mat, type="cpdag")
+backdoor(true.amat, 6, 3, type="cpdag")
 @ 
 
 \subsection{Using a user specific conditional independence test}

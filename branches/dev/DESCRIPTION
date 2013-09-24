@@ -1,17 +1,10 @@
 Package: pcalg
-Version: 2.0
-Date: 2010-05-06
+Version: 2.0-0
+Date: 2013-09-24
 Author: Markus Kalisch, Martin Maechler, Diego Colombo, Alain Hauser
 Maintainer: Alain Hauser <alain.hauser@biology.unibe.ch>
-Title: Estimation of CPDAG/PAG and causal inference using the IDA algorithm
-Description: Standard and robust estimation of the equivalence class of a
-    Directed Acyclic Graph (DAG) via the PC-Algorithm. The equivalence
-    class is represented by its (unique) Complete Partially Directed
-    Acyclic Graph (CPDAG). Furthermore, a PAG instead of a CPDAG can be
-    estimated if latent variables and/or selection variables are assumed
-    to be present. FCI and RFCI are available for estimating
-    PAGs. Functions for causal inference using the IDA 
-    algorithm (based on do-calculus of Judea Pearl) are provided for CPDAGs.
+Title: Methods for graphical models and causal inference
+Description: This package contains several functions for causal structure learning and causal inference using graphical models. The main algorithms for causal structure learning are PC (for observational data without hidden variables), FCI and RFCI (for observational data with hidden variables), and GIES (for a mix of observational and interventional data without hidden variables). For causal inference the IDA algorithm and the generalized backdoor criterion is implemented.
 Depends: methods, abind, corpcor, sfsmisc, Rcpp
 LinkingTo: Rcpp, RcppArmadillo
 SystemRequirements: Boost library from http://www.boost.org
