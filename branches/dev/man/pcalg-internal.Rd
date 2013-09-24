@@ -9,11 +9,8 @@
 \alias{udag2pdagRelaxed}
 \alias{udag2pdagSpecial}
 \alias{gAlgo-class}%-> *do* document! (FIXME)
-\alias{labelEdges}
 \alias{legal.psep}
 \alias{lm.cov}
-\alias{make.edge.df}
-\alias{orderEdges}
 \alias{pcAlgo.Perfect}
 \alias{reach}
 \alias{trueCov}

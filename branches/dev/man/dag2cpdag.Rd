@@ -24,7 +24,7 @@ dag2cpdag(g)
   The output of this function is exactly the same as the one using
   pc(suffStat, indepTest, p, alpha), using the
   true correlation matrix in the function \code{gaussCItest} with a
-  large "virtual sample size" and a large alpha, but it is much faster.
+  large virtual sample size and a large alpha, but it is much faster.
 }
 \value{
   A graph object containing the CPDAG.
@@ -32,7 +32,7 @@ dag2cpdag(g)
 \references{
   C. Meek (1995). Causal inference and causal explanation with
   background knowledge. In \emph{Proceedings of the Eleventh Conference on
-  Uncertainty in Artificial Intelligence (UAI-95)}, pp. 403–411. Morgan
+  Uncertainty in Artificial Intelligence (UAI-95)}, pp. 403-411. Morgan
   Kaufmann Publishers, Inc.
 
   P. Spirtes, C. Glymour and R. Scheines (2000)
@@ -54,8 +54,8 @@ g <- randomDAG(p,s)
 res <- dag2cpdag(g)
 
 ## find CPDAG with PC algorithm
-## as dependence "oracle", we use the true correlation matrix in the
-## function gaussCItest with a large "virtual sample size" and a large
+## as dependence oracle, we use the true correlation matrix in the
+## function gaussCItest with a large virtual sample size and a large
 ## alpha
 ## compute the true covariance matrix of g
 library(RBGL)

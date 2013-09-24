@@ -37,7 +37,8 @@ new("GaussL0penIntScore",
     parameter should only be set to \code{FALSE} in the case of problems.}
 }
 \section{Fields}{
-  The class \code{GaussL0penIntScore} has the same fields as \code{\link{Score}}.  
+  The class \code{\link{GaussL0penIntScore-class}} has the same fields
+  as \code{\link{Score-class}}.   
   They need not be accessed by the user.
 }
 \section{Methods}{
@@ -49,7 +50,8 @@ new("GaussL0penIntScore",
       a DAG, represented as a list of in-edges: for each vertex in the DAG,
       this list contains a vector of parents.}
     \item{\code{global.score(dag, ...)}}{Calculates the global score of a DAG,
-      represented as an object of a class derived from \code{\link{ParDAG}}.}
+      represented as an object of a class derived from
+      \code{\link{ParDAG}}.} 
     \item{\code{local.mle(vertex, parents, ...)}}{Calculates the local MLE of 
       a vertex and its parents.  The result is a vector of parameters encoded
       as follows:
@@ -60,7 +62,8 @@ new("GaussL0penIntScore",
       }
       }
     \item{\code{global.mle(dag, ...)}}{Calculates the global MLE of a DAG,
-      represented by an object of a class derived from \code{\link{ParDAG}}.
+      represented by an object of a class derived from
+      \code{\link{ParDAG}}. 
       The result is a list of vectors, one per vertex, each in the same format
       as the result vector of \code{local.mle}.}
   }
@@ -97,6 +100,7 @@ score$global.score(as(A, "GaussParDAG"))
 \seealso{
   \code{\link{gies}}, \code{\link{simy}}, 
   \code{\link{GaussL0penObsScore-class}}, 
-  \code{\link{Score-class}}
+  \code{\link{Score-class}},
+  \code{\link{ParDAG}}
 }
 \keyword{classes}
