@@ -99,8 +99,8 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   details). The original PC algorithm is known to be
   order-dependent, in the sense that the output depends on the order in
   which the variables are given. Therefore, Colombo and Maathuis (2013)
-  proposed a simple modification, called PC-stable, that yields order-independent
-  adjacencies in the skeleton (see the help file
+  proposed a simple modification, called PC-stable, that yields
+  order-independent adjacencies in the skeleton (see the help file
   of this function for details). Subsequently, as many edges as possible
   are oriented. This is done in two steps. It is important to note that
   if no further actions are taken (see below) these two steps still
@@ -162,7 +162,7 @@ pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   if b-c-d was visited first, meaning that the final orientation on the
   edge depends on the ordering in which the v-structures were
   considered. With the option \code{solve.confl = TRUE} (which is only
-  supported with option \code{u2pd = relaxed}), we first generate a list
+  supported with option \code{u2pd = "relaxed"}), we first generate a list
   of all (unambiguous) v-structures (in the example above a-b-c and
   b-c-d), and then we simply orient them allowing both directions on the
   edge b-c, namely we allow the bi-directed edge b <-> c resolving the

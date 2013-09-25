@@ -46,7 +46,7 @@ maj.rule = FALSE, labels = NA, type = "normal")
   \item{pdsep.max}{Maximum size of Possible-D-SEP for which subsets are
     considered as conditioning sets in the conditional independence
     tests. If the nodes \code{x} and \code{y} are adjacent in the graph
-    and the size of Possible-D-SEP(\code{x})\ {\code{x},\code{y}}, is
+    and the size of Possible-D-SEP(\code{x})\ {\code{x},\code{y}} is
     bigger than pdsep.max, the edge is simply left in the graph.
     Note that if pdsep.max is less than Inf, the final PAG
     may be a supergraph of the one computed with pdsep.max = Inf,
@@ -129,7 +129,7 @@ maj.rule = FALSE, labels = NA, type = "normal")
   Therefore, the initial skeleton may contain some superfluous edges.
   These edges are removed in the next step of the algorithm which
   requires some orientations. Therefore, the v-structures
-  are determined using the conservative (see discussion on
+  are determined using the conservative method (see discussion on
   \code{conservative} below).
   
   After the v-structures have been oriented, Possible-D-SEP sets for each

@@ -95,14 +95,14 @@ conservative = FALSE, maj.rule = FALSE, labels = NA)
   sepset(a,c), the triple is oriented as a v-structure a->b<-c. On the
   other hand, if an additional conditional independence relationship may
   be detected, say a is independent from b given the sepset(a,c), the
-  edge between a nd c is removed from the graph and the set responsible
+  edge between a and c is removed from the graph and the set responsible
   for that is saved in sepset(a,b). The removal of an edge can destroy
   or create new unshielded triples in the graph. To solve this problem
   we work with lists (for details see Colombo et al., 2012).
 
   Before orienting discriminating paths, we perform the following additional
   conditional independence tests. For each triple a <-* b o- *c with a
-  -> c ,  the algorithm searches for a discriminating path p = <d,
+  -> c,  the algorithm searches for a discriminating path p = <d,
   . . . , a,b,c> for b of minimal length, and checks that the vertices
   in every consecutive pair (f1,f2) on p are conditionally dependent
   given all subsets of sepset(d,c) \ {f1,f2 }. If we do not find any

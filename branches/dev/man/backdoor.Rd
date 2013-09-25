@@ -30,12 +30,14 @@ backdoor(amat, x, y, type = "pag")
   selection variables. For more details see Maathuis and Colombo(2013).
 
   The motivation to find a set W that satisfies the generalized backdoor
-  criterion relies on the result of the generalized backdoor adjustment
+  criterion with respect to \code{x} and \code{y}
+  in the given graph relies on the result of the generalized backdoor adjustment
   that says: "If a set of variables W satisfies the generalized backdoor
   criterion relative to \code{x} and \code{y} in the given graph, then
   the causal effect of \code{x} on \code{y} is identifiable and is given
   by:" P(Y|do(X = x)) = sum_W P(Y|X,W).P(W). This result allows to write
-  post-intervention densities using only observational densities
+  post-intervention densities (the one written using Pearl's
+  do-calculus) using only observational densities
   estimated from the data.
   
   If the input graph is a DAG (\code{type="dag"}), this function reduces
@@ -64,7 +66,7 @@ backdoor(amat, x, y, type = "pag")
   Either NA if the total causal effect is not identifiable via the
   generalized backdoor criterion, or a set if the effect is identifiable
   via the generalized backdoor criterion. Note that if the set W is
-  equal to the empty set, the output is NULL
+  equal to the empty set, the output is NULL.
 }
 \references{
   M.H. Maathuis and D. Colombo (2013). A generalized backdoor
