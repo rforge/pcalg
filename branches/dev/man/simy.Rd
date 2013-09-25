@@ -16,7 +16,7 @@ simy(p, targets, score, ...)
   \item{p}{Number of variables.}
   \item{targets}{A list of intervention targets (cf. details).  A list of
     vectors, each vector listing the vertices of one intervention target.}
-  \item{score}{An instance of a class derived from \code{\link{Score}}.}
+  \item{score}{An instance of a class derived from \code{\linkS4class{Score}}.}
   \item{\dots}{Additional arguments for debugging purposes and fine tuning.}
 }
 \details{

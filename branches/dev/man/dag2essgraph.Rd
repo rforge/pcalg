@@ -10,7 +10,7 @@ dag2essgraph(dag, targets = list(integer(0)))
 }
 \arguments{
   \item{dag}{The DAG whose essential graph has to be calculated, represented as 
-    an instance of a class derived from \code{\link{Score}}.}
+    an instance of a class derived from \code{\linkS4class{Score}}.}
   
   \item{targets}{List of intervention targets with respect to which the 
     essential graph has to be calculated.  An observational setting is

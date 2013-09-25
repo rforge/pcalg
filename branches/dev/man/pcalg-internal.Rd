@@ -8,7 +8,6 @@
 \alias{flipEdges}
 \alias{udag2pdagRelaxed}
 \alias{udag2pdagSpecial}
-\alias{gAlgo-class}%-> *do* document! (FIXME)
 \alias{legal.psep}
 \alias{lm.cov}
 \alias{pcAlgo.Perfect}
@@ -21,8 +20,8 @@
 \alias{faith.check}
 \alias{triple2numb}
 \alias{updateList}
-\alias{min.uncov.pd.path}
-\alias{min.uncov.circ.path}
+\alias{minUncovPdPath}
+\alias{minUncovCircPath}
 \alias{find.min.discr.path}
 \alias{qreach}
 \alias{pdsep}
@@ -39,6 +38,16 @@
 \alias{possibleDe}
 \alias{dreach}
 \alias{my.SpecialDag}
+%-> *do* document or confirm current status (FIXME):
+\alias{gAlgo-class}
+\alias{EssGraph-class}
+\alias{ParDAG-class}
+\alias{GaussParDAG-class}
+\alias{caus.inf}
+\alias{gds}
+\alias{r.gauss.pardag}
+\alias{rmvnorm.ivent}
+
 %
 \title{Internal Pcalg Functions}
 \description{
@@ -49,9 +58,6 @@ wgtMatrix(g, transpose=TRUE)
 adj.check(gm,x)
 amat2dag(amat)
 find.sink(gm)
-labelEdges(amat)
-make.edge.df(amat)
-orderEdges(amat)
 }
 \details{
   These are not to be called by the user.

@@ -4485,7 +4485,7 @@ triple2numb <- function(p,i,j,k)
 updateList <- function(path, set, old.list)
 {
   ## Purpose: update the list of all paths in the iterative functions
-  ## find.min.discr.path, min.uncov.circ.path and min.uncov.pd.path
+  ## find.min.discr.path, minUncovCircPath and minUncovPdPath
   ## ----------------------------------------------------------------------
   ## Arguments: - path: the path under investigation
   ##            - set: the set of variables to be added to path
@@ -4501,7 +4501,7 @@ updateList <- function(path, set, old.list)
 }
 
 ##R9-R10
-min.uncov.pd.path <- function(p, pag = NA, path = NA, unfVect = NA, verbose = FALSE)
+minUncovPdPath <- function(p, pag = NA, path = NA, unfVect = NA, verbose = FALSE)
 {
   ## Purpose: find a minimal uncovered pd path for a,b,c saved in path.
   ## Check also for the conservative case that it is unambiguous 
@@ -4581,7 +4581,7 @@ min.uncov.pd.path <- function(p, pag = NA, path = NA, unfVect = NA, verbose = FA
 }
 
 ##R5
-min.uncov.circ.path <- function(p, pag = NA, path = NA, unfVect= NA, verbose = FALSE)
+minUncovCircPath <- function(p, pag = NA, path = NA, unfVect= NA, verbose = FALSE)
 {
   ## Purpose: find a minimal uncovered circle path for a,b,c,d saved in path.
   ## Check also for the conservative case that it is unambiguous
@@ -5417,7 +5417,7 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
                 else {
                   ##find a minimal uncovered circle path for these a,b,c, and d
                   ##this path has already been checked to be uncovered and to be faithful for the conservative case
-                  tmp.ucp <- min.uncov.circ.path(p, pag = pag, path=c(a,c,d,b), unfVect = unfVect, verbose = verbose)
+                  tmp.ucp <- minUncovCircPath(p, pag = pag, path=c(a,c,d,b), unfVect = unfVect, verbose = verbose)
                   ##there is a path ---> orient
                   if (length(tmp.ucp) > 1) {
                     ##orient every edge on the path as --
@@ -5513,7 +5513,7 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
             ##path is the initial structure
             path <- c(a, b, c)
             ##find a minimal uncovered pd path
-            tmp.upd <- min.uncov.pd.path(p, pag = pag, path = path, unfVect= unfVect, verbose = verbose)
+            tmp.upd <- minUncovPdPath(p, pag = pag, path = path, unfVect= unfVect, verbose = verbose)
             ##there is a path ---> orient it
             if (length(tmp.upd) > 1) {
               pag[c, a] <- 3
@@ -5580,8 +5580,8 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
                       while ((counterX2 < length(indX2) && (pag[c, a] == 1))) {
                         counterX2 <- counterX2 + 1
                         sec.pos <- indX2[counterX2]
-                        tmp1 <- min.uncov.pd.path(p, pag = pag, path = c(a, first.pos, b), unfVect = unfVect, verbose = verbose)
-                        tmp2 <- min.uncov.pd.path(p, pag = pag, path = c(a, sec.pos, d), unfVect = unfVect, verbose = verbose)
+                        tmp1 <- minUncovPdPath(p, pag = pag, path = c(a, first.pos, b), unfVect = unfVect, verbose = verbose)
+                        tmp2 <- minUncovPdPath(p, pag = pag, path = c(a, sec.pos, d), unfVect = unfVect, verbose = verbose)
                         ##we found 2 uncovered pd paths
                         if ((length(tmp1) > 1) && (length(tmp2) > 1) && (first.pos != sec.pos) && (pag[first.pos, sec.pos] == 0)) {
                           ##normal version
@@ -6523,7 +6523,7 @@ udag2apag <- function (apag, suffStat, indepTest, alpha, sepset, rules = rep(TRU
                 else {
                   ##find a minimal uncovered circle path for these a,b,c, and d
                   ##this path has already been checked to be uncovered and to be faithful for the conservative case
-                  tmp.ucp <- min.uncov.circ.path(p, pag = apag, path=c(a,c,d,b), unfVect = unfVect, verbose = verbose)
+                  tmp.ucp <- minUncovCircPath(p, pag = apag, path=c(a,c,d,b), unfVect = unfVect, verbose = verbose)
                   ##there is a path ---> orient
                   if (length(tmp.ucp) > 1) {
                     ##orient every edge on the path as --
@@ -6632,7 +6632,7 @@ udag2apag <- function (apag, suffStat, indepTest, alpha, sepset, rules = rep(TRU
             ##path is the initial structure
             path <- c(a, b, c)
             ##find a minimal uncovered pd path
-            tmp.upd <- min.uncov.pd.path(p, pag = apag, path = path, unfVect= unfVect, verbose = verbose)
+            tmp.upd <- minUncovPdPath(p, pag = apag, path = path, unfVect= unfVect, verbose = verbose)
             ##there is a path ---> orient it
             if (length(tmp.upd) > 1) {
               apag[c, a] <- 3
@@ -6699,8 +6699,8 @@ udag2apag <- function (apag, suffStat, indepTest, alpha, sepset, rules = rep(TRU
                       while ((counterX2 < length(indX2) && (apag[c, a] == 1))) {
                         counterX2 <- counterX2 + 1
                         sec.pos <- indX2[counterX2]
-                        tmp1 <- min.uncov.pd.path(p, pag = apag, path = c(a, first.pos, b), unfVect = unfVect, verbose = verbose)
-                        tmp2 <- min.uncov.pd.path(p, pag = apag, path = c(a, sec.pos, d), unfVect = unfVect, verbose = verbose)
+                        tmp1 <- minUncovPdPath(p, pag = apag, path = c(a, first.pos, b), unfVect = unfVect, verbose = verbose)
+                        tmp2 <- minUncovPdPath(p, pag = apag, path = c(a, sec.pos, d), unfVect = unfVect, verbose = verbose)
                         ##we found 2 uncovered pd paths
                         if ((length(tmp1) > 1) && (length(tmp2) > 1) && (first.pos != sec.pos) && (apag[first.pos, sec.pos] == 0)) {
                           ##normal version

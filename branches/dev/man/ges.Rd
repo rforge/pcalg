@@ -12,7 +12,7 @@ ges(p, score, turning = TRUE, maxdegree = integer(0), ...)
 }
 \arguments{
   \item{p}{Number of variables.}
-  \item{score}{An instance of a class derived from \code{\link{Score}}
+  \item{score}{An instance of a class derived from \code{\linkS4class{Score}}
     which only accounts for observational data.}
   \item{turning}{Boolean indicating whether the function should try to augment
     the score by turning edges (cf. details).}

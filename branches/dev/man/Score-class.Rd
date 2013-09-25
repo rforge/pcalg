@@ -79,7 +79,8 @@
   Knowledge of this class is only required if you aim to implement an own 
   scoring criterion.  At the moment, it is recommended to use the predefined
   scoring criteria for multivariate Gaussian data derived from \code{Score}, 
-  \code{\link{GaussL0penIntScore}} and \code{\link{GaussL0penObsScore}}.
+  \code{\linkS4class{GaussL0penIntScore}} and
+  \code{\linkS4class{GaussL0penObsScore}}. 
 }
 \references{
   T. Silander and P. Myllymäki (2006).  A simple approach for finding the 

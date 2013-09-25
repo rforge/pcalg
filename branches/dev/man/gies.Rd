@@ -15,7 +15,7 @@ gies(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
   \item{p}{Number of variables.}
   \item{targets}{A list of intervention targets (cf. details).  A list of
     vectors, each vector listing the vertices of one intervention target.}
-  \item{score}{An instance of a class derived from \code{\link{Score}}.}
+  \item{score}{An instance of a class derived from \code{\linkS4class{Score}}.}
   \item{turning}{Boolean indicating whether the function should try to augment
     the score by turning edges (cf. details).}
   \item{maxdegree}{Parameter used to limit the vertex degree of the estimated

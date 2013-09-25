@@ -39,7 +39,8 @@ new("GaussL0penObsScore",
       a DAG, represented as a list of in-edges: for each vertex in the DAG,
       this list contains a vector of parents.}
     \item{\code{global.score(dag, ...)}}{Calculates the global score of a DAG,
-      represented as an object of a class derived from \code{\link{ParDAG}}.}
+      represented as an object of a class derived from
+      \code{\linkS4class{ParDAG}}.} 
     \item{\code{local.mle(vertex, parents, ...)}}{Calculates the local MLE of 
       a vertex and its parents.  The result is a vector of parameters encoded
       as follows:
@@ -50,7 +51,8 @@ new("GaussL0penObsScore",
       }
       }
     \item{\code{global.mle(dag, ...)}}{Calculates the global MLE of a DAG,
-      represented by an object of a class derived from \code{\link{ParDAG}}.
+      represented by an object of a class derived from
+      \code{\linkS4class{ParDAG}}. 
       The result is a list of vectors, one per vertex, each in the same format
       as the result vector of \code{local.mle}.}
   }
