@@ -1,8 +1,9 @@
 \name{simy}
 \alias{simy}
+\concept{dynamic programming}
+\concept{interventional Markov equivalence}
 \encoding{UTF-8}
-\title{Estimate the interventional Markov equivalence class of a DAG by dynamic
-  programming}
+\title{Estimate Interventional Markov Equivalence Class of a DAG}
 \description{
   Estimate the interventional essential graph representing the Markov 
   equivalence class of a DAG using the dynamic programming (DP) approach of 
@@ -90,13 +91,4 @@ if (require(Rgraphviz)) {
   plot(gmInt$g, main = "True DAG")
 }
 }
-\keyword{dynamic}
-\keyword{programming}
-\keyword{intervention}
-\keyword{interventional}
-\keyword{equivalence}
-\keyword{search}
-\keyword{DAG}
-\keyword{model}
-\keyword{essential}
-\keyword{graph}
+\keyword{graphs}
