@@ -1356,7 +1356,7 @@ percent of the separating sets it is set as a v-structure, and if in more
 than 50 percent it is set as a non v-structure (for more details see
 \cite{pc.indep}). 
 
-The implementation uses the stabilized skeleton \code{\link{skeleton}},
+The implementation uses the stabilized skeleton \code{skeleton()},
 which produces an initial order-independent skeleton. The final skeleton
 and edge orientations can still be order-dependent, see \cite{pc.indep}.
 
