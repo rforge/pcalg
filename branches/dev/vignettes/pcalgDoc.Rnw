@@ -39,20 +39,27 @@
   {\normalsize Alain Hauser} \\ {\small University of Bern} \And
   \AUT{Marloes H. Maathuis} \And
   \AUT{Peter Bühlmann}}
-\title{Causal Inference using Graphical Models with the \proglang{R} Package \pkg{pcalg}}
-
+%JSS:\title{Causal Inference using Graphical Models with the \proglang{R} Package \pkg{pcalg}}
+%% Slightly modified title, to better distinguish from JSS paper:
+\title{More Causal Inference with Graphical Models in \proglang{R} Package \pkg{pcalg}}
 %% for pretty printing and a nice hypersummary also set:
-\Plainauthor{Markus Kalisch, Martin Mächler, Diego Colombo, Alian Hauser,
-  Marloes H. Maathuis, Peter Bühlmann} %% comma-separated
-\Plaintitle{Causal Inference using Graphical Models: The R package pcalg} %% without formatting
-\Shorttitle{Causal Graphical Models: Package pcalg} %% a short title (if necessary)
+\Plainauthor{Kalisch, Mächler, Colombo, Hauser, Maathuis, Bühlmann} %% comma-separated
+%JSS:\Plaintitle{Causal Inference using Graphical Models: The R package pcalg} %% without formatting
+\Plaintitle{More Causal Inference with Graphical Models in R Package pcalg}
+\Shorttitle{More Causal Graphical Models: Package pcalg} %% a short title (if necessary)
 
 %% an abstract and keywords
-\Abstract{ The \pkg{pcalg} package for \proglang{R} (\cite{citeR}) can be
+\Abstract{ 
+  The \pkg{pcalg} package for \proglang{R} (\cite{citeR}) can be
   used for the following two purposes: Causal structure learning and
   estimation of causal effects from observational and/or interventional
-  data. In this document, we give a brief overview of the methodology, and demonstrate the package's functionality in both toy examples and 
-  applications.}
+  data. In this document, we give a brief overview of the methodology, and
+  demonstrate the package's functionality in both toy examples and  
+  applications.
+
+  This vignette is an updated (FCI, RFCI, etc) version of
+  \cite{KalMMCMB:2012} (for \pkg{pcalg} 1.1-4).
+}
 
 \Keywords{IDA, PC, RFCI, FCI, GES, GIES, do-calculus, causality, graphical model, \proglang{R}}
 \Plainkeywords{IDA, PC, RFCI, FCI, GES, GIES, do-calculus, causality, graphical models, R} %% without formatting
@@ -106,13 +113,14 @@
 
 \begin{document}
 
-<<preliminaries, echo=FALSE>>=
+<<preliminaries, echo=FALSE, results=hide>>=
 op.orig <-
-options(SweaveHooks=
-        list(fig=function() par(mar=c(5.1, 4.1, 1.1, 2.1))),
-        width = 75,
-        digits = 5,
-        prompt = "R> ")
+options(SweaveHooks= list(fig=function() par(mar=c(5.1, 4.1, 1.1, 2.1))),
+        width = 75, digits = 5,
+        ## JSS         : prompt = "R> "
+        ## Good looking:
+        prompt = "> ", continue = "  "
+        )
 @
 %% include your article here, just as usual
 %% Note that you should use the \pkg{}, \proglang{} and \code{} commands.
@@ -172,8 +180,9 @@ data set with $p = 8$ continuous variables with Gaussian noise and $n
 package \pkg{pcalg} and the data set.
 
 
+%% FALSE below disables, even for Martin:
 <<diagnose-lib, echo=FALSE>>=
-if(Sys.getenv("USER") == "maechler")## just for "testing"
+if(FALSE && Sys.getenv("USER") == "maechler")## just for "testing"
   print( .libPaths() )
 <<def-gmG, eval=FALSE, echo=FALSE>>=
 ## Used to generate the  'gmG'  Gaussian data originally:
@@ -309,7 +318,7 @@ structure. In particular, we discuss algorithms for structure learning
   \item in the absence of hidden variables from observational data
     such as PC (see \cite{SpirtesEtAl00})), GES (see 
     \cite{Chickering2002}), and the dynamic programming approach of
-    \cite{Silander2006}, 
+    \citep{Silander2006}, 
   
   \item from observational data accounting for hidden variables such as 
     FCI (see \cite{SpirtesEtAl00} and \cite{SpirtesMeekRichardson99})
@@ -1987,7 +1996,7 @@ issue by providing well-documented and easy to use software.
 \section{Session information}
 
 <<sessionInfo, results=tex>>=
-toLatex(sessionInfo())
+toLatex(sessionInfo(), locale=FALSE)
 <<finalizing, echo=FALSE>>=
 options(op.orig)
 @
