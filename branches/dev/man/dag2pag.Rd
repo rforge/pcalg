@@ -10,27 +10,28 @@
 dag2pag(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), verbose = FALSE)
 }
 \arguments{
-  \item{suffStat}{Sufficient statistics: List containing all necessary
-    elements for the conditional independence decisions in the
-    function \code{indepTest}.}
-  \item{indepTest}{Predefined function for testing conditional independence. The
-    function is internally called as \code{indepTest(x,y,S,suffStat)}, and
-    tests conditional independence of \code{x} and \code{y} given
-    \code{S}. Here, \code{x} and \code{y} are variables, and \code{S} is
-    a (possibly empty) vector of variables (all variables are denoted
-    by their column numbers
-    in the adjacency matrix). \code{suffStat} is a list containing
+  \item{suffStat}{the sufficient statistics, a \code{\link{list}}
+    containing all necessary elements for the conditional independence
+    decisions in the function \code{indepTest}.}
+  \item{indepTest}{a \code{\link{function}} for testing conditional
+    independence. The function is internally called as
+    \code{indepTest(x,y,S,suffStat)}, and tests conditional independence
+    of \code{x} and \code{y} given \code{S}.  Here, \code{x} and
+    \code{y} are variables, and \code{S} is a (possibly empty) vector of
+    variables (all variables are denoted by their column numbers
+    in the adjacency matrix).  \code{suffStat} is a list containing
     all relevant elements for the conditional independence
-    decisions. The return value of \code{indepTest} is the p-value of
+    decisions.  The return value of \code{indepTest()} is the p-value of
     the test for conditional independence.}
-  \item{graph}{DAG with \code{p} nodes (graph object). The graph must be
-  topological sorted (for example produced using \code{randomDAG}).}
-  \item{L}{Array containing the labels of the nodes in the \code{graph}
-  corresponding to the latent variables.}
-  \item{alpha}{Significance level for the individual conditional
+  \item{graph}{DAG with \code{p} nodes (\pkg{graph} object).  The graph
+    must be topological sorted (for example produced using
+    \code{\link{randomDAG}}).}
+  \item{L}{array containing the labels of the nodes in the \code{graph}
+    corresponding to the latent variables.}
+  \item{alpha}{significance level for the individual conditional
     independence tests.}
-  \item{rules}{Logical vector of length 10 indicating which rules
-    should be used when directing edges. The order of the rules is taken
+  \item{rules}{logical vector of length 10 indicating which rules
+    should be used when directing edges. The  order of the rules is taken
     from Zhang (2009).}
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
@@ -53,54 +54,49 @@ dag2pag(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), verbose = FA
   Richardson, T. and Spirtes, P. (2002). Ancestral graph Markov
   models. \emph{Ann. Statist.} \bold{30}, 962--1030, Theorem 4.2., page 983.
 }
-\author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch}).}
-\seealso{\code{\link{fci}}, \code{\link{pc}}}
+\author{Diego Colombo and Markus Kalisch \email{kalisch@stat.math.ethz.ch}.}
+\seealso{
+  \code{\link{fci}}, \code{\link{pc}}
+}
 \examples{
 ## create the graph
 set.seed(78)
-p <- 8
-g <- randomDAG(p, prob = 0.4)
+g <- randomDAG(8, prob = 0.4)
 
 ## define nodes 2 and 6 to be latent variables
 L <- c(2,6)
 
 ## compute the true covariance matrix of g
 cov.mat <- trueCov(g)
-      
 ## transform covariance matrix into a correlation matrix
 true.corr <- cov2cor(cov.mat)
 
 ## find PAG
-## as dependence "oracle", we use the true correlation matrix in the
-## function gaussCItest with a large "virtual sample size" and a large
-## alpha
-suffStat <- list(C=true.corr, n=10^9)
-indepTest <- gaussCItest
-library(RBGL)
-true.pag <- dag2pag(suffStat, indepTest, g, L, alpha = 0.9999)
+## as dependence "oracle", we use the true correlation matrix in
+## gaussCItest() with a large "virtual sample size" and a large alpha:
+true.pag <- dag2pag(suffStat = list(C = true.corr, n = 10^9),
+                    indepTest = gaussCItest,
+                    graph=g, L=L, alpha = 0.9999)
 
-##find PAG using fci-function
+### ---- Find PAG using fci-function --------------------------
+
 ## compute the true covariance matrix of g
 cov.mat1 <- trueCov(g)
-
 ## delete rows and columns belonging to latent variable L
 true.cov1 <- cov.mat1[-L,-L]
-
 ## transform covariance matrix into a correlation matrix
 true.corr1 <- cov2cor(true.cov1)
 
-## find PAG with FCI algorithm
-## as dependence "oracle", we use the true correlation matrix in the
-## function gaussCItest with a large "virtual sample size" and a large
-## alpha
-suffStat1 <- list(C = true.corr1, n = 10^9)
-indepTest1 <- gaussCItest
-true.pag1 <- fci(suffStat1, indepTest1, dim(true.corr1)[1], alpha = 0.9999)
+## Find PAG with FCI algorithm
+## as dependence "oracle", we use the true correlation matrix in 
+## gaussCItest() with a large "virtual sample size" and a large alpha:
+true.pag1 <- fci(suffStat = list(C = true.corr1, n = 10^9),
+                 indepTest = gaussCItest,
+                 p = dim(true.corr1)[1], alpha = 0.9999)
 
-##check if the outputs are equal
-all(true.pag@amat == true.pag1@amat)
+## check if the outputs are equal
+stopifnot(true.pag@amat == true.pag1@amat)
 }
 \keyword{multivariate}
 \keyword{models}
 \keyword{graphs}
-

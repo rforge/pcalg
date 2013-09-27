@@ -46,7 +46,7 @@
 \alias{caus.inf}
 \alias{gds}
 \alias{r.gauss.pardag}
-\alias{rmvnorm.ivent}
+\alias{rmvnorm.ivent}% keep: used create gmInt data -> ./gmInt.Rd
 
 %
 \title{Internal Pcalg Functions}

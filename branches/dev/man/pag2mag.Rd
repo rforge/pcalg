@@ -55,22 +55,18 @@ L <- c(2,6)
 
 ## compute the true covariance matrix of g
 cov.mat <- trueCov(g)
-      
 ## transform covariance matrix into a correlation matrix
 true.corr <- cov2cor(cov.mat)
 
 ## find PAG
 ## as dependence "oracle", we use the true correlation matrix in the
 ## function gaussCItest with a large "virtual sample size" and a large
-## alpha
-suffStat <- list(C=true.corr, n=10^9)
-indepTest <- gaussCItest
-library(RBGL)
-true.pag <- dag2pag(suffStat, indepTest, g, L, alpha = 0.9999)
+## alpha:
+true.pag <- dag2pag(suffStat = list(C= true.corr, n= 10^9),
+                    indepTest= gaussCItest, graph=g, L=L, alpha= 0.9999)
 
 ## find a valid MAG such that no additional edges are directed into
-library(igraph)
-valid.mag <- pag2mag(true.pag@amat, 4)
+(valid.mag <- pag2mag(true.pag@amat, 4))
 }
 \keyword{multivariate}
 \keyword{models}

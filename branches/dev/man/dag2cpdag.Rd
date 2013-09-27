@@ -48,22 +48,21 @@ s <- 0.4
 
 ## generate a random DAG
 set.seed(42)
-g <- randomDAG(p,s) 
+g <- randomDAG(p, s) 
 
 ## compute its unique CPDAG
 res <- dag2cpdag(g)
 
-## find CPDAG with PC algorithm
-## as dependence oracle, we use the true correlation matrix in the
-## function gaussCItest with a large virtual sample size and a large
-## alpha
-## compute the true covariance matrix of g
-library(RBGL)
+## Find CPDAG with PC algorithm:
+## As dependence oracle, we use the true correlation matrix in the
+## function gaussCItest with a large virtual sample size and a large alpha.
+##
+## Compute the true covariance matrix of g :
 true.cov <- trueCov(g)
 true.corr <- cov2cor(true.cov)
-suffStat <- list(C = true.corr, n = 10^9)
-indepTest <- gaussCItest
-res1 <- pc(suffStat, indepTest, p, alpha = 0.9999)
+res1 <- pc(suffStat = list(C = true.corr, n = 10^9),
+           indepTest = gaussCItest, p, alpha = 0.9999)
+res1
 }
 \keyword{multivariate}
 \keyword{models}

@@ -94,7 +94,7 @@ true.amat <- as(myDAG, "matrix")
 true.amat[which(true.amat!=0)] <- 1
 
 ## Compute the effect using the generalized backdoor criterion
-library(igraph)
+%% library(igraph)
 backdoor(true.amat, 5, 7, type="dag")
 
 #####################################################################
@@ -125,7 +125,7 @@ true.amat <- as(myCPDAG, "matrix")
 true.amat[which(true.amat!=0)] <- 1
 
 ## The effect is not identifiable, in fact:
-library(igraph)
+%% library(igraph)
 backdoor(true.amat, 3, 5, type="cpdag")
 
 
@@ -136,7 +136,8 @@ backdoor(true.amat, 3, 5, type="cpdag")
 
 ## create the graph
 p <- 6
-amat <- t(matrix(c(0,0,1,1,0,1, 0,0,1,1,0,1, 0,0,0,0,1,0, 0,0,0,0,1,1, 0,0,0,0,0,0, 0,0,0,0,0,0),6,6))
+amat <- rbind(c(0,0,1,1,0,1), c(0,0,1,1,0,1), c(0,0,0,0,1,0),
+              c(0,0,0,0,1,1), c(0,0,0,0,0,0), c(0,0,0,0,0,0))
 colnames(amat) <- rownames(amat) <- as.character(1:6)
 V <- as.character(1:6)
 edL <- vector("list",length=6)
@@ -154,7 +155,7 @@ true.amat <- as(myCPDAG, "matrix")
 true.amat[which(true.amat!=0)] <- 1
 
 ## The effect is identifiable and
-library(igraph)
+%% library(igraph)
 backdoor(true.amat, 6, 3, type="cpdag")
 
 ##################################################################
@@ -167,7 +168,9 @@ backdoor(true.amat, 6, 3, type="cpdag")
 
 ## create the graph
 p <- 7
-amat <- t(matrix(c(0,0,1,1,0,0,0, 0,0,1,1,0,0,0, 0,0,0,1,0,1,0, 0,0,0,0,0,0,1, 0,0,0,0,0,1,1, 0,0,0,0,0,0,0, 0,0,0,0,0,0,0),7,7))
+amat <- t(matrix(c(0,0,1,1,0,0,0, 0,0,1,1,0,0,0, 0,0,0,1,0,1,0, 
+                   0,0,0,0,0,0,1, 0,0,0,0,0,1,1, 0,0,0,0,0,0,0,
+                   0,0,0,0,0,0,0),  7, 7))
 colnames(amat) <- rownames(amat) <- as.character(1:7)
 V <- as.character(1:7)
 edL <- vector("list",length=7)
@@ -187,13 +190,13 @@ cov.mat <- trueCov(g)
 true.corr <- cov2cor(cov.mat)
 suffStat <- list(C=true.corr, n=10^9)
 indepTest <- gaussCItest
-library(RBGL)
+%% library(RBGL)
 
 ## estimate the true PAG
 true.pag <- dag2pag(suffStat, indepTest, g, L, alpha = 0.9999)
 
 ## The effect is identifiable and
-library(igraph)
+%% library(igraph)
 backdoor(true.pag@amat, 4, 6, type="pag")
 }
 \keyword{multivariate}

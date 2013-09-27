@@ -1,7 +1,7 @@
 \name{pcAlgo-class}
 \docType{class}
 \alias{pcAlgo-class}
-\alias{plot,pcAlgo-method}
+\alias{plot,pcAlgo,ANY-method}
 \alias{show,pcAlgo-method}
 \alias{summary,pcAlgo-method}
 
@@ -12,11 +12,11 @@
   Objects of this class have methods for the functions plot, show and
   summary.}
 \section{Creation of objects}{
-Objects can be created by calls of the form \code{new("pcAlgo", ...)} or
-by function call to \code{\link{skeleton}} or \code{\link{pc}}.
+  Objects can be created by calls of the form \code{new("pcAlgo", ...)} or
+  by calling \code{\link{skeleton}} or \code{\link{pc}}.
 }
 \section{Slots}{
-	 \describe{
+  \describe{
     \item{\code{graph}:}{Object of the class \code{"graph"}:
       the undirected or partially directed graph that was estimated.}
     \item{\code{call}:}{Object of the class \code{"call"}: the
@@ -59,9 +59,9 @@ Class \code{"\linkS4class{gAlgo}"}.
 \author{Markus Kalisch and Martin Maechler}
 
 \seealso{
-	\code{\link{pc}}, \code{\link{skeleton}},
-	\code{\linkS4class{fciAlgo}}
-      }
+  \code{\link{pc}}, \code{\link{skeleton}},
+  \code{\linkS4class{fciAlgo}}
+}
 
 \examples{
   showClass("pcAlgo")

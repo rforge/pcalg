@@ -392,9 +392,6 @@ pcorOrder <- function(i,j, k, C, cut.at = 0.9999999) {
   } else if (length(k)==1) {
     r <- (C[i, j] - C[i, k] * C[j, k])/sqrt((1 - C[j, k]^2) * (1 - C[i, k]^2))
   } else { ## length(k) >= 2
-    ## If corpcor was decent and had a name space, we'd just use
-    ## PM <- corpcor::pseudoinverse(C[c(i,j,k), c(i,j,k)])
-    stopifnot(require("corpcor", quietly=TRUE))
     PM <- pseudoinverse(C[c(i,j,k), c(i,j,k)])
     r <- -PM[1, 2]/sqrt(PM[1, 1] * PM[2, 2])
   }
@@ -6901,9 +6898,9 @@ new.ord <- function(start, old, L) {
 }
 
 iplotPC <- function(pc.fit, labels = NULL) {
-  ## alternative to Rgraphviz (only for pcAlgo objects
+  ## igraph alternative to Rgraphviz (only for pcAlgo objects)
   adjm <- t(wgtMatrix(pc.fit@graph))
-  if ( !is.null(labels) ) colnames(adjm) <- rownames(adjm) <- labels
+  if (!is.null(labels)) dimnames(adjm) <- list(labels, labels)
   g1 <- graph.adjacency( adjm )
   plot(g1)
 }

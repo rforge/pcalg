@@ -46,16 +46,16 @@
 
 * DESCRIPTION:
 ** Depends:  too many; I do not believe they are all "dependently" needed.
-
 *** DONE Remove more 'Depends:': vcd, RBGL.
     - vcd: I've eliminated it, and all the 'R CMD check' still run
     - RBGL: .. ok, only a few needed
     - graph: import quite a few; now found all examples -- is this (not
       attaching 'graph') acceptable to the current pcalg users ?
-**** Note: 'abind' and 'corpcor' are kept *ONLY* because they have no namespace!
+**** DONE : 'abind' and 'corpcor', as all packages now *DO* have a namespace!
     - abind: abind() needed in gSquareBin() & *Dis() -- once only, each
     - corpcor: pseudoinverse() [ -> fast.svd() .. non-optimal "A %% diag(.)" ]
 
+    
 
 
 * Remarks on specific functions and issues:

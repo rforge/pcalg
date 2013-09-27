@@ -29,8 +29,6 @@ true.amat <- as(myCPDAG, "matrix")
 true.amat[which(true.amat!=0)] <- 1
 
 ## The effect is not identifiable, in fact:
-library(igraph)
-library(RBGL)
 tmp.set <- backdoor(true.amat, 3, 5, type="cpdag")
 
 if (!is.na(tmp.set)) {
@@ -68,13 +66,11 @@ cov.mat <- trueCov(g)
 true.corr <- cov2cor(cov.mat)
 suffStat <- list(C=true.corr, n=10^9)
 indepTest <- gaussCItest
-library(RBGL)
 
 ## estimate the true PAG
 true.pag <- dag2pag(suffStat, indepTest, g, L, alpha = 0.9999)
 
 ## The effect is identifiable and
-library(igraph)
 tmp.set <- backdoor(true.pag@amat, 4, 6, type="pag")
 true.set <- c(1,2)
 

@@ -29,7 +29,6 @@ model; finally, variable one was declared to be latent and
 the corresponding column was deleted from the simulated data set.
 }
 \source{
-  % \code{
   \preformatted{
     ## Used to generate "gmL"
     set.seed(47)
@@ -40,7 +39,6 @@ the corresponding column was deleted from the simulated data set.
     colnames(myX) <- as.character(1:5)
     gmL <- list(x = myX[,-1], g = gGtrue)
   }
-  %}% code
 }
 % \references{
  %%  ~~ possibly secondary sources and usages ~~

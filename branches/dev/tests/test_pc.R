@@ -12,7 +12,7 @@ showProc.time <- local({
 ##################################################
 ## Standard PC
 ##################################################
-library(RBGL)
+##library(RBGL)
 nreps <- 10
 
 set.seed(234)
@@ -43,7 +43,7 @@ g <- randomDAG(p,2/(p-1))
 ## generate n samples of DAG using standard normal error distribution
 ##random data
 
-load(system.file("external", "test_conservative_pc_data1.rda", package = "pcalg"))
+(load(system.file("external", "test_conservative_pc_data1.rda", package = "pcalg")))
 ## set.seed(67*37)
 ## new.mat <- rmvnorm(n,mean=rep(0,p),sigma=trueCov(g))
 ## save(new.mat, file = "/u/kalisch/research/packages/pcalg/inst/external/test_conservative_pc_data1.rda")

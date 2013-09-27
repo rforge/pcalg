@@ -54,12 +54,7 @@ showEdgeList(pc.fit)
 ## Adjacency matrix
 showAmat(pc.fit)
 
-## Plot using package igraph
-if (require(igraph)) {
-## show estimated CPDAG using igraph
+## Plot: show estimated CPDAG using igraph
 iplotPC(pc.fit)
 }
-}
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{graphs}
+\keyword{hplot}

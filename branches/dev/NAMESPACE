@@ -1,3 +1,18 @@
+useDynLib(pcalg)
+
+###----- Imports ------------------------------------------------------
+
+importFrom("utils", str)# for all the help examples
+
+## try to import all we need, but not more
+importFrom("methods",
+           setClass, setClassUnion, setMethod, setOldClass, setValidity,
+           getClass, getClassDef, callGeneric, as, is, extends,
+	   new, validObject,
+	   signature, representation, prototype)
+
+importFrom("abind", abind)
+importFrom("corpcor", pseudoinverse)
 
 importFrom("robustbase",
 	   covOGK, hard.rejection,
@@ -14,18 +29,20 @@ importMethodsFrom("graph",
 		  numNodes, numEdges,
 		  subGraph, ugraph)
 
+importFrom("igraph", graph.adjacency, igraph.from.graphNEL, is.chordal, plot.igraph)
+
 importFrom("RBGL",
 	   biConnComp, johnson.all.pairs.sp, separates, bfs, connectedComp)
 ## also    sp.between -- but only for deprecated beta.special(), hence RBGL::*
 
+importFrom("ggm", isAcyclic, transClos, topOrder)
+
+importFrom("graphics", plot.default, plot)
 
 
-# importFrom("MASS", mvrnorm)
-importFrom("ggm", isAcyclic,transClos,topOrder)
+###----- Exports ------------------------------------------------------
 
-importFrom("graphics", plot)
-
-## FIXME: do *NOT* export those that are "internal" <--> man/pcalg-internal.Rd
+## NB: do not export those that are "internal" <--> man/pcalg-internal.Rd
 export(trueCov,
        randomDAG,
        wgtMatrix,
@@ -123,5 +140,3 @@ exportClasses("pcAlgo",
               "EssGraph")
 
 exportMethods("summary","show","plot")
-
-useDynLib(pcalg)

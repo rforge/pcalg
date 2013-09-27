@@ -254,7 +254,7 @@ indepTest <- gaussCItest
 suffStat <- list(C = cor(gmG$x), n = n)
 ## estimate CPDAG
 alpha <- 0.01
-library(RBGL)
+%% library(RBGL)
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
   ## show estimated CPDAG
@@ -289,7 +289,7 @@ indepTest <- disCItest
 suffStat <- list(dm = gmD$x, nlev = c(3,2,3,4,2), adaptDF = FALSE)
 ## estimate CPDAG
 alpha <- 0.01
-library(RBGL)
+%% library(RBGL)
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
   ## show estimated CPDAG
@@ -310,7 +310,7 @@ indepTest <- binCItest
 suffStat <- list(dm = gmB$x, adaptDF = FALSE)
 ## estimate CPDAG
 alpha <- 0.01
-library(RBGL)
+%% library(RBGL)
 pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
 if (require(Rgraphviz)) {
   ## show estimated CPDAG
