@@ -7131,12 +7131,12 @@ dreach <- function(x, y, amat, verbose=FALSE)
 }
 
 pag2mag <- function(amat.pag, x){
-  ## Purpose: transform a PAG into a valid MAG using the arrowhead augmentation
-  ##          from Zhang, without orienting additional edges in to x and then
-  ##          orient any chordal component into a DAG
+  ## Purpose: transform a PAG/CPDAG into a valid MAG/DAG using the arrowhead
+  ##          augmentation from Zhang, without orienting additional edges
+  ##          into x and then orient any chordal component into a DAG
   ## ----------------------------------------------------------------------
   ## Arguments:
-  ## - amat.pag: adjacency matrix of the PAG
+  ## - amat.pag: adjacency matrix of the PAG/CPDAG
   ## - x: node of interest
   ## ----------------------------------------------------------------------
   ## Value:
@@ -7155,6 +7155,8 @@ pag2mag <- function(amat.pag, x){
       amat.pag[b,a] <- 3
     }
   }
+  ##because we don't allow selection variables in the generalized backdoor
+  ##criterion these kind of edges should not be present BUT YOU NEVER KNOW...
   ##find all o-- edges in the PAG
   indB <- which((amat.pag == 3 & t(amat.pag) == 1), arr.ind = TRUE)
   if (length(indB) > 0) {
@@ -7290,56 +7292,60 @@ backdoor <- function(amat, x, y, type = "pag")
         }
     }
     
-    ##if x and y are not in the same connected component ---> 0
+    ##if x and y are not in the same connected component ---> empty set
     if (!found.conncomp) {
         set.w <- NULL
     }
     else {
-        ##1. compute the truncated graph
-        ##all the paths out of x with a definitely visible edge have to be
-        ##deleted and the invisible edge out of x are replaced by
-        ##bi-directed edges
-        amat.trunc <- amat
+        ##1. generate a MAG/DAG belonging to the equivalence class of the 
+        ##PAG or a CPDAG without orienting additional edges into X
+        if (type == "cpdag" | type == "pag") {
+            amat.r <- pag2mag(amat, x)
+        } else {
+            amat.r <- amat
+        }
+        
+        ##2. compute the truncated corresponding graph
+        ##2.a) find all the visible edges in the original graph that are out of X
+        ##2.b) all the definitely visible edges out of X have to be deleted
+        ##in the graph constructed previously
         indD <- which(amat[x,] == 2 & amat[,x] == 3) ## x--> d
-        ##in a CPDAG or DAG every directed edge is visible, then delete them all
+
+        ##CASE A: in a CPDAG or DAG every directed edge out of X is visible
+        ##        then delete them all
         if (type == "cpdag" | type == "dag") {
             if (length(indD > 0)) {
                 for (i in 1:length(indD)) {
                     ##delete visible edges out of x edges
-                    amat.trunc[indD[i],x] <- amat.trunc[x,indD[i]] <- 0
+                    amat.r[indD[i],x] <- amat.r[x,indD[i]] <- 0
                 }
             }
         } else {
+            ##CASE B: in a MAG or PAG the directed edges out of X need
+            ##        to be checked for visibility
             if (length(indD > 0)) {
                 del.edges <- rep(FALSE, length(indD))
                 for (i in 1:length(indD)) {
+                    ##check each directed edge out of X for visibility
                     del.edges[i] <- VisibleEdge(amat, x, indD[i])
                 }
                 ##delete visible edges out of x edges
-                amat.trunc[indD[del.edges],x] <- amat.trunc[x,indD[del.edges]] <- 0
+                amat.r[indD[del.edges],x] <- amat.r[x,indD[del.edges]] <- 0
                 ##transform invisible edges out of x by bi-directed 
-                amat.trunc[indD[!del.edges],x] <- amat.trunc[x,indD[!del.edges]] <- 2
+                ##amat.r[indD[!del.edges],x] <- amat.r[x,indD[!del.edges]] <- 2
             }
         }
-
-        ##2. generate a MAG belonging to the equivalence class of the truncated
-        ##PAG or a DAG in the truncated CPDAG
-        if (type == "cpdag" | type == "pag") {
-            amat.mag <- pag2mag(amat.trunc, x)
-        } else {
-            amat.mag <- amat.trunc
-        }
-        
+      
         ##3. compute possible descendants of x along definite status paths
         list.de <- possibleDe(amat, x)
         
-        ##4. compute D-SEP(x,y)_path in the truncated MAG or truncated DAG
-        dsep.set <- dreach(x, y, amat.mag)
+        ##4. compute D-SEP(x,y)_path in the truncated graph
+        dsep.set <- dreach(x, y, amat.r)
         
         ##5. check that no possible descendants of x along definite status
-        ##paths is in D-SEP(x,y,amat.mag) or y is in adj(x, amat.trunc)
-        if (!(amat.trunc[x,y] != 0) && !(any(list.de %in% dsep.set))) {
-            ##D-SEP(x,y,amat.mag) closes all the paths
+        ##paths are in D-SEP(x,y,amat.r) or y is in adj(x, amat.r)
+        if (!(amat.r[x,y] != 0) && !(any(list.de %in% dsep.set))) {
+            ##D-SEP(x,y,amat.r) closes all the paths
             set.w <- dsep.set
         }
     }
