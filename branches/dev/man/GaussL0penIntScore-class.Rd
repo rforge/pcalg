@@ -1,18 +1,39 @@
 \name{GaussL0penIntScore-class}
 \docType{class}
 \alias{GaussL0penIntScore-class}
+\alias{local.score,GaussL0penIntScore-method}
+\alias{global.score,GaussL0penIntScore-method}
+\alias{local.mle,GaussL0penIntScore-method}
+\alias{global.mle,GaussL0penIntScore-method}
 \encoding{UTF-8}
-\title{Class "GaussL0penIntScore"}
+\title{Class \code{"GaussL0penIntScore"}}
 \description{
   This class represents a score for causal inference from jointly interventional
   and observational Gaussian data; it is used in the causal inference functions 
   \code{\link{gies}} and \code{\link{simy}}. 
 }
+\details{
+  The class implements an \eqn{\ell_0}{ℓ0}-penalized Gaussian maximum 
+  likelihood estimator.  The penalization is a constant (specified by
+  the argument \code{lambda} in the constructor) times the number of 
+  parameters of the DAG model.  By default, the constant \eqn{\lambda}{λ} is 
+  chosen as \eqn{\log(n)/2}{log(n)/2}, which corresponds to the BIC score.
+}
+\section{Extends}{
+  Class \code{"\linkS4class{Score}"}, directly.
+  
+  All reference classes extend and inherit methods from \code{"\linkS4class{envRefClass}"}.
+}
 %% TODO:
 %% - replace this by \section{Constructor}; see the documentation of graphNEL (package graph)
 %% - include methods and slots, see documentation skeleton produced by promptClass("GaussL0penIntScore")
 %% - include aliases for methods and slots, see documentation of graphNEL
-\usage{
+\section{Fields}{
+  The class \code{GaussL0penIntScore} has the same fields as \code{\linkS4class{Score}}.   
+  They need not be accessed by the user.
+}
+\section{Constructor}{
+\preformatted{
 new("GaussL0penIntScore",
   data = matrix(1, 1, 1),
   targets = list(integer(0)), 
@@ -22,24 +43,20 @@ new("GaussL0penIntScore",
   use.cpp = TRUE, 
   ...)
 }
-\arguments{
-  \item{data}{Data matrix with \emph{n} rows and \emph{p} columns.  Each row
-    corresponds to one realization, either interventional or observational.}
-  \item{targets}{List of different intervention targets.}
-  \item{target.index}{Vector of length \emph{n} assigning the rows of
-    \code{data} to the intervention targets.}
-  \item{lambda}{Penalization constant (cf. details)}
-  \item{intercept}{Indicates whether an intercept is allowed in the linear
-    structural equations, or, equivalently, if a mean different from zero is
-    allowed for the observational distribution.}
-  \item{use.cpp}{Indicates whether the calculation of the score should be done
-    by the C++ library of the package, which speeds up calculation.  This
-    parameter should only be set to \code{FALSE} in the case of problems.}
-}
-\section{Fields}{
-  The class \code{\link{GaussL0penIntScore-class}} has the same fields
-  as \code{\link{Score-class}}.   
-  They need not be accessed by the user.
+  \describe{
+    \item{\code{data}}{Data matrix with \emph{n} rows and \emph{p} columns.  Each row
+      corresponds to one realization, either interventional or observational.}
+    \item{\code{targets}}{List of different intervention targets.}
+    \item{\code{target.index}}{Vector of length \emph{n} assigning the rows of
+      \code{data} to the intervention targets.}
+    \item{\code{lambda}}{Penalization constant (cf. details)}
+    \item{\code{intercept}}{Indicates whether an intercept is allowed in the linear
+      structural equations, or, equivalently, if a mean different from zero is
+      allowed for the observational distribution.}
+    \item{\code{use.cpp}}{Indicates whether the calculation of the score should be done
+      by the C++ library of the package, which speeds up calculation.  This
+      parameter should only be set to \code{FALSE} in the case of problems.}
+  }
 }
 \section{Methods}{
   \describe{
@@ -68,15 +85,8 @@ new("GaussL0penIntScore",
       as the result vector of \code{local.mle}.}
   }
 }
-\details{
-  The class implements an \eqn{\ell_0}{ℓ0}-penalized Gaussian maximum 
-  likelihood estimator.  The penalization is a constant (specified by
-  the argument \code{lambda} in the constructor) times the number of 
-  parameters of the DAG model.  By default, the constant \eqn{\lambda}{λ} is 
-  chosen as \eqn{\log(n)/2}{log(n)/2}, which corresponds to the BIC score.
-}
 \author{
-  Alain Hauser (\email{hauser@stat.math.ethz.ch})
+  Alain Hauser (\email{alain.hauser@biology.unibe.ch})
 }
 \examples{
 ##################################################
@@ -99,7 +109,7 @@ score$global.score(as(A, "GaussParDAG"))
 }
 \seealso{
   \code{\link{gies}}, \code{\link{simy}}, 
-  \code{\link{GaussL0penObsScore-class}}, 
-  \code{\link{Score-class}}
+  \code{\linkS4class{GaussL0penObsScore}}, 
+  \code{\linkS4class{Score}}
 }
 \keyword{classes}

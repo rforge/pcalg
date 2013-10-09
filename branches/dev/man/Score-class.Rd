@@ -88,7 +88,7 @@
   Conference on Uncertainty in Artificial Intelligence (UAI 2006)}, 445--452
 }
 \author{
-  Alain Hauser (\email{hauser@stat.math.ethz.ch})
+  Alain Hauser (\email{alain.hauser@biology.unibe.ch})
 }
 \seealso{
   \code{\link{ges}}, \code{\link{gies}}, \code{\link{simy}}, 

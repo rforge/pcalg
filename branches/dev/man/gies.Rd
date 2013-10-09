@@ -97,7 +97,7 @@ gies(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
   \emph{Journal of Machine Learning Research} \bold{13}, 2409--2464.
 }
 \author{
-  Alain Hauser (\email{hauser@stat.math.ethz.ch})
+  Alain Hauser (\email{alain.hauser@biology.unibe.ch})
 }
 \seealso{
   \code{\link{ges}}, \code{\linkS4class{Score}}, \code{\linkS4class{EssGraph}}

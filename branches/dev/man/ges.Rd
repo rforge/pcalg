@@ -110,7 +110,7 @@ ges(p, score, turning = TRUE, maxdegree = integer(0), ...)
   Prediction, and Search}, MIT Press, Cambridge (MA).
 }
 \author{
-  Alain Hauser (\email{hauser@stat.math.ethz.ch})
+  Alain Hauser (\email{alain.hauser@biology.unibe.ch})
 }
 \seealso{
   \code{\link{pc}}, \code{\linkS4class{Score}}, \code{\linkS4class{EssGraph}}
