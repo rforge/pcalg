@@ -1,40 +1,28 @@
-\name{gies}
-\alias{gies}
+\name{gds}
+\alias{gds}
 \encoding{UTF-8}
-\title{Estimate the interventional Markov equivalence class of a DAG using
-  GIES}
+\title{Greedily estimate the observational or interventional Markov equivalence 
+  class of a DAG.}
 \description{
-  Estimate the interventional essential graph representing the Markov 
-  equivalence class of a DAG using the greedy interventional equivalence search
-  (GIES) algorithm of Hauser and Bühlmann (2012).
+  Estimate the observational or interventional essential graph representing the 
+  Markov equivalence class of a DAG by greedily optimizing a score function in 
+  the space of DAGs.  In practice, greedy search should always be done in the 
+  space of equivalence classes instead of DAGs, giving the functions
+  \code{\link{gies}} or \code{\link{ges}} the preference over \code{gds}.
 }
 \usage{
-gies(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
+gds(p, targets, score, ...)
 }
 \arguments{
   \item{p}{Number of variables.}
   \item{targets}{A list of intervention targets (cf. details).  A list of
     vectors, each vector listing the vertices of one intervention target.}
   \item{score}{An instance of a class derived from \code{\linkS4class{Score}}.}
-  \item{turning}{Boolean indicating whether the function should try to augment
-    the score by turning edges (cf. details).}
-  \item{maxdegree}{Parameter used to limit the vertex degree of the estimated
-    graph.  Valid arguments:
-    \enumerate{
-      \item Vector of length 0 (default): vertex degree is not limited.
-      \item Real number \eqn{r}, \eqn{0 < r < 1}: degree of vertex \eqn{v} is 
-        limited to \eqn{r \cdot n_v}, where \eqn{n_v} denotes the number of
-        data points where \eqn{v} was not intervened.
-      \item Single integer: uniform bound of vertex degree for all vertices
-        of the graph.
-      \item Integer vector of length \code{p}: vector of individual bounds
-        for the vertex degrees.
-    }
-    }
   \item{\dots}{Additional arguments for debugging purposes and fine tuning.}
 }
 \details{
-  This function estimates the interventional Markov equivalence class of a DAG
+  This function estimates the observational or interventional Markov 
+  equivalence class of a DAG
   based on a data sample with interventional data originating from various
   interventions and possibly observational data. The intervention targets used
   for data generation must be specified by the argument \code{targets} as a
@@ -59,30 +47,32 @@ gies(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
   Note that when plotting the object, undirected and bidirected edges are 
   equivalent.
   
-  GIES (greedy interventional equivalence search) is a score-based algorithm 
-  that greedily maximizes a score function (typically the BIC, passed to the 
-  function via the argument \code{score}) in the space of interventional 
-  essential graphs in three phases, starting from the empty graph:
+  Greedy DAG search (GDS) maximizes a score function (typically the BIC, passed
+  to the function via the argument \code{score}) of a DAG in three phases, 
+  starting from the empty DAG:
   \describe{
-    \item{Forward phase}{In the forward phase, GIES moves through the space of
-      interventional essential graphs in steps that correspond to the addition 
-      of a single edge in the space of DAGs; the phase is aborted as soon as 
-      the score cannot be augmented any more.}
-    \item{Backward phase}{In the backward phase, the algorithm performs moves
-      that correspond to the removal of a single edge in the space of DAGs 
-      until the score cannot be augmented any more.}
-    \item{Turning phase}{In the turning phase, the algorithm performs moves 
-      that correspond to the reversal of a single arrow in the space of DAGs 
-      until the score cannot be augmented any more.}
+    \item{Forward phase}{In the forward phase, GDS adds single arrows to the 
+      DAG as long as this augments the score.}
+    \item{Backward phase}{In the backward phase, the algorithm removes arrows
+      from the DAG as long as this augments the score.}
+    \item{Turning phase}{In the turning phase, the algorithm reverts arrows of
+      the DAG as long as this augments the score.}
   }
   GIES cycles through these three phases until no augmentation of the score is
-  possible any more.  GIES is an interventional extension of the GES (greedy
-  equivalence search) algorithm of Chickering (2002) which is limited to
-  observational data and hence operates on the space of observational instead
-  of interventional Markov equivalence classes.
+  possible any more.  In the end, \code{gds} returns the (interventional or
+  observational) essential graph of the last visited DAG.
+  
+  It is well-known that a greedy search in the space of DAGs instead of 
+  essential graphs is more prone to be stuck in local optima of the score
+  function and hence expected to yield worse estimation results than GIES
+  (function \code{\link{gies}}) or GES (function \code{\link{ges}}) (Chickering,
+  2002; Hauser and Bühlmann, 2012).  The 
+  function \code{gds} is therefore not of practical use, but can be used
+  to compare causal inference algorithms to an elementary and straight-forward
+  approach.
 }
 \value{
-  \code{gies} returns a list with the following two components:
+  \code{gds} returns a list with the following two components:
   \item{essgraph}{An object of class \code{\linkS4class{EssGraph}} containing an 
     estimate of the equivalence class of the underlying DAG.}
   \item{repr}{An object of a class derived from \code{\linkS4class{ParDAG}}
@@ -100,7 +90,8 @@ gies(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
   Alain Hauser (\email{alain.hauser@biology.unibe.ch})
 }
 \seealso{
-  \code{\link{ges}}, \code{\linkS4class{Score}}, \code{\linkS4class{EssGraph}}
+  \code{\link{gies}}, \code{\link{ges}}, \code{\linkS4class{Score}}, 
+  \code{\linkS4class{EssGraph}}
 }
 \examples{
 ## Load predefined data
@@ -110,20 +101,16 @@ data(gmInt)
 score <- new("GaussL0penIntScore", gmInt$x, gmInt$targets, gmInt$target.index) 
 
 ## Estimate the essential graph
-gies.fit <- gies(ncol(gmInt$x), gmInt$targets, score) 
+gds.fit <- gds(ncol(gmInt$x), gmInt$targets, score) 
 
 ## Plot the estimated essential graph and the true DAG
 if (require(Rgraphviz)) {
   par(mfrow=c(1,2))
-  plot(gies.fit$essgraph, main = "Estimated ess. graph")
+  plot(gds.fit$essgraph, main = "Estimated ess. graph")
   plot(gmInt$g, main = "True DAG")
 }
 }
-\keyword{GIES}
 \keyword{greedy}
-\keyword{intervention}
-\keyword{interventional}
-\keyword{equivalence}
 \keyword{search}
 \keyword{DAG}
 \keyword{model}

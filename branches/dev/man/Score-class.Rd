@@ -27,21 +27,32 @@
       specified) classes derived from \code{Score}.} 
   }
 }
+\section{Constructor}{
+\preformatted{
+new("Score",
+  data = matrix(1, 1, 1), 
+  targets = list(integer(0)),
+  target.index = rep(as.integer(1), nrow(data)), 
+  ...)
+}
+  \describe{
+    \item{\code{data}}{Data matrix with \eqn{n} rows and \eqn{p} columns.  Each 
+      row corresponds to one realization, either interventional or 
+      observational.}
+    \item{\code{targets}}{List of mutually exclusive intervention targets
+      that have been used for data generation.}
+    \item{\code{target.index}}{Vector of length \eqn{n}; the \eqn{i}-th entry 
+      specifies the index of the intervention
+      target in \code{targets} under which the \eqn{i}-th row of \code{data}
+      was measured.}
+    \item{\code{...}}{Additional parameters used by derived (and non-virtual)
+      classes.}
+  }
+}
 \section{Methods}{
   Note that since \code{Score} is a virtual class, its methods cannot be called
   directly, but only on derived classes.
   \describe{
-    \item{\code{initialize(data = matrix(1, 1, 1), 
-      targets = list(integer(0)),
-      target.index = rep(as.integer(1), nrow(data)), 
-      ...)}}{Constructor; creates a \code{Score} object.  \code{data} specifies
-      the data matrix with jointly interventional and observational data;
-      \code{targets} is the list of mutually exclusive intervention targets
-      that have been used for data generation; \code{target.index} is a vector
-      whose length corresponds to the number of rows of the data matrix
-      \code{data}; the \eqn{i}-th entry specifies the index of the intervention
-      target in \code{targets} under which the \eqn{i}-th row of \code{data}
-      was measured.}
     \item{\code{local.score(vertex, parents, ...)}}{For decomposable scores,
       this function calculates the local score of a vertex and its parents.
       Must throw an error in derived classes that do not represent a 

@@ -37,7 +37,7 @@ new("GaussL0penObsScore",
   ...)
 }
   \describe{
-    \item{\code{data}}{Data matrix with \emph{n} rows and \emph{p} columns.  Each row
+    \item{\code{data}}{Data matrix with \eqn{n} rows and \eqn{p} columns.  Each row
       corresponds to one observational realization.}
     \item{\code{lambda}}{Penalization constant (cf. details)}
     \item{\code{intercept}}{Indicates whether an intercept is allowed in the linear

@@ -44,11 +44,15 @@ new("GaussL0penIntScore",
   ...)
 }
   \describe{
-    \item{\code{data}}{Data matrix with \emph{n} rows and \emph{p} columns.  Each row
-      corresponds to one realization, either interventional or observational.}
-    \item{\code{targets}}{List of different intervention targets.}
-    \item{\code{target.index}}{Vector of length \emph{n} assigning the rows of
-      \code{data} to the intervention targets.}
+    \item{\code{data}}{Data matrix with \eqn{n} rows and \eqn{p} columns.  Each 
+      row corresponds to one realization, either interventional or 
+      observational.}
+    \item{\code{targets}}{List of mutually exclusive intervention targets
+      that have been used for data generation.}
+    \item{\code{target.index}}{Vector of length \eqn{n}; the \eqn{i}-th entry 
+      specifies the index of the intervention
+      target in \code{targets} under which the \eqn{i}-th row of \code{data}
+      was measured.}
     \item{\code{lambda}}{Penalization constant (cf. details)}
     \item{\code{intercept}}{Indicates whether an intercept is allowed in the linear
       structural equations, or, equivalently, if a mean different from zero is

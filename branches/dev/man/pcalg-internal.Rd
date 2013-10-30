@@ -38,16 +38,9 @@
 \alias{possibleDe}
 \alias{dreach}
 \alias{my.SpecialDag}
+\alias{caus.inf}
 %-> *do* document or confirm current status (FIXME):
 \alias{gAlgo-class}
-\alias{EssGraph-class}
-\alias{ParDAG-class}
-\alias{GaussParDAG-class}
-\alias{caus.inf}
-\alias{gds}
-\alias{r.gauss.pardag}
-\alias{rmvnorm.ivent}% keep: used create gmInt data -> ./gmInt.Rd
-
 %
 \title{Internal Pcalg Functions}
 \description{

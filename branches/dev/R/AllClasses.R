@@ -700,6 +700,7 @@ setRefClass("EssGraph",
         #' Calculates an optimal intervention target
         #' 
         #' @param   max.size    maximum target size; allowed values: 1, p (= # nodes)
+        ## TODO document that function... or better: provide a documented wrapper function
         opt.target = function(max.size) {
           .Call("optimalTarget", .in.edges, max.size, PACKAGE = "pcalg")
         }
@@ -723,6 +724,8 @@ setAs("EssGraph", "matrix",
     })
 
 #' Plot method (needs Rgraphviz to work!!)
+## TODO maybe adapt method to make sure that undirected edges are not plotted as
+## bidirected
 setMethod("plot", "EssGraph", 
     function(x, y, ...) {
       if (!validObject(x))

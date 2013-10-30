@@ -3,7 +3,6 @@
 \docType{class}
 \alias{ParDAG-class}
 \alias{plot,ParDAG,ANY-method}
-
 \title{Class \code{"ParDAG"}}
 \description{
   This virtual base class represents a parametric causal model.
@@ -24,8 +23,15 @@
   All reference classes extend and inherit methods from \code{"\linkS4class{envRefClass}"}.
 }
 \section{Constructor}{
-\code{initialize(nodes, in.edges, params)}
-  % TODO...
+  \code{new("ParDAG", nodes, in.edges, params)}
+  \describe{
+    \item{\code{nodes}}{Vector of node names; cf. also field \code{.nodes}.}
+    \item{\code{in.edges}}{A list of length \code{p} consisting of index 
+      vectors indicating the edges pointing into the nodes of the DAG.}
+    \item{\code{params}}{A list of length \code{p} consisting of parameter 
+      vectors modeling the conditional distribution of a node given its 
+      parents; cf. also field \code{.params}.}
+  }
 }
 \section{Fields}{
   \describe{
@@ -39,13 +45,21 @@
       meaning in derived classes belonging to specific parametric model classes.}
   }
 }
-% TODO finish section
 \section{Class-Based Methods}{
   \describe{
     \item{\code{node.count()}:}{Yields the number of nodes (variables) of the 
       model.}
-    \item{\code{simulate(n, target, int.level)}:}{ ~~ }
-    \item{\code{edge.count()}:}{ ~~ }
+    \item{\code{simulate(n, target, int.level)}:}{Generates \eqn{n}
+      (observational or interventional) samples from the parametric causal
+      model.  The intervention target to be used is specified by the parameter
+      \code{target}; if the target is empty (\code{target = integer(0)}),
+      observational samples are generated.  \code{int.level} indicates
+      the values of the intervened variables; if it is a vector of the same
+      length as \code{target}, all samples are drawn from the same intervention
+      levels; if it is a matrix with \eqn{n} rows and as many columns as 
+      \code{target} has entries, its rows are interpreted as individual
+      intervention levels for each sample.}
+    \item{\code{edge.count()}:}{Yields the number of edges (arrows) in the DAG.}
   }
 }
 \section{Methods}{

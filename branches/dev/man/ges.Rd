@@ -116,9 +116,6 @@ ges(p, score, turning = TRUE, maxdegree = integer(0), ...)
   \code{\link{pc}}, \code{\linkS4class{Score}}, \code{\linkS4class{EssGraph}}
 }
 \examples{
-##################################################
-## Using Gaussian Data
-##################################################
 ## Load predefined data
 data(gmG)
 

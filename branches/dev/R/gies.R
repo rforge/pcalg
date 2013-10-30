@@ -153,6 +153,8 @@ gies <- function(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
 ges <- function(p, score, turning = TRUE, maxdegree = integer(0), ...) 
   caus.inf("GIES", p, list(integer(0)), score, turning = turning, maxdegree = maxdegree, ...)
 
+## TODO: make sure that the "representative" in the result is actually the last
+## visited DAG instead of a random representative; adapt documentation accordingly
 gds <- function(p, targets, score, ...) caus.inf("GDS", p, targets, score, ...)
 
 simy <- function(p, targets, score, ...) caus.inf("SiMy", p, targets, score, ...)
