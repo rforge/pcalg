@@ -569,7 +569,8 @@ brief introduction.
 Ancestral graphs have nodes, which represent random variables and edges
 which represent some kind of dependence. The edges can be either directed
 ($\gredge{<-}$ or $\gredge{->}$),
-undirected ($\gredge{-}$) or bidirected ($\gredge{<->}$) (note that in the context of ancestral graphs,
+undirected ($\gredge{-}$) or bidirected ($\gredge{<->}$) (note that in the
+context of ancestral graphs, 
 undirected and bidirected edges do \emph{not} mean the same). There are two
 rules that restrict the direction of edges in an ancestral graph:
 \begin{description}
@@ -649,11 +650,37 @@ remove these order-dependence issues in each of their steps.
 
 \subsubsection{From a mixture of observational and interventional data}
 
-We often have to deal with interventional data in causal inference.  In cell biology for example, data is often measured in different mutants, or collected from gene knockdown experiments, or simply measured under different experimental conditions.  An intervention, denoted by Pearl's do-calculus (see Section \ref{sec:introduction}), changes the joint probability distribution of the system; therefore, data samples collected from different intervention experiments are \emph{not} identically distributed (although still independent).
+We often have to deal with interventional data in causal inference.  In
+cell biology for example, data is often measured in different mutants, or
+collected from gene knockdown experiments, or simply measured under
+different experimental conditions.  An intervention, denoted by Pearl's
+do-calculus (see Section \ref{sec:introduction}), changes the joint
+probability distribution of the system; therefore, data samples collected
+from different intervention experiments are \emph{not} identically
+distributed (although still independent). 
 
-The algorithms PC and GES both rely on the i.i.d.\ assumption and are not suited for causal inference from interventional data.  The GIES algorithm, which stands for ``greedy interventional equivalence search'', is a generalization of GES to interventional data (see \cite{HauserBuhlmann2012}).  It does not only make sure that interventional data points are handled correctly (instead of being wrongly treated as observational data points), but also accounts for the improved identifiablity of causal models under interventional data by returning an \emph{interventional essential graph}.  Just as in the observational case, an interventional essential graph is a partially directed graph representing an (interventional) Markov equivalence class of DAGs: a directed edge between two vertices stands for an arrow with common orientation among all representatives of the equivalence class, an undirected edge stands for an arrow that has different orientations among different representative DAGs; for more details, see \cite{HauserBuhlmann2012}.
+The algorithms PC and GES both rely on the i.i.d.\ assumption and are not
+suited for causal inference from interventional data.  The GIES algorithm,
+which stands for ``greedy interventional equivalence search'', is a
+generalization of GES to interventional data (see
+\cite{HauserBuhlmann2012}).  It does not only make sure that interventional
+data points are handled correctly (instead of being wrongly treated as
+observational data points), but also accounts for the improved
+identifiablity of causal models under interventional data by returning an
+\emph{interventional essential graph}.  Just as in the observational case,
+an interventional essential graph is a partially directed graph
+representing an (interventional) Markov equivalence class of DAGs: a
+directed edge between two vertices stands for an arrow with common
+orientation among all representatives of the equivalence class, an
+undirected edge stands for an arrow that has different orientations among
+different representative DAGs; for more details, see
+\cite{HauserBuhlmann2012}. 
 
-GIES traverses the search space of interventional essential graphs in a similar way as GES traverses the search space of observational essential graphs.  In addition, a new search phase was introduced by \cite{HauserBuhlmann2012} with movements which correspond to turning single arrows in the space of DAGs.
+GIES traverses the search space of interventional essential graphs in a
+similar way as GES traverses the search space of observational essential
+graphs.  In addition, a new search phase was introduced by
+\cite{HauserBuhlmann2012} with movements which correspond to turning single
+arrows in the space of DAGs. 
 
 \subsection{Estimating bounds on causal effects} \label{sec:bounds}
 One way of quantifying the causal effect of variable $V_x$ on $V_y$ is to
@@ -665,7 +692,8 @@ in \cite{Pearl00}, the resulting distribution after manipulation is denoted
 by $P[V_y | \doop(V_x=x)]$. Note that this is different from the conditional
 distribution $P[V_y | V_x=x]$. To illustrate this, imagine the following
 simplistic situation. Suppose we observe a particular spot on
-the street during some hour. The random variable $V_x$ denotes whether it rained during that
+the street during some hour. The random variable $V_x$ denotes whether it
+rained during that 
 hour ($V_x=1$ if it rained, $V_x=0$ otherwise). The random variable $V_y$ denotes
 whether the street was wet at the end of that hour ($V_y=1$
 if it was wet, $V_y=0$ otherwise). If we assume $P(V_x=1) = 0.1$ (rather dry
@@ -685,9 +713,10 @@ E[V_y|\doop(V_x=x)]$, as a general measure for the causal effect of $V_x$ on
 $V_y$. For multivariate Gaussian random variables, $E[V_y|\doop(V_x=x)]$ depends
 linearly on $x$. Therefore, the derivative is constant which means that the
 causal effect does not depend on $x$, and can also be interpreted as
-$E[V_y|\doop(V_x=x+1)] - E[V_y|\doop(V_x=x)]$. For binary random variables (with domain
-$\{0,1\}$) we define the causal effect of $V_x$ on $V_y$ as $E(V_y|\doop(V_x=1)) -
-E(V_y|\doop(V_x=0)) = P(V_y=1|\doop(V_x=1)) - P(V_y=1|\doop(V_x=0))$.
+$E[V_y|\doop(V_x=x+1)] - E[V_y|\doop(V_x=x)]$. For binary random variables
+(with domain $\{0,1\}$) we define the causal effect of $V_x$ on $V_y$ as
+$E(V_y|\doop(V_x=1)) - E(V_y|\doop(V_x=0)) = 
+ P(V_y=1|\doop(V_x=1)) - P(V_y=1|\doop(V_x=0))$.
 
 The goal in the remainder of this section is to estimate the effect of an
 intervention if only observational data is available.
@@ -775,7 +804,8 @@ assumptions are made.
   
 \item[RFCI algorithm:] Allows for hidden and selection variables; consistent
   in high-dimensional settings if the underlying MAG is sparse (this is a
-  much weaker assumption than the one needed for FCI), the data is multivariate normal and satisfies some regularity
+  much weaker assumption than the one needed for FCI), the data is
+  multivariate normal and satisfies some regularity 
   conditions on the partial correlations, and $\alpha$ is taken to zero
   appropriately. See \cite{rfci} for full details. Consistency in
   a standard asymptotic regime with a fixed number of variables follows as
@@ -1063,24 +1093,56 @@ plot(pc.fit, main = "")
 
 \subsection{ges} \label{sec:ges}
 
-The PC algorithm presented in the previous section is based on conditional independence tests.  To apply it, we first had to calculate a sufficient statistic and to specify a conditional independence test function.  For the score-based GES algorithm, we have to define a score object before applying the inference algorithm.
+The PC algorithm presented in the previous section is based on conditional
+independence tests.  To apply it, we first had to calculate a sufficient
+statistic and to specify a conditional independence test function.  For the
+score-based GES algorithm, we have to define a score object before applying
+the inference algorithm. 
 
-A score object is an instance of a class derived from the base class \code{Score}.  This base class is implemented as a virtual reference class.  At the moment, the \pkg{pcalg} package only contains classes derived from \code{Score} for Gaussian data: \code{GaussL0penObsScore} for purely observational data, and \code{GaussL0penIntScore} for a mixture of observational and interventional data; for the GES algorithm, we only need the first one here, but we will encounter the second one in Section \ref{sec:gies} again.  The implementation of score classes for discrete data is planned for future versions of the \pkg{pcalg} package.  However, the flexible implementation using class inheritance allows the user to implement own score classes for different scores.
+A score object is an instance of a class derived from the base class
+\code{Score}.  This base class is implemented as a virtual reference class.
+At the moment, the \pkg{pcalg} package only contains classes derived from
+\code{Score} for Gaussian data: \code{GaussL0penObsScore} for purely
+observational data, and \code{GaussL0penIntScore} for a mixture of
+observational and interventional data; for the GES algorithm, we only need
+the first one here, but we will encounter the second one in Section
+\ref{sec:gies} again.  The implementation of score classes for discrete
+data is planned for future versions of the \pkg{pcalg} package.  However,
+the flexible implementation using class inheritance allows the user to
+implement own score classes for different scores. 
 
-The predefined score-class \code{GaussL0penObsScore} implements a an $\ell_0$-penalized maximum-likelihood estimator for observational data from a Gaussian causal model.  A instance is generated as follows:
+The predefined score-class \code{GaussL0penObsScore} implements a an
+$\ell_0$-penalized maximum-likelihood estimator for observational data from
+a Gaussian causal model.  A instance is generated as follows: 
 <<obs-score-args, eval = FALSE>>=
 score <- new("GaussL0penObsScore", data = matrix(1, 1, 1),
     lambda = 0.5*log(nrow(data)), intercept = FALSE, use.cpp = TRUE, ...)
 @
-The data matrix is provided by the argument \code{data}.  The penalization constant is specified by \code{lambda}.  The default value of \code{lambda} corresponds to the BIC score; the AIC score is realized by setting \code{lambda} to $1$.  The argument \code{intercept} indicates whether the model should allow for intercepts in the linear structural equations, or for a non-zero mean of the multivariate normal distribution, which is equivalent.  The last argument \code{use.cpp} indicates whether the internal C++ library should be used for calculation, which is in most cases the best choice due to velocity issues.
+The data matrix is provided by the argument \code{data}.  The penalization
+constant is specified by \code{lambda}.  The default value of \code{lambda}
+corresponds to the BIC score; the AIC score is realized by setting
+\code{lambda} to $1$.  The argument \code{intercept} indicates whether the
+model should allow for intercepts in the linear structural equations, or
+for a non-zero mean of the multivariate normal distribution, which is
+equivalent.  The last argument \code{use.cpp} indicates whether the
+internal C++ library should be used for calculation, which is in most cases
+the best choice due to velocity issues. 
 
 Once a score object is defined, the GES algorithm is called as follows:
 <<ges-args, echo = FALSE>>=
 showF(ges)
 @
-The argument \code{p} specifies the number of variables in the model, \code{score} is a score object defined before.  The argument \code{turning} indicates whether the novel turning phase (see Section \ref{sec:gm}) not present in the original implementation of \cite{Chickering2002} should be used, and \code{maxdegree} can be used to bound the vertex degree of the estimated graph.  More details can be found in the help file of \code{ges()}.
+The argument \code{p} specifies the number of variables in the model,
+\code{score} is a score object defined before.  The argument \code{turning}
+indicates whether the novel turning phase (see Section \ref{sec:gm}) not
+present in the original implementation of \cite{Chickering2002} should be
+used, and \code{maxdegree} can be used to bound the vertex degree of the
+estimated graph.  More details can be found in the help file of
+\code{ges()}. 
 
-In Fig.~\ref{fig:gesFit}, we re-analyse the data set used in the example of Fig.~\ref{fig:pcFit1} with the GES algorithm.  The estimated graph is exactly the same in this case.
+In Fig.~\ref{fig:gesFit}, we re-analyse the data set used in the example of
+Fig.~\ref{fig:pcFit1} with the GES algorithm.  The estimated graph is
+exactly the same in this case. 
 
 \begin{figure}
   \centering
@@ -1091,8 +1153,8 @@ par(mfrow = c(1, 2))
 plot(gmG$g, main = "")
 plot(ges.fit$essgraph, main = "")
 @
-\caption{True underlying DAG (left) and essential graph (right) estimated with the GES algorithm fitted on the
-  simulated Gaussian data set \code{gmG}.}
+\caption{True underlying DAG (left) and essential graph (right) estimated
+  with the GES algorithm fitted on the simulated Gaussian data set \code{gmG}.}
 \label{fig:gesFit}
 \end{figure}
 
@@ -1389,21 +1451,43 @@ the class (of their ``communalities'') \code{gAlgo}.
 
 \subsection{gies and simy} \label{sec:gies}
 
-As we noted in Section \ref{sec:gm}, the GIES algorithm is a generalization of the GES algorithm to a mix of interventional and observational data.  Hence the usage of \code{gies()} is similar to that of \code{ges()} (see Section \ref{sec:ges}).  Actually, the function \code{ges()} is only an internal wrapper for \code{gies()}.
+As we noted in Section \ref{sec:gm}, the GIES algorithm is a generalization
+of the GES algorithm to a mix of interventional and observational data.
+Hence the usage of \code{gies()} is similar to that of \code{ges()} (see
+Section \ref{sec:ges}).  Actually, the function \code{ges()} is only an
+internal wrapper for \code{gies()}. 
 
-A data set with jointly interventional and observational data points is \emph{not} i.i.d.  In order to use it for causal inference, we must specify the intervention target each data point belongs to.  This is done by specifying the arguments \code{target} and \code{target.index} when generating an instance of \code{GaussL0penIntScore} (see Section \ref{sec:ges}):
+A data set with jointly interventional and observational data points is
+\emph{not} i.i.d.  In order to use it for causal inference, we must specify
+the intervention target each data point belongs to.  This is done by
+specifying the arguments \code{target} and \code{target.index} when
+generating an instance of \code{GaussL0penIntScore} (see Section
+\ref{sec:ges}): 
 <<int-score-args, eval = FALSE>>=
 score <- new("GaussL0penIntScore", data = matrix(1, 1, 1),
     targets = list(integer(0)), target.index = rep(as.integer(1), nrow(data)), 
     lambda = 0.5*log(nrow(data)), intercept = FALSE, use.cpp = TRUE, ...)
 @
-The argument \code{targets} is a list of all (mutually different) targets that have been intervened in the experiments generating the data set.  The allocation of sample indices to intervention targets is specified by the argument \code{target.index}.  This is an integer vector whose first entry specifies the index of the intervention target in the list \code{targets} of the first data point, whose second entry specifies the target index of the second data point, and so on.  An example is given in Figure \ref{fig:giesFit}.
+The argument \code{targets} is a list of all (mutually different) targets
+that have been intervened in the experiments generating the data set.  The
+allocation of sample indices to intervention targets is specified by the
+argument \code{target.index}.  This is an integer vector whose first entry
+specifies the index of the intervention target in the list \code{targets}
+of the first data point, whose second entry specifies the target index of
+the second data point, and so on.  An example is given in Figure
+\ref{fig:giesFit}. 
 
-Once a score object for interventional data is defined, the GIES algorithm is called as follows:
+Once a score object for interventional data is defined, the GIES algorithm
+is called as follows: 
 <<gies-args, echo = FALSE>>=
 showF(gies)
 @
-Most arguments coincide with those of \code{ges()} (see Section \ref{sec:ges}).  The only additional argument is \code{targets}: it takes the same list of (unique) intervention targets as the constructor of the class \code{GaussL0penIntScore} (see above).  This list of targets specifies the space of corresponding interventional Markov equivalence classes or essential graphs (see Section \ref{sec:gm}).
+Most arguments coincide with those of \code{ges()} (see Section
+\ref{sec:ges}).  The only additional argument is \code{targets}: it takes
+the same list of (unique) intervention targets as the constructor of the
+class \code{GaussL0penIntScore} (see above).  This list of targets
+specifies the space of corresponding interventional Markov equivalence
+classes or essential graphs (see Section \ref{sec:gm}). 
 
 <<def-gmInt, eval=FALSE, echo=FALSE>>=
 ## Used to generate the  'gmInt'  Gaussian data originally:
@@ -1435,11 +1519,16 @@ n3 <- sum(gmInt$target.index == 2)
 n5 <- sum(gmInt$target.index == 3)
 @
 
-The data set \code{gmInt} consists of \Sexpr{n.tot} data points sampled from the DAG in Figure \ref{fig:skelExpl}, among them \Sexpr{n.obs} observational ones, \Sexpr{n3} originating from an intervention at vertex $3$ and \Sexpr{n5} originating from an intervention at vertex $5$.  It can be loaded by calling
+The data set \code{gmInt} consists of \Sexpr{n.tot} data points sampled
+from the DAG in Figure \ref{fig:skelExpl}, among them \Sexpr{n.obs}
+observational ones, \Sexpr{n3} originating from an intervention at vertex
+$3$ and \Sexpr{n5} originating from an intervention at vertex $5$.  It can
+be loaded by calling 
 <<load-gmInt>>=
 data(gmInt)
 @
-The underlying causal model (or its interventional essential graph, respectively) is estimated in Figure \ref{fig:giesFit}.
+The underlying causal model (or its interventional essential graph,
+respectively) is estimated in Figure \ref{fig:giesFit}. 
 
 \begin{figure}
   \centering
@@ -1453,11 +1542,28 @@ plot(gmInt$g, main = "")
 plot(gies.fit$essgraph, main = "")
 plot(simy.fit$essgraph, main = "")
 @
-  \caption{The underlying DAG (left) and the essential graph estimated with the GIES algorithm (middle) and the dynamic programming approach of \citet{Silander2006} (right) applied on the simulated interventional Gaussian data set \code{gmInt}.  This data set contains data from interventions at vertices $3$ and $5$; accordingly, the orientation of all arrows incident to these two vertices becomes identifiable (see also Figure \ref{fig:gesFit} for comparison with the observational case.}
+  \caption{The underlying DAG (left) and the essential graph estimated with
+    the GIES algorithm (middle) and the dynamic programming approach of
+    \citet{Silander2006} (right) applied on the simulated interventional
+    Gaussian data set \code{gmInt}.  This data set contains data from
+    interventions at vertices $3$ and $5$; accordingly, the orientation of
+    all arrows incident to these two vertices becomes identifiable (see
+    also Figure \ref{fig:gesFit} for comparison with the observational
+    case.} 
   \label{fig:giesFit}
 \end{figure}
 
-As an alternative to GIES, we can also use the dynamic programming approach of \citet{Silander2006} to estimate the interventional essential graph from this interventional data set.  This algorithm is implemented in the function \code{simy()} which has the same arguments as \code{gies()}.  As noted in Section \ref{sec:gm}, this approach yields the \emph{exact} optimum of the BIC score at the price of a computational complexity which is exponential in the number of variables.  On the small example based on $8$ variables, using this algorithm is feasible; however, it is not feasible for more than approximately $20$ variables, depending on the processor and memory of the machine.  In this example, we get exactly the same result as with \code{gies()} (see Figure \ref{fig:giesFit}).
+As an alternative to GIES, we can also use the dynamic programming approach
+of \citet{Silander2006} to estimate the interventional essential graph from
+this interventional data set.  This algorithm is implemented in the
+function \code{simy()} which has the same arguments as \code{gies()}.  As
+noted in Section \ref{sec:gm}, this approach yields the \emph{exact}
+optimum of the BIC score at the price of a computational complexity which
+is exponential in the number of variables.  On the small example based on
+$8$ variables, using this algorithm is feasible; however, it is not
+feasible for more than approximately $20$ variables, depending on the
+processor and memory of the machine.  In this example, we get exactly the
+same result as with \code{gies()} (see Figure \ref{fig:giesFit}). 
 
 \subsection{ida} \label{sec:ida} 
 
@@ -1641,8 +1747,8 @@ the genes is the cause. Thus in the causal structure, the response variable
 cannot be a parent node of any variable describing the expression level of
 genes. This background knowledge can be easily incorporated: By setting the
 option \code{y.notparent = TRUE}, all edges in the CPDAG that have the
-response variable as endpoint (no matter whether directed or undirected) are overwritten so
-that they are oriented towards the response variable.
+response variable as endpoint (no matter whether directed or undirected)
+are overwritten so that they are oriented towards the response variable.
 
 \subsection{idaFast}
 In some applications it is desirable to estimate the causal effect of one
@@ -1986,7 +2092,11 @@ replacement for experiments. Rather, IDA should be used as a guide for
 prioritizing experiments, especially in situations where no clear
 preferences based on the context can be given.
 
-Data from cell biology is usually interventional data: different measurements could originate from different mutants or different cell stems, or from experiments with gene knockout or knockdown experiments.  The GIES algorithm is designed for causal inference from data of this kind.
+Data from cell biology is usually interventional data: different
+measurements could originate from different mutants or different cell
+stems, or from experiments with gene knockout or knockdown experiments.
+The GIES algorithm is designed for causal inference from data of this
+kind. 
 
 Since many assumptions of the proposed methods are uncheckable, it is
 important to further validate the methods in a range of applications. We
