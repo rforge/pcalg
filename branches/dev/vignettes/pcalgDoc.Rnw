@@ -153,7 +153,7 @@ whihc has been designed for DAGs without latent variables. IDA was validated on 
 large-scale biological system (see \cite{NatMethods10}). Since the
 assumption of no latent variables is a strong assumption when working with
 real data and therefore often violated in practice, we generalized Pearl's
-backdoor criterion (see \cite{MaCo2013}) to more general types of graphs,
+backdoor criterion (see \cite{MaCo2013-arc}) to more general types of graphs,
 i.e. CPDAGs, MAGs, and PAGs, that describe Markov equivalence classes of
 DAGs with and without latent variables but without selection variables. 
 
@@ -332,7 +332,7 @@ In Section~\ref{sec:bounds} we first describe the IDA method (see
 data when no latent and selection variables are present. This method is
 based on first estimating the causal structure and then applying
 do-calculus (see \cite{Pearl00}). We then propose the generalized Pearl's
-backdoor criterion (see \cite{MaCo2013}) that works with DAGs, CPDAGs,
+backdoor criterion (see \cite{MaCo2013-arc}) that works with DAGs, CPDAGs,
 MAGs, and PAGs as input and it assumes that there are arbitrarly many latent
 variables but no selection variables. This method is based on two steps:
 first it checks if the total causal effect of one variable $X$ onto another
@@ -474,7 +474,7 @@ present. If no directed edge is present, all edges are undirected.)
 
 It is known that the PC algorithm is order-dependent in steps
 \textbf{(P2)}--\textbf{(P4)}, meaning that the output depends from the order
-in which the variables are given. \cite{CoMa13} proposed several
+in which the variables are given. \cite{CoMa2013-arc} proposed several
 modifications of the PC algorithm (see Sections \ref{sec:skel} and
 \ref{sec:pc}) that partly or fully remove these order-dependence issues in
 each step. 
@@ -642,7 +642,7 @@ algorithms are very similar.
 Since both these algorithms are build up from the PC algorithm, they are
 also order-dependent, meaning that the output depends from the order
 in which the variables are given. Starting from the solution proposed for
-the PC algorithm, \cite{CoMa13} proposed several
+the PC algorithm, \cite{CoMa2013-arc} proposed several
 modifications of the FCI and the RFCI algorithms (see Sections
 \ref{sec:skel}, \ref{sec:fci}, and \ref{sec:rfci}) that partly or fully
 remove these order-dependence issues in each of their steps.
@@ -763,7 +763,7 @@ present, one can estimate causal effects from observational data using for
 example Pearl's backdoor criterion, as done in IDA. 
 
 However, in practice the assumption of no latent variables is often
-violated. Therefore, \cite{MaCo13} generalized Pearl's backdoor
+violated. Therefore, \cite{MaCo2013-arc} generalized Pearl's backdoor
 criterion to more general types of graphs that describe Markov equivalence
 classes of DAGs when allowing arbitrarily many latent but no selection
 variables. This generalization works with DAGs, CPDAGs, MAGs, and PAGs as
@@ -822,7 +822,7 @@ assumptions are made.
   details.
   
 \item[Generalized Backdoor Criterion:] allows for arbitrarily many hidden
-  but no selection variables. See \cite{MaCo2013} for more details. 
+  but no selection variables. See \cite{MaCo2013-arc} for more details. 
 \end{description}
 
 \section{Package pcalg}
@@ -951,17 +951,17 @@ variables in the adjacency matrix, and not with the names of the variables.
 
 The PC algorithm is known to be order-dependent, in the sense that the
 output depends on the order in which the variables are given. Therefore,
-\cite{pc.indep} proposed a simple modification, called PC-stable, that yields
+\cite{CoMa2013-arc} proposed a simple modification, called PC-stable, that yields
 order-independent adjacencies in the skeleton. In this function we
 implement their modified algorithm (the old order-dependent implementation
 can be found in version 1.1-5). 
 
 Since the FCI and RFCI algorithms are build up from the PC algorithm, they
 are also order-dependent in the skeleton. To resolve their order-dependence
-issues in the skeleton is more involved, see \cite{pc.indep}. However, this
+issues in the skeleton is more involved, see \cite{CoMa2013-arc}. However, this
 function estimates an initial order-independent skeleton in these
 algorithms (for additional details on how to make the final skeleton of FCI
-fully order-independent see \ref{sec:fci} and \cite{pc.indep}). 
+fully order-independent see \ref{sec:fci} and \cite{CoMa2013-arc}). 
 
 \subsection{pc} \label{sec:pc}
 
@@ -999,15 +999,15 @@ given $V_S$, the triple $a \gredge{-} b \gredge{-} c$ is marked as
 v-structure. Furthermore, no later orientation rule that needs to know
 whether $a \gredge{-} b \gredge{-} c$ is a v-structure or not is
 applied. Instead of using the conservative version, which is quite strict
-towards the v-structures, \cite{pc.indep} introduced a less strict version
+towards the v-structures, \cite{CoMa2013-arc} introduced a less strict version
 for the v-structures called majority rule. This adaptation can be called using
 \code{maj.rule = TRUE}. In this case, the triple $a \gredge{-} b \gredge{-}
 c$ is marked as \emph{ambiguous} if $b$ is in exactly 50 percent of such
 conditioning sets, if it is in less than 50 percent it is set as a
 v-structure, and if in more than 50 percent as a non v-structure (for more
-details see \citep{pc.indep}). The useage of both the conservative and the
+details see \citep{CoMa2013-arc}). The useage of both the conservative and the
 majority rule versions resolve the order-dependence issues of the
-determination of the v-structures, see \cite{pc.indep} for more details.
+determination of the v-structures, see \cite{CoMa2013-arc} for more details.
   
 Sampling errors (or hidden variables) can lead to conflicting information
 about edge directions. For example, one may find that $a \gredge{-} b
@@ -1037,12 +1037,12 @@ be solved. Note that bi-directed edges merely represents a conflicting
 orientation and they should not to be interpreted causally. The useage of
 these lists for the candidate edges and allowing bi-directed edges resolve
 the order-dependence issues on the orientation of the v-strucutres and on
-the edges using the three orientation rules, see \cite{pc.indep} for more
+the edges using the three orientation rules, see \cite{CoMa2013-arc} for more
 details. 
 
 Note that calling (\code{conservative = TRUE}) or \code{maj.rule = TRUE},
 together with \code{solve.confl = TRUE} produces a fully order-independent
-output, see \cite{pc.indep}. 
+output, see \cite{CoMa2013-arc}. 
 
 Sampling errors, non faithfulness, or hidden variables can also lead to
 invalid CPDAGs, meaning that there does not exist a DAG that has the same
@@ -1188,7 +1188,7 @@ conditional independence tests of $V_x$ and $V_y$ given all subsets of
 Possible-D-SEP($x$) and of Possible-D-SEP($y$) (see helpfile of function
 \code{pdsep()}). The edge is removed if a conditional independence is
 found. This will produce a fully order-independent final skeleton as
-explained in \cite{pc.indep}. Subsequently, all edges are transformed into
+explained in \cite{CoMa2013-arc}. Subsequently, all edges are transformed into
 $\gredge{o-o}$ again and the v-structures are newly determined (using
 information in sepset).  Finally, as many undetermined edge marks (o) as
 possible are determined using (a subset of) the 10 orientation rules given
@@ -1254,7 +1254,7 @@ separating set might be outside the neighborhood of either $a$ or $c$. An
 ambiguous triple is not oriented as a v-structure. Furthermore, no further
 orientation rule that needs to know whether $a \gredge{-} b \gredge{-} c$
 is a v-structure or not is applied. Instead of using the conservative
-version, which is quite strict towards the v-structures, \cite{pc.indep}
+version, which is quite strict towards the v-structures, \cite{CoMa2013-arc}
 introduced a less strict version for the v-structures called majority
 rule. This adaptation can be called using \code{maj.rule = TRUE}. In this
 case, the triple $a \gredge{-} b \gredge{-} c$ is marked as
@@ -1262,7 +1262,7 @@ case, the triple $a \gredge{-} b \gredge{-} c$ is marked as
 separating sets or no separating set was found. If $b$ is in less than 50
 percent of the separating sets it is set as a v-structure, and if in more
 than 50 percent it is set as a non v-structure (for more details see
-\cite{pc.indep}). \cite{pc.indep} showed that with both these
+\cite{CoMa2013-arc}). \cite{CoMa2013-arc} showed that with both these
 modifications, the final skeleton and the decisions about the v-structures
 of the FCI algorithm are fully order-independent. 
 
@@ -1315,7 +1315,7 @@ par(mfrow = 1:2); plot(gmL$g, main = ""); plot(pag.est)
 %% showClass("pcAlgo")
 %% @
 
-\subsection{rfci}
+\subsection{rfci}\label{sec:rfci}
 The function \code{rfci()} is rather similar to \code{fci()}. However, it
 does not compute any Possible-D-SEP sets and thus does not make tests
 conditioning on them. This makes \code{rfci()} much faster than
@@ -1399,7 +1399,7 @@ separating set might be outside the neighborhood of either $a$ or $c$. An
 ambiguous triple is not oriented as a v-structure. Furthermore, no further
 orientation rule that needs to know whether $a \gredge{-} b \gredge{-} c$
 is a v-structure or not is applied. Instead of using the conservative
-version, which is quite strict towards the v-structures, \cite{pc.indep}
+version, which is quite strict towards the v-structures, \cite{CoMa2013-arc}
 introduced a less strict version for the v-structures called majority
 rule. This adaptation can be called using \code{maj.rule = TRUE}. In this
 case, the triple $a \gredge{-} b \gredge{-} c$ is marked as
@@ -1407,11 +1407,11 @@ case, the triple $a \gredge{-} b \gredge{-} c$ is marked as
 separating sets or no separating set was found. If $b$ is in less than 50
 percent of the separating sets it is set as a v-structure, and if in more
 than 50 percent it is set as a non v-structure (for more details see
-\cite{pc.indep}). 
+\cite{CoMa2013-arc}). 
 
 The implementation uses the stabilized skeleton \code{skeleton()},
 which produces an initial order-independent skeleton. The final skeleton
-and edge orientations can still be order-dependent, see \cite{pc.indep}.
+and edge orientations can still be order-dependent, see \cite{CoMa2013-arc}.
 
 As an example, we re-run the example from Section~\ref{sec:fci} and show
 the PAG estimated with \code{rfci()} in Figure~\ref{fig:fci}. The PAG
@@ -1782,7 +1782,7 @@ This function is a generalization of Pearl's backdoor criterion, see
 interventions and single outcome variable to more general
 types of graphs (CPDAGs, MAGs, and PAGs) that describe Markov equivalence
 classes of DAGs with and without latent variables but without selection
-variables, for more details see \cite{MaCo13}.  
+variables, for more details see \cite{MaCo2013-arc}.  
 
 The motivation to find a set $W$ that satisfies the generalized backdoor
 criterion with respect to $X$ and $Y$ in the given graph relies on the
@@ -1819,7 +1819,7 @@ and $Y$ in the DAG is given. If the input graph is a CPDAG $C$
 (\code{type="cpdag"}), a MAG $M$, or a PAG $P$ (with both $M$ and $P$ not
 allowing selection variables), this function first checks if the total
 causal effect of $X$ on $Y$ is identifiable via the generalized backdoor
-criterion (see \citep{MaCo13}, Theorem 4.1). If the effect is not
+criterion (see \citep{MaCo2013-arc}, Theorem 4.1). If the effect is not
 identifiable, the output is NA. Otherwise, an explicit set $W$ that
 satisfies the generalized backdoor criterion relative to $X$ and $Y$ in the
 given graph is found.
@@ -1835,7 +1835,7 @@ backdoor criterion, but the total causal effect might be identifiable via
 some other technique. 
 
 To illustrate this function, we use as example the CPDAG displayed in
-Figure 4, page 15 of \cite{MaCo13}. The R-code below is used to generate
+Figure 4, page 15 of \cite{MaCo2013-arc}. The R-code below is used to generate
 a DAG \code{g} that belongs to the required equivalence class which is
 uniquely represented by the estimated CPDAG \code{myCPDAG}. 
 
@@ -1875,7 +1875,7 @@ plot(myCPDAG, main = "")
 Now, we want to check if the effect of $V_6$ on $V_3$ in the given CPDAG is
 identifiable using \code{backdoor()} and if this is the case know which set
 $W$ satisfies the generalized backdoor criterion. As explained in Example 4 in
-\cite{MaCo13}, the causal effect of $V_6$ on $V_3$ in the CPDAG
+\cite{MaCo2013-arc}, the causal effect of $V_6$ on $V_3$ in the CPDAG
 \code{myCPDAG} is identifiable via the generalized backdoor criterion and
 there is a set $W$ that satisfies the generalized criterion:
 
@@ -2051,7 +2051,7 @@ extract useful information about causal effects.
   \caption{The largest 10\% of the causal effects found in experiments
     among yeast genes are identified much better from observational data
     with IDA than with Lasso, Elastic Net or random guessing. The figure is
-    essentially taken from \cite{pc.indep}.}
+    essentially taken from \cite{CoMa2013-arc}.}
 \label{fig:yeast.new}
 \end{figure}
 

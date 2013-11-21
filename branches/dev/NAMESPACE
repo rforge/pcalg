@@ -42,7 +42,7 @@ importFrom("graphics", plot.default, plot)
 
 ###----- Exports ------------------------------------------------------
 
-## NB: do not export those that are "internal" <--> man/pcalg-internal.Rd
+## FIXME??: do not export those that are "internal" <--> man/pcalg-internal.Rd
 export(trueCov,
        randomDAG,
        wgtMatrix,

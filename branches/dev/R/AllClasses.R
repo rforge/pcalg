@@ -1,5 +1,5 @@
 ##################################################
-## Reference classes used by pc and r/fci
+### Part 1 : S4 classes used by pc and r/fci
 ##################################################
 
 ## $Id$
@@ -172,12 +172,12 @@ setMethod("plot", signature(x = "fciAlgo"),
           Rgraphviz::renderGraph(Rgraphviz::layoutGraph(g))
       })
 
-##################################################
-## Reference classes used by GIES
-##################################################
+#######################################################
+### Part 2 : Reference classes and Methods used by GIES
+#######################################################
 
-#' Virtual base class for all parametric causal models.
-#' The meaning of the "params" depends on the model used.
+##' Virtual base class for all parametric causal models.
+##' The meaning of the "params" depends on the model used.
 setRefClass("ParDAG",
     fields = list(
         .nodes = "vector",
