@@ -1,11 +1,13 @@
 \name{GaussParDAG-class}
+\title{Class \code{"GaussParDAG"}}
+\alias{GaussParDAG-class}
 \Rdversion{1.1}
 \docType{class}
-\alias{GaussParDAG-class}
 \encoding{UTF-8}
-\title{Class \code{"GaussParDAG"}}
+\concept{Gaussian causal model}
+\concept{structural equation model}
 \description{
-  This class represents a Gaussian causal model.
+  The \code{"GaussParDAG"} class represents a Gaussian causal model.
 }
 \details{
   The class \code{"GaussParDAG"} is used to simulate observational
@@ -117,10 +119,4 @@ myDAG$intercept()
 if (require(Rgraphviz)) plot(myDAG)
 }
 \keyword{classes}
-\keyword{Gauss}
-\keyword{causal}
-\keyword{model}
-\keyword{linear}
-\keyword{structural}
-\keyword{equation}
-\keyword{model}
+\keyword{models}

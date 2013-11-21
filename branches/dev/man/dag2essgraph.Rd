@@ -1,7 +1,10 @@
 \name{dag2essgraph}
+\title{Convert a DAG to an Essential Graph}
 \alias{dag2essgraph}
 \encoding{UTF-8}
-\title{Convert a DAG to an essential graph}
+\concept{DAG}
+\concept{CPDAG}
+\concept{essential graph}
 \description{
 Convert a DAG to an (interventional or observational) essential graph.
 }
@@ -67,8 +70,5 @@ res.obs <- dag2essgraph(dag)
 ## {1} and {3}
 res.int <- dag2essgraph(dag, as.list(c(1, 3)))
 }
-\keyword{DAG}
-\keyword{CPDAG}
-\keyword{model}
-\keyword{essential}
-\keyword{graph}
+\keyword{models}
+\keyword{graphs}
