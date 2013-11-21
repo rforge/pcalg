@@ -90,13 +90,12 @@ p <- 7
 myDAG <- randomDAG(p, prob = 0.2) ## true DAG
 
 ## Extract the adjacency matrix of the true DAG
-true.amat <- as(myDAG, "matrix")
-true.amat[which(true.amat!=0)] <- 1
+true.amat <- (amat <- as(myDAG, "matrix")) != 0 # TRUE/FALSE <==> 1/0
+print.table(1*true.amat, zero.=".") # "visualization"
 
 ## Compute the effect using the generalized backdoor criterion
-%% library(igraph)
 backdoor(true.amat, 5, 7, type="dag")
-
+\dontshow{stopifnot(backdoor(true.amat, 5, 7, type="dag") == 3)}
 #####################################################################
 ##CPDAG
 #####################################################################
@@ -107,7 +106,8 @@ backdoor(true.amat, 5, 7, type="dag")
 
 ## create the graph
 p <- 5
-amat <- t(matrix(c(0,0,1,1,1, 0,0,1,1,1, 0,0,0,1,0, 0,0,0,0,1, 0,0,0,0,0),5,5))
+amat <- t(matrix(c(0,0,1,1,1, 0,0,1,1,1, 0,0,0,1,0,
+                   0,0,0,0,1, 0,0,0,0,0),  5,5))
 colnames(amat) <- rownames(amat) <- as.character(1:5)
 V <- as.character(1:5)
 edL <- vector("list",length=5)
@@ -121,13 +121,11 @@ g <- new("graphNEL", nodes=V, edgeL=edL, edgemode="directed")
 ## estimate the true CPDAG
 myCPDAG <- dag2cpdag(g)
 ## Extract the adjacency matrix of the true CPDAG
-true.amat <- as(myCPDAG, "matrix")
-true.amat[which(true.amat!=0)] <- 1
+true.amat <- (as(myCPDAG, "matrix") != 0) # 1/0 <==> TRUE/FALSE
 
 ## The effect is not identifiable, in fact:
-%% library(igraph)
 backdoor(true.amat, 3, 5, type="cpdag")
-
+\dontshow{stopifnot(identical(NA, backdoor(true.amat, 3, 5, type="cpdag")))}
 
 ##################################################
 ## Example identifiable
@@ -151,12 +149,11 @@ g <- new("graphNEL", nodes=V, edgeL=edL, edgemode="directed")
 ## estimate the true CPDAG
 myCPDAG <- dag2cpdag(g)
 ## Extract the adjacency matrix of the true CPDAG
-true.amat <- as(myCPDAG, "matrix")
-true.amat[which(true.amat!=0)] <- 1
+true.amat <- as(myCPDAG, "matrix") != 0 # 1/0
 
 ## The effect is identifiable and
-%% library(igraph)
 backdoor(true.amat, 6, 3, type="cpdag")
+\dontshow{stopifnot(backdoor(true.amat, 6, 3, type="cpdag") == 1:2)}
 
 ##################################################################
 ##PAG
@@ -190,14 +187,12 @@ cov.mat <- trueCov(g)
 true.corr <- cov2cor(cov.mat)
 suffStat <- list(C=true.corr, n=10^9)
 indepTest <- gaussCItest
-%% library(RBGL)
 
 ## estimate the true PAG
 true.pag <- dag2pag(suffStat, indepTest, g, L, alpha = 0.9999)
 
-## The effect is identifiable and
-%% library(igraph)
-backdoor(true.pag@amat, 4, 6, type="pag")
+## The effect is identifiable  and the backdoor is  {1,2}:
+stopifnot(backdoor(true.amat, 6, 3, type="cpdag") == 1:2)
 }
 \keyword{multivariate}
 \keyword{models}

@@ -1905,7 +1905,7 @@ if (numEdges(gInput@graph) == 0)
                     ##find all neighbours of b not adjacent to a
                     isC <- which(search.pdag[b, ] == 1 & search.pdag[, b] == 1 & search.pdag[a,] == 0 & search.pdag[,a] == 0)
                     if (length(isC) > 0) {
-                        for (ii in 1:length(isC)) {
+                        for (ii in seq_along(isC)) {
                             c <- isC[ii]
                             ##if the edge between b and c has not been oriented previously, orient it using normal R1
                             if (pdag[b,c] == 1 & pdag[c,b] == 1) {
@@ -1935,7 +1935,7 @@ if (numEdges(gInput@graph) == 0)
                     b <- ind[i, 2]
                     isC <- which((search.pdag[a, ] == 1 & search.pdag[, a] == 0) & (search.pdag[, b] == 1 & search.pdag[b, ] == 0))
                     if (length(isC) > 0) {
-                        for (ii in 1:length(isC)) {
+                        for (ii in seq_along(isC)) {
                             c <- isC[ii]
                             ##if the edge has not been oriented yet, orient it with R2
                             if (pdag[a, b] == 1 & pdag[b, a] == 1) { 
@@ -2079,7 +2079,7 @@ if (numEdges(gInput@graph) == 0)
                     ##find all neighbours of b not adjacent to a
                     isC <- which(search.pdag[b, ] == 1 & search.pdag[, b] == 1 & search.pdag[a,] == 0 & search.pdag[,a] == 0)
                     if (length(isC) > 0) {
-                        for (ii in 1:length(isC)) {
+                        for (ii in seq_along(isC)) {
                             c <- isC[ii]
                             ##if the edge between b and c has not been oriented previously, orient it using normal R1
                             if (pdag[b,c] == 1 & pdag[c,b] == 1) {
@@ -2114,7 +2114,7 @@ if (numEdges(gInput@graph) == 0)
                     b <- ind[i, 2]
                     isC <- which((search.pdag[a, ] == 1 & search.pdag[, a] == 0) & (search.pdag[, b] == 1 & search.pdag[b, ] == 0))
                     if (length(isC) > 0) {
-                        for (ii in 1:length(isC)) {
+                        for (ii in seq_along(isC)) {
                             c <- isC[ii]
                             ##if the edge has not been oriented yet, orient it with R2
                             if (pdag[a, b] == 1 & pdag[b, a] == 1) { 
@@ -4310,7 +4310,7 @@ checkTriple <- function(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC, suffStat, indep
     ## start with the neighbours of a
     if (length(nbrsA) > 0) {
         tmpLA <- vector("list",length(nbrsA))
-        for (i in 1:length(nbrsA)) {
+        for (i in seq_along(nbrsA)) {
             tmpLA[[i]] <- c(0,1)
         } 
         allCombA <- expand.grid(tmpLA)
@@ -4333,7 +4333,7 @@ checkTriple <- function(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC, suffStat, indep
     ## now with the neighbours of c
     if (length(nbrsC) > 0) {
         tmpLC <- vector("list",length(nbrsC))
-        for (i in 1:length(nbrsC)) {
+        for (i in seq_along(nbrsC)) {
             tmpLC[[i]] <- c(0,1)
         } 
         allCombC <- expand.grid(tmpLC)
@@ -4485,13 +4485,13 @@ updateList <- function(path, set, old.list)
   ## find.min.discr.path, minUncovCircPath and minUncovPdPath
   ## ----------------------------------------------------------------------
   ## Arguments: - path: the path under investigation
-  ##            - set: the set of variables to be added to path
+  ##            - set: (integer) index set of variables to be added to path
   ##            - old.list: the list to update
   ## ----------------------------------------------------------------------
   ## Author: Diego Colombo, Date: 21 Oct 2011, 11:41
 
   n <- length(old.list)
-  for (i in 1:length(set)) {
+  for (i in seq_along(set)) {
     old.list[[n+i]] <- c(path,set[i])
   }
   return(old.list)
@@ -4690,25 +4690,25 @@ find.min.discr.path <- function(pag = NA, path = NA, verbose = FALSE)
       pred <- min.path[m-1]
       path.list[[1]] <- NULL
       visited[d] <- TRUE
-      if (pag[c,d] == 0 & pag[d,c] == 0) {
-        ##discriminating path found
-        min.discr.path <- c(rev(min.path), c(b,c))
-        done <- TRUE
-      }
-      else {
-        ##d is connected to c -----> search iteratively
-        if (pag[d,c] == 2 && pag[c,d] == 3 && pag[pred,d] == 2) {
-          ##find all neighbours of d not visited yet
-          indR <- which(pag[d,] != 0 & pag[,d] == 2 & !visited) ## r *-> d
-          if (length(indR) > 0) {
-            ##update the queues
-            path.list <- updateList(min.path, indR, path.list)
-          }
+      if (pag[c,d] == 0 & pag[d,c] == 0)
+	## minimal discriminating path found :
+	return( c(rev(min.path), b,c) )
+
+      ## else :
+
+      ## d is connected to c -----> search iteratively
+      if (pag[d,c] == 2 && pag[c,d] == 3 && pag[pred,d] == 2) {
+        ## find all neighbours of d not visited yet
+        indR <- which(pag[d,] != 0 & pag[,d] == 2 & !visited) ## r *-> d
+        if (length(indR) > 0) {
+          ## update the queues
+          path.list <- updateList(min.path, indR, path.list)
         }
       }
     }
   }
-  return(min.discr.path)
+  ## nothing found:  return
+  NA
 }
 
 
@@ -4969,7 +4969,7 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = In
   allPdsep <- vector("list", p)
   if (biCC) {
     conn.comp <- biConnComp(skel)
-    for (ii in 1:length(conn.comp)){
+    for (ii in seq_along(conn.comp)){
       conn.comp[[ii]] <- as.numeric(conn.comp[[ii]])
     }
   }
@@ -4987,7 +4987,7 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = In
       y <- ind[i, 2]
       allZ <- setdiff(which(amat[y, ] != 0), x)
       if (length(allZ) > 0) {
-        for (j in 1:length(allZ)) {
+        for (j in seq_along(allZ)) {
           z <- allZ[j]
           if ((amat[x, z] == 0) && !((y %in% sepset[[x]][[z]]) || 
                      (y %in% sepset[[z]][[x]]))) {
@@ -5062,7 +5062,7 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = In
                 if (ord > max.ord) 
                   max.ord <- ord
                 if (ord == 1) {
-                  for (j in 1:length(diff.set)) {
+                  for (j in seq_along(diff.set)) {
                     pval <- indepTest(x, y, diff.set[j], suffStat)
                     n.edgetests[ord + 1] <- n.edgetests[ord + 1] + 1
                     if (is.na(pval)) 
@@ -5721,7 +5721,7 @@ find.unsh.triple <- function(g,p)
       y <- indS[i, 2]
       allZ <- setdiff(which(g[y, ] == 1), x) ##x-y-z
       if (length(allZ) > 0) {
-        for (j in 1:length(allZ)) {
+        for (j in seq_along(allZ)) {
           z <- allZ[j]
           if (g[x,z]==0 && g[z,x]==0) {
             ##save the matrix
@@ -5953,7 +5953,7 @@ dep.triple <- function(suffStat, indepTest, p, alpha, sepset, apag, unshTripl, u
           indM <- which((apag[x, ] == 1 & apag[, x] == 1) & (apag[y, ] == 1 & apag[, y] == 1))
           indM <- setdiff(indM,c(x,y,z))##just to be sure
           if (length(indM) > 0) {
-            for (j in 1:length(indM)) {
+            for (j in seq_along(indM)) {
               m <- indM[j]
               ##in the matrix the first column is always smaller than the third
               if (x < y) {
@@ -5973,7 +5973,7 @@ dep.triple <- function(suffStat, indepTest, p, alpha, sepset, apag, unshTripl, u
           indQ <- which((apag[x, ] == 1 & apag[, x] == 1) & (apag[y, ] == 0 & apag[, y] == 0))
           indQ <- setdiff(indQ,c(x,y,z))##just to be sure
           if (length(indQ) > 0) {
-            for (j in 1:length(indQ)) {
+            for (j in seq_along(indQ)) {
               q <- indQ[j]
               ##define the triple as FALSE in trueVstruct
               if (q < y) {
@@ -6000,7 +6000,7 @@ dep.triple <- function(suffStat, indepTest, p, alpha, sepset, apag, unshTripl, u
           indR <- which((apag[x, ] == 0 & apag[, x] == 0) & (apag[y, ] == 1 & apag[, y] == 1))
           indR <- setdiff(indQ,c(x,y,z))##just to be sure
           if (length(indR) > 0) {
-            for (j in 1:length(indR)) {
+            for (j in seq_along(indR)) {
               r <- indR[j]
               ##define the triple as FALSE in trueVstruct
               if (r < x) {
@@ -6061,7 +6061,7 @@ dep.triple <- function(suffStat, indepTest, p, alpha, sepset, apag, unshTripl, u
           indM <- which((apag[z, ] == 1 & apag[, z] == 1) & (apag[y, ] == 1 & apag[, y] == 1))
           indM <- setdiff(indM,c(x,y,z))##just to be sure
           if (length(indM) > 0) {
-            for (j in 1:length(indM)) {
+            for (j in seq_along(indM)) {
               m <- indM[j]
               ##in the matrix the first column is always smaller than the third
               if (z < y) {
@@ -6081,7 +6081,7 @@ dep.triple <- function(suffStat, indepTest, p, alpha, sepset, apag, unshTripl, u
           indQ <- which((apag[z, ] == 1 & apag[, z] == 1) & (apag[y, ] == 0 & apag[, y] == 0))
           indQ <- setdiff(indQ,c(x,y,z))##just to be sure
           if (length(indQ) > 0) {
-            for (j in 1:length(indQ)) {
+            for (j in seq_along(indQ)) {
               q <- indQ[j]
               ##define the triple as FALSE in trueVstruct
               if (q < y) {
@@ -6108,7 +6108,7 @@ dep.triple <- function(suffStat, indepTest, p, alpha, sepset, apag, unshTripl, u
           indR <- which((apag[z, ] == 0 & apag[, z] == 0) & (apag[y, ] == 1 & apag[, y] == 1))
           indR <- setdiff(indQ,c(x,y,z))##just to be sure
           if (length(indR) > 0) {
-            for (j in 1:length(indR)) {
+            for (j in seq_along(indR)) {
               r <- indR[j]
               ##define the triple as FALSE in trueVstruct
               if (r < z) {
@@ -6226,7 +6226,7 @@ CheckEdges <- function(suffStat, indepTest, p, alpha, apag, sepset, path, unfVec
               indM <- setdiff(indM,c(x,y))##just to be sure
               ##create the list with all the new unshielded triples to be tested
               if (length(indM) > 0) {
-                for (jj in 1:length(indM)) {
+                for (jj in seq_along(indM)) {
                   m <- indM[jj]
                   if (x < y) {
                     newList <- cbind(newList, c(x,m,y))
@@ -6306,7 +6306,7 @@ udag2apag <- function (apag, suffStat, indepTest, alpha, sepset, rules = rep(TRU
               }
               ##conservative
               else {
-                for (j in 1:length(indC)) {
+                for (j in seq_along(indC)) {
                   c <- indC[j]
                   ##check that a-b-c faithful
                   if (!any(unfVect==triple2numb(p,a,b,c), na.rm=TRUE) && !any(unfVect==triple2numb(p,c,b,a), na.rm=TRUE)) {
@@ -6574,7 +6574,7 @@ udag2apag <- function (apag, suffStat, indepTest, alpha, sepset, rules = rep(TRU
               }
               ##conservative
               else {
-                for (j in 1:length(indA)) {
+                for (j in seq_along(indA)) {
                   a <- indA[j]
                   ##check fatihfulness of a-b-c
                   if (!any(unfVect==triple2numb(p,a,b,c), na.rm=TRUE) && !any(unfVect==triple2numb(p,c,b,a), na.rm=TRUE)) {
@@ -6891,7 +6891,7 @@ new.ord <- function(start, old, L) {
   seq_start <- 1:start
   tmp <- setdiff(seq_start,L)
   new <- rep(0, length(old))
-  for (i in 1:length(old)) {
+  for (i in seq_along(old)) {
     new[i] <- which(tmp==old[i])
   }
   return(new)
@@ -6959,36 +6959,33 @@ VisibleEdge <- function(amat, x, z)
   ## ----------------------------------------------------------------------
   ## Value: T/F
   ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 25 Apr 2012, 14:48
+  ## Author: Diego Colombo, Date: 25 Apr 2012;  simplification: Martin Maechler
 
-  res <- FALSE
-  ##1. scenario: there exists a vertex not adjacent to z with *---> x
-  indC1 <- which(amat[x,] != 0 & amat[,x] == 2 & amat[z,] == 0) ## c *-> x --> z and c and z not connected
-  ##if there is at least one vertex
-  if (length(indC1) > 0) {
-    ##the edge is visible
-    res <- TRUE
-  } else {
-    ##2. scenario: there exists a collider path that is into x and every vertex on the path is a parent of z
-    indC2 <- which(amat[x,] == 2 & amat[,x] == 2 & amat[z,] == 3 & amat[,z] == 2) ## c <--> x --> z and c is a parent of z
-    if (length(indC2) > 0) {
-      counter.res <- FALSE
-      while ((length(indC2) > 0) & !counter.res) {
-        c <- indC2[1]
-        indC2 <- indC2[-1]
-        path <- c(c,x,z)
-        ##find a minimal discriminating path for c,x,z
-        tmp.path <- find.min.discr.path(pag = amat, path = path)
-        length.path <- length(tmp.path)
-        if (length.path > 1) {
-          ##a path exists
-          counter.res <- TRUE
-          res <- TRUE
-        }
-      }
-    }
+  ## 1. scenario: there exists a vertex not adjacent to z with *---> x
+  ## c *-> x --> z and c and z not connected :
+  hasC1 <- any(amat[x,] != 0 & amat[,x] == 2 & amat[z,] == 0)
+  ## if there is at least one vertex
+  if (any(hasC1)) ## the edge is visible
+      return(TRUE)
+
+  ## Otherwise:
+  ## 2. scenario: there exists a collider path that is into x and 
+  ##		  every vertex on the path is a parent of z  
+
+  ## c <--> x --> z and c is a parent of z :
+  indC2 <- which(amat[x,] == 2 & amat[,x] == 2 & amat[z,] == 3 & amat[,z] == 2)
+  while (length(indC2) > 0) {
+    c <- indC2[1]
+    indC2 <- indC2[-1]
+    path <- c(c,x,z)
+    ## find a minimal discriminating path for c,x,z
+    tmp.path <- find.min.discr.path(pag = amat, path = path)
+    if (length(tmp.path) > 1)
+      ## a path exists
+      return(TRUE)
   }
-  return(res)
+  ## nothing found:  return
+  FALSE
 }
 
 possibleDe <- function(amat,x)
@@ -7029,7 +7026,7 @@ possibleDe <- function(amat,x)
             ##check that the triple <pred,d,r> is of a definite status
             ##1. d is a collider on this subpath; this is impossible because the edge between d and r cannot be into d
             ##2. d is a definite non-collider
-            for(j in 1:length(indR)) {
+            for(j in seq_along(indR)) {
                 r <- indR[j]
                 if (amat[pred,d] == 3 || amat[r,d] == 3 || (amat[pred,d] == 1 && amat[r,d] == 1 && amat[pred,r] == 0)) {
                     ##update the queues
@@ -7178,7 +7175,7 @@ pag2mag <- function(amat.pag, x){
   
   #Get all connected components
   conn.comp <- connectedComp(g.undir)
-  for (ll in 1:length(conn.comp)){
+  for (ll in seq_along(conn.comp)){
     conn.comp[[ll]] <- as.numeric(conn.comp[[ll]])
   }
   
@@ -7186,7 +7183,7 @@ pag2mag <- function(amat.pag, x){
   valid.DAG.mat <- amat.undir      
   
   #get all semilocal extensions of the undirected cpdag
-  for (i in 1:length(conn.comp)){
+  for (i in seq_along(conn.comp)){
     conn.comp.i <- conn.comp[[i]]
     if (length(conn.comp.i) > 1){
       #check whether the component is chordal
@@ -7280,7 +7277,7 @@ backdoor <- function(amat, x, y, type = "pag")
     ##check that x and y belong to the same connected component
     ##compute the connected components of the whole graph
     conn.comp <- connectedComp(as(amat, "graphNEL"))
-    for (ll in 1:length(conn.comp)){
+    for (ll in seq_along(conn.comp)){
         conn.comp[[ll]] <- as.numeric(conn.comp[[ll]])
     }
     index.conncomp <- 0
@@ -7314,21 +7311,18 @@ backdoor <- function(amat, x, y, type = "pag")
         ##CASE A: in a CPDAG or DAG every directed edge out of X is visible
         ##        then delete them all
         if (type == "cpdag" | type == "dag") {
-            if (length(indD > 0)) {
-                for (i in 1:length(indD)) {
-                    ##delete visible edges out of x edges
-                    amat.r[indD[i],x] <- amat.r[x,indD[i]] <- 0
-                }
+            for (i in seq_along(indD)) {
+                ## delete visible edges out of x edges
+                amat.r[indD[i],x] <- amat.r[x,indD[i]] <- 0
             }
         } else {
             ##CASE B: in a MAG or PAG the directed edges out of X need
             ##        to be checked for visibility
-            if (length(indD > 0)) {
-                del.edges <- rep(FALSE, length(indD))
-                for (i in 1:length(indD)) {
-                    ##check each directed edge out of X for visibility
-                    del.edges[i] <- VisibleEdge(amat, x, indD[i])
-                }
+            if (length(indD) > 0) {
+		del.edges <- vapply(seq_along(indD), function(i) {
+		    ## check each directed edge out of X for visibility
+		    VisibleEdge(amat, x, indD[i])
+		}, NA)
                 ##delete visible edges out of x edges
                 amat.r[indD[del.edges],x] <- amat.r[x,indD[del.edges]] <- 0
                 ##transform invisible edges out of x by bi-directed 

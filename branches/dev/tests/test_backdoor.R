@@ -1,79 +1,32 @@
 library(pcalg)
 
+## NB: add tests in addition to the simple onesfrom Maathuis and Colombo (2013)
+## in ../man/backdoor.Rd
 
-#####################################################################
-##CPDAG
-#####################################################################
-##################################################
-## Example not identifiable
-## Maathuis and Colombo (2013), Fig. 3, p.14
-##################################################
+`%w/o%` <- function(x, y) x[!x %in% y] #--  x without y
+## slightly faster:
+`%w/o%` <- function(x, y) x[!match(x, y, nomatch = 0L)]
 
-## create the graph
-p <- 5
-amat <- t(matrix(c(0,0,1,1,1, 0,0,1,1,1, 0,0,0,1,0, 0,0,0,0,1, 0,0,0,0,0),5,5))
-colnames(amat) <- rownames(amat) <- as.character(1:5)
-V <- as.character(1:5)
-edL <- vector("list",length=5)
-names(edL) <- V
-edL[[1]] <- list(edges=c(3,4,5),weights=c(1,1,1))
-edL[[2]] <- list(edges=c(3,4,5),weights=c(1,1,1))
-edL[[3]] <- list(edges=4,weights=c(1))
-edL[[4]] <- list(edges=5,weights=c(1))
-g <- new("graphNEL", nodes=V, edgeL=edL, edgemode="directed")
+set.seed(47)
+p <- 17
+myDAG <- randomDAG(p, prob = 1/4) ## true DAG
 
-## estimate the true CPDAG
-myCPDAG <- dag2cpdag(g)
-## Extract the adjacency matrix of the true CPDAG
-true.amat <- as(myCPDAG, "matrix")
-true.amat[which(true.amat!=0)] <- 1
+## Extract the adjacency matrix of the true DAG
+true.amat <- (amat <- as(myDAG, "matrix")) != 0 # TRUE/FALSE <==> 1/0
+print.table(1*true.amat, zero.=".") # "visualization"
 
-## The effect is not identifiable, in fact:
-tmp.set <- backdoor(true.amat, 3, 5, type="cpdag")
+nodes <- 1:p; names(nodes) <- nodes
+cat("Time for many backdoor() s : ", system.time(
+LL <- lapply(nodes, function(i)
+	     lapply(nodes %w/o% i,
+		    backdoor,
+		    amat = true.amat, x = i, type="dag"))
+), "\n")
 
-if (!is.na(tmp.set)) {
-  stop("Test of backdoor: CPDAG example wrong set found!")
-}
+for(i in nodes[1:3]) ## Nodes 1,2,3 are all "root" nodes:
+    stopifnot(vapply(LL[[i]], identical, NA, y=integer(0)))
+
+str(LL[-(1:3)]) ## Martin: interesting.. is "this" known?
 
 
-##################################################################
-##PAG
-##################################################################
-##################################################
-## Example identifiable
-## Maathuis and Colombo (2013), Fig. 7, p.17
-##################################################
 
-## create the graph
-p <- 7
-amat <- t(matrix(c(0,0,1,1,0,0,0, 0,0,1,1,0,0,0, 0,0,0,1,0,1,0, 0,0,0,0,0,0,1, 0,0,0,0,0,1,1, 0,0,0,0,0,0,0, 0,0,0,0,0,0,0),7,7))
-colnames(amat) <- rownames(amat) <- as.character(1:7)
-V <- as.character(1:7)
-edL <- vector("list",length=7)
-names(edL) <- V
-edL[[1]] <- list(edges=c(3,4),weights=c(1,1))
-edL[[2]] <- list(edges=c(3,4),weights=c(1,1))
-edL[[3]] <- list(edges=c(4,6),weights=c(1,1))
-edL[[4]] <- list(edges=7,weights=c(1))
-edL[[5]] <- list(edges=c(6,7),weights=c(1,1))
-g <- new("graphNEL", nodes=V, edgeL=edL, edgemode="directed")
-L <- 5
-
-## compute the true covariance matrix of g
-cov.mat <- trueCov(g)
-
-## transform covariance matrix into a correlation matrix
-true.corr <- cov2cor(cov.mat)
-suffStat <- list(C=true.corr, n=10^9)
-indepTest <- gaussCItest
-
-## estimate the true PAG
-true.pag <- dag2pag(suffStat, indepTest, g, L, alpha = 0.9999)
-
-## The effect is identifiable and
-tmp.set <- backdoor(true.pag@amat, 4, 6, type="pag")
-true.set <- c(1,2)
-
-if (!all(tmp.set==true.set)) {
-  stop("Test of backdoor: PAG example wrong set found!")
-}
