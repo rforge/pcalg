@@ -1,8 +1,7 @@
 \name{gies}
 \alias{gies}
 \encoding{UTF-8}
-\title{Estimate the interventional Markov equivalence class of a DAG using
-  GIES}
+\title{Estimate Interventional Markov Equivalence Class of a DAG by GIES}
 \description{
   Estimate the interventional essential graph representing the Markov 
   equivalence class of a DAG using the greedy interventional equivalence search
@@ -30,7 +29,7 @@ gies(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
       \item Integer vector of length \code{p}: vector of individual bounds
         for the vertex degrees.
     }
-    }
+  }
   \item{\dots}{Additional arguments for debugging purposes and fine tuning.}
 }
 \details{

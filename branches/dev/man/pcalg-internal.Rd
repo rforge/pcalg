@@ -54,5 +54,6 @@ find.sink(gm)
 }
 \details{
   These are not to be called by the user.
+  %% or we have been too lazy to document
 }
 \keyword{ internal }
