@@ -50,15 +50,15 @@
 
 %% an abstract and keywords
 \Abstract{ 
-  The \pkg{pcalg} package for \proglang{R} (\cite{citeR}) can be
+  The \pkg{pcalg} package for \proglang{R} \citep{citeR} can be
   used for the following two purposes: Causal structure learning and
   estimation of causal effects from observational and/or interventional
   data. In this document, we give a brief overview of the methodology, and
   demonstrate the package's functionality in both toy examples and  
   applications.
 
-  This vignette is an updated (FCI, RFCI, etc) version of
-  \cite{KalMMCMB:2012} (for \pkg{pcalg} 1.1-4).
+  This vignette is an updated and extended (FCI, RFCI, etc) version of
+  \cite{KalMMCMB:2012} which was for \pkg{pcalg} 1.1-4.
 }
 
 \Keywords{IDA, PC, RFCI, FCI, GES, GIES, do-calculus, causality, graphical model, \proglang{R}}
@@ -135,25 +135,26 @@ used to find these relationships. In many settings, however, experiments
 are infeasible because of time, cost or ethical constraints.
 
 We therefore consider the problem of inferring causal information from
-observational data. Under some assumptions, the algorithms PC 
-(see \cite{SpirtesEtAl00}), FCI (see \cite{SpirtesEtAl00} and
-\cite{SpirtesMeekRichardson99}), RFCI (see \cite{rfci}) and GES (see 
-\cite{Chickering2002}) can
+observational data. Under some assumptions, the algorithms 
+PC   \citep[see][]{SpirtesEtAl00}, 
+FCI  \citep[see][]{SpirtesEtAl00,SpirtesMeekRichardson99}, 
+RFCI \citep[see][]{rfci} and 
+GES  \citep[see][]{Chickering2002} can
 infer information about the causal structure from observational data; 
 there also exists a generalization of GES to interventional data, GIES 
-(see \cite{HauserBuhlmann2012}). These
+\citep[see][]{HauserBuhlmann2012}. These
 algorithms tell us which variables could or could not be a cause of
 some variable of interest. They do not, however, give information about the
-size of the causal effects. We therefore developed the IDA method (see
-\cite{BuKaMa09}), which can infer bounds on causal effects based on
+size of the causal effects. We therefore developed the IDA method
+\citep{BuKaMa09}, which can infer bounds on causal effects based on
 observational data under some assumptions and in particular that no hidden
 and selection variables are present. IDA is a two step approach that
-combines the PC algorithm and Pearl's backdoor criterion (\citep{Pearl93}),
+combines the PC algorithm and Pearl's backdoor criterion \citep{Pearl93},
 which has been designed for DAGs without latent variables. IDA was validated on a
-large-scale biological system (see \cite{NatMethods10}). Since the
+large-scale biological system \citep[see][]{NatMethods10}. Since the
 assumption of no latent variables is a strong assumption when working with
 real data and therefore often violated in practice, we generalized Pearl's
-backdoor criterion (see \cite{MaCo2013-arc}) to more general types of graphs,
+backdoor criterion \citep[see][]{MaCo2013-arc} to more general types of graphs,
 i.e. CPDAGs, MAGs, and PAGs, that describe Markov equivalence classes of
 DAGs with and without latent variables but without selection variables. 
 
@@ -264,7 +265,7 @@ defined as
 C(V_1, V_6, \tilde{x}) &=& E(V_1|\doop(V_6 = \tilde{x} + 1)) - E(V_1|\doop(V_6 = \tilde{x})) \ \mbox{or} \\
 C(V_1, V_6, \tilde{x}) &=& \frac{\partial}{\partial x} E(V_1|\doop(V_6 = x))|_{x=\tilde{x}},
 \end{eqnarray*}
-where $\doop(V_6 = x)$ denotes Pearl's do-operator (see \cite{Pearl00}). If
+where $\doop(V_6 = x)$ denotes Pearl's do-operator \citep[see][]{Pearl00}. If
 the causal relationships are linear, these two expressions are equivalent
 and do not depend on $\tilde{x}$.
 
@@ -315,24 +316,24 @@ In Section~\ref{sec:gm} we propose methods for estimating the causal
 structure. In particular, we discuss algorithms for structure learning
 \begin{itemize}
   \item in the absence of hidden variables from observational data
-    such as PC (see \cite{SpirtesEtAl00})), GES (see 
-    \cite{Chickering2002}), and the dynamic programming approach of
-    \citep{Silander2006}, 
+    such as PC \citep[see][]{SpirtesEtAl00}, 
+    GES \citep[see][]{Chickering2002}, and the dynamic programming approach of
+    \cite{Silander2006}, 
   
   \item from observational data accounting for hidden variables such as 
-    FCI (see \cite{SpirtesEtAl00} and \cite{SpirtesMeekRichardson99})
-    and RFCI (see \cite{rfci}),
+    FCI \citep[see][]{SpirtesEtAl00, SpirtesMeekRichardson99}
+    and RFCI \citep[see][]{rfci},
   
   \item in the absence of hidden variables from jointly observational
-    and interventional data such as GIES (see \cite{HauserBuhlmann2012}).
+    and interventional data such as GIES \citep[see][]{HauserBuhlmann2012}.
 \end{itemize}
 
-In Section~\ref{sec:bounds} we first describe the IDA method (see
-\cite{BuKaMa09}) to obtain bounds on causal effects from observational
+In Section~\ref{sec:bounds} we first describe the IDA method 
+\citep[see][]{BuKaMa09} to obtain bounds on causal effects from observational
 data when no latent and selection variables are present. This method is
 based on first estimating the causal structure and then applying
-do-calculus (see \cite{Pearl00}). We then propose the generalized Pearl's
-backdoor criterion (see \cite{MaCo2013-arc}) that works with DAGs, CPDAGs,
+do-calculus \citep[see][]{Pearl00}. We then propose the generalized Pearl's
+backdoor criterion \citep[see][]{MaCo2013-arc} that works with DAGs, CPDAGs,
 MAGs, and PAGs as input and it assumes that there are arbitrarly many latent
 variables but no selection variables. This method is based on two steps:
 first it checks if the total causal effect of one variable $X$ onto another
@@ -344,7 +345,7 @@ $X$ and $Y$ in the given graph.
 \subsection{Estimating causal structures with  graphical models} \label{sec:gm}
 Graphical models
 can be thought of as maps of dependence structures of a given probability
-distribution or a sample thereof (see for example \cite{lauritzen}). In
+distribution or a sample thereof \citep[see for example][]{lauritzen}. In
 order to illustrate the analogy, let us consider a road map. In order to be
 able to use a road map, one needs two given factors. First, one needs the
 physical map with symbols such as dots and lines. Second, one needs a
@@ -371,7 +372,7 @@ following, we only deal with distributions whose list of conditional
 independencies perfectly matches the list of d-separation relations of 
 some DAG; such distributions are called faithful. It has been shown
 that the set of distributions that are faithful is the overwhelming
-majority (\cite{Meek95}), so that the assumption does not seem to be very
+majority \citep{Meek95}, so that the assumption does not seem to be very
 strict in practice.
 
 Since the DAG model encodes conditional independencies, it seems plausible
@@ -385,7 +386,7 @@ replaced by a statistical test for conditional independence. For situations
 without hidden variables and under some further conditions it has been
 shown that the PC algorithm using statistical tests instead of an
 independence oracle is computationally feasible and consistent even for very
-high-dimensional sparse DAGs (see \cite{KaBu07a}).
+high-dimensional sparse DAGs \citep[see][]{KaBu07a}.
 
 As mentioned before, several DAGs can encode the same list of conditional
 independencies. One can show that such DAGs must share certain
@@ -395,8 +396,8 @@ $i$ and $k$ are not adjacent (i.e., there is no edge between $i$ and
 $k$). Furthermore, let the skeleton of a DAG be the graph that is obtained
 by removing all arrowheads from the DAG. It was shown that two DAGs encode
 the same conditional independence statements if and only if the
-corresponding DAGs have the same skeleton and the same v-structures (see
-\cite{VermaPearl90}). Such DAGs are called Markov-equivalent. In this way,
+corresponding DAGs have the same skeleton and the same v-structures
+\citep[see][]{VermaPearl90}. Such DAGs are called Markov-equivalent. In this way,
 the space of DAGs can be partitioned into equivalence classes, where all
 members of an equivalence class encode the same conditional independence
 information. Conversely, if given a conditional independence oracle, one
@@ -410,8 +411,8 @@ where all DAGs in the equivalence class have the same directed edge. Edges
 that point into one direction for some DAGs in the equivalence class and in
 the other direction for other DAGs in the equivalence class are visualized
 by bidirected edges (sometimes, undirected edges are used instead). This
-graph is called a completed partially directed acyclic graph (CPDAG; 
-\cite{SpirtesEtAl00}) or essential graph (\cite{AnderssonMadiganPerlman97}).
+graph is called a completed partially directed acyclic graph, CPDAG
+\citep{SpirtesEtAl00}, or essential graph \citep{AnderssonMadiganPerlman97}.
 
 \begin{algorithm}[h]
 \caption{Outline of the PC-algorithm}
@@ -486,8 +487,8 @@ typically a model selection criterion, which is calculated from data.
 
 One of the most popular scores is the Bayesian information criterion (BIC)
 because its maximization leads to \emph{consistent} model selection in the
-classical large-sample limit (\cite{Haughton1988, Geiger2001}).  However,
-computing its maximum is an NP-hard problem (\cite{Chickering1996}).  An
+classical large-sample limit \citep{Haughton1988, Geiger2001}.  However,
+computing its maximum is an NP-hard problem \citep{Chickering1996}.  An
 exhaustive search is computationally infeasible due to the size of the
 search space, the space of DAGs or CPDAGs, respectively.
 \cite{Silander2006} have presented an exact dynamic programming algorithm
@@ -557,7 +558,7 @@ independencies among the observed variables only. We could marginalize out
 all latent variables and condition on all selection variables. It turns out
 that the resulting list of conditional independencies can in general not be
 represented by a DAG, since DAGs are not closed under marginalization or
-conditioning (see \cite{RichardsonSpirtes02}).
+conditioning \citep[see][]{RichardsonSpirtes02}.
 
 A class of graphical independence models that is closed under
 marginalization and conditioning and that contains all DAG models is the
@@ -606,8 +607,8 @@ oracle is in general impossible. One only reports on the equivalence class
 in which the true MAG lies.
 
 An equivalence class of a MAG can be uniquely represented by a partial
-ancestral graph (PAG) (see e.g., \cite{Zhang08-orientation-rules}). A PAG
-contains the following types of edges: $\gredge{o-o}$, $\gredge{o-}$, 
+ancestral graph (PAG) \citep[see, e.g.,][]{Zhang08-orientation-rules}. 
+A PAG contains the following types of edges: $\gredge{o-o}$, $\gredge{o-}$, 
 $\gredge{o->}$, $\gredge{->}$, $\gredge{<->}$, $\gredge{-}$. 
 Roughly, the bidirected edges come from hidden variables, and the
 undirected edges come from selection variables. The edges have the
@@ -661,8 +662,8 @@ distributed (although still independent).
 The algorithms PC and GES both rely on the i.i.d.\ assumption and are not
 suited for causal inference from interventional data.  The GIES algorithm,
 which stands for ``greedy interventional equivalence search'', is a
-generalization of GES to interventional data (see
-\cite{HauserBuhlmann2012}).  It does not only make sure that interventional
+generalization of GES to interventional data \citep[see][]{HauserBuhlmann2012}.  
+It does not only make sure that interventional
 data points are handled correctly (instead of being wrongly treated as
 observational data points), but also accounts for the improved
 identifiablity of causal models under interventional data by returning an
@@ -672,8 +673,7 @@ representing an (interventional) Markov equivalence class of DAGs: a
 directed edge between two vertices stands for an arrow with common
 orientation among all representatives of the equivalence class, an
 undirected edge stands for an arrow that has different orientations among
-different representative DAGs; for more details, see
-\cite{HauserBuhlmann2012}. 
+different representative DAGs; for more details, see \cite{HauserBuhlmann2012}. 
 
 GIES traverses the search space of interventional essential graphs in a
 similar way as GES traverses the search space of observational essential
@@ -754,7 +754,7 @@ It has recently been shown empirically that despite the described
 fundamental limitations in identifying the causal effect uniquely and
 despite potential violations of the underlying assumptions, the
 method performs well in identifying the most important causal effects in a
-high-dimensional yeast gene expression data set (see \cite{NatMethods10}).
+high-dimensional yeast gene expression data set \citep[see][]{NatMethods10}.
 
 \subsubsection{With hidden but no selection variables}
 
@@ -790,12 +790,12 @@ assumptions are made.
   of variables follows as a special case.
 
 \item[GES algorithm:] No hidden or selection variables; consistency in 
-  a standard asymptotic regime with a fixed number of variables (see
-  \cite{Chickering2002}).
+  a standard asymptotic regime with a fixed number of variables
+  \citep[see][]{Chickering2002}.
 
 \item[FCI algorithm:] Allows for hidden and selection variables; consistent
-  in high-dimensional settings if the so-called Possible-D-SEP sets (see
-  \cite{SpirtesEtAl00}) are sparse, the data is multivariate normal and
+  in high-dimensional settings if the so-called Possible-D-SEP sets
+  \citep[see][]{SpirtesEtAl00} are sparse, the data is multivariate normal and
   satisfies some regularity conditions on the partial correlations, and
   $\alpha$ is taken to zero appropriately. See \cite{rfci} for full
   details. Consistency in a standard asymptotic regime with a fixed number
@@ -846,8 +846,7 @@ backdoor criterion and if it is identifiable for estimating a set that
 actually satisfies the generalized backdoor criterion.
 
 Alternatives to this package for estimating graphical models in
-\proglang{R} include: \cite{bnlearn}, \cite{deal}, \cite{gRain}, \cite{gRbase}
-and \cite{gRc}.
+\proglang{R} include: \cite{bnlearn, deal, gRain, gRbase} and \cite{gRc}.
 
 \subsection{skeleton}\label{sec:skel}
 The function \code{skeleton()} estimates the skeleton of a DAG without
@@ -984,7 +983,7 @@ where the arguments \code{suffStat}, \code{indepTest}, \code{p},
 \code{m.max} are identical to those of \code{skeleton()}.
 
 The conservative PC algorithm (\code{conservative = TRUE}) is a slight
-variation of the PC algorithm (see \citep{Ramsey06}). After the
+variation of the PC algorithm \citep[see][]{Ramsey06}. After the
 skeleton is computed, all unshielded triplets $a \gredge{-} b \gredge{-} c$ are
 checked in the following way. We test whether $V_a$ and $V_c$ are
 independent conditioning on any subset of the neighbors of $a$ or any
@@ -1004,8 +1003,8 @@ for the v-structures called majority rule. This adaptation can be called using
 \code{maj.rule = TRUE}. In this case, the triple $a \gredge{-} b \gredge{-}
 c$ is marked as \emph{ambiguous} if $b$ is in exactly 50 percent of such
 conditioning sets, if it is in less than 50 percent it is set as a
-v-structure, and if in more than 50 percent as a non v-structure (for more
-details see \citep{CoMa2013-arc}). The usage of both the conservative and the
+v-structure, and if in more than 50 percent as a non v-structure, for more
+details see \cite{CoMa2013-arc}. The usage of both the conservative and the
 majority rule versions resolve the order-dependence issues of the
 determination of the v-structures, see \cite{CoMa2013-arc} for more details.
   
@@ -1261,8 +1260,8 @@ case, the triple $a \gredge{-} b \gredge{-} c$ is marked as
 \emph{ambiguous} if and only if $b$ is in exactly 50 percent of such
 separating sets or no separating set was found. If $b$ is in less than 50
 percent of the separating sets it is set as a v-structure, and if in more
-than 50 percent it is set as a non v-structure (for more details see
-\cite{CoMa2013-arc}). \cite{CoMa2013-arc} showed that with both these
+than 50 percent it is set as a non v-structure, for more details see
+\cite{CoMa2013-arc}. \cite{CoMa2013-arc} showed that with both these
 modifications, the final skeleton and the decisions about the v-structures
 of the FCI algorithm are fully order-independent. 
 
@@ -1366,7 +1365,7 @@ detected, say $V_a$ is independent from $V_b$ given the sepset$(a,c)$, the
 edge between $a$ and $c$ is removed from the graph and the set responsible
 for that is saved in sepset$(a,b)$. The removal of an edge can destroy or
 create new unshielded triples in the graph. To solve this problem we work
-with lists (for details see \cite{rfci}). 
+with lists \citep[for details see][]{rfci}. 
 
 Before orienting discriminating paths, we perform the following additional
 conditional independence tests. For each triple $a \gredge{<-*} b
@@ -1406,8 +1405,8 @@ case, the triple $a \gredge{-} b \gredge{-} c$ is marked as
 \emph{ambiguous} if and only if $b$ is in exactly 50 percent of such
 separating sets or no separating set was found. If $b$ is in less than 50
 percent of the separating sets it is set as a v-structure, and if in more
-than 50 percent it is set as a non v-structure (for more details see
-\cite{CoMa2013-arc}). 
+than 50 percent it is set as a non v-structure, for more details see
+\cite{CoMa2013-arc}. 
 
 The implementation uses the stabilized skeleton \code{skeleton()},
 which produces an initial order-independent skeleton. The final skeleton
@@ -1436,7 +1435,7 @@ the class (of their ``communalities'') \code{gAlgo}.
 As we noted in Section \ref{sec:gm}, the GIES algorithm is a generalization
 of the GES algorithm to a mix of interventional and observational data.
 Hence the usage of \code{gies()} is similar to that of \code{ges()} (see
-Section \ref{sec:ges}).  Actually, the function \code{ges()} is only an
+Section~\ref{sec:ges}).  Actually, the function \code{ges()} is only an
 internal wrapper for \code{gies()}. 
 
 A data set with jointly interventional and observational data points is
@@ -1523,7 +1522,7 @@ plot(simy.fit$essgraph, main = "")
 @
   \caption{The underlying DAG (left) and the essential graph estimated with
     the GIES algorithm (middle) and the dynamic programming approach of
-    \citet{Silander2006} (right) applied on the simulated interventional
+    \cite{Silander2006} (right) applied on the simulated interventional
     Gaussian data set \code{gmInt}.  This data set contains data from
     interventions at vertices $3$ and $5$; accordingly, the orientation of
     all arrows incident to these two vertices becomes identifiable (see
@@ -1533,7 +1532,7 @@ plot(simy.fit$essgraph, main = "")
 \end{figure}
 
 As an alternative to GIES, we can also use the dynamic programming approach
-of \citet{Silander2006} to estimate the interventional essential graph from
+of \cite{Silander2006} to estimate the interventional essential graph from
 this interventional data set.  This algorithm is implemented in the
 function \code{simy()} which has the same arguments as \code{gies()}.  As
 noted in Section \ref{sec:gm}, this approach yields the \emph{exact}
@@ -1819,7 +1818,7 @@ and $Y$ in the DAG is given. If the input graph is a CPDAG $C$
 (\code{type="cpdag"}), a MAG $M$, or a PAG $P$ (with both $M$ and $P$ not
 allowing selection variables), this function first checks if the total
 causal effect of $X$ on $Y$ is identifiable via the generalized backdoor
-criterion (see \citep{MaCo2013-arc}, Theorem 4.1). If the effect is not
+criterion (see \cite{MaCo2013-arc}, Theorem 4.1). If the effect is not
 identifiable, the output is NA. Otherwise, an explicit set $W$ that
 satisfies the generalized backdoor criterion relative to $X$ and $Y$ in the
 given graph is found.
@@ -1983,9 +1982,9 @@ system.time(for(i in 1:10)
 @
 
 \section{Applications}
-The \pkg{pcalg} package has been used for applications in epidemiology (see
-\cite{ICF}), biology (see \cite{NatMethods10} and \cite{nagarajan}) and the
-social sciences (see \cite{danenberg}). We will discuss two applications in
+The \pkg{pcalg} package has been used for applications in epidemiology
+\citep[see][]{ICF}, biology \citep[see][]{NatMethods10, nagarajan} and the
+social sciences \citep[see][]{danenberg}. We will discuss two applications in
 more detail below.
 
 \subsection{Graphical Models and Causal Effects  in Human Functioning}
@@ -2005,7 +2004,7 @@ In \cite{NatMethods10}, the authors aim at quantifying the effects of
 single gene interventions on the expression of other genes in yeast,
 allowing for better insights into causal relations between genes. With $n =
 63$ samples of observational data measuring the expression of $p = 5361$
-genes (see \cite{HughesEtAl00}), the goal was to identify the largest
+genes \citep[see][]{HughesEtAl00}, the goal was to identify the largest
 intervention effects between all pairs of genes. For the analysis, the
 \pkg{pcalg} package with version 1.1-5 was used.
 
