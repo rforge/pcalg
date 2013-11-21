@@ -149,7 +149,7 @@ size of the causal effects. We therefore developed the IDA method (see
 observational data under some assumptions and in particular that no hidden
 and selection variables are present. IDA is a two step approach that
 combines the PC algorithm and Pearl's backdoor criterion (\citep{Pearl93}),
-whihc has been designed for DAGs without latent variables. IDA was validated on a
+which has been designed for DAGs without latent variables. IDA was validated on a
 large-scale biological system (see \cite{NatMethods10}). Since the
 assumption of no latent variables is a strong assumption when working with
 real data and therefore often violated in practice, we generalized Pearl's
@@ -176,7 +176,7 @@ of such a system can be conveniently represented by a directed acyclic
 graph (DAG), where each node represents a variable and each directed edge
 represents a direct cause. To fix ideas, we have simulated an example
 data set with $p = 8$ continuous variables with Gaussian noise and $n
-= 5000$ observations, which we will now analyse. First, we load the
+= 5000$ observations, which we will now analyze. First, we load the
 package \pkg{pcalg} and the data set.
 
 
@@ -1005,7 +1005,7 @@ for the v-structures called majority rule. This adaptation can be called using
 c$ is marked as \emph{ambiguous} if $b$ is in exactly 50 percent of such
 conditioning sets, if it is in less than 50 percent it is set as a
 v-structure, and if in more than 50 percent as a non v-structure (for more
-details see \citep{CoMa2013-arc}). The useage of both the conservative and the
+details see \citep{CoMa2013-arc}). The usage of both the conservative and the
 majority rule versions resolve the order-dependence issues of the
 determination of the v-structures, see \cite{CoMa2013-arc} for more details.
   
@@ -1025,7 +1025,7 @@ $b \gredge{-} c \gredge{-} d$ was visited first, meaning that the final
 orientation on the edge depends on the ordering in which the edges are
 oriented. With the option \code{solve.confl = TRUE} (which is only
 supported with option \code{u2pd = "relaxed"}), we first generate a list of
-all (unambiguous) v-strucutres (in the example above $a \gredge{-} b
+all (unambiguous) v-structures (in the example above $a \gredge{-} b
 \gredge{-} c$ and $b \gredge{-} c \gredge{-} d$), and then we simply orient
 them allow both directions on the edge $b \gredge{-} c$, namely we allow the
 bi-directed edge $b \gredge{<->} c$ resolving the order-dependence issues
@@ -1034,9 +1034,9 @@ matrix M of the graph as $M[b,c]=2$ and $M[c,b]=2$. In a similar way using
 lists for the candidate edges for each orientation rule and allowing
 bi-directed edges, the order-dependence issues in the orientation rules can
 be solved. Note that bi-directed edges merely represents a conflicting
-orientation and they should not to be interpreted causally. The useage of
+orientation and they should not to be interpreted causally. The usage of
 these lists for the candidate edges and allowing bi-directed edges resolve
-the order-dependence issues on the orientation of the v-strucutres and on
+the order-dependence issues on the orientation of the v-structures and on
 the edges using the three orientation rules, see \cite{CoMa2013-arc} for more
 details. 
 
@@ -1133,7 +1133,7 @@ used, and \code{maxdegree} can be used to bound the vertex degree of the
 estimated graph.  More details can be found in the help file of
 \code{ges()}. 
 
-In Fig.~\ref{fig:gesFit}, we re-analyse the data set used in the example of
+In Fig.~\ref{fig:gesFit}, we re-analyze the data set used in the example of
 Fig.~\ref{fig:pcFit1} with the GES algorithm.  The estimated graph is
 exactly the same in this case. 
 
@@ -1185,7 +1185,7 @@ is not oriented as a v-structure. After the v-structures have been
 oriented, Possible-D-SEP sets for each node in the graph are computed at
 once. To decide whether edge $x \gredge{o-o} y$ should be removed, one performs
 conditional independence tests of $V_x$ and $V_y$ given all subsets of
-Possible-D-SEP($x$) and of Possible-D-SEP($y$) (see helpfile of function
+Possible-D-SEP($x$) and of Possible-D-SEP($y$) (see help file of function
 \code{pdsep()}). The edge is removed if a conditional independence is
 found. This will produce a fully order-independent final skeleton as
 explained in \cite{CoMa2013-arc}. Subsequently, all edges are transformed into
@@ -1715,7 +1715,7 @@ method are identical implies that summary measures of the multiset that
 only depend on the unique values (such as the minimum absolute value) can
 be found using the local method.
 
-In some applications, it is clear that some variable is definitivly a cause
+In some applications, it is clear that some variable is definitively a cause
 of other variables. Consider for example a bacterium producing
 a certain substance, taking the amount of produced substance as response
 variable. Knocking out genes in the bacterium might change the ability to
