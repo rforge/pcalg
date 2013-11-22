@@ -1,6 +1,7 @@
 %\documentclass[article]{jss}
-\documentclass[nojss,article]{jss}
+\documentclass[nojss,shortnames,article]{jss}
 %              ----- for the package-vignette, don't use JSS logo, etc
+%  shortnames: just because we don't want to see 22 author names for {HughesEtAl00}
 % but when submitting, do
 
 \usepackage[utf8]{inputenc}
