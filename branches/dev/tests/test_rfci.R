@@ -1,6 +1,10 @@
 library(pcalg)
 source(system.file(package="Matrix", "test-tools-1.R", mustWork=TRUE))
 ##--> showProc.time(), assertError(), relErrV(), ...
+R.home(); sessionInfo() # helping package maintainers to debug ...
+.libPaths()
+packageDescription("pcalg")
+packageDescription("Matrix")
 
 ## load the functions for the simulations of this paper
 ## source("/u/colombo/Diss/RAusw/First_paper_RFCI_simulations/functions_for_the_simulations.R")

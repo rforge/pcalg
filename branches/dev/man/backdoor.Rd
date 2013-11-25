@@ -1,7 +1,6 @@
 \name{backdoor}
 \alias{backdoor}
-\title{Determine a set that satisfies the Generalized Backdoor Criterion
-relative to x and y}
+\title{Find Set Satisfying the Generalized Backdoor Criterion}
 \description{
   This function first checks if the total causal effect of
   one variable (\code{x}) onto another variable (\code{y}) is
@@ -14,11 +13,11 @@ relative to x and y}
 backdoor(amat, x, y, type = "pag")
 }
 \arguments{
-  \item{amat}{Adjacency matrix of the given graph specified in \code{type}.}
-  \item{x}{Position of variable \code{x} in the adjacency matrix.}
-  \item{y}{Position of variable \code{y} in the adjacency matrix.}
-  \item{type}{It specifies the type of graph of the adjacency matrix
-    \code{amat}. It can be a DAG (type="dag"), a CPDAG (type="cpdag"), a
+  \item{amat}{adjacency matrix of the given graph specified in \code{type}.}
+  \item{x,y}{integer: position of variable \code{x} or \code{y} in the
+    adjacency matrix.}
+  \item{type}{a string specifying the type of graph of the adjacency matrix
+    \code{amat}.  It can be a DAG (type="dag"), a CPDAG (type="cpdag"), a
     MAG (type="mag"), or a PAG (type="pag").}
 }
 \details{
@@ -31,15 +30,19 @@ backdoor(amat, x, y, type = "pag")
 
   The motivation to find a set W that satisfies the generalized backdoor
   criterion with respect to \code{x} and \code{y}
-  in the given graph relies on the result of the generalized backdoor adjustment
-  that says: "If a set of variables W satisfies the generalized backdoor
-  criterion relative to \code{x} and \code{y} in the given graph, then
-  the causal effect of \code{x} on \code{y} is identifiable and is given
-  by:" P(Y|do(X = x)) = sum_W P(Y|X,W).P(W). This result allows to write
-  post-intervention densities (the one written using Pearl's
-  do-calculus) using only observational densities
+  in the given graph relies on the result of the generalized backdoor adjustment:
+
+  \emph{If a set of variables W satisfies the generalized backdoor
+    criterion relative to \code{x} and \code{y} in the given graph, then
+    the causal effect of \code{x} on \code{y} is identifiable and is given
+    by} \deqn{%
+    P(Y|do(X = x)) = \sum_W P(Y|X,W) \cdot P(W).}{%
+    P(Y|do(X = x)) =  sum_W P(Y|X,W) * P(W).}
+
+  This result allows to write post-intervention densities (the one
+  written using Pearl's do-calculus) using only observational densities
   estimated from the data.
-  
+
   If the input graph is a DAG (\code{type="dag"}), this function reduces
   to Pearl's backdoor criterion for single interventions and single
   outcome variable, and the parents of \code{x} in the DAG satisfy the
@@ -53,10 +56,10 @@ backdoor(amat, x, y, type = "pag")
   the effect is not identifiable in this way, the output is
   NA. Otherwise, an explicit set W that satisfies the generalized
   backdoor criterion with respect to \code{x} and \code{y} in the given
-  graph is found. 
+  graph is found.
 
-  At this moment this function is not able to work with an RFCI-PAG. 
-  
+  At this moment this function is not able to work with an RFCI-PAG.
+
   It is important to note that there can be pair of nodes \code{x} and
   \code{y} for which there is no set W that satisfies the generalized
   backdoor criterion, but the total causal effect might be identifiable
@@ -80,7 +83,7 @@ backdoor(amat, x, y, type = "pag")
   and \code{\link{fci}} for estimating a PAG, and \code{\link{pag2mag}}
   for estimating a MAG.
 }
-\examples{
+\examples{%% note:  Tests in  ../tests/test_backdoor.R
 #####################################################################
 ##DAG
 #####################################################################
@@ -165,7 +168,7 @@ backdoor(true.amat, 6, 3, type="cpdag")
 
 ## create the graph
 p <- 7
-amat <- t(matrix(c(0,0,1,1,0,0,0, 0,0,1,1,0,0,0, 0,0,0,1,0,1,0, 
+amat <- t(matrix(c(0,0,1,1,0,0,0, 0,0,1,1,0,0,0, 0,0,0,1,0,1,0,
                    0,0,0,0,0,0,1, 0,0,0,0,0,1,1, 0,0,0,0,0,0,0,
                    0,0,0,0,0,0,0),  7, 7))
 colnames(amat) <- rownames(amat) <- as.character(1:7)

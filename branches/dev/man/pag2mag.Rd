@@ -1,20 +1,17 @@
 \name{pag2mag}
-\alias{pag2mag}
-\encoding{UTF8}
-\title{Transform a PAG into a MAG in the Markov equivalence class
-  represented by the PAG with no additional edges into node x} 
+\alias{pag2magAM}
+\title{Transform a PAG into a MAG in the Corresponding Markov Equivalence Class}
 \description{
-  Transform a Partial Ancestral Graph (PAG) into a valid Maximal
-  Ancestral Graph (MAG) that belongs to the Markov equivalence class
-  represented by the given PAG.
+  Transform a Partial Ancestral Graph (PAG) into a valid
+  Maximal Ancestral Graph (MAG) that belongs to the Markov equivalence class
+  represented by the given PAG, with no additional edges into node \code{x}.
 }
 \usage{
-pag2mag(amat.pag, x)
+pag2magAM(amat.pag, x, max.chordal = 10, verbose = FALSE)
 }
 \arguments{
-  \item{amat.pag}{Adjacency matrix corresponding to the PAG.}
-  \item{x}{Node in the PAG for which no additional edges are oriented
-    into it.}
+  \item{amat.pag}{adjacency matrix corresponding to the PAG.}
+  \item{x}{node in the PAG for which no additional edges are oriented into it.}
 }
 \details{
   This function converts a PAG (adjacency matrix) to a valid MAG
@@ -38,11 +35,13 @@ pag2mag(amat.pag, x)
 \references{
   M.H. Maathuis and D. Colombo (2013). A generalized backdoor
   criterion. arXiv preprint arXiv:1307.5636.
-  
+
   Zhang, J. (2006). Causal Inference and Reasoning in Causally
   Insufficient Systems. Ph. D. thesis, Carnegie Mellon University.
 }
-\author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch}).}
+\author{
+  Diego Colombo, Markus Kalisch and Martin Maechler.
+}
 \seealso{\code{\link{fci}}, \code{\link{dag2pag}}, \code{\link{backdoor}}}
 \examples{
 ## create the graph
@@ -53,22 +52,18 @@ g <- randomDAG(p, prob = 0.4)
 ## define nodes 2 and 6 to be latent variables
 L <- c(2,6)
 
-## compute the true covariance matrix of g
-cov.mat <- trueCov(g)
-## transform covariance matrix into a correlation matrix
-true.corr <- cov2cor(cov.mat)
+## Compute the true covariance matrix of g, and transform to correlation matrix:
+true.corr <- cov2cor(trueCov(g))
 
-## find PAG
-## as dependence "oracle", we use the true correlation matrix in the
-## function gaussCItest with a large "virtual sample size" and a large
-## alpha:
+## Find PAG
+## As dependence "oracle", we use the true correlation matrix in
+## gaussCItest() with a large "virtual sample size" and a large alpha:
 true.pag <- dag2pag(suffStat = list(C= true.corr, n= 10^9),
                     indepTest= gaussCItest, graph=g, L=L, alpha= 0.9999)
 
 ## find a valid MAG such that no additional edges are directed into
-(valid.mag <- pag2mag(true.pag@amat, 4))
+(amat.mag <- pag2magAM(true.pag@amat, 4)) # -> the adj.matrix of the MAG
 }
 \keyword{multivariate}
 \keyword{models}
 \keyword{graphs}
-

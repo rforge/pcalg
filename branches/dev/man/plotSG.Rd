@@ -18,8 +18,8 @@ plotSG(graphObj, y, dist, amat = NA, directed = TRUE, main = )
     should be directed.}
   \item{main}{title to be used, with a sensible default; see \code{\link{title}}.}
 }
-\value{the desired subgraph is also plotted and returned (made
-  \code{\link{invisible}}).
+\value{the desired subgraph is plotted and returned via
+  \code{\link{invisible}}.
 }
 
 \details{
@@ -44,7 +44,7 @@ set.seed(45)
 myDAG <- randomDAG(p, prob = 0.3)
 
 ## plot whole the DAG
-plot(myDAG, main = "randomDAG(10, prob = 0.2)")
+plot(myDAG, main = "randomDAG(10, prob = 0.3)")
 
 op <- par(mfrow = c(3,2))
 ## plot the neighbours of node number 8 up to distance 1

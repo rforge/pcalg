@@ -24,7 +24,7 @@
 %\VignetteIndexEntry{Causal Inference: The R package pcalg}
 %%\VignetteDepends{pcalg, sfsmisc, Rgraphviz}
 \SweaveOpts{engine=R,eps=FALSE,pdf=TRUE,width=7,height=4}
-\SweaveOpts{keep.source=TRUE,strip.white=true}
+\SweaveOpts{keep.source=TRUE,strip.white=true, figs.only=TRUE}
 %           ^^^^^^^^^^^^^^^^ preserve comments (and all) in R chunks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -50,12 +50,12 @@
 \Shorttitle{More Causal Graphical Models: Package pcalg} %% a short title (if necessary)
 
 %% an abstract and keywords
-\Abstract{ 
+\Abstract{
   The \pkg{pcalg} package for \proglang{R} \citep{citeR} can be
   used for the following two purposes: Causal structure learning and
   estimation of causal effects from observational and/or interventional
   data. In this document, we give a brief overview of the methodology, and
-  demonstrate the package's functionality in both toy examples and  
+  demonstrate the package's functionality in both toy examples and
   applications.
 
   This vignette is an updated and extended (FCI, RFCI, etc) version of
@@ -136,13 +136,13 @@ used to find these relationships. In many settings, however, experiments
 are infeasible because of time, cost or ethical constraints.
 
 We therefore consider the problem of inferring causal information from
-observational data. Under some assumptions, the algorithms 
-PC   \citep[see][]{SpirtesEtAl00}, 
-FCI  \citep[see][]{SpirtesEtAl00,SpirtesMeekRichardson99}, 
-RFCI \citep[see][]{rfci} and 
+observational data. Under some assumptions, the algorithms
+PC   \citep[see][]{SpirtesEtAl00},
+FCI  \citep[see][]{SpirtesEtAl00,SpirtesMeekRichardson99},
+RFCI \citep[see][]{rfci} and
 GES  \citep[see][]{Chickering2002} can
-infer information about the causal structure from observational data; 
-there also exists a generalization of GES to interventional data, GIES 
+infer information about the causal structure from observational data;
+there also exists a generalization of GES to interventional data, GIES
 \citep[see][]{HauserBuhlmann2012}. These
 algorithms tell us which variables could or could not be a cause of
 some variable of interest. They do not, however, give information about the
@@ -157,15 +157,15 @@ assumption of no latent variables is a strong assumption when working with
 real data and therefore often violated in practice, we generalized Pearl's
 backdoor criterion \citep[see][]{MaCo2013-arc} to more general types of graphs,
 i.e. CPDAGs, MAGs, and PAGs, that describe Markov equivalence classes of
-DAGs with and without latent variables but without selection variables. 
+DAGs with and without latent variables but without selection variables.
 
 For broader use of these methods, well documented and easy to use software
 is indispensable. We therefore wrote the R package \pkg{pcalg}, which
-contains implementations of the algorithms PC, FCI, RFCI, GES and GIES, 
+contains implementations of the algorithms PC, FCI, RFCI, GES and GIES,
 as well as of the IDA method and the generalized Pearl's backdoor
 criterion. The objective of this paper is to introduce the R package
 \pkg{pcalg}, explain the range of functions on simulated data sets and
-summarize some applications. 
+summarize some applications.
 
 To get started, we show how two of the main functions (one for causal
 structure learning and one for estimating causal effects from observational
@@ -317,19 +317,19 @@ In Section~\ref{sec:gm} we propose methods for estimating the causal
 structure. In particular, we discuss algorithms for structure learning
 \begin{itemize}
   \item in the absence of hidden variables from observational data
-    such as PC \citep[see][]{SpirtesEtAl00}, 
+    such as PC \citep[see][]{SpirtesEtAl00},
     GES \citep[see][]{Chickering2002}, and the dynamic programming approach of
-    \cite{Silander2006}, 
-  
-  \item from observational data accounting for hidden variables such as 
+    \cite{Silander2006},
+
+  \item from observational data accounting for hidden variables such as
     FCI \citep[see][]{SpirtesEtAl00, SpirtesMeekRichardson99}
     and RFCI \citep[see][]{rfci},
-  
+
   \item in the absence of hidden variables from jointly observational
     and interventional data such as GIES \citep[see][]{HauserBuhlmann2012}.
 \end{itemize}
 
-In Section~\ref{sec:bounds} we first describe the IDA method 
+In Section~\ref{sec:bounds} we first describe the IDA method
 \citep[see][]{BuKaMa09} to obtain bounds on causal effects from observational
 data when no latent and selection variables are present. This method is
 based on first estimating the causal structure and then applying
@@ -341,7 +341,7 @@ first it checks if the total causal effect of one variable $X$ onto another
 variables $Y$ is identifiable via the generalized backdoor criterion in the
 given type of graph, and if this is the case it explicitly gives a set of
 variables that satisfies the generalized backdoor criterion with respect to
-$X$ and $Y$ in the given graph. 
+$X$ and $Y$ in the given graph.
 
 \subsection{Estimating causal structures with  graphical models} \label{sec:gm}
 Graphical models
@@ -370,7 +370,7 @@ the following way: If two nodes $x$ and $y$ are d-separated by a set of
 nodes $S$, then the corresponding random variables $V_{x}$ and $V_{y}$ are
 conditionally independent given the set of random variables $V_{S}$. For the
 following, we only deal with distributions whose list of conditional
-independencies perfectly matches the list of d-separation relations of 
+independencies perfectly matches the list of d-separation relations of
 some DAG; such distributions are called faithful. It has been shown
 that the set of distributions that are faithful is the overwhelming
 majority \citep{Meek95}, so that the assumption does not seem to be very
@@ -404,7 +404,7 @@ members of an equivalence class encode the same conditional independence
 information. Conversely, if given a conditional independence oracle, one
 can only determine a DAG up to its equivalence class. Therefore, the PC
 algorithm cannot determine the DAG uniquely, but only the corresponding
-equivalence class of the DAG. 
+equivalence class of the DAG.
 
 An equivalence class can be visualized by a graph that has the same
 skeleton as every DAG in the equivalence class and directed edges only
@@ -479,12 +479,12 @@ It is known that the PC algorithm is order-dependent in steps
 in which the variables are given. \cite{CoMa2013-arc} proposed several
 modifications of the PC algorithm (see Sections \ref{sec:skel} and
 \ref{sec:pc}) that partly or fully remove these order-dependence issues in
-each step. 
+each step.
 
 The PC algorithm presented so far is based on conditional independence
 tests. Score-based methods form an alternative approach to causal
 inference. They try to find a CPDAG that maximizes a \emph{score},
-typically a model selection criterion, which is calculated from data.   
+typically a model selection criterion, which is calculated from data.
 
 One of the most popular scores is the Bayesian information criterion (BIC)
 because its maximization leads to \emph{consistent} model selection in the
@@ -494,7 +494,7 @@ exhaustive search is computationally infeasible due to the size of the
 search space, the space of DAGs or CPDAGs, respectively.
 \cite{Silander2006} have presented an exact dynamic programming algorithm
 with an exponential time complexity.  Its execution is feasible for models
-with a few dozen variables. 
+with a few dozen variables.
 
 The greedy equivalence search (GES) of \cite{Chickering2002} makes the
 maximization of the BIC computationally feasible for much larger graphs.
@@ -503,24 +503,24 @@ As the name of the algorithm implies, GES maximizes the BIC in a
 limit.  It still has exponential-time complexity in the worst case, but
 only polynomial complexity in the average case where the size of the
 largest clique in a graph grows only logarithmically with the number of
-nodes \citep{Grimmett1975}. 
+nodes \citep{Grimmett1975}.
 
 GES greedily optimizes the BIC in two phases:
 \begin{itemize}
   \item In the \emph{forward phase}, the algorithm starts with the empty
     graph.  It then sequentially moves to larger CPDAGs by operations that
     correspond to adding single arrows in the space of DAGs.  This phase is
-    aborted if no augmentation of the BIC is possible any more. 
-  
+    aborted if no augmentation of the BIC is possible any more.
+
   \item In the \emph{backward phase}, the algorithm moves again into the
     direction of \emph{smaller} graphs by operations that correspond to
     removing single arrows in the space of DAGs.  The algorithm terminates
-    as soon as no augmentation of the BIC is possible any more. 
+    as soon as no augmentation of the BIC is possible any more.
 \end{itemize}
 A key ingredient for the fast exploration of the search space in GES is an
 evaluation of the greedy steps in a local fashion which avoids enumerating
 all representative DAGs of an equivalence class and which exploits the
-decomposability of the BIC score \citep{Chickering2002}. 
+decomposability of the BIC score \citep{Chickering2002}.
 
 A causal structure without feedback loops and without hidden or selection
 variable can be visualized using a DAG where the edges indicate direct
@@ -547,7 +547,7 @@ sample.
 In the case of hidden or selection variables, one could still visualize the
 underlying causal structure with a DAG that includes all observed, hidden
 and selection variables. However, when inferring the DAG from observational
-data, we do not know all hidden and selection variables. 
+data, we do not know all hidden and selection variables.
 
 We therefore seek to find a structure that represents all conditional
 independence relationships among the observed variables given the selection
@@ -571,7 +571,7 @@ Ancestral graphs have nodes, which represent random variables and edges
 which represent some kind of dependence. The edges can be either directed
 ($\gredge{<-}$ or $\gredge{->}$),
 undirected ($\gredge{-}$) or bidirected ($\gredge{<->}$) (note that in the
-context of ancestral graphs, 
+context of ancestral graphs,
 undirected and bidirected edges do \emph{not} mean the same). There are two
 rules that restrict the direction of edges in an ancestral graph:
 \begin{description}
@@ -608,9 +608,9 @@ oracle is in general impossible. One only reports on the equivalence class
 in which the true MAG lies.
 
 An equivalence class of a MAG can be uniquely represented by a partial
-ancestral graph (PAG) \citep[see, e.g.,][]{Zhang08-orientation-rules}. 
-A PAG contains the following types of edges: $\gredge{o-o}$, $\gredge{o-}$, 
-$\gredge{o->}$, $\gredge{->}$, $\gredge{<->}$, $\gredge{-}$. 
+ancestral graph (PAG) \citep[see, e.g.,][]{Zhang08-orientation-rules}.
+A PAG contains the following types of edges: $\gredge{o-o}$, $\gredge{o-}$,
+$\gredge{o->}$, $\gredge{->}$, $\gredge{<->}$, $\gredge{-}$.
 Roughly, the bidirected edges come from hidden variables, and the
 undirected edges come from selection variables. The edges have the
 following interpretation: (i) There is an edge between $x$ and $y$ if and
@@ -658,12 +658,12 @@ different experimental conditions.  An intervention, denoted by Pearl's
 do-calculus (see Section \ref{sec:introduction}), changes the joint
 probability distribution of the system; therefore, data samples collected
 from different intervention experiments are \emph{not} identically
-distributed (although still independent). 
+distributed (although still independent).
 
 The algorithms PC and GES both rely on the i.i.d.\ assumption and are not
 suited for causal inference from interventional data.  The GIES algorithm,
 which stands for ``greedy interventional equivalence search'', is a
-generalization of GES to interventional data \citep[see][]{HauserBuhlmann2012}.  
+generalization of GES to interventional data \citep[see][]{HauserBuhlmann2012}.
 It does not only make sure that interventional
 data points are handled correctly (instead of being wrongly treated as
 observational data points), but also accounts for the improved
@@ -674,13 +674,13 @@ representing an (interventional) Markov equivalence class of DAGs: a
 directed edge between two vertices stands for an arrow with common
 orientation among all representatives of the equivalence class, an
 undirected edge stands for an arrow that has different orientations among
-different representative DAGs; for more details, see \cite{HauserBuhlmann2012}. 
+different representative DAGs; for more details, see \cite{HauserBuhlmann2012}.
 
 GIES traverses the search space of interventional essential graphs in a
 similar way as GES traverses the search space of observational essential
 graphs.  In addition, a new search phase was introduced by
 \cite{HauserBuhlmann2012} with movements which correspond to turning single
-arrows in the space of DAGs. 
+arrows in the space of DAGs.
 
 \subsection{Estimating bounds on causal effects} \label{sec:bounds}
 One way of quantifying the causal effect of variable $V_x$ on $V_y$ is to
@@ -693,7 +693,7 @@ by $P[V_y | \doop(V_x=x)]$. Note that this is different from the conditional
 distribution $P[V_y | V_x=x]$. To illustrate this, imagine the following
 simplistic situation. Suppose we observe a particular spot on
 the street during some hour. The random variable $V_x$ denotes whether it
-rained during that 
+rained during that
 hour ($V_x=1$ if it rained, $V_x=0$ otherwise). The random variable $V_y$ denotes
 whether the street was wet at the end of that hour ($V_y=1$
 if it was wet, $V_y=0$ otherwise). If we assume $P(V_x=1) = 0.1$ (rather dry
@@ -705,7 +705,7 @@ to be wet, the probability that there was rain in the last hour is about
 $0.85$. However, if we take a garden hose and force the street to be wet at
 a randomly chosen hour, we get $P(V_x=1|\doop(V_y=1)) = P(V_x=1) = 0.1$. Thus, the
 distribution of the random variable describing rain is quite different when
-making an observation versus making an intervention.  
+making an observation versus making an intervention.
 
 Oftentimes, only the change of the target distribution under intervention
 is reported. We use the change in mean, i.e.,  $\frac{\partial}{\partial x}
@@ -715,7 +715,7 @@ linearly on $x$. Therefore, the derivative is constant which means that the
 causal effect does not depend on $x$, and can also be interpreted as
 $E[V_y|\doop(V_x=x+1)] - E[V_y|\doop(V_x=x)]$. For binary random variables
 (with domain $\{0,1\}$) we define the causal effect of $V_x$ on $V_y$ as
-$E(V_y|\doop(V_x=1)) - E(V_y|\doop(V_x=0)) = 
+$E(V_y|\doop(V_x=1)) - E(V_y|\doop(V_x=0)) =
  P(V_y=1|\doop(V_x=1)) - P(V_y=1|\doop(V_x=0))$.
 
 The goal in the remainder of this section is to estimate the effect of an
@@ -728,7 +728,7 @@ known as ``do-calculus'' whose
 application transforms an expression involving a ``do'' into an expression
 involving only conditional distributions. Thus, information on the
 interventional distribution can be obtained by using information obtained
-by observations and knowledge of the underlying causal structure. 
+by observations and knowledge of the underlying causal structure.
 
 Unfortunately, the causal structure is rarely known in practice. However,
 as discussed in Section~\ref{sec:gm}, we can estimate the Markov
@@ -749,7 +749,7 @@ In addition to this fundamental limitation in estimating a causal effect,
 errors due to finite sample size blur the result as with every statistical
 method. Thus, we can typically only get an estimate of the set of possible
 causal values. It was shown that this estimate is consistent in sparse
-high-dimensional settings under some assumptions by \cite{BuKaMa09}. 
+high-dimensional settings under some assumptions by \cite{BuKaMa09}.
 
 It has recently been shown empirically that despite the described
 fundamental limitations in identifying the causal effect uniquely and
@@ -761,7 +761,7 @@ high-dimensional yeast gene expression data set \citep[see][]{NatMethods10}.
 
 If the causal DAG is known and no latent and selection variables are
 present, one can estimate causal effects from observational data using for
-example Pearl's backdoor criterion, as done in IDA. 
+example Pearl's backdoor criterion, as done in IDA.
 
 However, in practice the assumption of no latent variables is often
 violated. Therefore, \cite{MaCo2013-arc} generalized Pearl's backdoor
@@ -774,7 +774,7 @@ checked to be identifiable via the generalized backdoor criterion, meaning
 that there exists a set of variables $W$ for which the generalized backdoor
 criterion is satisfied with respect to $X$ and $Y$ in the given graph. If
 the effect is indeed identifiable, in a second step the set $W$ is explicitly
-given.   
+given.
 
 \subsection{Summary of assumptions}
 For all proposed methods, we assume that the data is faithful to the
@@ -790,7 +790,7 @@ assumptions are made.
   details. Consistency in a standard asymptotic regime with a fixed number
   of variables follows as a special case.
 
-\item[GES algorithm:] No hidden or selection variables; consistency in 
+\item[GES algorithm:] No hidden or selection variables; consistency in
   a standard asymptotic regime with a fixed number of variables
   \citep[see][]{Chickering2002}.
 
@@ -801,18 +801,18 @@ assumptions are made.
   $\alpha$ is taken to zero appropriately. See \cite{rfci} for full
   details. Consistency in a standard asymptotic regime with a fixed number
   of variables follows as a special case.
-  
+
 \item[RFCI algorithm:] Allows for hidden and selection variables; consistent
   in high-dimensional settings if the underlying MAG is sparse (this is a
   much weaker assumption than the one needed for FCI), the data is
-  multivariate normal and satisfies some regularity 
+  multivariate normal and satisfies some regularity
   conditions on the partial correlations, and $\alpha$ is taken to zero
   appropriately. See \cite{rfci} for full details. Consistency in
   a standard asymptotic regime with a fixed number of variables follows as
   a special case.
 
-\item[GIES algorithm:] No hidden or selection variables; mix of observational 
-  and interventional data. Interventional data alone is sufficient if 
+\item[GIES algorithm:] No hidden or selection variables; mix of observational
+  and interventional data. Interventional data alone is sufficient if
   there is no variable which is intervened in \emph{all} data points.
 
 \item[IDA:] No hidden or selection variables; all conditional expectations
@@ -821,9 +821,9 @@ assumptions are made.
   conditions on the partial correlations and conditional variances, and
   $\alpha$ is taken to zero appropriately. See \cite{BuKaMa09} for full
   details.
-  
+
 \item[Generalized Backdoor Criterion:] allows for arbitrarily many hidden
-  but no selection variables. See \cite{MaCo2013-arc} for more details. 
+  but no selection variables. See \cite{MaCo2013-arc} for more details.
 \end{description}
 
 \section{Package pcalg}
@@ -834,7 +834,7 @@ implementation of the IDA method, which estimates bounds on causal effects
 from observational data when no causal structure is known and hidden or
 selection variables are absent, and it also provides a genralization of
 Pearl's backdoor criterion to DAGs, CPDAGs, MAGs, nad PAGs, when hidden but
-no selection variables are allowed.  
+no selection variables are allowed.
 
 In the following, we describe the main functions of our package for
 achieving these goals. The functions \code{skeleton()}, \code{pc()},
@@ -954,14 +954,14 @@ output depends on the order in which the variables are given. Therefore,
 \cite{CoMa2013-arc} proposed a simple modification, called PC-stable, that yields
 order-independent adjacencies in the skeleton. In this function we
 implement their modified algorithm (the old order-dependent implementation
-can be found in version 1.1-5). 
+can be found in version 1.1-5).
 
 Since the FCI and RFCI algorithms are build up from the PC algorithm, they
 are also order-dependent in the skeleton. To resolve their order-dependence
 issues in the skeleton is more involved, see \cite{CoMa2013-arc}. However, this
 function estimates an initial order-independent skeleton in these
 algorithms (for additional details on how to make the final skeleton of FCI
-fully order-independent see \ref{sec:fci} and \cite{CoMa2013-arc}). 
+fully order-independent see \ref{sec:fci} and \cite{CoMa2013-arc}).
 
 \subsection{pc} \label{sec:pc}
 
@@ -969,7 +969,7 @@ The function \code{pc()} implements all steps (P1) to (P4) of the PC
 algorithm shown in display algorithm~\ref{algo:pc}. First, the skeleton is
 computed using the function \code{skeleton()} (steps (P1) and (P2)). Then,
 as many edges as possible are oriented (steps (P3) and (P4)). The function
-can be called as 
+can be called as
 % with the following arguments.
 % \code{pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL, \\
 % fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "rand", \\
@@ -1008,19 +1008,19 @@ v-structure, and if in more than 50 percent as a non v-structure, for more
 details see \cite{CoMa2013-arc}. The usage of both the conservative and the
 majority rule versions resolve the order-dependence issues of the
 determination of the v-structures, see \cite{CoMa2013-arc} for more details.
-  
+
 Sampling errors (or hidden variables) can lead to conflicting information
 about edge directions. For example, one may find that $a \gredge{-} b
-\gredge{-} c$ and $b \gredge{-} c \gredge{-} d$ 
+\gredge{-} c$ and $b \gredge{-} c \gredge{-} d$
 should both be directed as v-structures. This gives conflicting information
 about the edge $b \gredge{-} c$, since it should be directed as $b
 \gredge{<-} c$ in v-structure $a \gredge{->} b \gredge{<-} c$, while it
 should be directed as $b \gredge{->} c$ in v-structure $b \gredge{->} c
 \gredge{<-} d$. With the option \code{solve.confl = FALSE}, in such cases,
 we simply overwrite the directions of the conflicting edge. In the example
-above this means that we obtain $a \gredge{->} b \gredge{->} c \gredge{<-} d$ if 
+above this means that we obtain $a \gredge{->} b \gredge{->} c \gredge{<-} d$ if
 $a \gredge{-} b \gredge{-} c$ was visited first, and
-$a \gredge{->} b \gredge{<-} c \gredge{<-} d$ if 
+$a \gredge{->} b \gredge{<-} c \gredge{<-} d$ if
 $b \gredge{-} c \gredge{-} d$ was visited first, meaning that the final
 orientation on the edge depends on the ordering in which the edges are
 oriented. With the option \code{solve.confl = TRUE} (which is only
@@ -1038,11 +1038,11 @@ orientation and they should not to be interpreted causally. The usage of
 these lists for the candidate edges and allowing bi-directed edges resolve
 the order-dependence issues on the orientation of the v-structures and on
 the edges using the three orientation rules, see \cite{CoMa2013-arc} for more
-details. 
+details.
 
 Note that calling (\code{conservative = TRUE}) or \code{maj.rule = TRUE},
 together with \code{solve.confl = TRUE} produces a fully order-independent
-output, see \cite{CoMa2013-arc}. 
+output, see \cite{CoMa2013-arc}.
 
 Sampling errors, non faithfulness, or hidden variables can also lead to
 invalid CPDAGs, meaning that there does not exist a DAG that has the same
@@ -1090,7 +1090,7 @@ The PC algorithm presented in the previous section is based on conditional
 independence tests.  To apply it, we first had to calculate a sufficient
 statistic and to specify a conditional independence test function.  For the
 score-based GES algorithm, we have to define a score object before applying
-the inference algorithm. 
+the inference algorithm.
 
 A score object is an instance of a class derived from the base class
 \code{Score}.  This base class is implemented as a virtual reference class.
@@ -1102,11 +1102,11 @@ the first one here, but we will encounter the second one in Section
 \ref{sec:gies} again.  The implementation of score classes for discrete
 data is planned for future versions of the \pkg{pcalg} package.  However,
 the flexible implementation using class inheritance allows the user to
-implement own score classes for different scores. 
+implement own score classes for different scores.
 
 The predefined score-class \code{GaussL0penObsScore} implements a an
 $\ell_0$-penalized maximum-likelihood estimator for observational data from
-a Gaussian causal model.  A instance is generated as follows: 
+a Gaussian causal model.  A instance is generated as follows:
 <<obs-score-args, eval = FALSE>>=
 score <- new("GaussL0penObsScore", data = matrix(1, 1, 1),
     lambda = 0.5*log(nrow(data)), intercept = FALSE, use.cpp = TRUE, ...)
@@ -1119,7 +1119,7 @@ model should allow for intercepts in the linear structural equations, or
 for a non-zero mean of the multivariate normal distribution, which is
 equivalent.  The last argument \code{use.cpp} indicates whether the
 internal C++ library should be used for calculation, which is in most cases
-the best choice due to velocity issues. 
+the best choice due to velocity issues.
 
 Once a score object is defined, the GES algorithm is called as follows:
 <<ges-args, echo = FALSE>>=
@@ -1131,11 +1131,11 @@ indicates whether the novel turning phase (see Section \ref{sec:gm}) not
 present in the original implementation of \cite{Chickering2002} should be
 used, and \code{maxdegree} can be used to bound the vertex degree of the
 estimated graph.  More details can be found in the help file of
-\code{ges()}. 
+\code{ges()}.
 
 In Fig.~\ref{fig:gesFit}, we re-analyze the data set used in the example of
 Fig.~\ref{fig:pcFit1} with the GES algorithm.  The estimated graph is
-exactly the same in this case. 
+exactly the same in this case.
 
 \begin{figure}
   \centering
@@ -1192,7 +1192,7 @@ explained in \cite{CoMa2013-arc}. Subsequently, all edges are transformed into
 $\gredge{o-o}$ again and the v-structures are newly determined (using
 information in sepset).  Finally, as many undetermined edge marks (o) as
 possible are determined using (a subset of) the 10 orientation rules given
-by \cite{Zhang08-orientation-rules}. 
+by \cite{Zhang08-orientation-rules}.
 
 The function can be called with the following arguments:
 \par\vspace*{-1.2ex}
@@ -1203,7 +1203,7 @@ showF(fci, width=75)
 where the arguments \code{suffStat}, \code{indepTest}, \code{p},
 \code{alpha}, \code{fixedGaps}, \code{fixedEdges}, \code{NAdelete} and
 \code{m.max} are identical to those in % function
-\code{skeleton()}. 
+\code{skeleton()}.
 
 The argument \code{pdsep.max} indicates the maximum size of Possible-D-SEP
 for which subsets are considered as conditioning sets in the conditional
@@ -1212,7 +1212,7 @@ graph and the size of Possible-D-SEP(\code{x})$\setminus
 \{$\code{x},\code{y}$\}$ is bigger than \code{pdsep.max} the edge is simply
 left in the graph. Note that if \code{pdsep.max} is less than Inf, the
 final PAG may be a supergraph than the one computed with \code{pdsep.max =
-  Inf}, because less tests may have been performed in the former. 
+  Inf}, because less tests may have been performed in the former.
 
 The option \code{rules} contains a logical vector of
 length 10 indicating which rules should be used when directing edges, where
@@ -1223,7 +1223,7 @@ computed for all nodes, and all
 subsets of Possible-D-SEP are considered as conditioning sets in the
 conditional independence tests, if not defined otherwise in
 \code{pdsep.max}. If FALSE, Possible-D-SEP is not computed, so that the
-algorithm simplifies to the Modified PC algorithm of \cite{SpirtesEtAl00}. 
+algorithm simplifies to the Modified PC algorithm of \cite{SpirtesEtAl00}.
 
 By setting the argument \code{biCC = TRUE}, Possible-D-SEP($a$, $c$) is
 defined as the intersection of the original Possible-D-SEP($a$, $c$) and
@@ -1232,7 +1232,7 @@ biconnected components to find all nodes on a path between nodes $a$ and
 $c$. The smaller Possible-D-SEP sets lead to faster computing times, while
 \cite{rfci} showed that the algorithm is identical to the original FCI
 algorithm given oracle information on the conditional independence
-relationships. 
+relationships.
 
 Conservative versions of FCI, Anytime FCI, and Adaptive Anytime FCI (see
 below) are computed if the argument of \code{conservative} is
@@ -1264,7 +1264,7 @@ percent of the separating sets it is set as a v-structure, and if in more
 than 50 percent it is set as a non v-structure, for more details see
 \cite{CoMa2013-arc}. \cite{CoMa2013-arc} showed that with both these
 modifications, the final skeleton and the decisions about the v-structures
-of the FCI algorithm are fully order-independent. 
+of the FCI algorithm are fully order-independent.
 
 Using the argument \code{labels}, one can pass names for the vertices of
 the estimated graph. By default, this argument is set to \code{NA}, in
@@ -1350,7 +1350,7 @@ performs independence tests conditioning on subsets of Possible-D-SEP to
 remove those edges. Since this procedure is computationally infeasible, the
 RFCI algorithm uses a different approach to remove some of those
 superfluous edges before orienting the v-structures and the discriminating
-paths in orientation rule 4. 
+paths in orientation rule 4.
 
 Before orienting the v-structures, we perform the following additional
 conditional independence tests. For each unshielded triple $a \gredge{-} b
@@ -1366,7 +1366,7 @@ detected, say $V_a$ is independent from $V_b$ given the sepset$(a,c)$, the
 edge between $a$ and $c$ is removed from the graph and the set responsible
 for that is saved in sepset$(a,b)$. The removal of an edge can destroy or
 create new unshielded triples in the graph. To solve this problem we work
-with lists \citep[for details see][]{rfci}. 
+with lists \citep[for details see][]{rfci}.
 
 Before orienting discriminating paths, we perform the following additional
 conditional independence tests. For each triple $a \gredge{<-*} b
@@ -1407,7 +1407,7 @@ case, the triple $a \gredge{-} b \gredge{-} c$ is marked as
 separating sets or no separating set was found. If $b$ is in less than 50
 percent of the separating sets it is set as a v-structure, and if in more
 than 50 percent it is set as a non v-structure, for more details see
-\cite{CoMa2013-arc}. 
+\cite{CoMa2013-arc}.
 
 The implementation uses the stabilized skeleton \code{skeleton()},
 which produces an initial order-independent skeleton. The final skeleton
@@ -1423,7 +1423,7 @@ data("gmL")
 suffStat1 <- list(C = cor(gmL$x), n = nrow(gmL$x))
 pag.est <- rfci(suffStat1, indepTest = gaussCItest,
                 p = ncol(gmL$x), alpha = 0.01, labels = as.character(2:5))
-@ 
+@
 
 A note on implementation: As \code{pc()}, \code{fci()} and \code{rfci()}
 are similar in the result they produce, their resulting values are of (S4)
@@ -1437,17 +1437,17 @@ As we noted in Section \ref{sec:gm}, the GIES algorithm is a generalization
 of the GES algorithm to a mix of interventional and observational data.
 Hence the usage of \code{gies()} is similar to that of \code{ges()} (see
 Section~\ref{sec:ges}).  Actually, the function \code{ges()} is only an
-internal wrapper for \code{gies()}. 
+internal wrapper for \code{gies()}.
 
 A data set with jointly interventional and observational data points is
 \emph{not} i.i.d.  In order to use it for causal inference, we must specify
 the intervention target each data point belongs to.  This is done by
 specifying the arguments \code{target} and \code{target.index} when
 generating an instance of \code{GaussL0penIntScore} (see Section
-\ref{sec:ges}): 
+\ref{sec:ges}):
 <<int-score-args, eval = FALSE>>=
 score <- new("GaussL0penIntScore", data = matrix(1, 1, 1),
-    targets = list(integer(0)), target.index = rep(as.integer(1), nrow(data)), 
+    targets = list(integer(0)), target.index = rep(as.integer(1), nrow(data)),
     lambda = 0.5*log(nrow(data)), intercept = FALSE, use.cpp = TRUE, ...)
 @
 The argument \code{targets} is a list of all (mutually different) targets
@@ -1456,10 +1456,10 @@ allocation of sample indices to intervention targets is specified by the
 argument \code{target.index}.  This is an integer vector whose first entry
 specifies the index of the intervention target in the list \code{targets}
 of the first data point, whose second entry specifies the target index of
-the second data point, and so on.  An example is given in Figure~\ref{fig:giesFit}. 
+the second data point, and so on.  An example is given in Figure~\ref{fig:giesFit}.
 
 Once a score object for interventional data is defined, the GIES algorithm
-is called as follows: 
+is called as follows:
 <<gies-args, echo = FALSE>>=
 showF(gies)
 @
@@ -1468,7 +1468,7 @@ Most arguments coincide with those of \code{ges()} (see Section
 the same list of (unique) intervention targets as the constructor of the
 class \code{GaussL0penIntScore} (see above).  This list of targets
 specifies the space of corresponding interventional Markov equivalence
-classes or essential graphs (see Section \ref{sec:gm}). 
+classes or essential graphs (see Section \ref{sec:gm}).
 
 <<def-gmInt, eval=FALSE, echo=FALSE>>=
 ## Used to generate the  'gmInt'  Gaussian data originally:
@@ -1482,13 +1482,13 @@ targets <- list(integer(0), 3, 5)
 target.index <- c(rep(1, 0.6*n), rep(2, n/5), rep(3, n/5))
 
 x1 <- rmvnorm.ivent(0.6*n, pardag)
-x2 <- rmvnorm.ivent(n/5, pardag, targets[[2]], 
+x2 <- rmvnorm.ivent(n/5, pardag, targets[[2]],
   matrix(rnorm(n/5, mean = 4, sd = 0.02), ncol = 1))
-x3 <- rmvnorm.ivent(n/5, pardag, targets[[3]], 
+x3 <- rmvnorm.ivent(n/5, pardag, targets[[3]],
   matrix(rnorm(n/5, mean = 4, sd = 0.02), ncol = 1))
-gmInt <- list(x = rbind(x1, x2, x3), 
-  targets = targets, 
-  target.index = target.index, 
+gmInt <- list(x = rbind(x1, x2, x3),
+  targets = targets,
+  target.index = target.index,
   g = gGtrue)
 @
 <<load-gmInt, echo = FALSE>>=
@@ -1503,17 +1503,17 @@ The data set \code{gmInt} consists of \Sexpr{n.tot} data points sampled
 from the DAG in Figure~\ref{fig:skelExpl}, among them \Sexpr{n.obs}
 observational ones, \Sexpr{n3} originating from an intervention at vertex
 $3$ and \Sexpr{n5} originating from an intervention at vertex $5$.  It can
-be loaded by calling 
+be loaded by calling
 <<load-gmInt>>=
 data(gmInt)
 @
 The underlying causal model (or its interventional essential graph,
-respectively) is estimated in Figure~\ref{fig:giesFit}. 
+respectively) is estimated in Figure~\ref{fig:giesFit}.
 
 \begin{figure}
   \centering
 <<gies-fit-plot, fig=TRUE, height = 3>>=
-score <- new("GaussL0penIntScore", gmInt$x, targets = gmInt$targets, 
+score <- new("GaussL0penIntScore", gmInt$x, targets = gmInt$targets,
              target.index = gmInt$target.index)
 gies.fit <- gies(ncol(gmInt$x), gmInt$targets, score)
 simy.fit <- simy(ncol(gmInt$x), gmInt$targets, score)
@@ -1528,7 +1528,7 @@ plot(simy.fit$essgraph, main = "")
     interventions at vertices $3$ and $5$; accordingly, the orientation of
     all arrows incident to these two vertices becomes identifiable (see
     also Figure~\ref{fig:gesFit} for comparison with the observational
-    case.} 
+    case.}
   \label{fig:giesFit}
 \end{figure}
 
@@ -1542,9 +1542,9 @@ is exponential in the number of variables.  On the small example based on
 $8$ variables, using this algorithm is feasible; however, it is not
 feasible for more than approximately $20$ variables, depending on the
 processor and memory of the machine.  In this example, we get exactly the
-same result as with \code{gies()} (see Figure~\ref{fig:giesFit}). 
+same result as with \code{gies()} (see Figure~\ref{fig:giesFit}).
 
-\subsection{ida} \label{sec:ida} 
+\subsection{ida} \label{sec:ida}
 
 To illustrate the function \code{ida()}, consider the following example. We
 simulated 10000 samples from seven multivariate Gaussian random variables
@@ -1588,12 +1588,12 @@ plot(pc.gmI, main = "")
 
 Since there are three undirected edges in the CPDAG, there might be up to
 $2^3 = 8$ DAGs in the corresponding equivalence class. However, the
-undirected edges $2 \gredge{-} 3 \gredge{-} 5$ can be oriented as a 
+undirected edges $2 \gredge{-} 3 \gredge{-} 5$ can be oriented as a
 new v-structure. As
 mentioned in Section~\ref{sec:gm}, DAGs in the equivalence class must have
 exactly the same v-structures as the corresponding CPDAG. Thus,
-$2 \gredge{-} 3 \gredge{-} 5$ can only be oriented as 
-$2 \gredge{->} 3 \gredge{->} 5$, $2 \gredge{<-} 3 \gredge{<-} 5$ 
+$2 \gredge{-} 3 \gredge{-} 5$ can only be oriented as
+$2 \gredge{->} 3 \gredge{->} 5$, $2 \gredge{<-} 3 \gredge{<-} 5$
 or $2 \gredge{<-} 3
 \gredge{->} 5$, and not as $2 \gredge{->} 3 \gredge{<-} 5$. There is
 only one remaining undirected edge ($1 \gredge{-} 6$), which can be oriented in
@@ -1775,14 +1775,14 @@ the output of \code{ida()}. As expected, both methods lead to the same results.
 (eff.estF <- idaFast(2, c(5,6,7), cov(gmI$x), pc.gmI@graph))
 @
 
-\subsection{backdoor} \label{sec:backdoor} 
+\subsection{backdoor} \label{sec:backdoor}
 
 This function is a generalization of Pearl's backdoor criterion, see
 \cite{Pearl93}, defined for directed acyclic graphs (DAGs), for single
 interventions and single outcome variable to more general
 types of graphs (CPDAGs, MAGs, and PAGs) that describe Markov equivalence
 classes of DAGs with and without latent variables but without selection
-variables, for more details see \cite{MaCo2013-arc}.  
+variables, for more details see \cite{MaCo2013-arc}.
 
 The motivation to find a set $W$ that satisfies the generalized backdoor
 criterion with respect to $X$ and $Y$ in the given graph relies on the
@@ -1827,21 +1827,21 @@ given graph is found.
 Note that if the set $W$ is equal to the empty set, the output is NULL.
 
 At this moment this function is not able to work with PAGs estimated using
-the \code{rfci} Algorithm.  
+the \code{rfci} Algorithm.
 
 It is important to note that there can be pair of nodes \code{x} and
 \code{y} for which there is no set $W$ that satisfies the generalized
 backdoor criterion, but the total causal effect might be identifiable via
-some other technique. 
+some other technique.
 
 To illustrate this function, we use as example the CPDAG displayed in
 Figure 4, page 15 of \cite{MaCo2013-arc}. The R-code below is used to generate
 a DAG \code{g} that belongs to the required equivalence class which is
-uniquely represented by the estimated CPDAG \code{myCPDAG}. 
+uniquely represented by the estimated CPDAG \code{myCPDAG}.
 
 <<backdoorExCPDAG1>>=
 p <- 6
-amat <- t(matrix(c(0,0,1,1,0,1, 0,0,1,1,0,1, 0,0,0,0,1,0, 
+amat <- t(matrix(c(0,0,1,1,0,1, 0,0,1,1,0,1, 0,0,0,0,1,0,
                    0,0,0,0,1,1, 0,0,0,0,0,0, 0,0,0,0,0,0), 6,6))
 V <- as.character(1:6)
 colnames(amat) <- rownames(amat) <- V
@@ -1858,7 +1858,7 @@ cov.mat <- trueCov(g)
 myCPDAG <- dag2cpdag(g)
 true.amat <- as(myCPDAG, "matrix")
 ## true.amat[true.amat != 0] <- 1
-@ 
+@
 
 The DAG \code{g} and the CPDAG \code{myCPDAG} are shown in Figure~\ref{fig:backdoor}.
 \begin{figure}
@@ -1881,7 +1881,7 @@ there is a set $W$ that satisfies the generalized criterion:
 
 <<backdoorExCPDAG2>>=
 backdoor(true.amat, 6, 3, type="cpdag")
-@ 
+@
 
 \subsection{Using a user specific conditional independence test}
 
@@ -2069,12 +2069,12 @@ Data from cell biology is usually interventional data: different
 measurements could originate from different mutants or different cell
 stems, or from experiments with gene knockout or knockdown experiments.
 The GIES algorithm is designed for causal inference from data of this
-kind. 
+kind.
 
 Since many assumptions of the proposed methods are uncheckable, it is
 important to further validate the methods in a range of applications. We
 hope that the \pkg{pcalg} package contributes to this important
-issue by providing well-documented and easy to use software. 
+issue by providing well-documented and easy to use software.
 
 \section{Session information}
 

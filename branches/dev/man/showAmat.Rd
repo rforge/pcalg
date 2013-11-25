@@ -1,21 +1,17 @@
 \name{showAmat}
 \alias{showAmat}
-%- Also NEED an '\alias' for EACH other topic documented here.
-\title{
-Show adjacency matrix of pcAlgo object
-}
+\title{Show adjacency matrix of pcAlgo object}
 \description{
   Show adjacency matrix of pcAlgo object; this is intended to be an alternative
-  if Rgraphviz does not work.
+  if the \pkg{Rgraphviz} package does not work.
 }
 \usage{
 showAmat(pc.fit)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{pc.fit}{
-Object of class pcAlgo (as returned from \code{\link{skeleton}} or \code{\link{pc}})
-}
+    Object of class pcAlgo (as returned from \code{\link{skeleton}} or \code{\link{pc}})
+  }
 }
 \value{
   Print out of adjacency matrix.
@@ -27,12 +23,10 @@ Markus Kalisch (\email{kalisch@stat.math.ethz.ch})
 For fciAlgo objects, the show method produces a similar result.
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
-\code{\link{iplotPC}} for plotting a pcAlgo object using the package
-igraph; \code{\link{showEdgeList}} for showing the edge list of a
-pcAlgo object.
+  \code{\link{iplotPC}} for plotting a pcAlgo object using the package
+  igraph; \code{\link{showEdgeList}} for showing the edge list of a
+  pcAlgo object.
 }
 \examples{
 ## Load predefined data

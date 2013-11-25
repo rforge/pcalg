@@ -1,5 +1,9 @@
 
-* Data: Mit Markus gesprochen (3.Sept.2010):
+* TODO Boost C++ library needed for Alain's GIES
+** TODO does *need* a correct ./configure, somewhat analogous to Martin's Rmpfr,
+  file:/u/maechler/R/Pkgs/Rmpfr/configure
+
+* DONE Data: Mit Markus gesprochen (3.Sept.2010):
 
  - Die data/test_*.rda Daten welche nur in tests/
    gebraucht werden, sollen nicht "exponiert" werden.
@@ -44,8 +48,8 @@
  }
 
 
-* DESCRIPTION:
-** Depends:  too many; I do not believe they are all "dependently" needed.
+* DONE DESCRIPTION:
+** DONE Depends:  too many; I do not believe they are all "dependently" needed.
 *** DONE Remove more 'Depends:': vcd, RBGL.
     - vcd: I've eliminated it, and all the 'R CMD check' still run
     - RBGL: .. ok, only a few needed
@@ -55,17 +59,16 @@
     - abind: abind() needed in gSquareBin() & *Dis() -- once only, each
     - corpcor: pseudoinverse() [ -> fast.svd() .. non-optimal "A %% diag(.)" ]
 
-    
 
+
+
+* Style:  am[which(am != 0)]  is faster than am[am != 0]  
+  for a sparse am of dim 50 x 50  ==> Using the more ugly notation is ok!
 
 * Remarks on specific functions and issues:
-
-** gSquareBin(), gSquareDis():
-  - returns a P-value but not the test statistic.  Should *really* return
-    an object of (standard S3 class) "htest" (which contains P-value, test
-    statistic, ...)!
-
-** fci() :
+** TODO pag2mag() return adj.matrix instead of *object*,
+  whereas dag2pag() does return more than just an adj.matrix. Change BEFORE release
+** TODO fci() :
   - returns the adjacency matrix "@ amat" (among other things),
     a simple matrix with entries in {0,1,2,3}.
     It would be nice to allow *sparse* matrices here,
@@ -74,32 +77,34 @@
     This makes sense mostly if it's realistic to have quite sparse
     and relatively large sets of variables.
 
-** gAlgo-class: consider using setMethod(., "gAlgo")
+** TODO gAlgo-class: consider using setMethod(., "gAlgo")
    instead of all methods (plot, summary) for both pcAlgo and fciAlgo
-
 ** DONE myCItest() in  der Vignette inst/doc/pcalgDoc.Snw
    instead of lm() twice, use lm.fit *once* (*multivariate* regression).
    This will probably be much faster.
-
 ** ida():  argument  'all.dags' is never used, i.e., never tested.
-
 ** dsepTest(): gibt 0 / 1  zurück; wieso nicht einfach FALSE/TRUE wie dsep()?
+** TODO gSquareBin(), gSquareDis():
+  - returns a P-value but not the test statistic.  Should *really* return
+    an object of (standard S3 class) "htest" (which contains P-value, test
+    statistic, ...)!
 
-* NAMESPACE:
+
+
+* NAMESPACE and "internal" functions:
 
 *** DONE Look at ./NAMESPACE  and replace *ALL*  the  Imports() by
      ImportsFrom(.)
 
 
 
-*** TODO What do we export / what not?
-    Currently, there is  ./man/pcalg-internal.Rd   with man \alias{}es
+*** TODO What do we export / what not?  <--> file:man/pcalg-internal.Rd
+    Currently, there is  ./man/pcalg-internal.Rd  with man \alias{}es
     and only few functions in "Usage".
     The concept of such "internal" functions really *predates* the use
     of NAMESPACEs and is now obsolete.
 
-    I think almost all of these should be *removed* for the *.Rd page,
-    *and* from NAMESPACE.
-    Very few maybe could be kept, but then we should plan to document them
-    (on a different *.Rd file)
+   Many of these should be *removed* for the *.Rd page *and* from NAMESPACE.
+   The otherse (very few?) would be kept, but then also "well" documented, i.e.,
+   on a different *.Rd file.
 **** Goal: Get rid of ./man/pcalg-internal.Rd   entirely.
