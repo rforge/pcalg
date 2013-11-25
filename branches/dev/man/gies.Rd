@@ -1,6 +1,8 @@
 \name{gies}
 \alias{gies}
 \encoding{UTF-8}
+\concept{greedy interventional equivalence search}
+\concept{essential graph}
 \title{Estimate Interventional Markov Equivalence Class of a DAG by GIES}
 \description{
   Estimate the interventional essential graph representing the Markov 
@@ -118,13 +120,5 @@ if (require(Rgraphviz)) {
   plot(gmInt$g, main = "True DAG")
 }
 }
-\keyword{GIES}
-\keyword{greedy}
-\keyword{intervention}
-\keyword{interventional}
-\keyword{equivalence}
-\keyword{search}
-\keyword{DAG}
-\keyword{model}
-\keyword{essential}
+\keyword{models}
 \keyword{graph}

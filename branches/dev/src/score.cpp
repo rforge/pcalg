@@ -176,7 +176,7 @@ void ScoreGaussL0PenScatter::setData(Rcpp::List& data)
 	// Cast preprocessed data from R list
 	dout.level(2) << "Casting preprocessed data...\n";
 	_dataCount = Rcpp::as<std::vector<int> >(data["data.count"]);
-	dout.level(3) << "# samples per intervention target: " << _dataCount << "\n";
+	dout.level(3) << "# samples per vertex: " << _dataCount << "\n";
 	_totalDataCount = Rcpp::as<uint>(data["total.data.count"]);
 	dout.level(3) << "Total # samples: " << _totalDataCount << "\n";
 	Rcpp::List scatter = data["scatter"];

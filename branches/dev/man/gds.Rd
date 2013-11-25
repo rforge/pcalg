@@ -1,6 +1,8 @@
 \name{gds}
 \alias{gds}
 \encoding{UTF-8}
+\concept{greedy DAG search}
+\concept{essential graph}
 \title{Greedily estimate the observational or interventional Markov equivalence 
   class of a DAG.}
 \description{
@@ -110,9 +112,5 @@ if (require(Rgraphviz)) {
   plot(gmInt$g, main = "True DAG")
 }
 }
-\keyword{greedy}
-\keyword{search}
-\keyword{DAG}
-\keyword{model}
-\keyword{essential}
-\keyword{graph}
+\keyword{models}
+\keyword{graphs}

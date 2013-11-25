@@ -1,6 +1,8 @@
 \name{r.gauss.pardag}
 \alias{r.gauss.pardag}
 \encoding{UTF-8}
+\concept{Gaussian causal model}
+\concept{random graph}
 \title{Generate a Gaussian Causal Model Randomly}
 \description{
   Generate a random Gaussian causal model.  Parameters specifying the 
@@ -106,8 +108,5 @@ any((B > 0 & B < 0.1) | B > 1)
 any(V < 0.5 | V > 1.5)
 diag(myDAG$cov.mat())
 }
-\keyword{random}
-\keyword{graph}
-\keyword{Gaussian}
-\keyword{causal}
-\keyword{model}
+\keyword{datagen}
+\keyword{graphs}

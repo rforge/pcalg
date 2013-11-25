@@ -1,6 +1,7 @@
 \name{rmvnorm.ivent}
 \alias{rmvnorm.ivent}
 \encoding{UTF-8}
+\concept{Gaussian causal model}
 \title{Simulate from a Gaussian Causal Model}
 \description{
   Produces one or more samples from the observational or an interventional
@@ -38,7 +39,5 @@ myDAG$cov.mat()
 var(rmvnorm.ivent(n = 1000, myDAG, target = 1, target.value = 1))
 myDAG$cov.mat(target = 1, ivent.var = 0)
 }
-\keyword{simulate}
-\keyword{Gaussian}
-\keyword{causal}
-\keyword{model}
+\keyword{datagen}
+\keyword{models}

@@ -1,6 +1,9 @@
 \name{ges}
 \alias{ges}
 \encoding{UTF-8}
+\concept{greedy equivalence search}
+\concept{essential graph}
+\concept{CPDAG}
 \title{Estimate the Markov equivalence class of a DAG using GES}
 \description{
   Estimate the observational essential graph representing the Markov 
@@ -132,12 +135,5 @@ if (require(Rgraphviz)) {
   plot(gmG$g, main = "True DAG")
 }
 }
-\keyword{GES}
-\keyword{greedy}
-\keyword{equivalence}
-\keyword{search}
-\keyword{DAG}
-\keyword{CPDAG}
-\keyword{model}
-\keyword{essential}
-\keyword{graph}
+\keyword{models}
+\keyword{graphs}
