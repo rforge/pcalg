@@ -1,28 +1,42 @@
 ## A version that works for "everyone" (not just Markus)
 ## *after* having installed or already reqquire()d  'pcalg':
 
-manualInst.vignette <- function(fstem) {
-    Rnw <- system.file("doc", paste(fstem,"Rnw", sep="."), package="pcalg")
-    if(interactive())
+manualInst.vignette <- function(fstem, verbose=FALSE) {
+    mkf <- function(ext) paste(fstem, ext, sep=".")
+    Rnw <- system.file("doc", mkf("Rnw"), package="pcalg")
+    if(interactive() && verbose)
         file.show(Rnw)
-    Sweave (Rnw)
-    tools::texi2pdf(paste(fstem, "tex", sep="."))
-    Stangle(Rnw)
-    ## and test if the code wokrs:
-    Rfile <- paste(fstem, "R", sep=".")
-    source(Rfile)
+    else message("Using file ", Rnw)
 
+    ## But we need to work from the *source*package: need *.bib, *.sty extra PDFs, etc
+    ## o.wd <- setwd(dirname(Rnw)); on.exit(setwd(o.wd))
     pkgSrcDir <-
         switch(Sys.getenv("USER"),
                "maechler" = "~/R/Pkgs/pcalg-dev",
                "kalischm" = ".....",    # PATH of pcalg-dev
-               stop("Must add your username in doc/sweaveCommand.R "))
+               stop("Must add your username / pcalg-source-directory in doc/sweaveCommand.R "))
+
+    o.wd <- setwd(file.path(pkgSrcDir, "vignettes")); on.exit(setwd(o.wd))
+
     ## Now manually "install" the vignette pdf and R :
+    Sweave (Rnw)
+    tools::texi2pdf(mkf("tex"))
+    Stangle(Rnw)
+    ## and test if the code works:
+    Rfile <- mkf("R")
+    source(Rfile)
+    message("\nend of source()ing file ", Rfile,"; wd= ",getwd(),"\n\n")
 
     (pkgDoc <- file.path(pkgSrcDir, "inst","doc"))
-    file.copy(c(Rnw, Rfile, paste(fstem, "pdf", sep=".")),
-              pkgDoc)
-    ## --> TRUE TRUE TRUE  if it works
+    f3 <- c(Rnw, Rfile, mkf("pdf"))
+    message("Now copying 3 files ", paste(f3, collapse=", "),
+            "\n --> to ",pkgDoc)
+    r <- file.copy(f3, pkgDoc, overwrite=TRUE)
+    ## cleanup all but pdf
+    file.remove(Rfile, mkf("tex"), # mkf("bbl"),
+                mkf("aux"), mkf("log"), mkf("out"), mkf("blg"),
+                list.files(patt=paste0(fstem, "-*\\.pdf$")))
+    r ## --> TRUE TRUE TRUE  if it works
 }
 
-stopifnot(manualInst.vignette(fstem = "pcalgDoc"))
+stopifnot(r <- manualInst.vignette(fstem = "pcalgDoc"))
