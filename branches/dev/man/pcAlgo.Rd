@@ -23,7 +23,7 @@ pcAlgo(dm = NA, C = NA, n=NA, alpha, corMethod = "standard",
     (partial) correlation estimation.
     "standard", "QnStable", "Qn" or "ogkQn" for standard and robust (based on
     the Qn scale estimator without and with OGK) correlation
-    estimation. For robust estimation, we recommend QnStable.}
+    estimation.  For robust estimation, we recommend \code{"QnStable"}.}
   \item{verbose}{0-no output, 1-small output, 2-details;using 1 and 2
   makes the function very much slower}
   \item{directed}{If \code{FALSE}, the underlying skeleton is computed;

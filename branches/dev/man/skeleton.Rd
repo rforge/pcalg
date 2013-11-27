@@ -7,15 +7,15 @@
 \description{
   If used in the PC algorithm, it estimates the order-independent
   \dQuote{skeleton} of a directed acyclic graph (DAG) from observational
-  data. When used in the FCI and RFCI algorithms, this function estimates
-  only an initial order-independent \dQuote{skeleton}. Because of the presence
-  of latent and selection variables, to find the final skeleton those
-  algorithms need to perform additional tests later on and consequently
-  some edges can be further deleted. 
+  data.  When used in the FCI and RFCI algorithms, this function estimates
+  only an initial order-independent \dQuote{skeleton}.  Because of the
+  presence of latent and selection variables, to find the final skeleton
+  those algorithms need to perform additional tests later on and
+  consequently some edges can be further deleted. 
 }
 \usage{
 skeleton(suffStat, indepTest, p, alpha, fixedGaps = NULL,
-fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
+         fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
 }
 \arguments{
   \item{suffStat}{Sufficient statistics: List containing all necessary

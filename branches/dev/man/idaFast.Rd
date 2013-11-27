@@ -27,7 +27,7 @@ idaFast(x.pos, y.pos.set, mcov, graphEst)
   \code{\link{ida}(x.pos, y.pos, mcov, graphEst, method="local",
     y.notparent=FALSE, verbose=FALSE)} for all values of \code{y.pos} in
   \code{y.pos.set} simultaneously, in an efficient way.
-  See the help file of \code{\link{ida}} for more details.  Note that the
+  See (the help about) \code{\link{ida}} for more details.  Note that the
   option \code{y.notparent = TRUE} is not implemented, since it is not
   clear how to do that efficiently without orienting all edges away from
   \code{y.pos.set} at the same time, which seems not to be
@@ -36,23 +36,12 @@ idaFast(x.pos, y.pos.set, mcov, graphEst)
 \value{
   Matrix with \code{length(y.pos.set)} rows.  Row \eqn{i} contains the multiset
   of estimated possible total causal effects of \code{x} on
-  \code{y.pos.set[i]}. Note that all multisets in the matrix have the
+  \code{y.pos.set[i]}.  Note that all multisets in the matrix have the
   same length, since the parents of \code{x} are the same for all elements
   of \code{y.pos.set}.
 }
 \references{
-  M.H. Maathuis, M. Kalisch, P. Buehlmann (2009).
-  Estimating high-dimensional intervention effects from observational data.
-  \emph{Annals of Statistics} \bold{37}, 3122--3164.
-
- Markus Kalisch, Martin Maechler, Diego Colombo, Marloes H. Maathuis,
-  Peter Buehlmann (2012). Causal Inference Using Graphical Models with
-  the R Package pcalg. \emph{Journal of Statistical Software}
-  \bold{47(11)} 1--26, \url{http://www.jstatsoft.org/v47/i11/}. 
-  
-  M.H. Maathuis, D. Colombo, M. Kalisch, P. Buehlmann (2010).
-  Predicting causal effects in large-scale systems from observational data.
-  \emph{Nature Methods, to appear}.
+  see the list in \code{\link{ida}}.
 }
 \author{Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 \seealso{\code{\link{pc}} for estimating a CPDAG, and

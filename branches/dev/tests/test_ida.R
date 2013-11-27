@@ -1,11 +1,10 @@
-# library(pcalg, lib.loc = "/sfs/u/staff/kalisch/research/packages/dev.Rcheck")
 library(pcalg)
 
 set.seed(123)
 nreps <- 100
-res <- rep(FALSE,nreps)
+res <- logical(nreps)
 all.eff.true <- res
-Rnd <- function(e) round(e, 14)
+Rnd <- function(e) round(e, 14)## get 14 digits accuracy, as we use true (DAG, cov)
 for (i in 1:nreps) {
   p <- 2 + rpois(1, lambda = 8) # ==>  p >= 2, E[p] = 10
   ## generate and draw random DAG :
@@ -13,8 +12,8 @@ for (i in 1:nreps) {
   myCPDAG <- dag2cpdag(myDAG)
   mcov <- trueCov(myDAG)
 
-  x <- sample(1:p, 1)
-  y <- sample(setdiff(1:p, x),1)
+  ## x != y  in {1,2,...p} ;
+  xy <- sample.int(p, 2); x <- xy[1]; y <- xy[2]
 
   ## plot(myCPDAG)
   eff.true <- Rnd(causalEffect(myDAG, y, x))

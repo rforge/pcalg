@@ -1,39 +1,30 @@
-\name{showEdgeList}
+\name{showEdgeList}% FIXME: "too much" in parallel with showAmat.Rd % (notably example)
 \alias{showEdgeList}
-%- Also NEED an '\alias' for EACH other topic documented here.
-\title{
-Show edge list of pcAlgo object
-}
+\title{Show Edge List of pcAlgo object}
 \description{
-  Show edge list of pcAlgo object; this is intended to be an alternative
-  if Rgraphviz does not work.
+  Show the list of edges (of the graph) of a pcAlgo object; this is
+  intended to be an alternative if \pkg{Rgraphviz} does not work.
 }
 \usage{
 showEdgeList(pc.fit, labels = NULL)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{pc.fit}{
-Object of class pcAlgo (as returned from \code{\link{skeleton}} or \code{\link{pc}})
+  \item{pc.fit}{object of class pcAlgo (as returned from
+    \code{\link{skeleton}} or \code{\link{pc}}).}
+  \item{labels}{optional labels for nodes; by default, the labels from the pcAlgo % 
+    object are used.}
 }
-  \item{labels}{
-    Optional labels for nodes; by default, the labels from the pcAlgo
-    object are used.
+\value{none; the purpose is in (the side effect of) printing
+  the edge list.
 }
-}
-\value{
-Print out of edge list.
-}
-\author{
-Markus Kalisch (\email{kalisch@stat.math.ethz.ch})
-}
+\author{Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 \note{
-There is no correspondin function for fciAlgo objects.
+  There is no corresponding function for fciAlgo objects.
 }
 \seealso{
-\code{\link{iplotPC}} for plotting a pcAlgo object using the package
-igraph; \code{\link{showAmat}} for showing the adjacency matrix of a
-pcAlgo object.
+  \code{\link{iplotPC}} for plotting a pcAlgo object using the package
+  \pkg{igraph}; \code{\link{showAmat}} for showing the adjacency matrix of a
+  pcAlgo object.
 }
 \examples{
 ## Load predefined data
@@ -57,10 +48,8 @@ showAmat(pc.fit)
 
 ## Plot using package igraph
 if (require(igraph)) {
-## show estimated CPDAG using igraph
-iplotPC(pc.fit)
+ ## show estimated CPDAG using igraph
+ iplotPC(pc.fit)
 }
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
 \keyword{graphs}

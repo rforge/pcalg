@@ -1,16 +1,14 @@
 \name{beta.special}
 \alias{beta.special}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{Compute set of intervention effects}
 \description{
   This function is DEPRECATED! Use \code{\link{ida}} instead.
 }
-
-\usage{ beta.special(dat=NA, x.pos, y.pos, verbose=0, a=0.01, myDAG=NA,
-myplot=FALSE, perfect=FALSE, method="local", collTest=TRUE, pcObj=NA,
-all.dags=NA, u2pd="rand") }
-
-%- maybe also 'usage' for other objects documented here.
+\usage{
+beta.special(dat=NA, x.pos, y.pos, verbose=0, a=0.01, myDAG=NA,
+             myplot=FALSE, perfect=FALSE, method="local", collTest=TRUE,
+             pcObj=NA, all.dags=NA, u2pd="rand") 
+}
 \arguments{
 \item{dat}{data matrix}
 \item{x.pos}{Column of x in dat}
