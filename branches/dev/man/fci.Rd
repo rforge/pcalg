@@ -1,15 +1,16 @@
 \name{fci}
 \alias{fci}
-\title{Estimate a Partial Ancestral Graph (PAG) using the FCI Algorithm}
+\title{Estimate a PAG, using the FCI-algorithm}
 \description{
-  Estimate a PAG from observational data, using the FCI-algorithm.
+  Estimate a Partial Ancestral Graph (PAG) from observational data, using
+  the FCI Algorithm.
 }
 
 \usage{
 fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, pdsep.max = Inf, rules
-= rep(TRUE, 10), doPdsep = TRUE, biCC = FALSE, conservative = FALSE,
-maj.rule = FALSE, labels = NA, type = "normal")
+    fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, pdsep.max = Inf,
+    rules = rep(TRUE, 10), doPdsep = TRUE, biCC = FALSE, conservative = FALSE,
+    maj.rule = FALSE, labels = NA, type = c("normal", "anytime", "adaptive"))
 }
 
 \arguments{
@@ -74,12 +75,12 @@ maj.rule = FALSE, labels = NA, type = "normal")
     conservative. For more information, see details.}  
   \item{labels}{Vector of length p with node names. If \code{NA},
     \code{as.character{1:p}} is used instead.}
-  \item{type}{It specifies the version of the FCI algorithm that has to be
-  used. Per default it is \code{normal} and so the normal FCI
-  algorithm is called. If set as \code{anytime}, the Anytime FCI is
-  called and in this case \code{m.max} must be specified. If set as
-  \code{adaptive}, the Adaptive Anytime FCI is called and in this
-  case m.max is not used. For more information, see Details.} 
+  \item{type}{character string specifying the version of the FCI
+  algorithm to be used.  By default, it is \code{"normal"}, and so the
+  normal FCI algorithm is called.  If set to \code{"anytime"}, the
+  \sQuote{Anytime FCI} is called and \code{m.max} needs to be specified.
+  If set to \code{"adaptive"}, the \sQuote{Adaptive Anytime FCI} is
+  called and \code{m.max} is not used.  For more information, see Details.} 
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
  \code{\linkS4class{fciAlgo}}) containing the estimated graph
@@ -128,7 +129,7 @@ maj.rule = FALSE, labels = NA, type = "normal")
   and \code{y} to decide whether the edge \code{x o-o y} should be removed.
   Therefore, the initial skeleton may contain some superfluous edges.
   These edges are removed in the next step of the algorithm which
-  requires some orientations. Therefore, the v-structures
+  requires some orientations.  Therefore, the v-structures
   are determined using the conservative method (see discussion on
   \code{conservative} below).
   
@@ -144,28 +145,28 @@ maj.rule = FALSE, labels = NA, type = "normal")
   marks (o) are determined using (a subset of) the 10 orientation rules
   given by Zhang (2009). 
 
-  The Anytime FCI algorithm was introduced by Spirtes (2001). It can be
-  viewed as a modification of the FCI algorithm that only performs
+  The \dQuote{Anytime FCI} algorithm was introduced by Spirtes (2001).  It
+  can be viewed as a modification of the FCI algorithm that only performs
   conditional independence tests up to and including order m.max when
   finding the initial skeleton, using the function \code{skeleton}, and
-  the final skeleton, using the function \code{pdsep}. Thus, Anytime FCI
-  performs fewer conditional independence tests than FCI. To use the Anytime
-  algorithm, one must specify m.max, the maximum size
-  of the conditioning sets, and set type = "anytime".
+  the final skeleton, using the function \code{pdsep}.  Thus, Anytime FCI
+  performs fewer conditional independence tests than FCI.  To use the
+  Anytime algorithm, one sets \code{type = "anytime"} and needs to
+  specify \code{m.max}, the maximum size of the conditioning sets.
 
-  The Adaptive Anytime FCI algorithm was introduced by Colombo et. al
-  (2012). The first part of the algorithm is identical to the normal
-  FCI described above. But in the second part when the final skeleton is
-  estimated using the function \code{pdsep}, the Adaptive Anytime FCI algorithm
-  only performs conditional independence tests up to and including order
-  m.max, where m.max is the maximum size of the conditioning sets that were
-  considered to determine the initial skeleton using the function
-  \code{skeleton}. Thus, m.max is chosen adaptively and does not have to
-  be specified by the user.
+  The \dQuote{Adaptive Anytime FCI} algorithm was introduced by Colombo
+  et. al (2012).  The first part of the algorithm is identical to the normal
+  FCI described above.  But in the second part when the final skeleton is
+  estimated using the function \code{\link{pdsep}}, the Adaptive Anytime
+  FCI algorithm only performs conditional independence tests up to and
+  including order \code{m.max}, where m.max is the maximum size of the
+  conditioning sets that were considered to determine the initial
+  skeleton using the function \code{skeleton}.  Thus, m.max is chosen
+  adaptively and does not have to be specified by the user.
 
-  Conservative versions of FCI, Anytime FCI, and Adaptive Anytime FCI
-  are computed if the argument of \code{conservative} is
-  \code{TRUE}. After the final skeleton is computed, all potential
+  \emph{Conservative} versions of FCI, Anytime FCI, and Adaptive Anytime FCI
+  are computed if \code{conservative = TRUE} is specified.  After the
+  final skeleton is computed, all potential 
   v-structures a-b-c are checked in the following way. We test whether a
   and c are independent conditioning on any subset of the neighbors of a
   or any subset of the neighbors of c. When a subset makes a and c
@@ -173,11 +174,11 @@ maj.rule = FALSE, labels = NA, type = "normal")
   such separating set or in all such separating sets, no further action
   is taken and the normal version of the FCI, Anytime FCI, or Adaptive
   Anytime FCI algorithm is continued. If, however, b is in only some
-  separating sets, the triple a-b-c is marked 'ambiguous'. If a is
+  separating sets, the triple a-b-c is marked \sQuote{ambiguous}. If a is
   independent of c given some S in the skeleton (i.e., the edge a-c
   dropped out), but a and c remain dependent given all subsets of
   neighbors of either a or c, we will call all triples a-b-c
-  'unambiguous'. This is because in the FCI algorithm, the true separating set
+  \sQuote{unambiguous}. This is because in the FCI algorithm, the true separating set
   might be outside the neighborhood of either a or c. An ambiguous
   triple is not oriented as a v-structure. Furthermore, no further
   orientation rule that needs to know whether a-b-c is a v-structure or
@@ -185,7 +186,7 @@ maj.rule = FALSE, labels = NA, type = "normal")
   quite strict towards the v-structures, Colombo and Maathuis (2013)
   introduced a less strict version for the v-structures called majority
   rule. This adaptation can be called using \code{maj.rule = TRUE}. In
-  this case, the triple a-b-c is marked as 'ambiguous' if and only if b
+  this case, the triple a-b-c is marked as \sQuote{ambiguous} if and only if b
   is in exactly 50 percent of such separating sets or no separating set
   was found. If b is in less than 50 percent of the separating sets it
   is set as a v-structure, and if in more than 50 percent it is set as a
@@ -195,8 +196,8 @@ maj.rule = FALSE, labels = NA, type = "normal")
   v-structures of the FCI algorithm are fully order-independent. 
 
   Note that the order-dependence issues on the 10 orientation rules are
-  still present, see Colombo and Maathuis (2013) for more details.}  
-
+  still present, see Colombo and Maathuis (2013) for more details.
+}  
 \references{
   D. Colombo and M.H. Maathuis (2013). Order-independent
   constraint-based causal structure learning. arXiv preprint
@@ -236,9 +237,11 @@ maj.rule = FALSE, labels = NA, type = "normal")
   the PC algorithm; \code{\link{pdsep}} for computing
   Possible-D-SEP for each node and testing and adapting the graph
   accordingly; \code{\link{qreach}} for a fast way of finding Possible-D-SEP
-    for a given node; \code{\link{gaussCItest}},
-  \code{\link{disCItest}}, \code{\link{binCItest}} and
-  \code{\link{dsepTest}} as examples for \code{indepTest}.
+  for a given node.
+
+  \code{\link{gaussCItest}}, \code{\link{disCItest}},
+  \code{\link{binCItest}} and \code{\link{dsepTest}} as examples for
+  \code{indepTest}. 
 }
 \author{
   Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch}).
