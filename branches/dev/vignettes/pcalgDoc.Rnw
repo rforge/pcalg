@@ -147,7 +147,7 @@ there also exists a generalization of GES to interventional data, GIES
 algorithms tell us which variables could or could not be a cause of
 some variable of interest. They do not, however, give information about the
 size of the causal effects. We therefore developed the IDA method
-\citep{BuKaMa09}, which can infer bounds on causal effects based on
+\citep{MaKaBu09}, which can infer bounds on causal effects based on
 observational data under some assumptions and in particular that no hidden
 and selection variables are present. IDA is a two step approach that
 combines the PC algorithm and Pearl's backdoor criterion \citep{Pearl93},
@@ -330,7 +330,7 @@ structure. In particular, we discuss algorithms for structure learning
 \end{itemize}
 
 In Section~\ref{sec:bounds} we first describe the IDA method
-\citep[see][]{BuKaMa09} to obtain bounds on causal effects from observational
+\citep[see][]{MaKaBu09} to obtain bounds on causal effects from observational
 data when no latent and selection variables are present. This method is
 based on first estimating the causal structure and then applying
 do-calculus \citep[see][]{Pearl00}. We then propose the generalized Pearl's
@@ -749,7 +749,7 @@ In addition to this fundamental limitation in estimating a causal effect,
 errors due to finite sample size blur the result as with every statistical
 method. Thus, we can typically only get an estimate of the set of possible
 causal values. It was shown that this estimate is consistent in sparse
-high-dimensional settings under some assumptions by \cite{BuKaMa09}.
+high-dimensional settings under some assumptions by \cite{MaKaBu09}.
 
 It has recently been shown empirically that despite the described
 fundamental limitations in identifying the causal effect uniquely and
@@ -819,7 +819,7 @@ assumptions are made.
   are linear; consistent in high-dimensional settings if the underlying DAG
   is sparse, the data is multivariate Normal and satisfies some regularity
   conditions on the partial correlations and conditional variances, and
-  $\alpha$ is taken to zero appropriately. See \cite{BuKaMa09} for full
+  $\alpha$ is taken to zero appropriately. See \cite{MaKaBu09} for full
   details.
 
 \item[Generalized Backdoor Criterion:] allows for arbitrarily many hidden
@@ -1691,7 +1691,7 @@ of $V_x$ on $V_y$ as above, using linear regression.
 At first sight, it is not clear that such a local configuration corresponds
 to a DAG in the equivalence class of the CPDAG, since it may be impossible
 to direct the remaining undirected edges without creating a directed cycle
-or a v-structure. However, \cite{BuKaMa09} showed
+or a v-structure. However, \cite{MaKaBu09} showed
 that there is at least one DAG in the equivalence class for each such local
 configuration.  As a result, it follows that the multisets of total causal
 effects of the \code{global} and the \code{local} method have the same unique

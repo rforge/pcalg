@@ -51,12 +51,14 @@ pcSelect(y, dm, alpha, corMethod = "standard",
 }
 
 \references{
-  Buehlmann, P., Kalisch, M. and Maathuis, M.H. (2009).
+  Buehlmann, P., Kalisch, M. and Maathuis, M.H. (2010).
   Variable selection for high-dimensional linear models:
   partially faithful distributions and the PC-simple algorithm.
-  \emph{To appear in Biometrika}.
+  \emph{Biometrika} \bold{97}, 261--278.
 }
-\seealso{\code{\link{pc}} which is the more general version of this function.
+\seealso{
+  \code{\link{pc}} which is the more general version of this function;
+  \code{\link{pcSelect.presel}} which applies \code{pcSelect()} twice.
 }
 \author{
   Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Martin Maechler.
