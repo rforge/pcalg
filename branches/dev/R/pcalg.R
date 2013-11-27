@@ -68,13 +68,12 @@ check.Rgraphviz <- function() {
 ##   xcov
 ## }
 
-trueCov <- function(myDAG)
+trueCov <- function(dag)
 {
-  wm <- wgtMatrix(myDAG)
-  p <- length(myDAG@nodes)
-  id <- diag(p)
-  tmp <- solve( id - wm )
-  tmp %*% t(tmp)
+  wm <- wgtMatrix(dag)
+  p <- length(dag@nodes)
+  ## SS'  where S = (I - W)^{-1} :
+  tcrossprod(solve(diag(p) - wm))
 }
 
 randomDAG <- function (n, prob, lB = 0.1, uB = 1)
@@ -142,11 +141,8 @@ randomDAG <- function (n, prob, lB = 0.1, uB = 1)
 
 wgtMatrix <- function(g, transpose = TRUE) {
   res <- as(g, "matrix")
-  if (transpose) {
-    return(t(res))
-  } else {
-    return(res)
-  }
+  if (transpose) ## default!
+      t(res) else res
 }
 
 rmvDAG <- function(n, dag, errDist = c("normal", "cauchy", "mix", "mixt3", "mixN100","t4"),
@@ -552,7 +548,8 @@ mcor <- function(dm, method =
          )
 }
 
-pcSelect.presel <- function(y,dm, alpha, alphapre, corMethod = "standard", verbose = 0, directed=FALSE)
+pcSelect.presel <- function(y,dm, alpha, alphapre, corMethod = "standard",
+                            verbose = 0, directed=FALSE)
 {
   ## Purpose: Find columns in dm, that have nonzero parcor with y given
   ## any other set of columns in dm with use of some kind of preselection
@@ -604,9 +601,10 @@ corGraph <- function(dm, alpha = 0.05, Cmethod = "pearson")
   ##          is to be  used for the test.  One of '"pearson"',
   ##          '"kendall"', or '"spearman"', can be abbreviated.
   ## ----------------------------------------------------------------------
-  ## Author: Markus Kalisch, Date: 30 Jan 2006, 12:08
+  ## Author: Markus Kalisch, Date: 30 Jan 2006; Martin Maechler (preserve cns)
 
   stopifnot(is.numeric(p <- ncol(dm)), p >= 2)
+  if(is.null(cns <- colnames(dm))) cns <- as.character(1:p)
   mat <- matrix(0, p,p)
   for (i in 1:(p-1)) {
     for (j in (i+1):p) {
@@ -615,7 +613,7 @@ corGraph <- function(dm, alpha = 0.05, Cmethod = "pearson")
     }
   }
   mat <- mat + t(mat)
-  rownames(mat) <- colnames(mat) <- 1:p
+  dimnames(mat) <- list(cns,cns)
   as(mat, "graphNEL")
 }
 
@@ -1214,8 +1212,7 @@ pcAlgo <- function(dm = NA, C = NA, n=NA, alpha, corMethod = "standard",
   ## - psepset: Also check possible sep sets.
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 26 Jan 2006; Martin Maechler
-  ## Modifications: Sarah Gerster, Date: July 2007
-  ## Modifications: Diego Colombo, Date: Sept 2009
+  ## Modifications: Sarah Gerster, Diego Colombo
 
   .Deprecated(msg = "pcAlgo() is deprecated and only kept for backward compatibility.
  Please use skeleton, pc, or fci instead\n")
@@ -1356,9 +1353,8 @@ pcAlgo <- function(dm = NA, C = NA, n=NA, alpha, corMethod = "standard",
 
   if (psepset) {
     amat <- G
-    amat[amat==TRUE] <- 1
-    amat[amat==FALSE] <- 0
-    ind <- which(amat==1, arr.ind=TRUE)
+    ind <- which(G, arr.ind=TRUE)
+    storage.mode(amat) <- "integer" # (TRUE , FALSE) -->  (1, 0)
     ## Orient colliders
     for (i in seq_len(nrow(ind))) {
       x <- ind[i,1]
@@ -2689,8 +2685,6 @@ pcAlgo.Perfect <- function(C, cutoff= 1e-8, corMethod = "standard", verbose = 0,
   ## Modification: Diego Colombo, Sept 2009
   ## backward compatibility
   stopifnot((p <- nrow(C)) >= 2)
-  if (verbose==FALSE) verbose <- 0
-  if (verbose==TRUE) verbose <- 1
   cl <- match.call()
   seq_p <- 1:p
   pcMin <- matrix(Inf, p,p)
@@ -2764,26 +2758,25 @@ pcAlgo.Perfect <- function(C, cutoff= 1e-8, corMethod = "standard", verbose = 0,
 
   if (psepset) {
     amat <- G
-    amat[amat==TRUE] <- 1
-    amat[amat==FALSE] <- 0
-    ind <- which(amat==1, arr.ind=TRUE)
+    ind <- which(G, arr.ind=TRUE)
+    storage.mode(amat) <- "integer" # (TRUE , FALSE) -->  (1, 0)
     ## Orient colliders
     for (i in seq_len(nrow(ind))) {
       x <- ind[i,1]
       y <- ind[i,2]
-      allZ <- setdiff(which(amat[y,]==1),x) ## x-y-z
+      allZ <- setdiff(which(amat[y,]==1L),x) ## x-y-z
 
       if (length(allZ)>0) {
         for (j in seq_along(allZ)) {
           z <- allZ[j]
-          if ((amat[x,z]==0) && !((y %in% sepset[[x]][[z]]) |(y %in% sepset[[z]][[x]]))) {
+          if ((amat[x,z]==0L) && !((y %in% sepset[[x]][[z]]) |(y %in% sepset[[z]][[x]]))) {
             if (verbose == 2) {
               cat("\n",x,"*->",y,"<-*",z,"\n")
               cat("Sxz=",sepset[[z]][[x]],"and","Szx=",sepset[[x]][[z]],"\n")
             }
 
             ## x o-> y <-o z
-            amat[x,y] <- amat[z,y] <- 2
+            amat[x,y] <- amat[z,y] <- 2L
 
           } ## if
         } ## for
@@ -2793,9 +2786,9 @@ pcAlgo.Perfect <- function(C, cutoff= 1e-8, corMethod = "standard", verbose = 0,
     ## Compute poss. sepsets
     for (x in 1:p) {
       attr(x,'class') <- 'possibledsep'
-      if (any(amat[x,]!=0)){
+      if (any(amat[x,]!=0L)){
         tf1 <- setdiff(reach(x,-1,-1,amat),x)
-        for (y in seq_p[amat[x,]!=0]) {
+        for (y in seq_p[amat[x,]!=0L]) {
           ## tf = possible_d_sep(amat,x,y)
           tf <- setdiff(tf1,y)
           ## test
@@ -2806,7 +2799,7 @@ pcAlgo.Perfect <- function(C, cutoff= 1e-8, corMethod = "standard", verbose = 0,
             }
             if (abs(pc.val) <= cutoff) {
               ## delete x-y
-              amat[x,y] <- amat[y,x] <- 0
+              amat[x,y] <- amat[y,x] <- 0L
               ## save pos d-sepset in sepset
               sepset[[x]][[y]] <- tf
               if (verbose==2){
@@ -2820,8 +2813,9 @@ pcAlgo.Perfect <- function(C, cutoff= 1e-8, corMethod = "standard", verbose = 0,
         }
       }
     }
-    G[amat==0] <- FALSE
-    G[amat==1] <- TRUE
+    
+    G[amat==0L] <- FALSE
+    G[amat==1L] <- TRUE
   } ## end if(psepset)
 
   if(verbose>=1) { cat("Final graph adjacency matrix:\n"); print(symnum(G)) }
@@ -2947,8 +2941,9 @@ plotAG <- function(amat)
   Rgraphviz::renderGraph(Rgraphviz::layoutGraph(g))
 }
 
-skeleton <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE) {
-
+skeleton <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL, fixedEdges = NULL,
+                     NAdelete = TRUE, m.max = Inf, verbose = FALSE)
+{
   ## Purpose: Perform undirected part of PC-Algorithm, i.e.,
   ## estimate skeleton of DAG given data
   ## Order-independent version! NEU
@@ -2969,7 +2964,7 @@ skeleton <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL, fixedEdges
   ## - G, sepset, pMax, ord, n.edgetests
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 09.12.2009
-  ## Modification: Diego Colombo, Date: 16.11.2012
+  ## Modification: Diego Colombo
 
   ## x,y,S konstruieren
   ##-   tst <- try(indepTest(x,y,S, obj))
@@ -3093,7 +3088,8 @@ skeleton <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL, fixedEdges
 
 
 pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-               fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "relaxed",
+               fixedEdges = NULL, NAdelete = TRUE, m.max = Inf,
+               u2pd = c("relaxed", "rand", "retry"),
                conservative = FALSE, maj.rule = FALSE, solve.confl=FALSE)
 {
   ## Purpose: Perform PC-Algorithm, i.e., estimate skeleton of DAG given data
@@ -3118,38 +3114,41 @@ pc <- function(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   ## - conservative: If TRUE, conservative PC is done
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 26 Jan 2006; Martin Maechler
-  ## Modifications: Sarah Gerster, Date: July 2007
-  ## Modifications: Diego Colombo, Date: Sept 2009
-  ## Modifications: Markus Kalisch, Date: Dec 2009
-  ## Modifications: Diego Colombo, Date: Aug 2013
+  ## Modifications: Sarah Gerster, Diego Colombo, Markus Kalisch
 
   ## Initial Checks
   cl <- match.call()
+  u2pd <- match.arg(u2pd)
+  if(u2pd != "relaxed") {
+    if (conservative || maj.rule)
+      stop("Conservative PC and majority rule PC can only be run with 'u2pd = relaxed'")
 
-  if ((conservative  || maj.rule ) & u2pd != "relaxed") stop("Conservative PC and majority rule PC can only be run with 'u2pd = relaxed'")
+    if (solve.confl)
+      stop("Versions of PC using lists for the orientation rules (and possibly bi-directed edges)\n can only be run with 'u2pd = relaxed'")
+  }
 
-  if (solve.confl  && u2pd != "relaxed") stop("Versions of PC using lists for the orientation rules (and possibly bi-directed edges) can only be run with 'u2pd = relaxed'")
-
-  if (conservative  && maj.rule ) stop("Choose either conservative PC or majority rule PC!")
+  if (conservative && maj.rule) stop("Choose either conservative PC or majority rule PC!")
 
   ## Skeleton
-  skel <- skeleton(suffStat, indepTest, p, alpha, fixedGaps = fixedGaps, fixedEdges = fixedEdges, NAdelete = NAdelete, m.max = m.max, verbose = verbose)
+  skel <- skeleton(suffStat, indepTest, p, alpha, fixedGaps=fixedGaps,
+                   fixedEdges=fixedEdges, NAdelete=NAdelete, m.max=m.max, verbose=verbose)
 
   ## Orient edges
   if (!conservative && !maj.rule) {
     switch (u2pd,
             "rand" = udag2pdag(skel),
             "retry" = udag2pdagSpecial(skel)$pcObj,
-            "relaxed" = udag2pdagRelaxed(skel, verbose = verbose, solve.confl = solve.confl))
+            "relaxed" = udag2pdagRelaxed(skel, verbose=verbose, solve.confl=solve.confl))
   }
-  else {
+  else { ## u2pd "relaxed" : conservative _or_ maj.rule
+
     ## version.unf defined per default
     ## Tetrad CPC works with version.unf=c(2,1)
     ## see comment on pc.cons.intern for description of version.unf
-    tmp <- pc.cons.intern(skel, suffStat, indepTest, alpha, verbose=verbose, version.unf=c(2,1), maj.rule=maj.rule)
-    tripleList <- tmp$unfTripl
-    skel <- tmp$sk
-    udag2pdagRelaxed(gInput=skel, verbose=verbose, unfVect=tripleList, solve.confl=solve.confl)
+    pc. <- pc.cons.intern(skel, suffStat, indepTest, alpha, verbose=verbose,
+                          version.unf=c(2,1), maj.rule=maj.rule)
+    tripleList <- pc.$unfTripl
+    udag2pdagRelaxed(pc.$sk, verbose=verbose, unfVect=tripleList, solve.confl=solve.confl)
   }
 }
 
@@ -3690,7 +3689,7 @@ gaussCItest <- function(x,y,S,suffStat) {
 }
 
 
-dsep <- function(a,b, S, g, john.pairs=NULL)
+dsep <- function(a,b, S=NULL, g, john.pairs=NULL)
 {
   ## Purpose: Are the set a and the set b d-separeted given the set S?
   ## ----------------------------------------------------------------------
@@ -3716,7 +3715,7 @@ dsep <- function(a,b, S, g, john.pairs=NULL)
 
   ## find ancestor graph of nodeUnion
   anc.set <- NULL
-  for (i in 1:p) {
+  for (i in seq_len(p)) {
     desc.nodes <- my.nodes[which(john.pairs[i,]<Inf)]
     if (any(desc.nodes %in% nodeUnion)) anc.set <- c(anc.set,my.nodes[i])
   } ## for (i in 1:p)
@@ -3763,7 +3762,7 @@ dsep <- function(a,b, S, g, john.pairs=NULL)
 
 
 ## Orakel
-dsepTest <- function(x,y,S,suffStat) {
+dsepTest <- function(x,y, S=NULL, suffStat) {
   ## suffStat$g: True graph (graphNEL suffStatect)
   ## suffStat$jp: johnson all pairs
   ## Return "P-value"
@@ -3805,7 +3804,7 @@ binCItest <- function(x,y,S,suffStat) {
 
 
 
-ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
+ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
                 y.notparent = FALSE, verbose=FALSE, all.dags=NA)
 {
   ## Purpose: Estimate the causal effect of x on y; the graphEst and correlation
@@ -3828,8 +3827,12 @@ ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
   ## ----------------------------------------------------------------------
   ## Value: causal values
   ## ----------------------------------------------------------------------
-  ## Author: Markus Kalisch, Date: 7 Jan 2010, 11:18
+  ## Author: Markus Kalisch, Date: 7 Jan 2010; tweaks: Martin Maechler
 
+  stopifnot(x.pos == (x <- as.integer(x.pos)),
+            y.pos == (y <- as.integer(y.pos)),
+            length(x) == 1, length(y) == 1)
+  method <- match.arg(method)
   tmpColl <- FALSE
 
   ## prepare adjMatrix and skeleton
@@ -3846,30 +3849,30 @@ ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
     ## find unique parents of x
     wgt.est <- (wgtMatrix(graphEst)!=0)
     if (y.notparent) {
-      ## Direct edge btw. x.pos and y.pos towards y.pos
-      wgt.est[x.pos, y.pos] <- FALSE
+      ## Direct edge btw. x and y towards y
+      wgt.est[x, y] <- FALSE
     }
     tmp <- wgt.est-t(wgt.est)
     tmp[which(tmp<0)] <- 0
     wgt.unique <- tmp
-    pa1 <- which(wgt.unique[x.pos,]!=0)
-    if (y.pos %in% pa1) {
+    pa1 <- which(wgt.unique[x,]!=0)
+    if (y %in% pa1) {
       ## x is parent of y -> zero effect
       beta.hat <- 0
-    } else { ## y.pos not in pa1
+    } else { ## y not in pa1
       ## find ambiguous parents of x
       wgt.ambig <- wgt.est-wgt.unique
-      pa2 <- which(wgt.ambig[x.pos,]!=0)
+      pa2 <- which(wgt.ambig[x,]!=0)
       if (verbose) {
-        cat("\n\nx=",x.pos,"y=",y.pos,"\n")
+        cat("\n\nx=",x,"y=",y,"\n")
         cat("pa1=",pa1,"\n")
         cat("pa2=",pa2,"\n")
       }
 
       ## estimate beta
       if (length(pa2)==0) {
-        beta.hat <- lm.cov(mcov,y.pos,c(x.pos,pa1))
-        if (verbose) cat("Fit - y:",y.pos,"x:",c(x.pos,pa1),
+        beta.hat <- lm.cov(mcov,y,c(x,pa1))
+        if (verbose) cat("Fit - y:",y,"x:",c(x,pa1),
                          "|b.hat=",beta.hat,"\n")
       } else {
         ## at least one undirected parent
@@ -3879,26 +3882,26 @@ ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
         ## no member of pa2
         pa2.f <- pa2
         pa2.t <- NA
-        tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
+        tmpColl <- check.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)
         if (!tmpColl) {
-          beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1))
-          if (verbose) cat("Fit - y:",y.pos,"x:",c(x.pos,pa1),
+          beta.hat[ii] <- lm.cov(mcov,y,c(x,pa1))
+          if (verbose) cat("Fit - y:",y,"x:",c(x,pa1),
                            "|b.hat=",beta.hat[ii],"\n")
         }
         ## exactly one member of pa2
         for (i2 in seq_along(pa2)) {
           pa2.f <- pa2[-i2]
           pa2.t <- pa2[i2]
-          tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
+          tmpColl <- check.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)
           if (!tmpColl) {
             ii <-  ii+1
-            if (y.pos %in% pa2.t) {
+            if (y %in% pa2.t) {
               beta.hat[ii] <- 0
             } else {
-              beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1,pa2[i2]))
-              if (verbose) cat("Fit - y:",y.pos,"x:",c(x.pos,pa1,pa2[i2]),
+              beta.hat[ii] <- lm.cov(mcov,y,c(x,pa1,pa2[i2]))
+              if (verbose) cat("Fit - y:",y,"x:",c(x,pa1,pa2[i2]),
                                "|b.hat=",beta.hat[ii],"\n")
-            } ## if (y.pos %in% pa2.t)
+            } ## if (y %in% pa2.t)
           } ## if (!tmpColl)
         } ## for (i2 in seq_along(pa2))
 
@@ -3910,22 +3913,22 @@ ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
             for (j in 1:n.comb) {
               pa2.f <- setdiff(pa2,pa.tmp[,j])
               pa2.t <- pa.tmp[,j]
-              tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
+              tmpColl <- check.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)
               if (!tmpColl) {
                 ii <- ii+1
-                if (y.pos %in% pa2.t) {
+                if (y %in% pa2.t) {
                   beta.hat[ii] <- 0
                 } else {
-                  beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1,pa.tmp[,j]))
+                  beta.hat[ii] <- lm.cov(mcov,y,c(x,pa1,pa.tmp[,j]))
                   if (verbose)
-                    cat("Fit - y:",y.pos,"x:",c(x.pos,pa1,pa.tmp[,j]),
+                    cat("Fit - y:",y,"x:",c(x,pa1,pa.tmp[,j]),
                         "|b.hat=",beta.hat[ii],"\n")
                 }
               } ## if (!tmpColl)
             } ## for (j in 1:n.comb)
           } ## for (i in 2:length(pa2))
       } ## if (length(pa2) == 0)
-    } ## if (y.pos %in% pa1)
+    } ## if (y %in% pa1)
 
   } else {
 ##############################
@@ -3936,8 +3939,8 @@ ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
     am.pdag <- wgtMatrix(graphEst)
     am.pdag[am.pdag!=0] <- 1
     if (y.notparent) {
-      ## Direct edge btw. x.pos and y.pos towards y.pos
-      am.pdag[x.pos, y.pos] <- 0
+      ## Direct edge btw. x and y towards y
+      am.pdag[x, y] <- 0
     }
 
     ## find all DAGs if not provided externally
@@ -3948,27 +3951,27 @@ ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
       ## compute effect for every DAG
       gDag <- as(matrix(ad[i,],p,p),"graphNEL")
       ## path from y to x
-      ## rev.pth <- RBGL::sp.between(gDag,as.character(y.pos),
-      ##                    as.character(x.pos))[[1]]$path
+      ## rev.pth <- RBGL::sp.between(gDag,as.character(y),
+      ##                    as.character(x))[[1]]$path
       ## if (length(rev.pth)>1) {
       ## if reverse path exists, beta=0
       ##  beta.hat[i] <- 0
       ## } else {
       ## path from x to y
-      ##       pth <- RBGL::sp.between(gDag,as.character(x.pos),
-      ##                       as.character(y.pos))[[1]]$path
+      ##       pth <- RBGL::sp.between(gDag,as.character(x),
+      ##                       as.character(y))[[1]]$path
       ##   if (length(pth)<2) {
       ## sic! There is NO path from x to y
       ##   beta.hat[i] <- 0
       ## } else {
       ## There is a path from x to y
       wgt.unique <- t(matrix(ad[i,],p,p)) ## wgt.est is wgtMatrix of DAG
-      pa1 <- which(wgt.unique[x.pos,]!=0)
-      if (y.pos %in% pa1) {
+      pa1 <- which(wgt.unique[x,]!=0)
+      if (y %in% pa1) {
         beta.hat[i] <- 0
       } else {
-        beta.hat[i] <- lm.cov(mcov,y.pos,c(x.pos,pa1))
-        if (verbose) cat("Fit - y:",y.pos,"x:",c(x.pos,pa1),
+        beta.hat[i] <- lm.cov(mcov,y,c(x,pa1))
+        if (verbose) cat("Fit - y:",y,"x:",c(x,pa1),
                          "|b.hat=",beta.hat[i],"\n")
       }
     } ## for ( i  n.dags)
@@ -3976,7 +3979,7 @@ ida <- function(x.pos,y.pos,mcov,graphEst,method="local",
   beta.hat
 }
 
-idaFast <- function(x.pos,y.pos.set,mcov,graphEst)
+idaFast <- function(x.pos, y.pos.set, mcov, graphEst)
 {
   ## Purpose: Estimate the causal effect of x on each element in the
   ## set y using the local method; graphEst and correlation matrix
@@ -4149,7 +4152,8 @@ plotSG <- function(graphObj, y, dist, amat = NA, directed = TRUE,
 
 ##Functions used by all algorithms
 ##########################################################
-pc.cons.intern <- function(sk, suffStat, indepTest, alpha, verbose=FALSE, version.unf=c(NA,NA), maj.rule=FALSE)
+pc.cons.intern <- function(sk, suffStat, indepTest, alpha, verbose=FALSE,
+                           version.unf=c(NA,NA), maj.rule=FALSE)
 {
   ## Purpose:  For any unshielded triple A-B-C, consider all subsets D of
   ## the neighbors of A and of the neighbors of C, and record the sets
@@ -4188,8 +4192,7 @@ pc.cons.intern <- function(sk, suffStat, indepTest, alpha, verbose=FALSE, versio
   ##        - sk: updated skelet object, sepsets might have been updated
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 12 Feb 2010, 10:43
-  ## Modification: Diego Colombo, Date: 6 May 2010, 9:13
-  ## Modification: Diego Colombo, Date: 27 March 2013, 12.46
+  ## Modifications: Diego Colombo
 
   g <- as(sk@graph,"matrix")
   stopifnot(all(g==t(g))) ## g is guaranteed to be symmetric
@@ -4298,8 +4301,7 @@ checkTriple <- function(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC, suffStat, indep
   ##        - sepsetA and sepsetC: updated separation sets
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 12 Feb 2010, 12:13
-  ## Modification: Diego Colombo, Date: 23 Apr 2010, 11:48
-  ## Modification: Diego Colombo, Date: 27 March 2013, 12:55
+  ## Modifications: Diego Colombo
 
 
     ## loop through all subsets of parents
@@ -4476,8 +4478,9 @@ triple2numb <- function(p,i,j,k)
   ## ----------------------------------------------------------------------
   ## Arguments:-p:number of nodes;-triple: i-j-k
   ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 11 May 2010, 15:35
-  as.numeric(k) + as.numeric(p)*(as.numeric(j) + as.numeric(p)*as.numeric(i))
+  ## Author: Diego Colombo, Date: 11 May 2010
+  ## as.numeric(.): not integer arithmetic which easily overflows
+  k + (p. <- as.numeric(p)) * (j + p.*i)
 }
 
 ##Functions for R4, R5, and R9-R10 for FCI(all) and RFCI
@@ -4492,17 +4495,12 @@ updateList <- function(path, set, old.list)
   ##            - set: (integer) index set of variables to be added to path
   ##            - old.list: the list to update
   ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 21 Oct 2011, 11:41
-
-  n <- length(old.list)
-  for (i in seq_along(set)) {
-    old.list[[n+i]] <- c(path,set[i])
-  }
-  return(old.list)
+  ## Author: Diego Colombo, Date: 21 Oct 2011; Rewritten w/o for() by Martin Maechler
+  c(old.list, lapply(set, function(s) c(path,s)))
 }
 
 ##R9-R10
-minUncovPdPath <- function(p, pag = NA, path = NA, unfVect = NA, verbose = FALSE)
+minUncovPdPath <- function(p, pag, path, unfVect, verbose = FALSE)
 {
   ## Purpose: find a minimal uncovered pd path for a,b,c saved in path.
   ## Check also for the conservative case that it is unambiguous
@@ -4519,10 +4517,12 @@ minUncovPdPath <- function(p, pag = NA, path = NA, unfVect = NA, verbose = FALSE
   a <- path[1]
   b <- path[2]
   c <- path[3]
-  visited[a] <- visited[b] <- visited[c] <- TRUE
+  visited[path] <- TRUE
   min.upd.path <- NA
-  ##find all neighbours of b not visited yet
-  indD <- which((pag[b,] == 1 | pag[b,] == 2) & (pag[,b] == 1 | pag[,b] == 3) & (pag[,a] == 0) & !visited)
+  ## find all neighbours of b not visited yet
+  indD <- which((pag[b,] == 1 | pag[b,] == 2) &
+                (pag[,b] == 1 | pag[,b] == 3) &
+                (pag[,a] == 0) & !visited)
   if (length(indD) > 0) {
     path.list <- updateList(b, indD, NULL)
     done <- FALSE
@@ -4534,15 +4534,16 @@ minUncovPdPath <- function(p, pag = NA, path = NA, unfVect = NA, verbose = FALSE
       d <- min.path[m]
       path.list[[1]] <- NULL
       visited[d] <- TRUE
-      if ((pag[d,c] == 1 || pag[d,c] == 2) && (pag[c,d] == 1 || pag[c,d] == 3)) {
-        ##pd path found
+      if (any(pag[d,c] == 1:2) && any(pag[c,d] == c(1,3))) {
+        ## pd path found
         min.path <- c(a,min.path,c)
         n <- length(min.path)
         ##check the path to be uncovered
         check.uncov <- 0
-        for (l in 1:(n - 2)) {
-          if (pag[min.path[l], min.path[l + 2]] == 0 && pag[min.path[l + 2], min.path[l]] == 0) {
-            check.uncov <- check.uncov
+        for (l in seq_len(n - 2)) {
+          if (pag[min.path[l], min.path[l + 2]] == 0 &&
+              pag[min.path[l + 2], min.path[l]] == 0) {
+            ## check.uncov <- check.uncov
           }
           else {
             check.uncov <- check.uncov + 1
@@ -4570,7 +4571,8 @@ minUncovPdPath <- function(p, pag = NA, path = NA, unfVect = NA, verbose = FALSE
       else {
         ##d and c are either not connected or connected with a "wrong" edge -----> search iteratively
         ##find all neighbours of d not visited yet
-        indR <- which((pag[d,] == 1 | pag[d,] == 2) & (pag[,d] == 1 | pag[,d] == 3) & !visited)
+        indR <- which((pag[d,] == 1 | pag[d,] == 2) &
+                      (pag[,d] == 1 | pag[,d] == 3) & !visited)
         if (length(indR) > 0) {
           ##update the queues
           path.list <- updateList(min.path, indR, path.list)
@@ -4582,7 +4584,7 @@ minUncovPdPath <- function(p, pag = NA, path = NA, unfVect = NA, verbose = FALSE
 }
 
 ##R5
-minUncovCircPath <- function(p, pag = NA, path = NA, unfVect= NA, verbose = FALSE)
+minUncovCircPath <- function(p, pag, path, unfVect, verbose = FALSE)
 {
   ## Purpose: find a minimal uncovered circle path for a,b,c,d saved in path.
   ## Check also for the conservative case that it is unambiguous
@@ -4596,11 +4598,11 @@ minUncovCircPath <- function(p, pag = NA, path = NA, unfVect= NA, verbose = FALS
   ## Author: Diego Colombo, Date: 19 Oct 2011, 13:11
 
   visited <- rep(FALSE, p)
+  visited[path] <- TRUE # (a,b,c,d) all 'visited'
   a <- path[1]
   c <- path[2]
   d <- path[3]
   b <- path[4]
-  visited[a] <- visited[b] <- visited[c] <- visited[d] <- TRUE
   min.ucp.path <- NA
   ##find all neighbours of c not visited yet
   indX <- which(pag[c,] == 1 & pag[,c] == 1 & !visited) ## c o-o x
@@ -4663,7 +4665,7 @@ minUncovCircPath <- function(p, pag = NA, path = NA, unfVect= NA, verbose = FALS
 }
 
 ##R4
-find.min.discr.path <- function(pag = NA, path = NA, verbose = FALSE)
+find.min.discr.path <- function(pag, path, verbose = FALSE)
 {
   ## Purpose: find a minimal discrimating path for a,b,c saved in path.
   ## If a path exists this is the output, otherwise NA
@@ -4675,18 +4677,17 @@ find.min.discr.path <- function(pag = NA, path = NA, verbose = FALSE)
 
   p <- as.numeric(dim(pag)[1])
   visited <- rep(FALSE, p)
+  visited[path] <- TRUE # {a,b,c} "visited"
   a <- path[1]
   b <- path[2]
   c <- path[3]
-  visited[a] <- visited[b] <- visited[c] <- TRUE
   min.discr.path <- NA
   ##find all neighbours of a not visited yet
   indD <- which(pag[a,] != 0 & pag[,a] == 2 & !visited) ## d *-> a
   if (length(indD) > 0) {
     path.list <- updateList(a, indD, NULL)
-    done <- FALSE
     min.path <- NA
-    while ((length(path.list) > 0) && (!done)) {
+    while (length(path.list) > 0) {
       ##next element in the queue
       min.path <- path.list[[1]]
       m <- length(min.path)
@@ -4723,7 +4724,8 @@ find.min.discr.path <- function(pag = NA, path = NA, verbose = FALSE)
 fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
                  fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, pdsep.max = Inf,
                  rules = rep(TRUE, 10), doPdsep = TRUE, biCC = FALSE,
-                 conservative = FALSE, maj.rule = FALSE, labels = NA, type = "normal")
+                 conservative = FALSE, maj.rule = FALSE, labels = NA,
+                 type = c("normal", "anytime", "adaptive"))
 {
   ## Purpose: Perform FCI-Algorithm, i.e., estimate PAG
   ## ----------------------------------------------------------------------
@@ -4765,10 +4767,9 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
     else {
         labels <- as.character(1:p)
     }
-    ##Check that the type is a valid one
-    if ((type != "normal") && (type != "anytime") && (type != "adaptive")) {
-        stop("Input variable type is misspecified.")
-    }
+    ## Check that the type is a valid one
+    type <- match.arg(type)
+
     ##Check that if someone chooses the Anytime FCI, m.max must be given
     if ((type == "anytime") && (m.max == Inf)) {
         stop("To use the Anytime FCI you must specify m.max.")
@@ -4796,10 +4797,9 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
     tripleList <- NULL
 
     if (doPdsep) {
-        if (verbose) {
-            cat("\nCompute PDSEP\n=============\n")
-        }
-        tmp <- pc.cons.intern(skel, suffStat, indepTest, alpha, verbose = verbose, version.unf = c(1, 1), maj.rule=FALSE)
+        if (verbose) cat("\nCompute PDSEP\n=============\n")
+        tmp <- pc.cons.intern(skel, suffStat, indepTest, alpha,
+                              verbose = verbose, version.unf = c(1, 1), maj.rule=FALSE)
         tripleList.pdsep <- tmp$unfTripl
         ##update the sepsets
         sepset <- tmp$sk@sepset
@@ -4824,7 +4824,8 @@ fci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NUL
                              n = integer(0), max.ord = as.integer(max.ordSKEL),
                              n.edgetests = n.edgetestsSKEL, sepset = sepset,
                              pMax = pMax, zMin = matrix(NA, 1, 1))
-            sk.pdsep <- pc.cons.intern(tmp.pdsep, suffStat, indepTest, alpha, verbose = verbose, version.unf = c(1, 1), maj.rule = maj.rule)
+            sk.pdsep <- pc.cons.intern(tmp.pdsep, suffStat, indepTest, alpha,
+                                       verbose = verbose, version.unf = c(1, 1), maj.rule = maj.rule)
             tripleList <- sk.pdsep$unfTripl
             ##update the sepsets
             sepset <- sk.pdsep$sk@sepset
@@ -4969,8 +4970,8 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = In
   ## - pMax: Updated pMax
   ## - allPdsep: Possible d-sep for each node [list]
   ## ----------------------------------------------------------------------
-  ## Author: Markus Kalisch, Date:  9 Dec 2009, 16:01
-  ## Modification: Diego Colombo, Date: 23 Nov 2010, 13:14
+  ## Author: Markus Kalisch, Date:  9 Dec 2009
+  ## Modification: Diego Colombo
 
   G <- (as(skel, "matrix") != 0)
   n.edgetests <- rep(0, 1000)
@@ -4982,11 +4983,10 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = In
       conn.comp[[ii]] <- as.numeric(conn.comp[[ii]])
     }
   }
-  if (sum(G) > 0) {
+  if (any(G)) {
     amat <- G
-    amat[amat==TRUE] <- 1
-    amat[amat==FALSE] <- 0
-    ind <- which(amat==1, arr.ind=TRUE)
+    ind <- which(G, arr.ind=TRUE)
+    storage.mode(amat) <- "integer" # (TRUE , FALSE) -->  (1, 0)
     ##Orient colliders
     if (verbose) cat("\nCompute collider:\n")
     for (i in seq_len(nrow(ind))) {
@@ -5011,9 +5011,8 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = In
               if (!any(unfVect==triple2numb(p,x,y,z), na.rm=TRUE) &&
                   !any(unfVect==triple2numb(p,z,y,x), na.rm=TRUE)) {
                 amat[x, y] <- amat[z, y] <- 2
-                if (verbose) {
+                if (verbose)
                   cat("\n",x,"*->", y, "<-*", z, "\n")
-                }
               }
             }
           }
@@ -6843,25 +6842,35 @@ dag2pag <- function(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), 
       sepset = sepset, pMax = pMax, allPdsep = allPdsep)
 } # {dag2pag}
 
+##' Perform undirected part of oracle FCI-Algorithm, i.e.,
+##' estimate skeleton of PAG given the true DAG
+##'
+##' .. content for \details{} ..
+##' @title 
+##' @param suffStat  info for the tests
+##' @param indepTest info for the tests
+##' @param graph the true DAG
+##' @param ancList list containing the ancestors of each node in the graph
+##' @param L array containing the latent variables (columns in the adjacency matrix)
+##' @param alpha Significance level of individual partial correlation tests
+##' @param NAdelete delete edge if pval=NA (for discrete data)
+##' @param verbose 0 - no output, 1 - detailed output
+##' @return "pcAlgo" object : (G, sepset, pMax, ord, n.edgetests)
+##' @author  Diego Colombo, 2011; speedup: Martin Maechler, Nov.2013
 skeleton.dag2pag <- function(suffStat, indepTest, graph, ancList, L, alpha,
-                             NAdelete = TRUE, verbose = FALSE) {
+                             NAdelete = TRUE, verbose = FALSE)
+{
+  ## Currently exported but undocumented, used only in  dag2pag()
 
-  ## Purpose: Perform undirected part of oracle FCI-Algorithm, i.e.,
-  ## estimate skeleton of PAG given the true DAG
-  ## ----------------------------------------------------------------------
-  ## Arguments:
-  ## - suffStat, indepTest: info for the tests
-  ## - graph: the true DAG
-  ## - ancList: list containing the ancestors of each node in the graph
-  ## - L: array containing the latent variables (columns in the adjacency matrix)
-  ## - alpha: Significance level of individual partial correlation tests
-  ## - NAdelete: delete edge if pval=NA (for discrete data)
-  ## - verbose: 0 - no output, 1 - detailed output
-  ## ----------------------------------------------------------------------
-  ## Value:
-  ## - G, sepset, pMax, ord, n.edgetests
-  ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, 2011
+  new.ord <- function(start, old, L) {
+    seq_start <- 1:start
+    tmp <- setdiff(seq_start,L) ## <- independent of old -- FIXME speed
+    new <- rep(0, length(old))
+    for (i in seq_along(old)) {
+      new[i] <- which(tmp==old[i])
+    }
+    return(new)
+  }
 
   cl <- match.call()
   pval <- NULL
@@ -6874,27 +6883,26 @@ skeleton.dag2pag <- function(suffStat, indepTest, graph, ancList, L, alpha,
   for (iList in 1:new.p) sepset[[iList]] <- vector("list", new.p)
   pMax <- matrix(-Inf, nrow = new.p, ncol = new.p)
   diag(pMax) <- 1
-  ##test independence given the ancestors
-  for (i in 1:(p-1)) {
-    for (j in (i+1):p) {
-      if (!(i %in% L) && !(j %in% L)) {
+  ## test independence given the ancestors
+  for (i in 1:(p-1)) if(!(i %in% L)) {
+    iL <- new.ord(p,i,L)
+    for (j in (i+1):p) if(!(j %in% L)) {
         cond.set <- c(ancList[[i]],ancList[[j]])
         cond.set <- setdiff(cond.set,c(i,j,L))
         pval <- indepTest(i, j, cond.set, suffStat)
+        jL <- new.ord(p,j,L)
         if (verbose) {
-          cat("x=", new.ord(p,i,L), " y=", new.ord(p,j,L), " S=", new.ord(p,cond.set,L),": pval =", pval, "\n")
+          cat("x=", iL, " y=", jL,
+              " S=", new.ord(p,cond.set,L),": pval =", pval, "\n")
         }
-        if (is.na(pval)) {
-          pval <- ifelse(NAdelete, 1, 0)
-        }
-        if (pval > pMax[new.ord(p,i,L), new.ord(p,j,L)]) {
-          pMax[new.ord(p,i,L), new.ord(p,j,L)] <- pval
+        if(is.na(pval)) pval <- as.numeric(NAdelete) ## == if(NAdelete) 1 else 0
+        if (pval > pMax[iL, jL]) {
+          pMax[iL, jL] <- pval
         }
         if (pval >= alpha) {
-          G[new.ord(p,i,L), new.ord(p,j,L)] <- G[new.ord(p,j,L), new.ord(p,i,L)] <- FALSE
-          sepset[[new.ord(p,i,L)]][[new.ord(p,j,L)]] <- new.ord(p,cond.set,L)
+          G[iL, jL] <- G[jL, iL] <- FALSE
+          sepset[[iL]][[jL]] <- new.ord(p,cond.set,L)
         }
-      }
     }
   }
   for (i in 1:(new.p - 1)) {
@@ -6902,63 +6910,50 @@ skeleton.dag2pag <- function(suffStat, indepTest, graph, ancList, L, alpha,
       pMax[i, j] <- pMax[j, i] <- max(pMax[i, j], pMax[j, i])
     }
   }
-  if (sum(G) == 0) {
-    Gobject <- new("graphNEL", nodes = as.character(1:new.p))
-  }
+  Gobject <- if (sum(G) == 0)
+      new("graphNEL", nodes = as.character(1:new.p))
   else {
-    colnames(G) <- rownames(G) <- as.character(1:new.p)
-    Gobject <- as(G, "graphNEL")
+      colnames(G) <- rownames(G) <- as.character(1:new.p)
+      as(G, "graphNEL")
   }
   new("pcAlgo", graph = Gobject, call = cl, n = integer(0),
       max.ord = integer(0), n.edgetests = integer(0),
       sepset = sepset, pMax = pMax, zMin = matrix(NA, 1, 1))
 }
 
-new.ord <- function(start, old, L) {
-  seq_start <- 1:start
-  tmp <- setdiff(seq_start,L)
-  new <- rep(0, length(old))
-  for (i in seq_along(old)) {
-    new[i] <- which(tmp==old[i])
-  }
-  return(new)
-}
-
 iplotPC <- function(pc.fit, labels = NULL) {
   ## igraph alternative to Rgraphviz (only for pcAlgo objects)
-  adjm <- t(wgtMatrix(pc.fit@graph))
+  adjm <- wgtMatrix(pc.fit@graph, transpose=FALSE)
   if (!is.null(labels)) dimnames(adjm) <- list(labels, labels)
   g1 <- graph.adjacency( adjm )
   plot(g1)
 }
 
-showEdgeList <- function(pc.fit, labels = NULL) {
-
+showEdgeList <- function(pc.fit, labels = NULL)
+{
     cat("\nEdge List: \n")
     g <- pc.fit@graph
     if (is.null(labels)) labels <- g@nodes
 
     wm <- wgtMatrix(g)
-    wmU <- wm + t(wm)
-    wmD <- t(wm - t(wm))
-    u <- which( (wmU == 2) & upper.tri(wmU), arr.ind = TRUE)
-    dTmp <- which( wmD == 1, arr.ind = TRUE)
-    d <- dTmp[order(dTmp[,1]),]
+    wmU <- wm + t(wm)   # weights for undirected e.
+    wmD <- t(wm - t(wm))# weights for   directed e.
+    u <- which(wmU == 2 & upper.tri(wmU), arr.ind = TRUE)
+    d <- which(wmD == 1, arr.ind = TRUE)
+    d <- d[order(d[,1]),]
     cat("\nUndirected Edges:\n")
-    if(!nrow(u)==0){
-        for (i in 1:nrow(u)) {
-            x <- u[i,1]
-            y <- u[i,2]
-            cat(paste(labels[x], " --- ", labels[y], "\n"))
-        }}
-    cat("\nDirected Edges:\n")
-    if(!nrow(d)==0){
-        for (i in 1:nrow(d)) {
-            x <- d[i,1]
-            y <- d[i,2]
-            cat(paste(labels[x], " --> ", labels[y], "\n"))
-        }
+    for (i in seq_len(nrow(u))) {
+        x <- u[i,1]
+        y <- u[i,2]
+        cat(paste(labels[x], " --- ", labels[y], "\n"))
     }
+    cat("\nDirected Edges:\n")
+    for (i in seq_len(nrow(d))) {
+        x <- d[i,1]
+        y <- d[i,2]
+        cat(paste(labels[x], " --> ", labels[y], "\n"))
+    }
+    invisible(list(undir = u, direct = d))
 }
 
 showAmat <- function(pc.fit) {
@@ -7267,7 +7262,7 @@ my.SpecialDag <- function (gm, a, tmp, X, verbose = FALSE)
 } ## {my.SpecialDag}
 
 
-backdoor <- function(amat, x, y, type = "pag", verbose = FALSE)
+backdoor <- function(amat, x, y, type = "pag", max.chordal = 10, verbose = FALSE)
 {
   ## Purpose: for a given pair of nodes (x,y) and a given graph (DAG, CPDAG,
   ##          MAG, or PAG) estimate if the causal effect of x on y using the
@@ -7289,9 +7284,9 @@ backdoor <- function(amat, x, y, type = "pag", verbose = FALSE)
   ## ----------------------------------------------------------------------
   ## Author: Diego Colombo, Date: 12 Apr 2013, 16:06
 
-    stopifnot (dim(amat)[1] > 0, x!=y)
+    stopifnot (dim(amat)[1] > 0, x != y, length(type) == 1)
     set.w <- NA
-    if (type == "dag" | type == "cpdag") {
+    if (type == "dag" || type == "cpdag") {
         ##transfor each directed edge from 0-1 to 2-3 in the adjacency matrix
         ind <- which((amat == 1 & t(amat) == 0), arr.ind = TRUE) ##a -> b
         for (i in seq_len(nrow(ind))) {
@@ -7321,7 +7316,9 @@ backdoor <- function(amat, x, y, type = "pag", verbose = FALSE)
 
     ## 1. generate a MAG/DAG belonging to the equivalence class of the
     ## PAG or a CPDAG without orienting additional edges into X
-    amat.r <- if (type == "cpdag" || type == "pag") pag2magAM(amat, x) else amat
+    amat.r <- if (type == "cpdag" || type == "pag")
+        pag2magAM(amat, x, max.chordal=max.chordal, verbose=verbose)
+    else amat
 
     ## 2. compute the truncated corresponding graph
     ## 2.a) find all the visible edges in the original graph that are out of X

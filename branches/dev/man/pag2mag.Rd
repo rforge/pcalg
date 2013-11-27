@@ -11,16 +11,21 @@ pag2magAM(amat.pag, x, max.chordal = 10, verbose = FALSE)
 }
 \arguments{
   \item{amat.pag}{adjacency matrix corresponding to the PAG.}
-  \item{x}{node in the PAG for which no additional edges are oriented into it.}
+  \item{x}{node in the PAG into which no additional edges are oriented.}
+  \item{max.chordal}{positive integer: graph paths larger than
+    \code{max.chordal} are considered to be too large to be checked for
+    chordality.}
+  \item{verbose}{logical; if true, some output is produced during
+    computation.}  
 }
 \details{
   This function converts a PAG (adjacency matrix) to a valid MAG
   (adjacency matrix) that belongs to the Markov equivalence class
-  represented by the given PAG. Note that we assume that there are no
+  represented by the given PAG.  Note that we assume that there are no
   selection variables, meaning that the edges in the PAG can be of the
-  following types: ->, <->, o->, and o-o. In a first step, it uses the
-  Arrowhead Augmentation of Zhang (2006), i.e. any o-> edge is oriented
-  into ->. Afterwards, it orients each chordal component into a valid DAG
+  following types: ->, <->, o->, and o-o.  In a first step, it uses the
+  Arrowhead Augmentation of Zhang (2006), i.e., any o-> edge is oriented
+  into ->.  Afterwards, it orients each chordal component into a valid DAG
   without orienting any additional edges into x.
 
   This function is used in the Generalized Backdoor Criterion
@@ -29,7 +34,7 @@ pag2magAM(amat.pag, x, max.chordal = 10, verbose = FALSE)
 }
 \value{
   The output is an adjacency matrix M of a valid MAG with edge
-  marks. The edge marks are coded in the following way: M[i,j]=M[j,i]=0:
+  marks.  The edge marks are coded in the following way: M[i,j]=M[j,i]=0:
   no edge; M[i,j]=2, M[j,i]=3: i -> j; M[i,j]=2, M[j,i]=2: i <-> j.
 }
 \references{
@@ -48,12 +53,11 @@ pag2magAM(amat.pag, x, max.chordal = 10, verbose = FALSE)
 set.seed(78)
 p <- 12
 g <- randomDAG(p, prob = 0.4)
+## Compute the true covariance and then correlation matrix of g:
+true.corr <- cov2cor(trueCov(g))
 
 ## define nodes 2 and 6 to be latent variables
 L <- c(2,6)
-
-## Compute the true covariance matrix of g, and transform to correlation matrix:
-true.corr <- cov2cor(trueCov(g))
 
 ## Find PAG
 ## As dependence "oracle", we use the true correlation matrix in

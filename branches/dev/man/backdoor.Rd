@@ -10,7 +10,7 @@
   in the given graph.
 }
 \usage{
-backdoor(amat, x, y, type = "pag")
+backdoor(amat, x, y, type = "pag", max.chordal = 10, verbose=FALSE)
 }
 \arguments{
   \item{amat}{adjacency matrix of the given graph specified in \code{type}.}
@@ -19,6 +19,11 @@ backdoor(amat, x, y, type = "pag")
   \item{type}{a string specifying the type of graph of the adjacency matrix
     \code{amat}.  It can be a DAG (type="dag"), a CPDAG (type="cpdag"), a
     MAG (type="mag"), or a PAG (type="pag").}
+  \item{max.chordal}{only if \code{type = "mag"}, is used in
+    \code{\link{pag2magAM}} to determine paths too large to be checked
+    for chordality.}
+  \item{verbose}{logical; if true, some output is produced during
+    computation.}  
 }
 \details{
   This function is a generalization of Pearl's backdoor criterion, see
@@ -80,8 +85,8 @@ backdoor(amat, x, y, type = "pag")
 }
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 \seealso{\code{\link{pc}} for estimating a CPDAG, \code{\link{dag2pag}}
-  and \code{\link{fci}} for estimating a PAG, and \code{\link{pag2mag}}
-  for estimating a MAG.
+  and \code{\link{fci}} for estimating a PAG, and
+  \code{\link{pag2magAM}} for estimating a MAG.
 }
 \examples{%% note:  Tests in  ../tests/test_backdoor.R
 #####################################################################
