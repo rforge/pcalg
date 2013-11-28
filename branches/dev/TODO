@@ -1,20 +1,20 @@
-				[Emacs org: use  [Tab]  ``all the time'']
+##-*- mode: org -*-  Emacs org: use  [Tab]  ``all the time''
 
 * TODO NAMESPACE and "internal" functions:
-** DONE Look at ./NAMESPACE  and replace *ALL*  the  Imports() by
-     ImportsFrom(.)
+** DONE Look at ./NAMESPACE  and replace *ALL*  the  Imports() by ImportsFrom(.)
 ** TODO What do we export / what not?  <--> file:man/pcalg-internal.Rd
     Currently, there is  ./man/pcalg-internal.Rd  with man \alias{}es
     and only few functions in "Usage".
     The concept of such "internal" functions really *predates* the use
     of NAMESPACEs and is now obsolete.
 
-   Many of these should be *removed* for the *.Rd page *and* from NAMESPACE.
-   The otherse (very few?) would be kept, but then also "well" documented, i.e.,
+   Many of these should be *removed* for the *.Rdany of these should be *removed* for the *.Rd page *and* from NAMESPACE.
+   The others (few?) would be kept, but then also "well" documented, i.e.,
    on a different *.Rd file.
 *** Goal: Get rid of ./man/pcalg-internal.Rd   entirely.
      
 * TODO Remarks on specific functions and issues:
+** TODO skeleton(): keep back compatibility  update= c("stable","original")  <<---MM
 ** TODO pag2mag() return adj.matrix instead of *object* -> named pag2magAM()
    whereas dag2pag() does return more than just an adj.matrix. Change BEFORE release
 ** TODO I've introduced 'max.chordal = 10' to 'backdoor()' 
@@ -49,9 +49,13 @@
    Better: verbose in { 0,1,2 (, 3) } and verbose=1 should give much less
    than TRUE now
 
+
+* Parallelize option
+* Allow 'tiers' (as in Tetrad), and 'background knowledge' (about orientations etc).
+
 * ?? Where is all the robustness gone that pcAlgo() had?
  Maybe  pcAlgo() should not be deprecated because it allows robust
- correlation methods?
+ correlation methods?  ---> indepTest argument: Qn ? --> Martin
 --------------------------------------------------------------------------
 * Style:  am[which(am != 0)]  is faster than am[am != 0]  
   for a sparse am of dim 50 x 50  ==> Using the more ugly notation is ok!
