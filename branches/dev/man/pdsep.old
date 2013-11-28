@@ -10,7 +10,7 @@
 }
 \usage{
 pdsep(skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = Inf,
-pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
+      pdsep.max = Inf, NAdelete = TRUE, unfVect = NULL, biCC = FALSE, verbose = FALSE)
 }
 \arguments{
   \item{skel}{Graph object returned by \code{\link{skeleton}}.}

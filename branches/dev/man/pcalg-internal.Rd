@@ -37,11 +37,9 @@
 %--------------------------------------------------------------------------
 % FIXME: *do* document [says Martin]  (((or confirm current status))):
 \alias{gAlgo-class}
-\alias{trueCov}% used in examples / tests!
+\alias{trueCov}% used in examples / tests! -- change name !
 \alias{allDags}%<- mentioned in other help pages !!
 \alias{amat2dag}% in ../tests/test_amat2dag.R
-%% the following seem important, self contained, have "header help"
-\alias{skeleton.dag2pag}
 %
 \title{Internal Pcalg Functions}
 \description{

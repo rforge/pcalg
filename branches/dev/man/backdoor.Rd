@@ -31,7 +31,7 @@ backdoor(amat, x, y, type = "pag", max.chordal = 10, verbose=FALSE)
   interventions and single outcome variable to more general types of
   graphs (CPDAGs, MAGs, and PAGs) that describe Markov equivalence
   classes of DAGs with and without latent variables but without
-  selection variables. For more details see Maathuis and Colombo(2013).
+  selection variables. For more details see Maathuis and Colombo (2013).
 
   The motivation to find a set W that satisfies the generalized backdoor
   criterion with respect to \code{x} and \code{y}

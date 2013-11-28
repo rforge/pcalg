@@ -1,5 +1,6 @@
 \name{dag2pag}
 \alias{dag2pag}
+%%\alias{skeleton.dag2pag}
 \encoding{UTF8}
 \title{Convert a DAG with latent variables into a PAG}
 \description{

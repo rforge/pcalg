@@ -391,7 +391,7 @@ pcorOrder <- function(i,j, k, C, cut.at = 0.9999999) {
     PM <- pseudoinverse(C[c(i,j,k), c(i,j,k)])
     r <- -PM[1, 2]/sqrt(PM[1, 1] * PM[2, 2])
   }
-  if(is.na(r)) r <- 0
+  if(is.na(r)) return( 0 )
   min(cut.at, max(-cut.at, r))
 }
 
@@ -3066,7 +3066,7 @@ skeleton <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL, fixedEdges
       }
     }
     ord <- ord + 1
-  }
+   } ## while()
   for (i in 1:(p - 1)) {
     for (j in 2:p) {
       pMax[i, j] <- pMax[j, i] <- max(pMax[i, j], pMax[j,i])
@@ -6843,7 +6843,7 @@ dag2pag <- function(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10), 
 } # {dag2pag}
 
 ##' Perform undirected part of oracle FCI-Algorithm, i.e.,
-##' estimate skeleton of PAG given the true DAG
+##' find skeleton of PAG given the true DAG
 ##'
 ##' .. content for \details{} ..
 ##' @title 
