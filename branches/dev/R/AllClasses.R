@@ -451,8 +451,8 @@ setRefClass("GaussL0penIntScore",
           max.si <- 0
           for (i in 1:p) {
             ## Generate indices of (distinct) scatter matrices
-            non.ivent[ , i] <- sapply(1:length(pp.dat$targets), 
-                function(j) !(i %in% pp.dat$targets[[j]]))
+            non.ivent[ , i] <- sapply(seq_along(pp.dat$targets), 
+                                      function(j) i %nin% pp.dat$targets[[j]])
             pp.dat$scatter.index[i] <<- max.si + 1
             j <- 1
             while (j < i) {
@@ -782,8 +782,8 @@ setRefClass("GaussParDAG",
           target <- as.integer(sort(target))
           result <- matrix(0, p, p)
           for (i in 1:p)
-            if (!(as.integer(i) %in% target))
-              result[.in.edges[[i]], i] <- .params[[i]][-c(1, 2)]
+            if (as.integer(i) %nin% target)
+              result[.in.edges[[i]], i] <- .params[[i]][-(1:2)]
           
           ## Set row and column names
           rownames(result) <- .nodes
@@ -827,7 +827,7 @@ setRefClass("GaussParDAG",
           else
             Y <- matrix(rnorm(n*node.count(), mean = intercept(), sd = sqrt(err.var())), ncol = n)
           if (length(target) > 0) {
-            if (!(length(int.level) %in% c(length(target), n*length(target))))
+            if (length(int.level) %nin% c(length(target), n*length(target)))
               stop("int.level must either be a vector of the same length as target, or a matrix of dimension n x length(target)")
             if (is.matrix(int.level))
               int.level <- t(int.level)
