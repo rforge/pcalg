@@ -1,12 +1,11 @@
 \name{udag2pag}
 \alias{udag2pag}
-\title{Extend the final skeleton into an FCI-PAG}
+\title{Perform the last steps of the FCI algorithm: transform the final skeleton into an FCI-PAG}
 \description{
-This function extends an undirected final skeleton into a Partial
+This function transforms an un-oriented final skeleton into a Partial
 Ancestral Graph (PAG). The final skeleton must have been estimated
-either with the function \link{skeleton} (if the search on
-Possible-D-SEP has not been performed) or with the
-function \link{pdsep}. The result is an adjacency matrix
+with the
+function \code{\link{pdsep}}. The result is an adjacency matrix
 indicating also the edge marks.
 }
 \usage{
@@ -14,7 +13,7 @@ udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose = FALSE)
 }
 \arguments{
   \item{pag}{adjacency matrix of the final skeleton of size p*p.}
-  \item{sepset}{List of length p; each element of the list
+  \item{sepset}{list of length p; each element of the list
     contains another list of length p. The element
     \code{sepset[[x]][[y]]} contains the separation set that made the edge
     between \code{x} and \code{y} drop out. This object is thought to be
@@ -22,47 +21,47 @@ udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose = FALSE)
   \item{rules}{array of length 10 containing \code{TRUE} or \code{FALSE}
     for each rule. \code{TRUE} in position i means that rule i (Ri) will
     be used. Per default, all rules are set to TRUE.}
-  \item{unfVect}{Vector containing numbers that encode the ambiguous
-    triple. This is needed in the conservative and majority rule FCI.}
+  \item{unfVect}{Vector containing numbers that encode ambiguous unshielded
+    triples (as returned by \code{\link{pc.cons.intern}}). This is needed in the conservative and majority rule versions of FCI.}
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
 \details{
-  The skeleton is extended to an FCI-PAG using rules by Zhang (see
-  References). Note that the algorithm works with columns' position of the
-  adjacency matrix and not with the names of the variables.
+  The skeleton is transformed into an FCI-PAG using rules by Zhang (2008).
 
-  If \code{unfVect = NULL} the v-structures and the ten orientation
-  rules are applied to each eligible structure until no more edges can
-  be oriented. On the other hand if the v-structures have been checked
-  previously either using the conservative method or the majority rule,
-  \code{unfVect} contains a list of all ambiguous triples in the
-  graph. In this case, only structures containing unambiguous triples
-  are oriented until no more edges can be oriented.
-
+  If \code{unfVect = NULL} (i.e., one uses standard FCI or one uses conservative/majority rule FCI but there are no ambiguous triples), then the orientation rules are applied to each
+  eligible structure until no more edges can be oriented. On the other
+  hand, if one uses conservative or majority rule FCI and ambiguous triples have been found in
+  \code{\link{pc.cons.intern}}, \code{unfVect} contains the numbers of all ambiguous
+  triples in the graph. In this case, the orientation rules take this information into account. For example, if a *-> b o-* c and <a,b,c> is an unambigous unshielded triple and not a v-structure, then we obtain 
+b -* c (otherwise we would create an additional v-structure). On the other hand, if a *-> b o-* c but <a,b,c> is an ambiguous unshielded triple, then the circle mark at b is not oriented. 
+ 
   Note that the algorithm works with columns' position of the adjacency
   matrix and not with the names of the variables.
 
-  Note that the order-dependence issues on the 10 orientation rules are
-  still present, see Colombo and Maathuis (2013) for more details.
+   Note that this function does not resolve possible order-dependence in the application of the orientation rules, see Colombo and Maathuis (2013). 
 }
 \value{
-  The output is an adjacency matrix M with edge marks. The edge marks are
+  Adjacency matrix M with edge marks. The edge marks are
   coded in the following way: M[i,j]=M[j,i]=0: no edge; M[i,j]=1, M[j,i]
   != 0: i *-o j; M[i,j]=2, M[j,i]!=0: i*->j; M[i,j]=3, M[j,i]!=0: i*-j.
 }
 \references{
-  D. Colombo and M.H. Maathuis (2013).
-  \emph{Order-independent constraint-based causal structure learning},
-  (arXiv:1211.3295v2)
+  D. Colombo and M.H. Maathuis (2013). Order-independent constraint-based 
+  causal structure learning. arXiv:1211.3295v2
   
+  D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
+  (2012). Learning high-dimensional directed acyclic graphs with latent
+  and selection variables. \emph{Ann. Statist.} \bold{40}, 294-321.   
+
   J. Zhang (2008). On the completeness of orientation rules for causal
   discovery in the presence of latent confounders and selection bias.
   \emph{Artificial Intelligence} \bold{172} 1873-1896.
 }
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 
-\seealso{\code{\link{fci}}}
-
+\seealso{\code{\link{fci}}, \code{\link{udag2apag}}, \code{\link{dag2pag}}, 
+  \code{\link{udag2pdag}}, \code{\link{udag2pdagSpecial}}, 
+  \code[\link{udag2pdagRelaxed}}}
 \examples{
 ##################################################
 ## Example with hidden variables

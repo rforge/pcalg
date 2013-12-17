@@ -1,12 +1,14 @@
 \name{udag2apag}
 \alias{udag2apag}
-\title{Extend a partially oriented skeleton into an RFCI-PAG}
+\title{Perform the last step of the RFCI algorithm: transform a 
+partially oriented graph into an RFCI-PAG}
 \description{
-This function extends a skeleton in which the v-structures have been
-already oriented into an RFCI Partial Ancestral Graph (PAG). While
+This function transforms a partially oriented graph in which 
+the v-structures have been
+oriented into an RFCI Partial Ancestral Graph (PAG) (see Colombo et al (2012)). While
 orienting the edges, this function performs some additional conditional
-independence tests in rule 4 to ensure correctness of the ancestral
-relationships, and consequently some edges can be deleted. The result is
+independence tests in orientation rule 4 to ensure correctness of the ancestral
+relationships. As a result of these additional tests, some additional edges can be deleted. The result is
 the final adjacency matrix indicating also the edge marks and the
 updated sepsets.  
 }
@@ -17,71 +19,69 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
 \arguments{
   \item{apag}{adjacency matrix of the pcAlgo-object of size p*p where
     the v-structures have already been oriented.}
-  \item{suffStat}{Sufficient statistics: List containing all necessary
+  \item{suffStat}{sufficient statistics: List containing all necessary
     elements for the conditional independence decisions in the
     function \code{indepTest}.}
-  \item{indepTest}{Predefined function for testing conditional independence. The
+  \item{indepTest}{pre-defined function for testing conditional independence. The
     function is internally called as \code{indepTest(x,y,S,suffStat)}, and
     tests conditional independence of \code{x} and \code{y} given
     \code{S}. Here, \code{x} and \code{y} are variables, and \code{S} is
-    a (possibly empty) vector of variables (all variables are denoted
+    a (possibly empty) set of variables (all variables are denoted
     by their column numbers
     in the adjacency matrix). \code{suffStat} is a list containing
     all relevant elements for the conditional independence
     decisions. The return value of \code{indepTest} is the p-value of
     the test for conditional independence.}
-  \item{alpha}{Significance level for the individual conditional
+  \item{alpha}{significance level for the individual conditional
     independence tests.}
-  \item{sepset}{List of length p; each element of the list
+  \item{sepset}{list of length p; each element of the list
     contains another list of length p. The element
     \code{sepset[[x]][[y]]} contains the separation set that made the edge
     between \code{x} and \code{y} drop out. This object is thought to be
     obtained from a \code{pcAlgo}-object.}
-  \item{rules}{array of length 10 containing \code{TRUE} or \code{FALSE} for each
+  \item{rules}{array of length 10 containing \code{TRUE} or \code{FALSE} for 
+   each
     rule. \code{TRUE} in position i means that rule i (Ri) will be used. Per
     default, all rules are set to \code{TRUE}.}
-  \item{unfVect}{Vector containing numbers that encode the unfaithful
-    triple. This is needed in the conservative and in the majority rule RFCI.}
+  \item{unfVect}{Vector containing numbers that encode the ambiguous 
+    triples (as returned by \code{\link{pc.cons.intern}}). This is needed in the conservative and in the majority rule versions of RFCI.}
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
 \details{
-  The partially oriented skeleton (v-structures have been already
-  oriented) is extended to an RFCI-PAG using adapted rules by Zhang (see
-  References). This function is similar to \link{udag2pag} used to
+  The partially oriented graph in which the v-structures have been 
+  oriented is transformed into an RFCI-PAG using adapted rules of Zhang (2008). This function is similar to \link{udag2pag} used to
   orient the skeleton into a PAG in the FCI algorithm. However, it is
-  slightly more complicated because while orienting rule 4 additional
-  conditional independence tests are performed to ensure correctness of
-  the ancestral relationships and some edges can be deleted, see Colombo
-  et al. (2012). To this purpose, \code{suffStat}, \code{indepTest}, and
-  \code{alpha} are used as inputs. Note that because some edges can be
+  slightly more complicated because we perform additional conditional independence tests when applying rule 4, to ensure correctness of
+  the ancestral relationships. As a result, some additional edges can be deleted, see Colombo
+  et al. (2012). Because of these addiitonal tests, we need to give \code{suffStat}, \code{indepTest}, and
+  \code{alpha} as inputs. Since edges can be
   deleted, the input adjacency matrix \code{apag} and the input
-  separating sets \code{sepset} can change in the run of the algorithm.
+  separating sets \code{sepset} can change in this algorithm.
 
-  If \code{unfVect = NULL} the ten orientation rules are applied to each
-  eligible structure until no more edges can be oriented. On the other
-  hand if the v-structures have been checked previously in either using
-  the conservative method or the majority rule, \code{unfVect} contains
-  a list of all ambiguous triples in the graph. In this case, only
-  structures containing unambiguous triples are oriented until no more
-  edges can be oriented. 
+  If \code{unfVect = NULL} (no ambiguous triples), the orientation rules are applied to each
+  eligible structure until no more edges can be oriented. On the other hand, 
+  hand, if one uses conservative or majority rule FCI and ambiguous triples have been found in
+  \code{\link{pc.cons.intern}}, \code{unfVect} contains the numbers of all ambiguous
+  triples in the graph. In this case, the orientation rules take this information into account. For example, if a *-> b o-* c and <a,b,c> is an unambigous unshielded triple and not a v-structure, then we obtain 
+b -* c (otherwise we would create an additional v-structure). On the other hand, if a *-> b o-* c but <a,b,c> is an ambiguous unshielded triple, then the circle mark at b is not oriented. 
 
   Note that the algorithm works with columns' position of the adjacency
   matrix and not with the names of the variables.
-
-  Note that the order-dependence issues on the 10 orientation rules are
-  still present, see Colombo and Maathuis (2013) for more details.
+ 
+  Note that this function does not resolve possible order-dependence in the application of the orientation rules, see Colombo and Maathuis (2013). 
 }
 \value{
-  The outputs are the updated list of sepset and the final adjacency
-  matrix M, since some edges may have been deleted. The edge marks in
+  \item{apag}{final adjacency matrix.  The edge marks in
   the adjacency matrix M are coded in the following way:
   M[i,j]=M[j,i]=0: no edge; M[i,j]=1, M[j,i] != 0: i *-o j; M[i,j]=2,
-  M[j,i]!=0: i*->j; M[i,j]=3, M[j,i]!=0: i*-j.   
+  M[j,i]!=0: i*->j; M[i,j]=3, M[j,i]!=0: i*-j.}
+
+  \item{sepset}{updated list of separating sets} 
 }
 \references{
   D. Colombo and M.H. Maathuis (2013).
-  \emph{Order-independent constraint-based causal structure learning},
-  (arXiv:1211.3295v2)
+  Order-independent constraint-based causal structure learning.
+  arXiv:1211.3295v2.
   
   D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
   (2012). Learning high-dimensional directed acyclic graphs with latent
@@ -93,7 +93,9 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset, rules = rep(TRUE,
 }
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 
-\seealso{\code{\link{rfci}}}
+\seealso{\code{\link{rfci}}, \code{\link{\udag2pag}},
+\code{link{dag2pag}}, \code{\link{udag2pdag}}, 
+\code{link{\udag2pdagSpecial}}, \code{\link{udag2pdagRelaxed}}}
 
 \examples{
 ##################################################

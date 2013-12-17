@@ -9,7 +9,6 @@
 \alias{checkTriple}
 \alias{ci.test}
 \alias{dep.triple}
-\alias{dreach}%-> ./dreach.old
 \alias{faith.check}
 \alias{find.min.discr.path}
 \alias{find.sink}
@@ -19,18 +18,11 @@
 \alias{minUncovCircPath}
 \alias{minUncovPdPath}
 \alias{my.SpecialDag}
-\alias{pc.cons.intern}%-. ./pc.cons.intern.old
 \alias{pcAlgo.Perfect}
-\alias{pdsep}%-> ./pdsep.old;  mentioned on ./fci.Rd
 \alias{possibleDe}
-\alias{qreach}%-> ./qreach.old; mentioned on ./fci.Rd
 \alias{reach}
-\alias{rfci.vstructures}
+\alias{rfci.v.str}% <- renamed; TODO (MM)
 \alias{triple2numb}
-\alias{udag2apag}%-> ./udag2apag.old
-\alias{udag2pag} %-> ./udag2pag.old
-\alias{udag2pdagRelaxed}%-> ./udag2pdagRelaxed.old
-\alias{udag2pdagSpecial}%-> ./udag2pdagSpecial.old
 \alias{updateList}
 \alias{visibleEdge}
 \alias{wgtMatrix}
