@@ -1,130 +1,151 @@
 \name{skeleton}
 \alias{skeleton}
-\title{Estimate the skeleton of a DAG without latent and selection
-  variables using the PC Algorithm and estimate an initial skeleton of a
-  DAG with arbitrarily many latent and selection variables using the FCI
-  and the RFCI algorithms.}
+\title{Estimate (Initial) Skeleton of a DAG using the PC / PC-Stable Algorithm}
 \description{
+  Estimate the skeleton of a DAG without latent and selection
+  variables using the PC Algorithm or
+  estimate an initial skeleton of a DAG with arbitrarily many latent and
+  selection variables using the FCI and the RFCI algorithms.
+  
   If used in the PC algorithm, it estimates the order-independent
+  \dQuote{PC-stable} (\code{"stable"}) or original PC (\code{"original"})
   \dQuote{skeleton} of a directed acyclic graph (DAG) from observational
-  data.  When used in the FCI and RFCI algorithms, this function estimates
-  only an initial order-independent \dQuote{skeleton}.  Because of the
-  presence of latent and selection variables, to find the final skeleton
-  those algorithms need to perform additional tests later on and
+  data.
+  
+  When used in the FCI and RFCI algorithms, this function estimates
+  only an initial order-independent (or PC original) \dQuote{skeleton}.
+  Because of the presence of latent and selection variables, to find the
+  final skeleton those algorithms need to perform additional tests later on and
   consequently some edges can be further deleted. 
 }
 \usage{
-skeleton(suffStat, indepTest, p, alpha, fixedGaps = NULL,
-         fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, verbose = FALSE)
+skeleton(suffStat, indepTest, p, alpha,
+         method = c("stable", "original"), m.max = Inf, 
+         fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
+         verbose = FALSE)
 }
 \arguments{
-  \item{suffStat}{Sufficient statistics: List containing all necessary
+  \item{suffStat}{sufficient statistics: List containing all necessary
     elements for the conditional independence decisions in the
     function \code{indepTest}.}
-  \item{indepTest}{Predefined function for testing conditional independence. The
-    function is internally called as \code{indepTest(x,y,S,suffStat)}, and
-    tests conditional independence of \code{x} and \code{y} given
-    \code{S}. Here, \code{x} and \code{y} are variables, and \code{S} is
-    a (possibly empty) vector of variables (all variables are denoted
-    by their column numbers
+  \item{indepTest}{predefined \code{\link{function}} for testing
+    conditional independence.  The function is internally called as
+    \code{indepTest(x,y,S,suffStat)} and tests conditional independence
+    of \code{x} and \code{y} given \code{S}.  Here, \code{x} and
+    \code{y} are variables, and \code{S} is a (possibly empty) vector of
+    variables (all variables are denoted by their column numbers
     in the adjacency matrix). \code{suffStat} is a list containing
-    all relevant elements for the conditional independence
-    decisions. The return value of \code{indepTest} is the p-value of
-    the test for conditional independence.}
-  \item{p}{Number of variables.}
-  \item{alpha}{Significance level for the individual conditional
+    all relevant elements for the conditional independence decisions.
+    The return value of \code{indepTest} is the p-value of the test for
+    conditional independence.} 
+  \item{p}{number of variables.}
+  \item{alpha}{significance level for the individual conditional
     independence tests.}
-  \item{fixedGaps}{A logical matrix of dimension p*p. If entry
-    \code{[i,j]} or \code{[j,i]} (or both) are TRUE, the edge i-j is
-    removed before starting the algorithm. Therefore, this edge is
-    guaranteed to be absent in the resulting graph.}
-  \item{fixedEdges}{A logical matrix of dimension p*p. If entry
-    \code{[i,j]} or \code{[j,i]} (or both) are TRUE, the edge i-j is
-    never considered for removal. Therefore, this edge is
-    guaranteed to be present in the resulting graph.}
-  \item{NAdelete}{If indepTest returns \code{NA} and this option is
+  \item{method}{character string specifying method; the default,
+    \code{"stable"} provides an \emph{order-independent} skeleton, see
+    \sQuote{Details} below.} 
+  \item{m.max}{maximal size of the conditioning sets that are considered in the
+    conditional independence tests.}
+  \item{fixedGaps}{a logical matrix of dimension p*p.  If entry
+    \code{[i,j]} or \code{[j,i]} (or both) are true, the edge
+    \eqn{i--j}{i-j} is removed before starting the algorithm.
+    Therefore, this edge is guaranteed to be absent in the resulting
+    graph.}
+  \item{fixedEdges}{a logical matrix of dimension p*p.  If entry
+    \code{[i,j]} or \code{[j,i]} (or both) are true, the edge
+    \eqn{i--j}{i-j} is never considered for removal.  Therefore, this
+    edge is guaranteed to be present in the resulting graph.}
+  \item{NAdelete}{if indepTest returns \code{NA} and this option is
     \code{TRUE}, the corresponding edge is deleted. If this option is
     \code{FALSE}, the edge is not deleted.}
-  \item{m.max}{Maximal size of the conditioning sets that are considered in the
-    conditional independence tests.}
-  \item{verbose}{If \code{TRUE}, detailed output is provided.}
+  \item{verbose}{if \code{TRUE}, detailed output is provided.}
 }
 \value{An object of \code{\link{class}} \code{"pcAlgo"} (see
   \code{\linkS4class{pcAlgo}}) containing an estimate of the skeleton of
-  the underlying DAG, the conditioning sets that led to edge removals
-  (sepset) and several other parameters.
+  the underlying DAG, the conditioning sets (\code{sepset}) that led to
+  edge removals and several other parameters. 
 }
 \details{
   Under the assumption that the distribution of the observed variables
-  is faithful to a DAG and that there are no latent and selection
-  variables, this function estimates the skeleton of the DAG. The
+  is faithful to a DAG and that there are \bold{no} latent and selection
+  variables, this function estimates the skeleton of the DAG.  The
   skeleton of a DAG is the undirected graph resulting from removing all
-  arrowheads from the DAG. Edges in the skeleton of a DAG have the
-  following interpretation: there is an edge between i and j if and only
-  if variables i and j are conditionally dependent given S for all
-  possible subsets S of the remaining nodes.
+  arrowheads from the DAG.  Edges in the skeleton of a DAG have the
+  following interpretation:
+  \cr
+  There is an edge between \eqn{i} and \eqn{j}, \eqn{i--j}{i-j}, 
+  if and only if variables \eqn{i} and \eqn{j} are conditionally
+  dependent given \eqn{S} for all possible subsets \eqn{S} of the
+  remaining nodes. 
 
-  Under the assumption that the distribution of the observed variables
-  is faithful to a DAG with arbitrarily many latent and selection
-  variables, this function estimates the initial skeleton of the
-  DAG. Edges in this initial skeleton of a DAG have the
-  following interpretation: there is an edge between i and j if and only
-  if variables i and j are conditionally dependent given S for all
-  possible subsets S of the neighbours of i and of the neighbours of j.
+  On the other hand, the distribution of the observed variables
+  is faithful to a DAG with \bold{arbitrarily many} latent and selection
+  variables, \code{skeleton()} estimates the initial skeleton of the
+  DAG.  Edges in this initial skeleton of a DAG have the
+  following interpretation:
+  \cr
+  There is an edge \eqn{i--j}{i-j} if and only if variables \eqn{i} and
+  \eqn{j} are conditionally dependent given \eqn{S} for all possible
+  subsets \eqn{S} of the neighbours of \eqn{i} and the neighbours of
+  \eqn{j}. 
 
   The data are not required to follow a specific distribution,
   but one should make sure that the conditional indepedence test used in
-  \code{indepTest} is appropriate for the data. Pre-programmed versions
+  \code{indepTest} is appropriate for the data.  Pre-programmed versions
   of \code{indepTest} are available for Gaussian data
   (\code{\link{gaussCItest}}), discrete data (\code{\link{disCItest}}),
-  and binary data (see \code{\link{binCItest}}). Users can also specify
+  and binary data (see \code{\link{binCItest}}).  Users may also specify
   their own \code{indepTest} function. 
 
   The PC algorithm (Spirtes, Glymour and Scheines, 2000)
-  is known to be order-dependent, in the sense that the
-  output depends on the order in which the variables are
-  given. Therefore, Colombo and Maathuis (2013) proposed a simple
-  modification, called PC-stable, that yields order-independent
-  adjacencies in the skeleton. In this function we implement their
-  modified algorithm (the old order-dependent implementation can be
-  found in version 1.1-5).
+  (\code{method = "original"}) is known to be order-dependent, in the
+  sense that the output may depend on the order in which the variables
+  are given.  Therefore, Colombo and Maathuis (2013) proposed a simple
+  modification, called \dQuote{PC-stable}, which yields
+  order-independent adjacencies in the skeleton, provided by \code{pc()}
+  with the new default \code{method = "stable"}.  
 
-  The algorithm starts with a complete undirected graph. In each
-  step, it visits all pairs (\code{i},\code{j}) of adjacent nodes in the
+  The algorithm starts with a complete undirected graph.  In each
+  step, it visits all pairs \eqn{(i,j)} of adjacent nodes in the
   current graph, and determines based on conditional independence tests
-  whether the edge i-j should be removed. In particular, for each step
-  \code{m} (\code{m}=0,1,...) of the size of the conditioning sets, the
-  algorithm at first determines the neighbours \code{a(i)} of each node
-  \code{i} in the graph. Then, the algorithm visits all pairs (\code{i},
-  \code{j}) of adjacent nodes in the current graph, and the edge between
-  \code{i} and \code{j} is kept if and only if the null hypothesis
-  "\code{i} and \code{j} are
-  conditionally independent given S" is
-  rejected at significance level \code{alpha} for all subsets \code{S} of size
-  \code{m} of \code{a(i)} and of \code{a(j)} (as judged by the function
-  \code{indepTest}). The difference with the original PC algorithm is
-  that the neighborhoods \code{a(i)} are kept fixed within each value of
-  \code{m}, and this makes the algorithm order-independent. The
-  algorithm stops when \code{m} is larger than the largest neighbourhood
-  size of all nodes, or when \code{m} has reached the limit \code{m.max}
-  defined by the user. 
+  whether the edge \eqn{i--j}{i-j} should be removed.  In particular, for each step
+  \eqn{m} (\eqn{m=0,1,\dots}) of the size of the conditioning sets, the
+  algorithm at first determines the neighbours \eqn{a(i)} of each node
+  \eqn{i} in the graph.  Then, the algorithm visits all pairs \eqn{(i,j)}
+  of adjacent nodes in the current graph, and the edge \eqn{i--j}{i-j} is
+  kept if and only if the null hypothesis
+  \cr
+  \emph{\eqn{i} and \eqn{j} are conditionally independent given S}
+  \cr
+  rejected at significance level \code{alpha} for all subsets \eqn{S} of size
+  \eqn{m} of \eqn{a(i)} and of \eqn{a(j)} (as judged by the function
+  \code{indepTest}).  For the \code{"stable"} method, the neighborhoods
+  \eqn{a(i)} are kept fixed within each value of \eqn{m}, and this
+  makes the algorithm order-independent.  Method \code{"original"},
+  the original PC algorithm would update the neighbour list after each
+  edge change.
+
+  The algorithm stops when \eqn{m} is larger than the largest
+  neighbourhood size of all nodes, or when \eqn{m} has reached the limit
+  \code{m.max} which may be set by the user. 
 
   Since the FCI (Spirtes, Glymour and Scheines, 2000) and RFCI (Colombo
-  et al., 2012) algorithms are build up from the PC algorithm, they are also
-  order-dependent in the skeleton. To resolve their order-dependence
+  et al., 2012) algorithms are built up from the PC algorithm, they are also
+  order-dependent in the skeleton.  To resolve their order-dependence
   issues in the skeleton is more involved, see Colombo and Maathuis
-  (2013). However, from the description above, this function estimates an
-  initial order-independent skeleton in these algorithms (for additional
-  details on how to make the final skeleton of FCI fully
+  (2013).  However now, with \code{method = "stable"}, this function
+  estimates an initial order-independent skeleton in these algorithms
+  (for additional details on how to make the final skeleton of FCI fully
   order-independent see \code{\link{fci}} and Colombo and Maathuis (2013)).   
 
   The information in \code{fixedGaps} and \code{fixedEdges} is used as follows.
   The gaps given in \code{fixedGaps} are introduced in the very beginning of
   the algorithm by removing the corresponding edges from the complete
-  undirected graph. Pairs (\code{i},\code{j}) in \code{fixedEdges} are
-  skipped in all steps of the algorithm, so that these edges remain in the
-  graph.
+  undirected graph.  Pairs \eqn{(i,j)} in \code{fixedEdges} are skipped
+  in all steps of the algorithm, so that these edges remain in the graph.
 
+  %% MM: why say this here?
+  %% FIXME that it even does not *return* the correct variable names !
   Note: Throughout, the algorithm works with the column positions of
   the variables in the adjacency matrix, and not with the names of
   the variables.
@@ -146,11 +167,14 @@ skeleton(suffStat, indepTest, p, alpha, fixedGaps = NULL,
   \emph{Causation, Prediction, and Search}, 2nd edition, MIT Press.     
 }
 
-\seealso{\code{\link{pc}} for generating a partially directed graph
+\seealso{
+  \code{\link{pc}} for generating a partially directed graph
   using the PC algorithm; \code{\link{fci}} for generating a partial
   ancestral graph using the FCI algorithm; \code{\link{rfci}} for
-  generating a partial ancestral graph using the RFCI
-  algorithm;\code{\link{gaussCItest}}, \code{\link{disCItest}},
+  generating a partial ancestral graph using the RFCI algorithm;
+  \code{\link{udag2pdag}} for converting the skeleton to a CPDAG.
+
+  Further, \code{\link{gaussCItest}}, \code{\link{disCItest}},
   \code{\link{binCItest}} and \code{\link{dsepTest}} as examples for
   \code{indepTest}. 
 }

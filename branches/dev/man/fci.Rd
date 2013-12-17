@@ -7,10 +7,14 @@
 }
 
 \usage{
-fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-    fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, pdsep.max = Inf,
-    rules = rep(TRUE, 10), doPdsep = TRUE, biCC = FALSE, conservative = FALSE,
-    maj.rule = FALSE, labels = NA, type = c("normal", "anytime", "adaptive"))
+fci(suffStat, indepTest, p, alpha, 
+    skel.method = c("stable", "original"),
+    type = c("normal", "anytime", "adaptive"), 
+    fixedGaps = NULL, fixedEdges = NULL, 
+    NAdelete = TRUE, m.max = Inf, pdsep.max = Inf,
+    rules = rep(TRUE, 10), doPdsep = TRUE, biCC = FALSE,
+    conservative = FALSE, maj.rule = FALSE,
+    labels = NA, verbose = FALSE)
 }
 
 \arguments{
@@ -30,7 +34,15 @@ fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   \item{p}{Number of variables.}
   \item{alpha}{Significance level for the individual conditional
     independence tests.}
-  \item{verbose}{If \code{TRUE}, detailed output is provided.}
+  \item{skel.method}{character string specifying method; the default,
+    \code{"stable"} provides an \emph{order-independent} skeleton, see
+    \code{\link{skeleton}}.}
+  \item{type}{character string specifying the version of the FCI
+    algorithm to be used.  By default, it is \code{"normal"}, and so the
+    normal FCI algorithm is called.  If set to \code{"anytime"}, the
+    \sQuote{Anytime FCI} is called and \code{m.max} needs to be specified.
+    If set to \code{"adaptive"}, the \sQuote{Adaptive Anytime FCI} is
+    called and \code{m.max} is not used.  For more information, see Details.}
   \item{fixedGaps}{A logical matrix of dimension p*p. If entry
     \code{[i,j]} or \code{[j,i]} (or both) are TRUE, the edge i-j is
     removed before starting the algorithm. Therefore, this edge is
@@ -66,21 +78,16 @@ fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
     and \code{y} are considered to be in Possible-D-SEP(\code{x}) when
     testing independence between \code{x} and \code{y}. Uses
     biconnected components, \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
-  \item{conservative}{If \code{TRUE}, the unshielded triples are checked
-    for ambiguity the second time when v-structures are determined. For
-    more information, see details.} 
-  \item{maj.rule}{If \code{TRUE}, the unshielded triples are checked for
-    ambiguity the second time when v-structures are determined using a
-    majority rule idea, which is less strict than the standard
-    conservative. For more information, see details.}  
-  \item{labels}{Vector of length p with node names. If \code{NA},
-    \code{as.character{1:p}} is used instead.}
-  \item{type}{character string specifying the version of the FCI
-  algorithm to be used.  By default, it is \code{"normal"}, and so the
-  normal FCI algorithm is called.  If set to \code{"anytime"}, the
-  \sQuote{Anytime FCI} is called and \code{m.max} needs to be specified.
-  If set to \code{"adaptive"}, the \sQuote{Adaptive Anytime FCI} is
-  called and \code{m.max} is not used.  For more information, see Details.} 
+  \item{conservative}{logical indicating if the unshielded triples
+    should be checked for ambiguity the second time when v-structures
+    are determined.  For more information, see details.} 
+  \item{maj.rule}{logical indicating if the unshielded triples should
+    be checked for ambiguity the second time when v-structures are
+    determined using a majority rule idea, which is less strict than the
+    standard conservative.  For more information, see details.}  
+  \item{labels}{character vector of length p with node names. If
+    \code{NA}, \code{as.character{1:p}} is used instead.}
+  \item{verbose}{if true, more detailed output is provided.}
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
  \code{\linkS4class{fciAlgo}}) containing the estimated graph
@@ -99,12 +106,12 @@ fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
   that describe the conditional independence relationships between the
   observed variables. 
 
-  We estimate an equivalence class of MAGs instead of DAGs, since DAGs are
-  not closed under marginalization and conditioning
-  (Richardson and Spirtes, 2002).
+  We estimate an equivalence class of \bold{maximal ancestral graph}s (\bold{MAG}s)
+  instead of DAGs, since DAGs are not closed under marginalization and
+  conditioning (Richardson and Spirtes, 2002).
 
-  An equivalence class of a MAG can be uniquely represented by a partial
-  ancestral graph (PAG). A PAG contains the following types of edges:
+  An equivalence class of a MAG can be uniquely represented by a \bold{partial
+  ancestral graph} (\bold{PAG}).  A PAG contains the following types of edges:
   o-o, o-, o->, ->, <->, -. The bidirected edges come from hidden variables,
   and the undirected edges come from selection variables. The edges have
   the following interpretation: (i) there is an edge between \code{x}
@@ -121,10 +128,10 @@ fci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
 
   The first part of the FCI algorithm is analogous to the PC algorithm. It
   starts with a complete undirected graph and estimates an initial skeleton
-  using the function \code{\link{skeleton}}, which
-  produces an initial order-independent skeleton, see
-  \code{\link{skeleton}} for more details. All edges of this skeleton are of
-  the form o-o. Due to the presence of hidden variables, it is no longer
+  using \code{\link{skeleton}(*, method="stable")} which produces an
+  initial order-independent skeleton, see \code{\link{skeleton}} for
+  more details.  All edges of this skeleton are of 
+  the form o-o.  Due to the presence of hidden variables, it is no longer
   sufficient to consider only subsets of the neighborhoods of nodes \code{x}
   and \code{y} to decide whether the edge \code{x o-o y} should be removed.
   Therefore, the initial skeleton may contain some superfluous edges.

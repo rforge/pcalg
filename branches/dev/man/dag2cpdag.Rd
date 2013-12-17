@@ -1,30 +1,31 @@
 \name{dag2cpdag}
 \alias{dag2cpdag}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{Convert a DAG to a CPDAG}
 \description{
-Convert a DAG to a Completed Partially Directed Acyclic Graph (CPDAG).
+  Convert a DAG (Directed Acyclic Graph) to a Completed Partially
+  Directed Acyclic Graph (CPDAG). 
 }
 \usage{
 dag2cpdag(g)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{g}{DAG (graph object)}
+  \item{g}{an \R object of class \code{"graph"} (package \pkg{graph}),
+    representing a DAG.} 
 }
 \details{
-  This function converts a DAG (graph object) into its corresponding
-  (unique) CPDAG (graph object) as follows. Because every DAG in the
+  This function converts a DAG into its corresponding
+  (unique) CPDAG as follows. Because every DAG in the
   Markov equivalence class described by a CPDAG shares the same skeleton
   and the same v-structures, this function takes the skeleton and the
-  v-structures of the given DAG \code{g}. Afterwards it simply uses the
+  v-structures of the given DAG \code{g}.  Afterwards it simply uses the
   3 orientation rules of the PC algorithm (see references) to orient as
   many of the remaining undirected edges as possible.
 
   The output of this function is exactly the same as the one using
-  pc(suffStat, indepTest, p, alpha), using the
-  true correlation matrix in the function \code{gaussCItest} with a
-  large virtual sample size and a large alpha, but it is much faster.
+  \preformatted{pc(suffStat, indepTest, p, alpha)}
+  using the true correlation matrix in the function \code{gaussCItest}
+  with a large virtual sample size and a large alpha, but it is much
+  faster. 
 }
 \value{
   A graph object containing the CPDAG.
@@ -41,28 +42,26 @@ dag2cpdag(g)
 \author{Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Diego Colombo}
 \seealso{\code{\link{randomDAG}}, \code{\link{pc}}}
 \examples{
-## number of random variables
-p <- 10
-## sparseness of the graph
-s <- 0.4 
+p <- 10  ## number of random variables
+s <- 0.4 ## sparseness of the graph
 
 ## generate a random DAG
 set.seed(42)
 g <- randomDAG(p, s) 
 
 ## compute its unique CPDAG
-res <- dag2cpdag(g)
+system.time(res <- dag2cpdag(g))
 
 ## Find CPDAG with PC algorithm:
-## As dependence oracle, we use the true correlation matrix in the
-## function gaussCItest with a large virtual sample size and a large alpha.
-##
-## Compute the true covariance matrix of g :
-true.cov <- trueCov(g)
-true.corr <- cov2cor(true.cov)
-res1 <- pc(suffStat = list(C = true.corr, n = 10^9),
-           indepTest = gaussCItest, p, alpha = 0.9999)
-res1
+## As dependence oracle, we use the true correlation matrix in 
+## gaussCItest() with a large "virtual sample size" and a large alpha:
+system.time(
+rpc <- pc(suffStat = list(C = cov2cor(trueCov(g)), n = 10^9),
+          indepTest = gaussCItest, p, alpha = 0.9999) )
+
+## confirm that it coincides with dag2cpdag()'s result:
+stopifnot(all.equal(as( res,     "matrix"),
+                    as(rpc@graph,"matrix"), tol=0))
 }
 \keyword{multivariate}
 \keyword{models}

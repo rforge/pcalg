@@ -1,7 +1,7 @@
 \name{gmL}
 \alias{gmL}
 \docType{data}
-\title{Latent Variable Graphical Model Data Example}
+\title{Latent Variable 4-Dim Graphical Model Data Example}
 \description{
 This data set contains a matrix containing information on four gaussian
 variables and the corresonding DAG model containing four observed and

@@ -6,9 +6,11 @@
 }
 
 \usage{
-rfci(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10),
-conservative = FALSE, maj.rule = FALSE, labels = NA) 
+rfci(suffStat, indepTest, p, alpha, 
+     skel.method = c("stable", "original"),
+     fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, 
+     m.max = Inf, rules = rep(TRUE, 10),
+     conservative = FALSE, maj.rule = FALSE, labels = NA, verbose = FALSE) 
 }
 
 \arguments{
@@ -28,7 +30,9 @@ conservative = FALSE, maj.rule = FALSE, labels = NA)
   \item{p}{Number of variables.}
   \item{alpha}{Significance level for the individual conditional
     independence tests.}
-  \item{verbose}{If \code{TRUE}, detailed output is provided.}
+  \item{skel.method}{character string specifying method; the default,
+    \code{"stable"} provides an \emph{order-independent} skeleton, see
+    \code{\link{skeleton}}.}
   \item{fixedGaps}{A logical matrix of dimension p*p. If entry
     \code{[i,j]} or \code{[j,i]} (or both) are TRUE, the edge i-j is
     removed before starting the algorithm. Therefore, this edge is
@@ -45,14 +49,15 @@ conservative = FALSE, maj.rule = FALSE, labels = NA)
   \item{rules}{Logical vector of length 10 indicating which rules
     should be used when directing edges. The order of the rules is taken
     from Zhang (2009).}
-  \item{conservative}{If \code{TRUE}, the unshielded triples are checked
-  for ambiguity after the skeleton has been found, similar to the
-  conservative PC algorithm.}   
-  \item{maj.rule}{If \code{TRUE}, the unshielded triples are checked for
-  ambiguity after the skeleton has been found using a majority rule
-  idea, which is less strict than the conservative.}  
-  \item{labels}{Vector of length p with node names. If \code{NA},
-    \code{as.character(1:p)} is used instead.}
+  \item{conservative}{logical indicating if the unshielded triples
+    should be checked for ambiguity after the skeleton has been found,
+    similar to the conservative PC algorithm.}   
+  \item{maj.rule}{logical indicating if the unshielded triples should be
+    checked for ambiguity after the skeleton has been found using a
+    majority rule idea, which is less strict than the conservative.}
+  \item{labels}{character vector of length p with node names. If
+    \code{NA}, \code{as.character{1:p}} is used instead.}
+  \item{verbose}{if true, more detailed output is provided.}
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
  \code{\linkS4class{fciAlgo}}) containing the estimated graph
