@@ -93,9 +93,9 @@ b -* c (otherwise we would create an additional v-structure). On the other hand,
 }
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 
-\seealso{\code{\link{rfci}}, \code{\link{\udag2pag}},
-\code{link{dag2pag}}, \code{\link{udag2pdag}}, 
-\code{link{\udag2pdagSpecial}}, \code{\link{udag2pdagRelaxed}}}
+\seealso{\code{\link{rfci}}, \code{\link{udag2pag}},
+\code{\link{dag2pag}}, \code{\link{udag2pdag}}, 
+\code{\link{udag2pdagSpecial}}, \code{\link{udag2pdagRelaxed}}}
 
 \examples{
 ##################################################

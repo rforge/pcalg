@@ -14,7 +14,7 @@
 \alias{find.sink}
 \alias{find.unsh.triple}
 \alias{flipEdges}
-\alias{legal.psep}
+\alias{legal.path}
 \alias{minUncovCircPath}
 \alias{minUncovPdPath}
 \alias{my.SpecialDag}

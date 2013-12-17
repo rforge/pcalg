@@ -60,7 +60,13 @@
 * Style:  am[which(am != 0)]  is faster than am[am != 0]  
   for a sparse am of dim 50 x 50  ==> Using the more ugly notation is ok!
 
+* find.unsh.triple: remove arg 'p'
 
+* allDags() bekommt noch keine Hilfeseite -> moechte bald eine grosse Aenderung der Funktion machen (inkl. Parameter)
+
+* Letztest Bsp in fci(): p-1 statt p im Argument, weil eine (latente) Var gelöscht wurde
+
+* Make a fast dsep function for testing (using a lot of precomputation; e.g. ancestors, parents that are not married, so that finding moral graph becomes trivial; we then only need to check separation; could also tsort all nodes and precompute one moral graph for every element in the tsorted node sequence (~p graphs); then, the test boils down to a mere separation test
 
 * DONE Boost C++ library needed for Alain's GIES
 ** DONE does *need* a correct ./configure, somewhat analogous to Martin's Rmpfr.

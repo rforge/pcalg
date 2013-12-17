@@ -11,7 +11,7 @@
   used in \code{\link{skeleton}}, \code{\link{pc}} and \code{\link{fci}}.
 }
 \usage{
-gSquareDis(x, y, S, dm, nlev, adaptDF = FALSE, verbose = FALSE)
+gSquareDis(x, y, S, dm, nlev, verbose = FALSE, adaptDF = FALSE)
 disCItest (x, y, S, suffStat)
 }
 \arguments{

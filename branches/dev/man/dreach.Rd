@@ -26,7 +26,7 @@
   M.H. Maathuis and D. Colombo (2013). A generalized backdoor criterion. arXiv:1307.5636.
 }
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
-\seealso{\code{\link{backdoor}} uses this function.; \code{\link{pag2mag}}}
+\seealso{\code{\link{backdoor}} uses this function.; \code{\link{pag2magAM}}}
 
 
 

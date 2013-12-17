@@ -12,7 +12,7 @@
   \code{\link{fci}}. 
 }
 \usage{
-gSquareBin(x, y, S, dm, adaptDF = FALSE, verbose = FALSE)
+gSquareBin(x, y, S, dm, verbose = FALSE, adaptDF = FALSE)
 binCItest (x, y, S, suffStat)
 }
 \arguments{

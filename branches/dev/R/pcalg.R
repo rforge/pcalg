@@ -145,7 +145,7 @@ wgtMatrix <- function(g, transpose = TRUE) {
       t(res) else res
 }
 
-rmvDAG <- function(n, dag, errDist = c("normal", "cauchy", "mix", "mixt3", "mixN100","t4"),
+rmvDAG <- function(n, dag, errDist = c("normal", "t4", "cauchy", "mix", "mixt3", "mixN100"),
                    mix = 0.1, errMat = NULL)
 {
   ## Purpose: Generate data according to a given DAG (with weights) and
@@ -4064,7 +4064,7 @@ idaFast <- function(x.pos, y.pos.set, mcov, graphEst)
   beta.hat
 }
 
-legal.psep <- function(a,b,c,amat)
+legal.path <- function(a,b,c,amat)
 {
   ## Purpose: Is path a-b-c legal (either collider in b or a,b,c is triangle)
   ## !! a-b-c must be in a path !! this is not checked !!
@@ -4932,7 +4932,7 @@ qreach <- function(x,amat,verbose=FALSE)
       for (i in seq_along(nb)) {
         b <- nb[i]
         ## Guaranteed: pred-a-b are a path because of (A3)
-        if (lres <- legal.psep(pred,a,b,amat)) {
+        if (lres <- legal.path(pred,a,b,amat)) {
           amat.tmp[a,b] <- 0 ## remove b out of adj(a) in amat.tmp (+)
           Q <- c(Q,b)
           P <- c(P,a)
@@ -5728,7 +5728,7 @@ rfci <- function (suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NU
 
 find.unsh.triple <- function(g,p)
 {
-  ## Purpose: find the ordered (<x,y,x> with x<z) list of all the unshielded
+  ## Purpose: find the ordered (<x,y,z> with x<z) list of all the unshielded
   ##          triples in the graph
   ## ----------------------------------------------------------------------
   ## Arguments: g: adjacency matrix
@@ -5740,6 +5740,8 @@ find.unsh.triple <- function(g,p)
   ## ----------------------------------------------------------------------
   ## Author: Diego Colombo, Date: 21 Oct 2010, 14:05
 
+  stopifnot( all(g == t(g)) )
+  
   if (any(g!=0)) {
     unshtmp <- unshTripl <- NULL
     ##find all unshielded triple in g

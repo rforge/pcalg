@@ -8,8 +8,9 @@
 }
 \usage{
 pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-   fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = "relaxed",
-   conservative = FALSE, maj.rule = FALSE, solve.confl = FALSE)
+   fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = c("relaxed",
+"rand", "retry"), conservative = FALSE, maj.rule = FALSE, solve.confl =
+FALSE) 
 }
 \arguments{
   \item{suffStat}{Sufficient statistics: List containing all necessary
