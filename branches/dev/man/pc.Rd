@@ -1,57 +1,58 @@
 \name{pc}
 \alias{pc}
-\title{Estimate the equivalence class of a DAG
-  using the PC algorithm}
+\title{Estimate the Equivalence Class of a DAG using the PC Algorithm}
 \description{
   Estimate the equivalence class of a directed acyclic
   graph (DAG) from observational data, using the PC-algorithm.
 }
 \usage{
-pc(suffStat, indepTest, p, alpha, verbose = FALSE, fixedGaps = NULL,
-   fixedEdges = NULL, NAdelete = TRUE, m.max = Inf, u2pd = c("relaxed",
-"rand", "retry"), conservative = FALSE, maj.rule = FALSE, solve.confl =
-FALSE) 
+pc(suffStat, indepTest, p, alpha, fixedGaps = NULL,
+   fixedEdges = NULL, NAdelete = TRUE, m.max = Inf,
+   u2pd = c("relaxed", "rand", "retry"),
+   skel.method = c("stable", "original"),
+   conservative = FALSE, maj.rule = FALSE, solve.confl = FALSE, verbose = FALSE)
 }
 \arguments{
-  \item{suffStat}{Sufficient statistics: List containing all necessary
-    elements for the conditional independence decisions in the
-    function \code{indepTest}.}
-  \item{indepTest}{Predefined function for testing conditional independence. The
-    function is internally called as \code{indepTest(x,y,S,suffStat)}, and
-    tests conditional independence of \code{x} and \code{y} given
-    \code{S}. Here, \code{x} and \code{y} are variables, and \code{S} is
-    a (possibly empty) vector of variables (all variables are denoted
-    by their column numbers
-    in the adjacency matrix). \code{suffStat} is a list containing
-    all relevant elements for the conditional independence
-    decisions. The return value of \code{indepTest} is the p-value of
-    the test for conditional independence.}
-  \item{p}{Number of variables.}
-  \item{alpha}{Significance level for the individual conditional
-    independence tests.}
+  \item{suffStat}{a \code{\link{list}} of sufficient statistics,
+    containing all necessary elements for the conditional independence
+    decisions in the function \code{indepTest}.}
+  \item{indepTest}{a \code{\link{function}} for testing conditional
+    independence.  It is internally called as
+    \code{indepTest(x,y,S,suffStat)}, and tests conditional independence
+    of \code{x} and \code{y} given \code{S}.  Here, \code{x} and
+    \code{y} are variables, and \code{S} is a (possibly empty) vector of
+    variables (all variables are denoted by their column numbers
+    in the adjacency matrix).  \code{suffStat} is a list, see the
+    argument above.  The return value of \code{indepTest} is the p-value
+    of the test for conditional independence.}
+  \item{p}{number of variables.}
+  \item{alpha}{significance level for the individual conditional independence tests.}
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
-  \item{fixedGaps}{A logical matrix of dimension p*p. If entry
+  \item{fixedGaps}{a logical matrix of dimension p*p. If entry
     \code{[i,j]} or \code{[j,i]} (or both) are TRUE, the edge i-j is
     removed before starting the algorithm. Therefore, this edge is
     guaranteed to be absent in the resulting graph.}
-  \item{fixedEdges}{A logical matrix of dimension p*p. If entry
+  \item{fixedEdges}{a logical matrix of dimension p*p. If entry
     \code{[i,j]} or \code{[j,i]} (or both) are TRUE, the edge i-j is
     never considered for removal. Therefore, this edge is
     guaranteed to be present in the resulting graph.}
-  \item{NAdelete}{If indepTest returns \code{NA} and this option is
+  \item{NAdelete}{if indepTest returns \code{NA} and this option is
     \code{TRUE}, the corresponding edge is deleted. If this option is
     \code{FALSE}, the edge is not deleted.}
-  \item{m.max}{Maximal size of the conditioning sets that are considered in the
+  \item{m.max}{maximal size of the conditioning sets that are considered in the
     conditional independence tests.}
-  \item{u2pd}{Method for dealing with conflicting information when
-    trying to orient edges (see details below).}
-  \item{conservative}{If \code{TRUE}, conservative PC is used. In this
-    case, only option \code{u2pd = relaxed} is supported. Note, that
-    therefore the resulting object might not be extendable to a DAG. See details
-    for more information.}
-  \item{maj.rule}{If \code{TRUE}, the triples are checked for ambiguity
-    using a majority rule idea, which is less strict than the
-    conservative PC algorithm. For more information, see details.} 
+  \item{u2pd}{string specifying the method for dealing with conflicting
+    information when trying to orient edges (see details below).}
+  \item{skel.method}{character string specifying method; the default,
+    \code{"stable"} provides an \emph{order-independent} skeleton, see
+    \code{\link{skeleton}}.}
+  \item{conservative}{logical indicating if the conservative PC is used.
+    In this case, only option \code{u2pd = "relaxed"} is supported.
+    Note that therefore the resulting object might not be extendable to
+    a DAG.  See details for more information.}
+  \item{maj.rule}{logical indicating that the triples shall be checked
+    for ambiguity using a majority rule idea, which is less strict than the
+    conservative PC algorithm.  For more information, see details.}
   \item{solve.confl}{If \code{TRUE}, the orientation of the v-structures and the
     orientation rules work with lists for candidate sets and allow
     bi-directed edges to resolve conflicting edge orientations. In this
@@ -105,7 +106,7 @@ FALSE)
   of this function for details). Subsequently, as many edges as possible
   are oriented. This is done in two steps. It is important to note that
   if no further actions are taken (see below) these two steps still
-  remain order-dependent. 
+  remain order-dependent.
 
   The edges are oriented as follows. First, the algorithm considers all
   triples \code{(a,b,c)}, where \code{a} and
@@ -149,7 +150,7 @@ FALSE)
   if in more than 50 percent it is set as a non v-structure (for more
   details see Colombo and Maathuis, 2013). The useage of both the
   conservative and the majority rule versions resolve the
-  order-dependence issues of the determination of the v-structures. 
+  order-dependence issues of the determination of the v-structures.
 
   Sampling errors (or hidden variables) can lead to conflicting
   information about edge directions. For example, one may find that
@@ -177,7 +178,7 @@ FALSE)
   for the candidate edges and allowing bi-directed edges resolves the
   order-dependence issues on the orientation of the v-structures and on
   the orientation rules, see Colombo and Maathuis (2013) for
-  more details. 
+  more details.
 
   Note that calling (\code{conservative = TRUE}), or \code{maj.rule =
   TRUE}, together with \code{solve.confl = TRUE} produces a fully
@@ -201,7 +202,7 @@ FALSE)
   and then converted into its CPDAG. Note that the output can also be an
   invalid CPDAG, in the sense that it cannot arise from the oracle PC
   algorithm, but be extendible to a DAG, for example a->b<-c<-d. In this
-  case, \code{u2pd} is not used.  
+  case, \code{u2pd} is not used.
 
   Notes: (1) Throughout, the algorithm works with the column positions
   of the variables in the adjacency matrix, and not with the names of
@@ -226,9 +227,9 @@ FALSE)
   Adjacency-faithfulness and conservative causal inference. In
   \emph{Proceedings of the 22nd Annual Conference on Uncertainty in
   Artificial Intelligence}. AUAI Press, Arlington, VA.
-  
+
   P. Spirtes, C. Glymour and R. Scheines (2000).
-  \emph{Causation, Prediction, and Search}, 2nd edition. The MIT Press.  
+  \emph{Causation, Prediction, and Search}, 2nd edition. The MIT Press.
 }
 \seealso{\code{\link{skeleton}} for estimating a skeleton of a DAG;
   \code{\link{udag2pdag}} for converting the
@@ -249,14 +250,11 @@ data(gmG)
 n <- nrow(gmG$x)
 p <- ncol(gmG$x)
 
-## define independence test (partial correlations)
-indepTest <- gaussCItest
-## define sufficient statistics
-suffStat <- list(C = cor(gmG$x), n = n)
 ## estimate CPDAG
-alpha <- 0.01
-%% library(RBGL)
-pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
+pc.fit <- pc(suffStat = list(C = cor(gmG$x), n = n),
+             indepTest = gaussCItest, ## indep.test: partial correlations
+             p=p,
+             alpha=0.01, verbose = TRUE)
 if (require(Rgraphviz)) {
   ## show estimated CPDAG
   par(mfrow=c(1,2))
@@ -278,24 +276,24 @@ if (require(Rgraphviz)) {
   plot(fit, main = "Estimated CPDAG")
   plot(gmG$g, main = "True DAG")
 }
+
 ##################################################
 ## Using discrete data
 ##################################################
 ## Load data
 data(gmD)
 p <- ncol(gmD$x)
-## define independence test (G^2 statistics)
-indepTest <- disCItest
 ## define sufficient statistics
 suffStat <- list(dm = gmD$x, nlev = c(3,2,3,4,2), adaptDF = FALSE)
 ## estimate CPDAG
-alpha <- 0.01
-%% library(RBGL)
-pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
+pc.D <- pc(suffStat,
+           ## independence test: G^2 statistic
+           indepTest = disCItest, p=p,
+           alpha = 0.01, verbose = TRUE)
 if (require(Rgraphviz)) {
   ## show estimated CPDAG
   par(mfrow = c(1,2))
-  plot(pc.fit, main = "Estimated CPDAG")
+  plot(pc.D, main = "Estimated CPDAG")
   plot(gmD$g, main = "True DAG")
 }
 
@@ -305,17 +303,14 @@ if (require(Rgraphviz)) {
 ## Load binary data
 data(gmB)
 p <- ncol(gmB$x)
-## define independence test
-indepTest <- binCItest
-## define sufficient statistics
-suffStat <- list(dm = gmB$x, adaptDF = FALSE)
 ## estimate CPDAG
-alpha <- 0.01
-%% library(RBGL)
-pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
+pc.B <- pc(suffStat = list(dm = gmB$x, adaptDF = FALSE),
+           indepTest = binCItest, p=p,
+           alpha = 0.01, verbose = TRUE)
+pc.B
 if (require(Rgraphviz)) {
   ## show estimated CPDAG
-  plot(pc.fit, main = "Estimated CPDAG")
+  plot(pc.B, main = "Estimated CPDAG")
   plot(gmB$g, main = "True DAG")
 }
 }%{examples}
