@@ -13,26 +13,26 @@
 gies(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
 }
 \arguments{
-  \item{p}{Number of variables.}
-  \item{targets}{A list of intervention targets (cf. details).  A list of
+  \item{p}{number of variables.}
+  \item{targets}{a list of intervention targets (cf. details).  A list of
     vectors, each vector listing the vertices of one intervention target.}
-  \item{score}{An instance of a class derived from \code{\linkS4class{Score}}.}
-  \item{turning}{Boolean indicating whether the function should try to augment
+  \item{score}{an instance of a class derived from \code{\linkS4class{Score}}.}
+  \item{turning}{logical indicating whether the function should try to augment
     the score by turning edges (cf. details).}
-  \item{maxdegree}{Parameter used to limit the vertex degree of the estimated
-    graph.  Valid arguments:
+  \item{maxdegree}{parameter used to limit the vertex degree of the estimated
+    graph.  Possible values:
     \enumerate{
       \item Vector of length 0 (default): vertex degree is not limited.
       \item Real number \eqn{r}, \eqn{0 < r < 1}: degree of vertex \eqn{v} is 
-        limited to \eqn{r \cdot n_v}, where \eqn{n_v} denotes the number of
-        data points where \eqn{v} was not intervened.
+        limited to \eqn{r \cdot n_v}{r . n_v}, where \eqn{n_v} denotes
+	the number of data points where \eqn{v} was not intervened.
       \item Single integer: uniform bound of vertex degree for all vertices
         of the graph.
       \item Integer vector of length \code{p}: vector of individual bounds
         for the vertex degrees.
     }
   }
-  \item{\dots}{Additional arguments for debugging purposes and fine tuning.}
+  \item{\dots}{additional arguments for debugging purposes and fine tuning.}
 }
 \details{
   This function estimates the interventional Markov equivalence class of a DAG

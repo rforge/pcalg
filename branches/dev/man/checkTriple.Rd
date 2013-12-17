@@ -1,51 +1,28 @@
 \name{checkTriple}
 \alias{checkTriple}
-\title{
-Check consistency of conditional independence for a triple of nodes.
-}
+\title{Check Consistency of Conditional Independence for a Triple of Nodes}
 \description{
-For each subset of \code{nbrsA} and \code{nbrsC} where \code{a} and
-\code{c} are cond. independent, it is checked if \code{b} is in the
-conditioning set.  
+  For each subset of \code{nbrsA} and \code{nbrsC} where \code{a} and
+  \code{c} are conditionally independent, it is checked if \code{b} is in the
+  conditioning set.  
 }
 \usage{
-checkTriple(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC, suffStat, indepTest, alpha, verbose = FALSE, version.unf = c(NA, NA), maj.rule = FALSE)
+checkTriple(a, b, c, nbrsA, nbrsC,
+            sepsetA, sepsetC,
+            suffStat, indepTest, alpha, version.unf = c(NA, NA),
+            maj.rule = FALSE, verbose = FALSE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{a}{
-    Node \code{a} (positions in adjacency matrix).
-  }
-  \item{b}{
-    Node \code{b} (positions in adjacency matrix).
-  }
-  \item{c}{
-  Node \code{c} (positions in adjacency matrix).
-}
-\item{nbrsA}{
-Neighbors of \code{a}.
-}
-\item{nbrsC}{
-  Neighbors of \code{c}.
-}
-  \item{sepsetA}{
-Vector containing Sepset(a,c).
-}
-  \item{sepsetC}{
-Vector containing Sepset(c,a).
-}
-  \item{suffStat}{
-Sufficient statistics for independent tests.
-}
-  \item{indepTest}{
-Function for independence test.
-}
-  \item{alpha}{
-Significance level of test.
-}
-  \item{verbose}{
-Detailed output of intermediate steps.
-}
+  \item{a, b, c}{integer positions in adjacency matrix for nodes
+    \eqn{a}, \eqn{b}, and \eqn{c}, respectively.}
+  \item{nbrsA, nbrsC}{neighbors of \eqn{a} and \eqn{c}, respectively.}
+  \item{sepsetA}{vector containing \eqn{Sepset(a,c)}.}
+  \item{sepsetC}{vector containing \eqn{Sepset(c,a)}.}
+  \item{suffStat}{a \code{\link{list}} of sufficient statistics for
+    independent tests; see, e.g., \code{\link{pc}}.}
+  \item{indepTest}{a \code{\link{function}} for the independence test,
+    see, e.g., \code{\link{pc}}.}
+  \item{alpha}{significance level of test.}
   \item{version.unf}{
     Vector of length two:
     \code{version.unf[1]}: 1 - check for all separating subsets of
@@ -55,32 +32,33 @@ Detailed output of intermediate steps.
     although \code{b} is in the sepset, which indicates an ambiguous situation);
     version.unf[2]: 1 - do not consider the initial sepsets
     \code{sepsetA} and \code{sepsetC} (same as Tetrad), 2 - consider if
-    \code{b} is in \code{sepsetA} or \code{sepsetC}
-}
-  \item{maj.rule}{
-Boolean; if \code{TRUE}, the following majority rule is applied: if \code{b} is
-in less than 
-50\% of the checked sepsets, we say that \code{b} is in NO sepset. If
-\code{b} is in more than 50\% of the checked sepsets, we say that
-\code{b} is in ALL sepsets. If \code{b} is in exactly 50\% of the
-checked sepsets, the triple is considered ambiguous.
-}
+    \code{b} is in \code{sepsetA} or \code{sepsetC}.}
+  \item{maj.rule}{logical, indicating that the following majority rule
+    is applied: if \code{b} is in less than 
+    50\% of the checked sepsets, we say that \code{b} is in \bold{no} sepset.  If
+    \code{b} is in more than 50\% of the checked sepsets, we say that
+    \code{b} is in \bold{all} sepsets.  If \code{b} is in exactly 50\% of the
+    checked sepsets, the triple is considered \sQuote{ambiguous}.}
+  \item{verbose}{logical asking for detailed output of intermediate steps.}
 }
 \details{
 This function is used in the conservative versions of structure learning
   algorithms. 
 }
 \value{
-  \item{decision}{Decision on possibly ambiguous triple: 1 - \code{b} is in NO
-  sepset (make v-structure); 2 - \code{b} is in ALL sepsets (make no
-  v-structure); 3 - \code{b} is in SOME but not all sepsets (ambiguous triple)}
-\item{vers}{version (1 or 2) of the ambiguous triple
-  (1=normal ambiguous triple that is \code{b} is in some sepsets;
-  2=triple coming from \code{version.unf[1]==2}, that is, \code{a} and
-  \code{c} are indep given the initial sepset but there doesn't exist a
-  subset of the neighbours that d-separates them.)}
-\item{sepsetA}{Updated version of \code{sepsetA}}
-\item{sepsetC}{Updated version of \code{sepsetC}}
+  \item{decision}{Decision on possibly ambiguous triple with codes
+    \describe{
+      \item{1}{\code{b} is in NO sepset (make v-structure);}
+      \item{2}{\code{b} is in ALL sepsets (make no v-structure);}
+      \item{3}{\code{b} is in SOME but not all sepsets (ambiguous triple)}
+  }}
+  \item{vers}{version (1 or 2) of the ambiguous triple
+    (1=normal ambiguous triple that is \code{b} is in some sepsets;
+    2=triple coming from \code{version.unf[1]==2}, that is, \code{a} and
+    \code{c} are indep given the initial sepset but there doesn't exist a
+    subset of the neighbours that d-separates them.)}
+  \item{sepsetA}{Updated version of \code{sepsetA}}
+  \item{sepsetC}{Updated version of \code{sepsetC}}
 }
 \references{
   D. Colombo and M.H. Maathuis (2013).
@@ -127,6 +105,4 @@ checkTriple(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC, suffStat,
 indepTest, alpha, verbose = TRUE, version.unf = c(2,2), maj.rule = FALSE)
 
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
 \keyword{manip}

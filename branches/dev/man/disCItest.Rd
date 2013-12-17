@@ -11,7 +11,7 @@
   used in \code{\link{skeleton}}, \code{\link{pc}} and \code{\link{fci}}.
 }
 \usage{
-gSquareDis(x, y, S, dm, nlev, verbose = FALSE, adaptDF = FALSE)
+gSquareDis(x, y, S, dm, nlev, adaptDF = FALSE, verbose = FALSE)
 disCItest (x, y, S, suffStat)
 }
 \arguments{
@@ -21,9 +21,9 @@ disCItest (x, y, S, suffStat)
   \item{dm}{data matrix (rows: samples, columns: variables) with binary
     entries}
   \item{nlev}{vector with numbers of levels for each variable}
-  \item{verbose}{logical indicating if detailed output is to be provided.}
   \item{adaptDF}{lower the degrees of freedom by one for each zero
     count.  The value for the degrees of freedom cannot go below 1.}
+  \item{verbose}{logical indicating if detailed output is to be provided.}
 
   \item{suffStat}{A list with three elements: \code{"dm"},
     \code{"nlev"}, \code{"adaptDF"}; each corresponding to the above

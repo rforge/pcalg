@@ -4023,8 +4023,9 @@ idaFast <- function(x.pos, y.pos.set, mcov, graphEst)
   beta.hat
 }
 
+## -> ../man/legal.path.Rd
 ## only called in  qreach()  with only 'c' varying
-legal.psep <- function(a,b,c,amat)
+legal.path <- function(a,b,c, amat)
 {
   ## Purpose: Is path a-b-c legal (either collider in b or a,b,c is triangle)
   ## !! a-b-c must be in a path !! this is not checked !!

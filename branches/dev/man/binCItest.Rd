@@ -12,7 +12,7 @@
   \code{\link{fci}}. 
 }
 \usage{
-gSquareBin(x, y, S, dm, verbose = FALSE, adaptDF = FALSE)
+gSquareBin(x, y, S, dm, adaptDF = FALSE, verbose = FALSE)
 binCItest (x, y, S, suffStat)
 }
 \arguments{
@@ -24,10 +24,10 @@ binCItest (x, y, S, suffStat)
   \item{adaptDF}{logical specifying if the degrees of freedom should be
     lowered by one for each zero count.  The value for the degrees of
     freedom cannot go below 1.}
-  \item{verbose}{logical indicating if detailed output is to be provided.}
   \item{suffStat}{a \code{\link{list}} with two elements,
     \code{"dm"}, and \code{"adaptDF"} corresponding to the above two
     arguments of \code{gSquareBin()}.}
+  \item{verbose}{logical indicating if detailed output is to be provided.}
 }
 \value{
   The p-value of the test.

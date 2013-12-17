@@ -35,11 +35,11 @@ pcSelect(y, dm, alpha, corMethod = "standard",
   \item{directed}{logical; should the output graph be directed?}
 }
 \value{
-  \item{G}{A boolean vector indicating which column of \code{dm} is
-    associated with \code{y}}
-  \item{zMin}{The minimal z-values when testing partial correlations
-    between \code{y} and each column of \code{dm}. The larger the number,
-    the more consistent is the edge with the data.}
+  \item{G}{A \code{\link{logical}} vector indicating which column of
+    \code{dm} is associated with \code{y}.} 
+  \item{zMin}{the minimal z-values when testing partial correlations
+    between \code{y} and each column of \code{dm}.  The larger the
+    number, the more consistent is the edge with the data.}
 }
 \details{
   This function basically applies \code{\link{pc}} on the data

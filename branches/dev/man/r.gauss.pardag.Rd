@@ -13,22 +13,22 @@
 }
 \usage{
 r.gauss.pardag(p, prob, top.sort = FALSE, normalize = FALSE, 
-lbe = 0.1, ube = 1, neg.coef = TRUE, lbv = 0.5, ubv = 1)
+               lbe = 0.1, ube = 1, neg.coef = TRUE, lbv = 0.5, ubv = 1)
 }
 \arguments{
-  \item{p}{Number of nodes}
-  \item{prob}{Probability of connecting a node to another node.}
-  \item{top.sort}{Boolean indicating whether the output graph should be 
+  \item{p}{number of nodes}
+  \item{prob}{probability of connecting a node to another node.}
+  \item{top.sort}{logical indicating whether the output graph should be 
     topologically sorted, meaning that arrows always point from lower
     to higher node indices.}
-  \item{normalize}{Boolean indicating whether weights and error variances
+  \item{normalize}{logical indicating whether weights and error variances
     should be normalized such that the diagonal of the corresponding 
     observational covariance matrix is 1.}
-  \item{lbe, ube}{Lower and upper bounds of the absolute values of edge 
+  \item{lbe, ube}{lower and upper bounds of the absolute values of edge 
     weights.}
-  \item{neg.coef}{Boolean indicating whether negative edge weights are also
+  \item{neg.coef}{logical indicating whether negative edge weights are also
     admissible.}
-  \item{lbv, ubv}{Lower and upper bound on error variances of the noise terms
+  \item{lbv, ubv}{lower and upper bound on error variances of the noise terms
     in the structural equations.}
 }
 \details{

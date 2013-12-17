@@ -23,7 +23,7 @@ pcSelect.presel(y, dm, alpha, alphapre, corMethod = "standard",
   \item{directed}{logical; should the output graph be directed?}
 }
 \value{
-  \item{pcs}{A boolean vector indicating which column of \code{dm} is
+  \item{pcs}{logical vector indicating which column of \code{dm} is
     associated with \code{y}}
   \item{zMin}{The minimal z-values when testing partial correlations
     between \code{y} and each column of \code{dm}. The larger the number,
@@ -37,9 +37,7 @@ pcSelect.presel(y, dm, alpha, alphapre, corMethod = "standard",
 }
 \seealso{\code{\link{pcSelect}}
 }
-\author{
-  Philipp Ruetimann.
-}
+\author{Philipp Ruetimann}
 \examples{
 p <- 10
 ## generate and draw random DAG :
@@ -57,7 +55,7 @@ d.mat <- rmvDAG(n, myDAG, errDist = "normal")
 ## "cause" the tenth variable?
 y <- d.mat[,10]
 dm <- d.mat[,-10]
-res <- pcSelect.presel(d.mat[,10],d.mat[,-10],alpha=0.05,alphapre=0.6)
+res <- pcSelect.presel(d.mat[,10], d.mat[,-10], alpha=0.05, alphapre=0.6)
 }
 \keyword{multivariate}
 \keyword{models}
