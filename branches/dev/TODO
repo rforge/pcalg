@@ -15,10 +15,10 @@
      
 * TODO Remarks on specific functions and issues:
 ** TODO skeleton(): keep back compatibility  update= c("stable","original")  <<---MM
+*** DONE in code
+*** TODO but MM's tests show NOT QUITE back compatibility 
 ** TODO pag2mag() return adj.matrix instead of *object* -> named pag2magAM()
    whereas dag2pag() does return more than just an adj.matrix. Change BEFORE release
-** TODO I've introduced 'max.chordal = 10' to 'backdoor()' 
-  which was hidden in the code previously. Have you ever tried larger/smaller?
 ** TODO pc(), probably fci() etc: loses variable labels and works with "1", "2",...???
    --> file:/u/maechler/R/MM/Pkg-ex/pcalg/Borsboom_mail.R is an example
    where he explicitly calls an other package just to get sensible labeled plots.
@@ -33,16 +33,18 @@
 
 ** TODO gAlgo-class: consider using setMethod(., "gAlgo")
    instead of all methods (plot, summary) for both pcAlgo and fciAlgo
-** DONE myCItest() in  der Vignette inst/doc/pcalgDoc.Snw
+** DONE myCItest() in Vignette vignettes/pcalgDoc.Rnw
    instead of lm() twice, use lm.fit *once* (*multivariate* regression).
    This will probably be much faster.
 ** ida():  argument  'all.dags' is never used, i.e., never tested.
 ** DONE dsepTest(): gibt 0 / 1  zurück; wieso nicht  FALSE/TRUE wie dsep()?  A:"P-value"
-** TODO gSquareBin(), gSquareDis():
+** TODO I've introduced 'max.chordal = 10' to 'backdoor()' 
+  which was hidden in the code previously. Have you ever tried larger/smaller?
+** DONE gSquareBin(), gSquareDis():
   - returns a P-value but not the test statistic.  Should *really* return
     an object of (standard S3 class) "htest" (which contains P-value, test
-    statistic, ...)!
-
+    statistic, ...).  
+    But they have been documented to do what they do, and so we keep them.
 
 ** TODO pc(*, verbose=TRUE) for a "large" example with 18 vars: *much* output;
    and the 10 rules at the very end.
