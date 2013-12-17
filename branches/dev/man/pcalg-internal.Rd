@@ -21,7 +21,7 @@
 \alias{pcAlgo.Perfect}
 \alias{possibleDe}
 \alias{reach}
-\alias{rfci.v.str}% <- renamed; TODO (MM)
+\alias{rfci.vStruc}% <- renamed; TODO (MM)
 \alias{triple2numb}
 \alias{updateList}
 \alias{visibleEdge}

@@ -2,7 +2,7 @@
 \alias{udag2pdag}
 \alias{udag2pdagRelaxed}
 \alias{udag2pdagSpecial}
-\title{Last PC Algorithm Step: Extend Object with Skeleton to a Completed PDAG}
+\title{Last PC Algorithm Step: Extend Object with Skeleton to Completed PDAG}
 \description{
   These functions perform the last step in the PC algorithm:
   Transform an object of the class
@@ -178,7 +178,7 @@
 \author{Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 \seealso{\code{\link{pc}}, \code{\link{pdag2dag}},
   \code{\link{dag2cpdag}}, \code{\link{udag2pag}},
-  \code{\link{udag2apag}}, \link{\code{dag2pag}}.
+  \code{\link{udag2apag}}, \code{\link{dag2pag}}.
 }
 \examples{
 ## simulate data
