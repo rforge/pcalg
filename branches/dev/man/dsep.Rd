@@ -12,10 +12,10 @@ dsep(a, b, S=NULL, g, john.pairs = NULL)
   \item{b}{Label (sic!) of node B}
   \item{S}{Labels (sic!) of set of nodes on which it is conditioned,
     maybe empty}
-  \item{g}{the Directed Acyclic Graph (object of \code{\link{class}}
+  \item{g}{The Directed Acyclic Graph (object of \code{\link{class}}
     "graph", see \code{\link[graph]{graph-class}} from the
     package \pkg{graph})}
-  \item{john.pairs}{the shortest path distance matrix for all pairs of
+  \item{john.pairs}{The shortest path distance matrix for all pairs of
     nodes as computed (also by default) in
     \code{\link[RBGL]{johnson.all.pairs.sp}} from package \pkg{RBGL}.}
 }

@@ -10,8 +10,8 @@
 shd(g1,g2)
 }
 \arguments{
-  \item{g1}{graph object}
-  \item{g2}{graph object}
+  \item{g1}{Graph object}
+  \item{g2}{Graph object}
 }
 \value{
   The value of the SHD (numeric).

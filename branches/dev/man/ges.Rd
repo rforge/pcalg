@@ -17,7 +17,7 @@ ges(p, score, turning = TRUE, maxdegree = integer(0), ...)
   \item{p}{Number of variables.}
   \item{score}{An instance of a class derived from \code{\linkS4class{Score}}
     which only accounts for observational data.}
-  \item{turning}{logical indicating whether the function should try to augment
+  \item{turning}{Logical indicating whether the function should try to augment
     the score by turning edges (cf. details).}
   \item{maxdegree}{Parameter used to limit the vertex degree of the estimated
     graph.  Valid arguments:

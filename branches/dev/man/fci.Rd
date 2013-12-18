@@ -34,10 +34,10 @@ fci(suffStat, indepTest, p, alpha,
   \item{p}{Number of variables.}
   \item{alpha}{Significance level for the individual conditional
     independence tests.}
-  \item{skel.method}{character string specifying method; the default,
+  \item{skel.method}{Character string specifying method; the default,
     \code{"stable"} provides an \emph{order-independent} skeleton, see
     \code{\link{skeleton}}.}
-  \item{type}{character string specifying the version of the FCI
+  \item{type}{Character string specifying the version of the FCI
     algorithm to be used.  By default, it is \code{"normal"}, and so the
     normal FCI algorithm is called.  If set to \code{"anytime"}, the
     \sQuote{Anytime FCI} is called and \code{m.max} needs to be specified.
@@ -78,16 +78,16 @@ fci(suffStat, indepTest, p, alpha,
     and \code{y} are considered to be in Possible-D-SEP(\code{x}) when
     testing independence between \code{x} and \code{y}. Uses
     biconnected components, \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
-  \item{conservative}{logical indicating if the unshielded triples
+  \item{conservative}{Logical indicating if the unshielded triples
     should be checked for ambiguity the second time when v-structures
     are determined.  For more information, see details.} 
-  \item{maj.rule}{logical indicating if the unshielded triples should
+  \item{maj.rule}{Logical indicating if the unshielded triples should
     be checked for ambiguity the second time when v-structures are
     determined using a majority rule idea, which is less strict than the
     standard conservative.  For more information, see details.}  
-  \item{labels}{character vector of length p with node names. If
+  \item{labels}{Character vector of length p with node names. If
     \code{NA}, \code{as.character{1:p}} is used instead.}
-  \item{verbose}{if true, more detailed output is provided.}
+  \item{verbose}{If true, more detailed output is provided.}
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
  \code{\linkS4class{fciAlgo}}) containing the estimated graph

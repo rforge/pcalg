@@ -16,16 +16,13 @@
   qreach(x, amat, verbose = FALSE)
 }
 \arguments{
-  \item{x}{integer: column position of node in adjacency matrix, of
+  \item{x}{Integer: column position of node in adjacency matrix, of
   which Possible-D-SEP set is to be computed.}
-  \item{amat}{adjacency matrix as returned by ....% << FIXME ???
-    \describe{
-      \item{amat[i,j] = 0}{iff no edge btw i,j}
-      \item{amat[i,j] = 1}{iff i *-o j}
-      \item{amat[i,j] = 2}{iff i *-> j}
-    }
+  \item{amat}{Adjacency matrix (coding 0,1,2,3 for no edge, circle,
+    arrowhead, tail; e.g., \code{amat[a,b] = 2} and \code{amat[b,a] = 3}
+    implies a -> b) 
   }
-  \item{verbose}{logical, asking for details on output}
+  \item{verbose}{Logical, asking for details on output}
 }
 \value{
   Vector of column positions indicating the nodes in Possible-D-SEP of x.

@@ -19,19 +19,19 @@ zStat         (x, y, S, C, n)
 gaussCItest   (x, y, S, suffStat)
 }
 \arguments{
-  \item{x,y,S}{it is tested, whether \code{x} and \code{y} are conditionally
+  \item{x,y,S}{It is tested, whether \code{x} and \code{y} are conditionally
     independent given the subset \code{S} of the remaining nodes.
     \code{x, y, S} all are integers, corresponding to variable or node
     numbers.}
-  \item{C}{correlation matrix of nodes}
-  \item{n}{integer specifying the number of observations
+  \item{C}{Correlation matrix of nodes}
+  \item{n}{Integer specifying the number of observations
     (\dQuote{samples}) used to estimate the correlation matrix \code{C}.}
-  \item{cutoff}{numeric cutoff for significance level of individual partial
+  \item{cutoff}{Numeric cutoff for significance level of individual partial
     correlation tests.  Must be set to \code{\link{qnorm}(1 - alpha/2)}
     for a test significance level of \code{alpha}.}
-  \item{verbose}{logical indicating whether some intermediate output should be
+  \item{verbose}{Logical indicating whether some intermediate output should be
     shown; currently not used.}% (WARNING: This decreases the performance dramatically!)}
-  \item{suffStat}{a \code{\link{list}} with two elements, \code{"C"}
+  \item{suffStat}{A \code{\link{list}} with two elements, \code{"C"}
     and \code{"n"}, corresponding to the above arguments with the same name.}
 }
 \value{

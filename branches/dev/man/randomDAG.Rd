@@ -9,10 +9,10 @@
 randomDAG(n, prob, lB = 0.1, uB = 1, V = as.character(1:n))
 }
 \arguments{
-  \item{n}{number of nodes, \eqn{n \ge 2}{n >= 2}.}
-  \item{prob}{probability of connecting a node to another node with
+  \item{n}{Number of nodes, \eqn{n \ge 2}{N >= 2}.}
+  \item{prob}{Probability of connecting a node to another node with
     higher topological ordering.}
-  \item{lB, uB}{lower and upper limit of edge weights, chosen uniformly
+  \item{lB, uB}{Lower and upper limit of edge weights, chosen uniformly
     at random, i.e., by \code{\link{runif}(., min=lB, max=uB)}.}
   \item{V}{\code{\link{character}} vector length \code{n} of node names.}
 }

@@ -12,11 +12,11 @@ pc.cons.intern(sk, suffStat, indepTest, alpha, version.unf = c(NA, NA),
                maj.rule = FALSE, verbose = FALSE)
 }
 \arguments{
-  \item{sk}{a skeleton object as returned from \code{\link{skeleton}()}.}
-  \item{suffStat}{sufficient statistic: List containing all necessary
+  \item{sk}{A skeleton object as returned from \code{\link{skeleton}()}.}
+  \item{suffStat}{Sufficient statistic: List containing all necessary
     elements for the conditional independence decisions in the
     function \code{indepTest}.}
-  \item{indepTest}{pre-defined function for testing conditional independence. The
+  \item{indepTest}{Pre-defined function for testing conditional independence. The
     function is internally called as \code{indepTest(x,y,S,suffStat)}, and
     tests conditional independence of \code{x} and \code{y} given
     \code{S}. Here, \code{x} and \code{y} are variables, and \code{S} is
@@ -26,19 +26,19 @@ pc.cons.intern(sk, suffStat, indepTest, alpha, version.unf = c(NA, NA),
     all relevant elements for the conditional independence
     decisions. The return value of \code{indepTest} is the p-value of
     the test for conditional independence.}
-  \item{alpha}{significance level for the individual conditional
+  \item{alpha}{Significance level for the individual conditional
     independence tests.}
-  \item{version.unf}{vector of length two.  If \code{version.unf}[2]==1,
+  \item{version.unf}{Vector of length two.  If \code{version.unf}[2]==1,
     the intitial separating set found by the PC/FCI algorithm is
     added to the set of separating sets; if \code{version.unf[2]==}2, it
     is not added.  In the latter case, if the set of separating sets is
     empty, the triple is marked as unambiguous if
     \code{version.unf}[1]==1, and as ambiguous if
     \code{version.unf}[1]==2.}
-  \item{maj.rule}{logical indicatin if the triples are checked for
+  \item{maj.rule}{Logical indicatin if the triples are checked for
     ambiguity using the majority rule idea, which is less strict than
     the standard conservative method.}
-  \item{verbose}{logical asking for detailed output.}
+  \item{verbose}{Logical asking for detailed output.}
 }
 \details{
   For any unshielded triple A-B-C, consider all subsets of the neighbors

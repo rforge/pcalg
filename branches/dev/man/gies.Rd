@@ -13,13 +13,13 @@
 gies(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
 }
 \arguments{
-  \item{p}{number of variables.}
-  \item{targets}{a list of intervention targets (cf. details).  A list of
+  \item{p}{Number of variables.}
+  \item{targets}{A list of intervention targets (cf. details).  A list of
     vectors, each vector listing the vertices of one intervention target.}
-  \item{score}{an instance of a class derived from \code{\linkS4class{Score}}.}
-  \item{turning}{logical indicating whether the function should try to augment
+  \item{score}{An instance of a class derived from \code{\linkS4class{Score}}.}
+  \item{turning}{Logical indicating whether the function should try to augment
     the score by turning edges (cf. details).}
-  \item{maxdegree}{parameter used to limit the vertex degree of the estimated
+  \item{maxdegree}{Parameter used to limit the vertex degree of the estimated
     graph.  Possible values:
     \enumerate{
       \item Vector of length 0 (default): vertex degree is not limited.
@@ -32,7 +32,7 @@ gies(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
         for the vertex degrees.
     }
   }
-  \item{\dots}{additional arguments for debugging purposes and fine tuning.}
+  \item{\dots}{Additional arguments for debugging purposes and fine tuning.}
 }
 \details{
   This function estimates the interventional Markov equivalence class of a DAG

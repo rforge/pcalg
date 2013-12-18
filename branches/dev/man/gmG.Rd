@@ -10,7 +10,7 @@ variables and the corresonding DAG model.
 \format{
   The format is a list of two components
   \describe{
-    \item{x:}{num [1:5000, 1:8] 0.181 0.354 0.504 0.701 -0.705 ...}
+    \item{x:}{Num [1:5000, 1:8] 0.181 0.354 0.504 0.701 -0.705 ...}
     \item{g:}{Formal class 'graphNEL' [package "graph"] with 6 slots\cr
       .. ..@ nodes     : chr [1:8] "1" "2" "3" "4" ...\cr
       .. ..@ edgeL     :List of 8\cr

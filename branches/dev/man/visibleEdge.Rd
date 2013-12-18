@@ -11,7 +11,8 @@ visibleEdge(amat, x, z)
 }
 \arguments{
   \item{amat}{Adjacency matrix (coding 0,1,2,3 for no edge, circle,
-    arrowhead, tail).
+    arrowhead, tail; e.g., \code{amat[a,b] = 2} and \code{amat[b,a] = 3}
+    implies a -> b).
 }
   \item{x}{Node x.
 }

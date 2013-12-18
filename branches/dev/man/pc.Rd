@@ -13,10 +13,10 @@ pc(suffStat, indepTest, p, alpha, fixedGaps = NULL,
    conservative = FALSE, maj.rule = FALSE, solve.confl = FALSE, verbose = FALSE)
 }
 \arguments{
-  \item{suffStat}{a \code{\link{list}} of sufficient statistics,
+  \item{suffStat}{A \code{\link{list}} of sufficient statistics,
     containing all necessary elements for the conditional independence
     decisions in the function \code{indepTest}.}
-  \item{indepTest}{a \code{\link{function}} for testing conditional
+  \item{indepTest}{A \code{\link{function}} for testing conditional
     independence.  It is internally called as
     \code{indepTest(x,y,S,suffStat)}, and tests conditional independence
     of \code{x} and \code{y} given \code{S}.  Here, \code{x} and
@@ -25,32 +25,32 @@ pc(suffStat, indepTest, p, alpha, fixedGaps = NULL,
     in the adjacency matrix).  \code{suffStat} is a list, see the
     argument above.  The return value of \code{indepTest} is the p-value
     of the test for conditional independence.}
-  \item{p}{number of variables.}
-  \item{alpha}{significance level for the individual conditional independence tests.}
+  \item{p}{Number of variables.}
+  \item{alpha}{Significance level for the individual conditional independence tests.}
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
-  \item{fixedGaps}{a logical matrix of dimension p*p. If entry
+  \item{fixedGaps}{A logical matrix of dimension p*p. If entry
     \code{[i,j]} or \code{[j,i]} (or both) are TRUE, the edge i-j is
     removed before starting the algorithm. Therefore, this edge is
     guaranteed to be absent in the resulting graph.}
-  \item{fixedEdges}{a logical matrix of dimension p*p. If entry
+  \item{fixedEdges}{A logical matrix of dimension p*p. If entry
     \code{[i,j]} or \code{[j,i]} (or both) are TRUE, the edge i-j is
     never considered for removal. Therefore, this edge is
     guaranteed to be present in the resulting graph.}
-  \item{NAdelete}{if indepTest returns \code{NA} and this option is
+  \item{NAdelete}{If indepTest returns \code{NA} and this option is
     \code{TRUE}, the corresponding edge is deleted. If this option is
     \code{FALSE}, the edge is not deleted.}
-  \item{m.max}{maximal size of the conditioning sets that are considered in the
+  \item{m.max}{Maximal size of the conditioning sets that are considered in the
     conditional independence tests.}
-  \item{u2pd}{string specifying the method for dealing with conflicting
+  \item{u2pd}{String specifying the method for dealing with conflicting
     information when trying to orient edges (see details below).}
-  \item{skel.method}{character string specifying method; the default,
+  \item{skel.method}{Character string specifying method; the default,
     \code{"stable"} provides an \emph{order-independent} skeleton, see
     \code{\link{skeleton}}.}
-  \item{conservative}{logical indicating if the conservative PC is used.
+  \item{conservative}{Logical indicating if the conservative PC is used.
     In this case, only option \code{u2pd = "relaxed"} is supported.
     Note that therefore the resulting object might not be extendable to
     a DAG.  See details for more information.}
-  \item{maj.rule}{logical indicating that the triples shall be checked
+  \item{maj.rule}{Logical indicating that the triples shall be checked
     for ambiguity using a majority rule idea, which is less strict than the
     conservative PC algorithm.  For more information, see details.}
   \item{solve.confl}{If \code{TRUE}, the orientation of the v-structures and the

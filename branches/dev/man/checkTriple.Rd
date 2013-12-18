@@ -13,16 +13,16 @@ checkTriple(a, b, c, nbrsA, nbrsC,
             maj.rule = FALSE, verbose = FALSE)
 }
 \arguments{
-  \item{a, b, c}{integer positions in adjacency matrix for nodes
+  \item{a, b, c}{Integer positions in adjacency matrix for nodes
     \eqn{a}, \eqn{b}, and \eqn{c}, respectively.}
-  \item{nbrsA, nbrsC}{neighbors of \eqn{a} and \eqn{c}, respectively.}
-  \item{sepsetA}{vector containing \eqn{Sepset(a,c)}.}
-  \item{sepsetC}{vector containing \eqn{Sepset(c,a)}.}
-  \item{suffStat}{a \code{\link{list}} of sufficient statistics for
+  \item{nbrsA, nbrsC}{Neighbors of \eqn{a} and \eqn{c}, respectively.}
+  \item{sepsetA}{Vector containing \eqn{Sepset(a,c)}.}
+  \item{sepsetC}{Vector containing \eqn{Sepset(c,a)}.}
+  \item{suffStat}{A \code{\link{list}} of sufficient statistics for
     independent tests; see, e.g., \code{\link{pc}}.}
-  \item{indepTest}{a \code{\link{function}} for the independence test,
+  \item{indepTest}{A \code{\link{function}} for the independence test,
     see, e.g., \code{\link{pc}}.}
-  \item{alpha}{significance level of test.}
+  \item{alpha}{Significance level of test.}
   \item{version.unf}{
     Vector of length two:
     \code{version.unf[1]}: 1 - check for all separating subsets of
@@ -33,13 +33,13 @@ checkTriple(a, b, c, nbrsA, nbrsC,
     version.unf[2]: 1 - do not consider the initial sepsets
     \code{sepsetA} and \code{sepsetC} (same as Tetrad), 2 - consider if
     \code{b} is in \code{sepsetA} or \code{sepsetC}.}
-  \item{maj.rule}{logical, indicating that the following majority rule
+  \item{maj.rule}{Logical, indicating that the following majority rule
     is applied: if \code{b} is in less than 
     50\% of the checked sepsets, we say that \code{b} is in \bold{no} sepset.  If
     \code{b} is in more than 50\% of the checked sepsets, we say that
     \code{b} is in \bold{all} sepsets.  If \code{b} is in exactly 50\% of the
     checked sepsets, the triple is considered \sQuote{ambiguous}.}
-  \item{verbose}{logical asking for detailed output of intermediate steps.}
+  \item{verbose}{Logical asking for detailed output of intermediate steps.}
 }
 \details{
 This function is used in the conservative versions of structure learning
@@ -52,7 +52,7 @@ This function is used in the conservative versions of structure learning
       \item{2}{\code{b} is in ALL sepsets (make no v-structure);}
       \item{3}{\code{b} is in SOME but not all sepsets (ambiguous triple)}
   }}
-  \item{vers}{version (1 or 2) of the ambiguous triple
+  \item{vers}{Version (1 or 2) of the ambiguous triple
     (1=normal ambiguous triple that is \code{b} is in some sepsets;
     2=triple coming from \code{version.unf[1]==2}, that is, \code{a} and
     \code{c} are indep given the initial sepset but there doesn't exist a

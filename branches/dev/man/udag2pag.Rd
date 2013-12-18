@@ -12,16 +12,18 @@
 udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL, verbose = FALSE)
 }
 \arguments{
-  \item{pag}{adjacency matrix of the final skeleton of size p*p.}
-  \item{sepset}{list of length p; each element of the list
+  \item{pag}{Adjacency matrix of the final skeleton of size p*p (coding
+    0,1,2,3 for no edge, circle, arrowhead, tail; e.g., \code{amat[a,b]
+      = 2} and \code{amat[b,a] = 3} implies a -> b).} 
+  \item{sepset}{List of length p; each element of the list
     contains another list of length p. The element
     \code{sepset[[x]][[y]]} contains the separation set that made the edge
     between \code{x} and \code{y} drop out. This object is thought to be
     obtained from a \code{pcAlgo}-object.}
-  \item{rules}{array of length 10 containing \code{TRUE} or \code{FALSE}
+  \item{rules}{Array of length 10 containing \code{TRUE} or \code{FALSE}
     for each rule. \code{TRUE} in position i means that rule i (Ri) will
     be applied.  By default, all rules are used.}
-  \item{unfVect}{vector containing numbers that encode ambiguous unshielded
+  \item{unfVect}{Vector containing numbers that encode ambiguous unshielded
     triples (as returned by \code{\link{pc.cons.intern}}).  This is
     needed in the conservative and majority rule versions of FCI.}
   \item{verbose}{If \code{TRUE}, detailed output is provided.}

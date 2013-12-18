@@ -11,9 +11,11 @@
 legal.path(a, b, c, amat)
 }
 \arguments{
-  \item{a,b,c}{integer positions in adjacency matrix of nodes \eqn{a},
+  \item{a,b,c}{Integer positions in adjacency matrix of nodes \eqn{a},
     \eqn{b}, and \eqn{c}, respectively.}
-  \item{amat}{adjacency matrix with values 0,1,2 for no edge, circle, arrowhead.}
+  \item{amat}{Adjacency matrix (coding 0,1,2,3 for no edge, circle,
+  arrowhead, tail; e.g., \code{amat[a,b] = 2} and \code{amat[b,a] = 3}
+  implies a -> b)} 
 }
 \note{Prerequisite: \eqn{a--b--c}{a-b-c} \emph{must} be in a path (and
   this is \emph{not} checked by \code{legal.path()}).

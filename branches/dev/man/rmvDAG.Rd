@@ -13,12 +13,12 @@ rmvDAG(n, dag,
        mix = 0.1, errMat = NULL)
 }
 \arguments{
-  \item{n}{number of samples that should be drawn. (integer)}
-  \item{dag}{a graph object describing the DAG; must contain weights for
+  \item{n}{Number of samples that should be drawn. (integer)}
+  \item{dag}{A graph object describing the DAG; must contain weights for
     all the edges. The nodes must be topologically sorted. (For
     topological sorting use \code{\link[RBGL]{tsort}} from the
     \pkg{RBGL} package.)}
-  \item{errDist}{string specifying the distribution of each node.
+  \item{errDist}{String specifying the distribution of each node.
     Currently, the options "normal", "t4", "cauchy", "mix", "mixt3" and
     "mixN100" are supported.  The first
     three generate standard normal-, t(df=4)- and cauchy-random
@@ -27,10 +27,10 @@ rmvDAG(n, dag,
     options "mix", "mixt3", "mixN100" are drawn from a standard cauchy,
     t(df=3) and N(0,100) distribution, respectively.  The fraction of
     outliers is determined by the \code{mix} argument.}
-  \item{mix}{for the \code{"mix*"} error distributuion, \code{mix}
+  \item{mix}{For the \code{"mix*"} error distributuion, \code{mix}
     specifies the fraction of \dQuote{outlier} samples (i.e., Cauchy, t3
     or N(0,100)).}
-  \item{errMat}{numeric \eqn{n * p} matrix specifiying the error vectors
+  \item{errMat}{Numeric \eqn{n * p} matrix specifiying the error vectors
     \eqn{e_i} (see Details), instead of specifying \code{errDist} (and
     maybe \code{mix}).}
 }

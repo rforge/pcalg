@@ -10,13 +10,13 @@
 plotSG(graphObj, y, dist, amat = NA, directed = TRUE, main = )
 }
 \arguments{
-  \item{graphObj}{an \R object of class \code{\link[graph:graph-class]{graph}}.}
-  \item{y}{starting node.}
-  \item{dist}{distance of nodes included in subgraph from starting node \code{y}.}
-  \item{amat}{adjacency matrix of skeleton graph (optional).}
+  \item{graphObj}{An \R object of class \code{\link[graph:graph-class]{graph}}.}
+  \item{y}{Starting node.}
+  \item{dist}{Distance of nodes included in subgraph from starting node \code{y}.}
+  \item{amat}{Adjacency matrix of skeleton graph (optional).}
   \item{directed}{\code{\link{logical}} indicating if the subgraph
     should be directed.}
-  \item{main}{title to be used, with a sensible default; see \code{\link{title}}.}
+  \item{main}{Title to be used, with a sensible default; see \code{\link{title}}.}
 }
 \value{the desired subgraph is plotted and returned via
   \code{\link{invisible}}.

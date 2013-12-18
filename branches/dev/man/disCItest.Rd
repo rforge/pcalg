@@ -18,12 +18,12 @@ disCItest (x, y, S, suffStat)
   \item{x}{Position of variable X in the adjacency matrix}
   \item{y}{Position of variable Y in the adjacency matrix}
   \item{S}{Position of conditioning variables in the adjacency matrix}
-  \item{dm}{data matrix (rows: samples, columns: variables) with binary
+  \item{dm}{Data matrix (rows: samples, columns: variables) with binary
     entries}
-  \item{nlev}{vector with numbers of levels for each variable}
-  \item{adaptDF}{lower the degrees of freedom by one for each zero
+  \item{nlev}{Vector with numbers of levels for each variable}
+  \item{adaptDF}{Lower the degrees of freedom by one for each zero
     count.  The value for the degrees of freedom cannot go below 1.}
-  \item{verbose}{logical indicating if detailed output is to be provided.}
+  \item{verbose}{Logical indicating if detailed output is to be provided.}
 
   \item{suffStat}{A list with three elements: \code{"dm"},
     \code{"nlev"}, \code{"adaptDF"}; each corresponding to the above

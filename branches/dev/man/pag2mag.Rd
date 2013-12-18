@@ -10,12 +10,14 @@
 pag2magAM(amat.pag, x, max.chordal = 10, verbose = FALSE)
 }
 \arguments{
-  \item{amat.pag}{adjacency matrix corresponding to the PAG.}
-  \item{x}{node in the PAG into which no additional edges are oriented.}
-  \item{max.chordal}{positive integer: graph paths larger than
+  \item{amat.pag}{Adjacency matrix (coding 0,1,2,3 for no edge, circle,
+    arrowhead, tail; e.g., \code{amat[a,b] = 2} and \code{amat[b,a] = 3}
+    implies a -> b)} 
+  \item{x}{Node in the PAG into which no additional edges are oriented.}
+  \item{max.chordal}{Positive integer: graph paths larger than
     \code{max.chordal} are considered to be too large to be checked for
     chordality.}
-  \item{verbose}{logical; if true, some output is produced during
+  \item{verbose}{Logical; if true, some output is produced during
     computation.}  
 }
 \details{

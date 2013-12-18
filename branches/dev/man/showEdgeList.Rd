@@ -9,9 +9,9 @@
 showEdgeList(pc.fit, labels = NULL)
 }
 \arguments{
-  \item{pc.fit}{object of class pcAlgo (as returned from
+  \item{pc.fit}{Object of class pcAlgo (as returned from
     \code{\link{skeleton}} or \code{\link{pc}}).}
-  \item{labels}{optional labels for nodes; by default, the labels from the pcAlgo % 
+  \item{labels}{Optional labels for nodes; by default, the labels from the pcAlgo % 
     object are used.}
 }
 \value{none; the purpose is in (the side effect of) printing

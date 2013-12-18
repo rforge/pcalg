@@ -19,12 +19,14 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset,
           rules = rep(TRUE, 10), unfVect = NULL, verbose = FALSE)
 }
 \arguments{
-  \item{apag}{adjacency matrix of the pcAlgo-object of size p*p where
-    the v-structures have already been oriented.}
-  \item{suffStat}{sufficient statistics: A \code{\link{list}} containing
+  \item{apag}{Adjacency matrix of the pcAlgo-object of size p*p where
+    the v-structures have already been oriented (coding 0,1,2,3 for no
+  edge, circle, arrowhead, tail; e.g., \code{amat[a,b] = 2} and
+  \code{amat[b,a] = 3} implies a -> b).} 
+  \item{suffStat}{Sufficient statistics: A \code{\link{list}} containing
     all necessary elements for the conditional independence decisions in the
     function \code{indepTest}.}
-  \item{indepTest}{pre-defined function for testing conditional
+  \item{indepTest}{Pre-defined function for testing conditional
     independence.  The function is internally called as
     \code{indepTest(x,y,S,suffStat)}, and tests conditional independence
     of \code{x} and \code{y} given \code{S}.  Here, \code{x} and \code{y}
@@ -34,20 +36,20 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset,
     for the conditional independence decisions.  The return value of 
     \code{indepTest} is the p-value of the test for conditional
     independence.} 
-  \item{alpha}{significance level for the individual conditional
+  \item{alpha}{Significance level for the individual conditional
     independence tests.}
-  \item{sepset}{list of length p; each element of the list
+  \item{sepset}{List of length p; each element of the list
     contains another list of length p.  The element
     \code{sepset[[x]][[y]]} contains the separation set that made the edge
     between \code{x} and \code{y} drop out.  This object is thought to be
     obtained from a \code{pcAlgo}-object.}
-  \item{rules}{logical vector of length 10 with \code{TRUE} or \code{FALSE} for 
+  \item{rules}{Logical vector of length 10 with \code{TRUE} or \code{FALSE} for 
     each rule, where \code{TRUE} in position i means that rule i (Ri) will be
     applied.  By default, all rules are active.}
-  \item{unfVect}{vector containing numbers that encode the ambiguous
+  \item{unfVect}{Vector containing numbers that encode the ambiguous
     triples (as returned by \code{\link{pc.cons.intern}}).  This is
     needed in the conservative and in the majority rule versions of RFCI.}
-  \item{verbose}{logical indicating if detailed output is to be given.}
+  \item{verbose}{Logical indicating if detailed output is to be given.}
 }
 \details{
   The partially oriented graph in which the v-structures have been 
@@ -83,12 +85,11 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset,
   the application of the orientation rules, see Colombo and Maathuis (2013).  
 }
 \value{
-  \item{apag}{final adjacency matrix.  The edge marks in
-  the adjacency matrix M are coded in the following way:
-  M[i,j]=M[j,i]=0: no edge; M[i,j]=1, M[j,i] != 0: i *-o j; M[i,j]=2,
-  M[j,i]!=0: i*->j; M[i,j]=3, M[j,i]!=0: i*-j.}
+  \item{apag}{Final adjacency matrix (coding 0,1,2,3 for no edge,
+  circle, arrowhead, tail; e.g., \code{amat[a,b] = 2} and
+  \code{amat[b,a] = 3} implies a -> b)} 
 
-  \item{sepset}{updated list of separating sets} 
+  \item{sepset}{Updated list of separating sets} 
 }
 \references{
   D. Colombo and M.H. Maathuis (2013).

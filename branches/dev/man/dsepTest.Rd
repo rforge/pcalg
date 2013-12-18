@@ -10,15 +10,15 @@
 dsepTest(x, y, S=NULL, suffStat)
 }
 \arguments{
-  \item{x,y}{position of variable x and y in the adjacency matrix.}
-  \item{S}{positions of conditioning variables in the adjacency matrix,
+  \item{x,y}{Position of variable x and y in the adjacency matrix.}
+  \item{S}{Positions of conditioning variables in the adjacency matrix,
     possibly empty.}
-  \item{suffStat}{a \code{\link{list}} with two elements,
+  \item{suffStat}{A \code{\link{list}} with two elements,
     \describe{
-      \item{\code{"g"}}{containing the Directed Acyclic Graph (object of
+      \item{\code{"g"}}{Containing the Directed Acyclic Graph (object of
 	\code{\link{class}} \code{"graph"}, see
 	\code{\link[graph]{graph-class}} from the package \pkg{graph}), and}
-      \item{\code{"jp"}}{containing the shortest path distance
+      \item{\code{"jp"}}{Containing the shortest path distance
 	matrix for all pairs of nodes as computed by
 	\code{\link[RBGL]{johnson.all.pairs.sp}} from package
 	\pkg{RBGL}.}

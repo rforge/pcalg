@@ -8,9 +8,9 @@ iplotPC(pc.fit, labels = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{pc.fit}{object of class \code{\linkS4class{pcAlgo}} (as returned
+  \item{pc.fit}{Object of class \code{\linkS4class{pcAlgo}} (as returned
     from \code{\link{skeleton}} or \code{\link{pc}}).}
-  \item{labels}{optional labels for nodes; by default, the labels from \code{pc.fit}
+  \item{labels}{Optional labels for nodes; by default, the labels from \code{pc.fit}
     object are used.}
 }
 \details{

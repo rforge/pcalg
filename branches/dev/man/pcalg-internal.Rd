@@ -9,7 +9,6 @@
 \alias{ci.test}
 \alias{dep.triple}
 \alias{faith.check}
-\alias{find.min.discr.path}
 \alias{find.sink}
 \alias{flipEdges}
 \alias{minUncovCircPath}

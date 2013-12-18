@@ -10,7 +10,8 @@ Find the ordered (<x,y,z> with x<z) list of all the triples in the graph.
 find.unsh.triple(g, p)
 }
 \arguments{
-  \item{g}{Adjacency matrix of skeleton
+  \item{g}{Adjacency matrix of skeleton (needs to be symmetric; coding
+    0/1 for no edge/edge)
 }
   \item{p}{Number of nodes of the graph
 }

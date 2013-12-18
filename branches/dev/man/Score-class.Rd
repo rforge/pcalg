@@ -17,7 +17,7 @@
       decomposable (cf. details).  At the moment, only decomposable scores are 
       supported by the implementation of the causal inference algorithms; 
       support for non-decomposable scores is planned.}
-    \item{\code{pp.dat}:}{list representing the preprocessed input data;
+    \item{\code{pp.dat}:}{List representing the preprocessed input data;
       this is typically a statistic which is sufficient for the 
       calculation of the score.}
     \item{\code{.pardag.class}:}{Name of the class of the parametric DAG model

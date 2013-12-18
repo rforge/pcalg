@@ -9,7 +9,7 @@
 dag2cpdag(g)
 }
 \arguments{
-  \item{g}{an \R object of class \code{"graph"} (package \pkg{graph}),
+  \item{g}{An \R object of class \code{"graph"} (package \pkg{graph}),
     representing a DAG.} 
 }
 \details{

@@ -10,7 +10,7 @@
 \format{
   The format is a list of two components
   \describe{
-    \item{x:}{num [1:10000, 1:7] -1.727 1.69 0.504 2.528 0.549 ...}
+    \item{x:}{Num [1:10000, 1:7] -1.727 1.69 0.504 2.528 0.549 ...}
     \item{g:}{Formal class 'graphNEL' [package "graph"] with 6 slots\cr
       .. ..@ nodes     : chr [1:7] "1" "2" "3" "4" ...\cr
       .. ..@ edgeL     :List of 7\cr

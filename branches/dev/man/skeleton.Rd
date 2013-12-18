@@ -25,10 +25,10 @@ skeleton(suffStat, indepTest, p, alpha,
          verbose = FALSE)
 }
 \arguments{
-  \item{suffStat}{sufficient statistics: List containing all necessary
+  \item{suffStat}{Sufficient statistics: List containing all necessary
     elements for the conditional independence decisions in the
     function \code{indepTest}.}
-  \item{indepTest}{predefined \code{\link{function}} for testing
+  \item{indepTest}{Predefined \code{\link{function}} for testing
     conditional independence.  The function is internally called as
     \code{indepTest(x,y,S,suffStat)} and tests conditional independence
     of \code{x} and \code{y} given \code{S}.  Here, \code{x} and
@@ -38,27 +38,27 @@ skeleton(suffStat, indepTest, p, alpha,
     all relevant elements for the conditional independence decisions.
     The return value of \code{indepTest} is the p-value of the test for
     conditional independence.} 
-  \item{p}{number of variables.}
-  \item{alpha}{significance level for the individual conditional
+  \item{p}{Number of variables.}
+  \item{alpha}{Significance level for the individual conditional
     independence tests.}
-  \item{method}{character string specifying method; the default,
+  \item{method}{Character string specifying method; the default,
     \code{"stable"} provides an \emph{order-independent} skeleton, see
     \sQuote{Details} below.} 
-  \item{m.max}{maximal size of the conditioning sets that are considered in the
+  \item{m.max}{Maximal size of the conditioning sets that are considered in the
     conditional independence tests.}
-  \item{fixedGaps}{a logical matrix of dimension p*p.  If entry
+  \item{fixedGaps}{A logical matrix of dimension p*p.  If entry
     \code{[i,j]} or \code{[j,i]} (or both) are true, the edge
     \eqn{i--j}{i-j} is removed before starting the algorithm.
     Therefore, this edge is guaranteed to be absent in the resulting
     graph.}
-  \item{fixedEdges}{a logical matrix of dimension p*p.  If entry
+  \item{fixedEdges}{A logical matrix of dimension p*p.  If entry
     \code{[i,j]} or \code{[j,i]} (or both) are true, the edge
     \eqn{i--j}{i-j} is never considered for removal.  Therefore, this
     edge is guaranteed to be present in the resulting graph.}
-  \item{NAdelete}{if indepTest returns \code{NA} and this option is
+  \item{NAdelete}{If indepTest returns \code{NA} and this option is
     \code{TRUE}, the corresponding edge is deleted. If this option is
     \code{FALSE}, the edge is not deleted.}
-  \item{verbose}{if \code{TRUE}, detailed output is provided.}
+  \item{verbose}{If \code{TRUE}, detailed output is provided.}
 }
 \value{An object of \code{\link{class}} \code{"pcAlgo"} (see
   \code{\linkS4class{pcAlgo}}) containing an estimate of the skeleton of

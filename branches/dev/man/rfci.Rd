@@ -30,7 +30,7 @@ rfci(suffStat, indepTest, p, alpha,
   \item{p}{Number of variables.}
   \item{alpha}{Significance level for the individual conditional
     independence tests.}
-  \item{skel.method}{character string specifying method; the default,
+  \item{skel.method}{Character string specifying method; the default,
     \code{"stable"} provides an \emph{order-independent} skeleton, see
     \code{\link{skeleton}}.}
   \item{fixedGaps}{A logical matrix of dimension p*p. If entry
@@ -49,15 +49,15 @@ rfci(suffStat, indepTest, p, alpha,
   \item{rules}{Logical vector of length 10 indicating which rules
     should be used when directing edges. The order of the rules is taken
     from Zhang (2009).}
-  \item{conservative}{logical indicating if the unshielded triples
+  \item{conservative}{Logical indicating if the unshielded triples
     should be checked for ambiguity after the skeleton has been found,
     similar to the conservative PC algorithm.}   
-  \item{maj.rule}{logical indicating if the unshielded triples should be
+  \item{maj.rule}{Logical indicating if the unshielded triples should be
     checked for ambiguity after the skeleton has been found using a
     majority rule idea, which is less strict than the conservative.}
-  \item{labels}{character vector of length p with node names. If
+  \item{labels}{Character vector of length p with node names. If
     \code{NA}, \code{as.character{1:p}} is used instead.}
-  \item{verbose}{if true, more detailed output is provided.}
+  \item{verbose}{If true, more detailed output is provided.}
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
  \code{\linkS4class{fciAlgo}}) containing the estimated graph

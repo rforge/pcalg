@@ -31,15 +31,15 @@
   \item{gInput}{\code{"pcAlgo"}-object containing skeleton and
     conditional indepedence information.}
   \item{verbose}{0: No output; 1: Details}
-  \item{unfVect}{vector containing numbers that encode ambiguous
+  \item{unfVect}{Vector containing numbers that encode ambiguous
     triples (as returned by \code{\link{pc.cons.intern}}). This is
     needed in the conservative and majority rule PC algorithms.} 
-  \item{solve.confl}{if \code{TRUE}, the orientation of the v-structures and the
+  \item{solve.confl}{If \code{TRUE}, the orientation of the v-structures and the
     orientation rules work with lists for candidate sets and allow
     bi-directed edges to resolve conflicting edge orientations. Note that
     therefore the resulting object is order-independent but might not be
     a PDAG because bi-directed edges can be present.}
-  \item{n.max}{maximum number of tries for re-orienting doubly visited
+  \item{n.max}{Maximum number of tries for re-orienting doubly visited
     edges in \code{udag2pdagSpecial}.} 
 }
 \details{
@@ -138,21 +138,25 @@
     \item{for \code{udag2pdag()} and \code{udag2pdagRelaxed()}:}{%
       oriented \code{"pcAlgo"}-object.}
 
-    \item{for \code{udag2pdagSpecial}:}{a \code{\link{list}} with
+    \item{for \code{udag2pdagSpecial}:}{A \code{\link{list}} with
       components \describe{
-	\item{pcObj}{an oriented \code{"pcAlgo"}-object.}
-	\item{evisit}{matrix counting the number of orientation attempts per edge}
+	\item{pcObj}{An oriented \code{"pcAlgo"}-object.}
+	\item{evisit}{Matrix counting the number of orientation attempts per edge}
 	%% TODO both xtbl.orig and xtbl:  what is different from 'status'  <<<<<,
-	\item{xtbl.orig}{logical indicating whether the original graph
+	\item{xtbl.orig}{Logical indicating whether the original graph
 	  with v-structures is extendable.}
-	\item{xtbl}{logical indicating whether the final graph with v-structures is extendable}
-	\item{amat0}{adjacency matrix of original graph with v-structures.}
-	\item{amat1}{adjacency matrix of final graph with v-structures
-	  after changing the ordering in which the v-structures are considered.} 
-	\item{status}{integer code with values \describe{
-	    \item{0:}{original try is extendable;}
-	    \item{1:}{reorienting double edge visits helps;}
-	    \item{2:}{original try is not extendable; reorienting double
+	\item{xtbl}{Logical indicating whether the final graph with v-structures is extendable}
+	\item{amat0}{Adjacency matrix of original graph with
+      v-structures (coding 0/1 for no edge or tail / arrowhead;
+      e.g. \code{amat[a,b] = 0} and \code{amat[b,a] = 1} implies a -> b) .}
+	\item{amat1}{Adjacency matrix of final graph with v-structures
+	  after changing the ordering in which the v-structures are
+      considered (coding 0/1 for no edge or tail / arrowhead;
+      e.g. \code{amat[a,b] = 0} and \code{amat[b,a] = 1} implies a -> b) .} 
+	\item{status}{Integer code with values \describe{
+	    \item{0:}{Original try is extendable;}
+	    \item{1:}{Reorienting double edge visits helps;}
+	    \item{2:}{Original try is not extendable; reorienting double
 	      visits does not help; result is acyclic, has original
 	      v-structures, but perhaps additional v-structures.}
 	}}

@@ -16,17 +16,15 @@
   dreach(x, y, amat, verbose = FALSE)
 }
 \arguments{
-  \item{x}{first argument of D-SEP, given as the column number of the
+  \item{x}{First argument of D-SEP, given as the column number of the
     node in the adjacency matrix.} 
-  \item{y}{second argument of D-SEP, given as the column number of the
+  \item{y}{Second argument of D-SEP, given as the column number of the
     node in the adjacency matrix (\code{y} must be different from \code{x}).} 
-  \item{amat}{mixed graph G, encoded as adjacency matrix:\describe{
-      \item{amat[i,j] = 0}{iff i and j are not adjacent}
-      \item{amat[i,j] = 2}{iff i *-> j}
-      \item{amat[i,j] = 3}{iff i *-- j}
-    }
+  \item{amat}{Adjacency matrix (coding 0,1,2,3 for no edge, circle,
+  arrowhead, tail; e.g., \code{amat[a,b] = 2} and \code{amat[b,a] = 3}
+  implies a -> b) 
   }
-  \item{verbose}{logical specifying details should be on output}
+  \item{verbose}{Logical specifying details should be on output}
 }
 \value{
   Vector of column positions indicating the nodes in D-SEP(x,y,G).

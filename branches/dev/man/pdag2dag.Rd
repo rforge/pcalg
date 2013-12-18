@@ -9,8 +9,8 @@
 pdag2dag(g, keepVstruct=TRUE)
 }
 \arguments{
-  \item{g}{input PDAG (graph object)}
-  \item{keepVstruct}{logical indicating if the v-structures in g are
+  \item{g}{Input PDAG (graph object)}
+  \item{keepVstruct}{Logical indicating if the v-structures in g are
     kept.  Otherwise they are ignored and an arbitrary extension is
     generated.} 
 }
@@ -23,8 +23,8 @@ pdag2dag(g, keepVstruct=TRUE)
 }
 \value{
   List with entries
-  \item{graph}{contains a consistent DAG extension (graph object),}
-  \item{success}{is \code{TRUE} iff the extension was possible.}
+  \item{graph}{Contains a consistent DAG extension (graph object),}
+  \item{success}{Is \code{TRUE} iff the extension was possible.}
 }
 \references{
   D.Dor, M.Tarsi (1992). A simple algorithm to construct a

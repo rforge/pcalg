@@ -12,10 +12,10 @@ dag2pag(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10),
         verbose = FALSE)
 }
 \arguments{
-  \item{suffStat}{the sufficient statistics, a \code{\link{list}}
+  \item{suffStat}{The sufficient statistics, a \code{\link{list}}
     containing all necessary elements for the conditional independence
     decisions in the function \code{indepTest}.}
-  \item{indepTest}{a \code{\link{function}} for testing conditional
+  \item{indepTest}{A \code{\link{function}} for testing conditional
     independence.  The function is internally called as
     \code{indepTest(x,y,S,suffStat)}, and tests conditional independence
     of \code{x} and \code{y} given \code{S}.  Here, \code{x} and
@@ -25,17 +25,17 @@ dag2pag(suffStat, indepTest, graph, L, alpha, rules = rep(TRUE,10),
     all relevant elements for the conditional independence
     decisions.  The return value of \code{indepTest()} is the p-value of
     the test for conditional independence.}
-  \item{graph}{a DAG with \code{p} nodes, a \pkg{graph} object.  The
+  \item{graph}{A DAG with \code{p} nodes, a \pkg{graph} object.  The
     graph must be topological sorted (for example produced using
     \code{\link{randomDAG}}).}
-  \item{L}{array containing the labels of the nodes in the \code{graph}
+  \item{L}{Array containing the labels of the nodes in the \code{graph}
     corresponding to the latent variables.}
-  \item{alpha}{significance level for the individual conditional
+  \item{alpha}{Significance level for the individual conditional
     independence tests.}
-  \item{rules}{logical vector of length 10 indicating which rules
+  \item{rules}{Logical vector of length 10 indicating which rules
     should be used when directing edges.  The order of the rules is
     taken from Zhang (2009).}
-  \item{verbose}{logical; if \code{TRUE}, detailed output is provided.}
+  \item{verbose}{Logical; if \code{TRUE}, detailed output is provided.}
 }
 \details{
   This function converts a DAG (graph object) with latent variables into

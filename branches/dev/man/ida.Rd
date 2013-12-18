@@ -19,27 +19,27 @@ causalEffect(g, y, x)
 \arguments{
   \item{x.pos, x}{(integer) position of variable \code{x} in the covariance matrix.}
   \item{y.pos, y}{(integer) position of variable \code{y} in the covariance matrix.}
-  \item{mcov}{covariance matrix that was used to estimate \code{graphEst}.}
-  \item{graphEst}{estimated CPDAG, typically from \code{\link{pc}()}: If
+  \item{mcov}{Covariance matrix that was used to estimate \code{graphEst}.}
+  \item{graphEst}{Estimated CPDAG, typically from \code{\link{pc}()}: If
     the result of \code{\link{pc}} is \code{pc.fit}, the estimated CPDAG
     can be obtained by \code{pc.fit@graph}.}
-  \item{method}{character string specifying the method with default \code{"local"}.
+  \item{method}{Character string specifying the method with default \code{"local"}.
     \describe{
-      \item{\code{"global"}:}{the algorithm considers all DAGs in the
+      \item{\code{"global"}:}{The algorithm considers all DAGs in the
       equivalence class of the CPDAG, hence is \emph{slow}.}
-      \item{\code{"local"}:}{the algorithm only considers the local
+      \item{\code{"local"}:}{The algorithm only considers the local
       neighborhood of \code{x} in the CPDAG, hence is \emph{faster}.}
     }
     See details below.}
-  \item{y.notparent}{logical; if true, any edge between \code{x} and
+  \item{y.notparent}{Logical; if true, any edge between \code{x} and
     \code{y} is assumed to be of the form \code{x->y}.}
-  \item{verbose}{if TRUE, details on the regressions are printed.}
-  \item{all.dags}{all DAGs in the equivalence class of the
+  \item{verbose}{If TRUE, details on the regressions are printed.}
+  \item{all.dags}{All DAGs in the equivalence class of the
     CPDAG can be precomputed by \code{\link{allDags}()} and passed via
     this argument.  In that case, \code{\link{allDags}(..)} is not called
     internally.
     This option is only relevant when using \code{method="global"}.}
-  \item{g}{graph in which the causal effect is sought.}
+  \item{g}{Graph in which the causal effect is sought.}
 }
 \details{
   It is assumed that we have observational data that are multivariate

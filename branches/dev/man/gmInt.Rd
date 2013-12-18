@@ -11,14 +11,14 @@ interventional data from eight Gaussian variables.  The corresponding
 \format{
   The format is a list of four components
   \describe{
-    \item{x:}{matrix with 5000 rows (one row a measurement) and 8 columns
+    \item{x:}{Matrix with 5000 rows (one row a measurement) and 8 columns
       (corresponding to the 8 variables}
-    \item{targets:}{list of (mutually exclusive) intervention targets. In this
+    \item{targets:}{List of (mutually exclusive) intervention targets. In this
       example, the three entries \code{integer(0)}, \code{3} and \code{5} 
       indicate that the data set consists of observational data, interventional
       data originating from an intervention at vertex 3, and interventional data
       originating from an intervention at vertex 5.}
-    \item{target.index:}{vector with 5000 elements. Each entry maps a row of 
+    \item{target.index:}{Vector with 5000 elements. Each entry maps a row of 
       \code{x} to the corresponding intervention target.  Example:
       \code{gmInt$target.index[3322] == 2} means that \code{x[3322, ]} was 
       simulated from an intervention at \code{gmInt$targets[[2]]}, i.e. at 

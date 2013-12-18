@@ -12,14 +12,14 @@ pcAlgo(dm = NA, C = NA, n=NA, alpha, corMethod = "standard",
        NAdelete=TRUE, m.max=Inf, u2pd = "rand", psepset=FALSE)
 }
 \arguments{
-  \item{dm}{data matrix; rows correspond to samples, cols correspond to
+  \item{dm}{Data matrix; rows correspond to samples, cols correspond to
     nodes.}
-  \item{C}{correlation matrix; this is an alternative for specifying the
+  \item{C}{Correlation matrix; this is an alternative for specifying the
     data matrix.}
-  \item{n}{sample size; this is only needed if the data matrix is not
+  \item{n}{Sample size; this is only needed if the data matrix is not
     provided.}
-  \item{alpha}{significance level for the individual partial correlation tests.}
-  \item{corMethod}{a character string speciyfing the method for
+  \item{alpha}{Significance level for the individual partial correlation tests.}
+  \item{corMethod}{A character string speciyfing the method for
     (partial) correlation estimation.
     "standard", "QnStable", "Qn" or "ogkQn" for standard and robust (based on
     the Qn scale estimator without and with OGK) correlation
@@ -28,11 +28,11 @@ pcAlgo(dm = NA, C = NA, n=NA, alpha, corMethod = "standard",
   makes the function very much slower}
   \item{directed}{If \code{FALSE}, the underlying skeleton is computed;
     if \code{TRUE}, the underlying CPDAG is computed}
-  \item{G}{the adjacency matrix of the graph from which the algorithm
+  \item{G}{The adjacency matrix of the graph from which the algorithm
     should start (logical)}
-  \item{datatype}{distinguish between discrete and continuous data}
-  \item{NAdelete}{delete edge if pval=NA (for discrete data)}
-  \item{m.max}{maximal size of conditioning set}
+  \item{datatype}{Distinguish between discrete and continuous data}
+  \item{NAdelete}{Delete edge if pval=NA (for discrete data)}
+  \item{m.max}{Maximal size of conditioning set}
   \item{u2pd}{Function used for converting skeleton to cpdag. "rand"
     (use udag2pdag); "relaxed" (use udag2pdagRelaxed); "retry" (use
     udag2pdagSpecial)}

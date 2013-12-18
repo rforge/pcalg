@@ -10,20 +10,20 @@ pcSelect.presel(y, dm, alpha, alphapre, corMethod = "standard",
                 verbose = 0, directed=FALSE)
 }
 \arguments{
-  \item{y}{response vector.}
-  \item{dm}{data matrix (rows: samples, cols: nodes; i.e.,
+  \item{y}{Response vector.}
+  \item{dm}{Data matrix (rows: samples, cols: nodes; i.e.,
     \code{length(y) == nrow(dm)}).}
-  \item{alpha}{significance level of individual partial correlation
+  \item{alpha}{Significance level of individual partial correlation
     tests.  }
   \item{alphapre}{Significance level for pcSelect in preselection}
   \item{corMethod}{"standard" or "Qn" for standard or robust correlation
     estimation}
   \item{verbose}{0-no output, 1-small output, 2-details (using 1 and 2
     makes the function very much slower)}
-  \item{directed}{logical; should the output graph be directed?}
+  \item{directed}{Logical; should the output graph be directed?}
 }
 \value{
-  \item{pcs}{logical vector indicating which column of \code{dm} is
+  \item{pcs}{Logical vector indicating which column of \code{dm} is
     associated with \code{y}}
   \item{zMin}{The minimal z-values when testing partial correlations
     between \code{y} and each column of \code{dm}. The larger the number,
