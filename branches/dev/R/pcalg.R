@@ -2211,12 +2211,10 @@ beta.special <- function(dat=NA, x.pos, y.pos, verbose=0, a=0.01,
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 21 Nov 2007, 11:18
 
-  ##  dat=d.mat;x.pos;y.pos;verbose=0;a=0.01;myDAG=NA;myplot=FALSE;perfect=FALSE;method="global";collTest=TRUE;pcObj=NA;all.dags=NA;trueLocal=TRUE;u2pd="rand"
-
   cat("This function is deprecated and is only kept for backward compatibility.
 Please use ida or idaFast instead\n")
 
-  tmpColl <- FALSE
+  if(!collTest) tmpColl <- FALSE
 
   ## Covariance matrix: Perfect case / standard case
   if (perfect) {
@@ -2349,13 +2347,9 @@ Please use ida or idaFast instead\n")
     am.pdag <- ad.res
     am.pdag[am.pdag!=0] <- 1
     ## find all DAGs if not provided externally
-    if (is.na(all.dags)) {
-      ad <- allDags(am.pdag,am.pdag,NULL)
-    } else {
-      ad <- all.dags
-    }
+    ad <- if (is.na(all.dags)) allDags(am.pdag,am.pdag,NULL) else all.dags
     n.dags <- nrow(ad)
-    beta.hat <- rep(NA,n.dags)
+    beta.hat <- rep.int(NA,n.dags)
     if (n.dags>0) {
       if (myplot) {
         ## x11()
@@ -2996,17 +2990,14 @@ skeleton <- function(suffStat, indepTest, p, alpha,
     if(method == "stable") {
       ## Order-independent version: Compute the adjacency sets for any vertex
       ## Then don't update when edges are deleted
-      nbrsBool.tmp <- vector("list",p)
-      for (i in 1:p) {
-        nbrsBool.tmp[[i]] <- G[, i]
-      }
+      G.l <- split(G, gl(p,p))
     }
     for (i in 1:remainingEdgeTests) {
       if (verbose && i%%100 == 0) cat("|i=", i, "|iMax=", nrow(ind), "\n")
       x <- ind[i, 1]
       y <- ind[i, 2]
       if (G[y, x] && !fixedEdges[y, x]) {
-	nbrsBool <- if(method == "stable") nbrsBool.tmp[[x]] else G[,x]
+	nbrsBool <- if(method == "stable") G.l[[x]] else G[,x]
         nbrsBool[y] <- FALSE
         nbrs <- seq_p[nbrsBool]
         length_nbrs <- length(nbrs)
@@ -3736,11 +3727,9 @@ dsepTest <- function(x,y, S=NULL, suffStat) {
   } else {
     stopifnot(is(g <- suffStat$g, "graph"))
     jp <- suffStat$jp
-    if(dsep(a = as.character(x), b = as.character(y),
-            S = if(length(S)) as.character(S),# else NULL
-            g = g, john.pairs = jp))
-      1 ## delete edge
-    else 0
+    V <- nodes(g)
+    ## return  0 / 1
+    as.numeric(dsep(a = V[x], b = V[y], S = V[S], g = g, john.pairs = jp))
   }
 } ## {dsepTest}
 
@@ -3823,17 +3812,13 @@ ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
       ## find ambiguous parents of x
       wgt.ambig <- wgt.est-wgt.unique
       pa2 <- which(wgt.ambig[x,]!=0)
-      if (verbose) {
-        cat("\n\nx=",x,"y=",y,"\n")
-        cat("pa1=",pa1,"\n")
-        cat("pa2=",pa2,"\n")
-      }
+      if (verbose)
+        cat("\n\nx=", x, "y=",y, "\npa1=",pa1, "\npa2=",pa2,"\n")
 
       ## estimate beta
       if (length(pa2)==0) {
         beta.hat <- lm.cov(mcov,y,c(x,pa1))
-        if (verbose) cat("Fit - y:",y,"x:",c(x,pa1),
-                         "|b.hat=",beta.hat,"\n")
+        if (verbose) cat("Fit - y:",y,"x:",c(x,pa1), "|b.hat=",beta.hat,"\n")
       } else {
         ## at least one undirected parent
         beta.hat <- NA
