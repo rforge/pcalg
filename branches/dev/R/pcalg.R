@@ -102,38 +102,38 @@ randomDAG <- function (n, prob, lB = 0.1, uB = 1, V = as.character(1:n))
 
 ## A version of this is also in	/u/maechler/R/MM/Pkg-ex/graph/weightmatrix.R
 ## another on in  Matrix/R/sparseMatrix.R  function graph.wgtMatrix() :
+## No longer in use __apart__ for  rmDAG(..., back.compatible=TRUE)
+wgtMatrix.0 <- function(g, transpose = TRUE)
+{
+  ## Purpose: work around "graph" package's  as(g, "matrix") bug
+  ## ----------------------------------------------------------------------
+  ## ACHTUNG: mat_[i,j]==1 iff j->i,
+  ## whereas with as(g,"matrix") mat_[i,j]==1 iff i->j
+  ## ----------------------------------------------------------------------
+  ## Arguments: g: an object inheriting from (S4) class "graph"
+  ## ----------------------------------------------------------------------
+  ## Author: Martin Maechler, based on Seth Falcon's code;  Date: 12 May 2006
 
-## wgtMatrix <- function(g, transpose = TRUE)
-## {
-##   ## Purpose: work around "graph" package's  as(g, "matrix") bug
-##   ## ----------------------------------------------------------------------
-##   ## ACHTUNG: mat_[i,j]==1 iff j->i,
-##   ## whereas with as(g,"matrix") mat_[i,j]==1 iff i->j
-##   ## ----------------------------------------------------------------------
-##   ## Arguments: g: an object inheriting from (S4) class "graph"
-##   ## ----------------------------------------------------------------------
-##   ## Author: Martin Maechler, based on Seth Falcon's code;  Date: 12 May 2006
-
-##   ## MM: another buglet for the case of  "no edges":
-##   if(numEdges(g) == 0) {
-##     p <- length(nd <- nodes(g))
-##     return( matrix(0, p,p, dimnames = list(nd, nd)) )
-##   }
-##   ## Usual case, when there are edges:
-##   if(!("weight" %in% names(edgeDataDefaults(g))))
-##     edgeDataDefaults(g, "weight") <- 1L
-##   w <- unlist(edgeData(g, attr = "weight"))
-##   ## we need the *transposed* matrix typically:
-##   tm <- if(transpose) t(as(g, "matrix")) else as(g, "matrix")
-##   ## now is a 0/1 - matrix (instead of 0/wgts) with the 'graph' bug
-##   if(any(w != 1)) ## fix it
-##     tm[tm != 0] <- w
-##   ## tm_[i,j]==1 iff i->j
-##   tm
-## }
+  ## MM: another buglet for the case of  "no edges":
+  if(numEdges(g) == 0) {
+    p <- length(nd <- nodes(g))
+    return( matrix(0, p,p, dimnames = list(nd, nd)) )
+  }
+  ## Usual case, when there are edges:
+  if(!("weight" %in% names(edgeDataDefaults(g))))
+    edgeDataDefaults(g, "weight") <- 1L
+  w <- unlist(edgeData(g, attr = "weight"))
+  ## we need the *transposed* matrix typically:
+  tm <- if(transpose) t(as(g, "matrix")) else as(g, "matrix")
+  ## now is a 0/1 - matrix (instead of 0/wgts) with the 'graph' bug
+  if(any(w != 1)) ## fix it
+    tm[tm != 0] <- w
+  ## tm_[i,j]==1 iff i->j
+  tm
+}
 
 wgtMatrix <- function(g, transpose = TRUE) {
-  res <- as(g, "matrix")
+  res <- as(g, "matrix") # from 'graph' package, now reliable (we hope)
   if (transpose) ## default!
       t(res) else res
 }
@@ -141,7 +141,8 @@ wgtMatrix <- function(g, transpose = TRUE) {
 rmvDAG <-
   function(n, dag,
 	   errDist = c("normal", "cauchy", "t4", "mix", "mixt3", "mixN100"),
-	   mix = 0.1, errMat = NULL)
+	   mix = 0.1, errMat = NULL, back.compatible = FALSE,
+           use.node.names = !back.compatible)
 {
   ## Purpose: Generate data according to a given DAG (with weights) and
   ## given node distribution (rows: number of samples; cols: node values in
@@ -162,13 +163,12 @@ rmvDAG <-
 
   ##  as(.,"matrix") now {for some versions of 'graph' pkg} is 0/1
   ## weightMatrix <- t(as(dag,"matrix"))
-  weightMatrix <- wgtMatrix(dag)
+  weightMatrix <- if(back.compatible) wgtMatrix.0(dag) else wgtMatrix(dag)
 
   ## check if top. sorted
   nonZeros <- which(weightMatrix != 0, arr.ind = TRUE)
-  if (nrow(nonZeros)>0) {
-    if (any((nonZeros[,1] - nonZeros[,2])<0) ||
-        any(diag(weightMatrix) != 0) )
+  if (nrow(nonZeros) > 0) {
+    if (any(nonZeros[,1] - nonZeros[,2] < 0) || any(diag(weightMatrix) != 0))
       stop("Input DAG must be topologically ordered!")
   }
 
@@ -193,20 +193,20 @@ rmvDAG <-
     stopifnot(!is.null(dim.eM <- dim(errMat)),
               dim.eM == c(n,p), is.numeric(errMat))
   }
-  X <- matrix(0, n, p) # will contain the result
+  if(use.node.names)
+    colnames(errMat) <- nodes(dag) # == colnames(weightMatrix)
 
   ## compute X matrix X_i
   if (sum(weightMatrix) > 0) {
-    X[,1] <- errMat[,1] # for (one of) the root node(s)
+    X <- errMat
     for (j in 2:p) { ## uses X[*, 1:(j-1)] -- "recursively" !
       ij <- 1:(j-1)
-      X[,j] <- X[, ij, drop = FALSE] %*% weightMatrix[j, ij] + errMat[,j]
+      X[,j] <- X[,j] + X[, ij, drop = FALSE] %*% weightMatrix[j, ij]
     }
     X
   }
-  else { ## return
+  else
     errMat
-  }
 }
 
 
@@ -2179,8 +2179,9 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
 
 
 ## DEPRECATED! -- use  ida() --
-beta.special <- function(dat=NA,x.pos,y.pos,verbose=0,a=0.01,myDAG=NA,myplot=FALSE,perfect=FALSE,
-                         method="local",collTest=TRUE,pcObj=NA,all.dags=NA,u2pd="rand")
+beta.special <- function(dat=NA, x.pos, y.pos, verbose=0, a=0.01,
+                         myDAG=NA, myplot=FALSE, perfect=FALSE,
+                         method="local", collTest=TRUE, pcObj=NA, all.dags=NA, u2pd="rand")
 {
   ## Purpose: Estimate the causal effect of x on y; the pcObj and all DAGs
   ## can be precomputed
@@ -2236,7 +2237,7 @@ Please use ida or idaFast instead\n")
       pcAlgo(dat, alpha = a, corMethod = "standard",directed=TRUE,u2pd=u2pd)
 
   ## prepare adjMatrix and skeleton {MM FIXME : can be improved}
-  amat <- wgtMatrix(res@graph)
+  amat <- ad.res <- wgtMatrix(res@graph)
   amat[which(amat!=0)] <- 1 ## i->j if amat[j,i]==1
   amatSkel <- amat + t(amat)
   amatSkel[amatSkel!=0] <- 1
@@ -2247,7 +2248,7 @@ Please use ida or idaFast instead\n")
     ## Main Input: mcov
 ##############################
     ## find unique parents of x
-    wgt.est <- wgtMatrix(res@graph)
+    wgt.est <- ad.res
     tmp <- wgt.est-t(wgt.est)
     tmp[which(tmp<0)] <- 0
     wgt.unique <- tmp
@@ -2345,7 +2346,7 @@ Please use ida or idaFast instead\n")
     ## Main Input: mcov
 ##############################
     p <- numNodes(res@graph)
-    am.pdag <- wgtMatrix(res@graph)
+    am.pdag <- ad.res
     am.pdag[am.pdag!=0] <- 1
     ## find all DAGs if not provided externally
     if (is.na(all.dags)) {
@@ -3795,18 +3796,18 @@ ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
   tmpColl <- FALSE
 
   ## prepare adjMatrix and skeleton
-  amat <- wgtMatrix(graphEst)
+  amat <- ad.g <- wgtMatrix(graphEst)
   amat[which(amat!=0)] <- 1 ## i->j if amat[j,i]==1
   amatSkel <- amat + t(amat)
   amatSkel[amatSkel!=0] <- 1
 
-  if (method=="local") {
+  if (method == "local") {
 ##############################
     ## local method
     ## Main Input: mcov, graphEst
 ##############################
     ## find unique parents of x
-    wgt.est <- (wgtMatrix(graphEst)!=0)
+    wgt.est <- (ad.g != 0)
     if (y.notparent) {
       ## Direct edge btw. x and y towards y
       wgt.est[x, y] <- FALSE
@@ -3841,8 +3842,7 @@ ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
         ## no member of pa2
         pa2.f <- pa2
         pa2.t <- NA
-        tmpColl <- check.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)
-        if (!tmpColl) {
+        if (!check.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)) {
           beta.hat[ii] <- lm.cov(mcov,y,c(x,pa1))
           if (verbose) cat("Fit - y:",y,"x:",c(x,pa1),
                            "|b.hat=",beta.hat[ii],"\n")
@@ -3851,8 +3851,7 @@ ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
         for (i2 in seq_along(pa2)) {
           pa2.f <- pa2[-i2]
           pa2.t <- pa2[i2]
-          tmpColl <- check.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)
-          if (!tmpColl) {
+          if (!check.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)) {
             ii <-  ii+1
             if (y %in% pa2.t) {
               beta.hat[ii] <- 0
@@ -3860,20 +3859,19 @@ ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
               beta.hat[ii] <- lm.cov(mcov,y,c(x,pa1,pa2[i2]))
               if (verbose) cat("Fit - y:",y,"x:",c(x,pa1,pa2[i2]),
                                "|b.hat=",beta.hat[ii],"\n")
-            } ## if (y %in% pa2.t)
-          } ## if (!tmpColl)
+            }
+          } ## if (!check..)
         } ## for (i2 in seq_along(pa2))
 
         ## higher order subsets of pa2
-        if (length(pa2)>1)
+        if (length(pa2) > 1)
           for (i in 2:length(pa2)) {
             pa.tmp <- combn(pa2,i,simplify=TRUE)
             n.comb <- ncol(pa.tmp)
             for (j in 1:n.comb) {
               pa2.f <- setdiff(pa2,pa.tmp[,j])
               pa2.t <- pa.tmp[,j]
-              tmpColl <- check.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)
-              if (!tmpColl) {
+              if (!check.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)) {
                 ii <- ii+1
                 if (y %in% pa2.t) {
                   beta.hat[ii] <- 0
@@ -3883,10 +3881,10 @@ ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
                     cat("Fit - y:",y,"x:",c(x,pa1,pa.tmp[,j]),
                         "|b.hat=",beta.hat[ii],"\n")
                 }
-              } ## if (!tmpColl)
-            } ## for (j in 1:n.comb)
-          } ## for (i in 2:length(pa2))
-      } ## if (length(pa2) == 0)
+              } ## if (!check..)
+            } ## for (j ...)
+          } ## for (i ...)
+      } ## if (length(pa2) ..)
     } ## if (y %in% pa1)
 
   } else {
@@ -3895,8 +3893,8 @@ ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
     ## Main Input: mcov, graphEst
 ##############################
     p <- numNodes(graphEst)
-    am.pdag <- wgtMatrix(graphEst)
-    am.pdag[am.pdag!=0] <- 1
+    am.pdag <- ad.g
+    am.pdag[am.pdag != 0] <- 1
     if (y.notparent) {
       ## Direct edge btw. x and y towards y
       am.pdag[x, y] <- 0
@@ -3936,7 +3934,7 @@ ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
     } ## for ( i  n.dags)
   } ## else : method = "global"
   beta.hat
-}
+} ## {ida}
 
 idaFast <- function(x.pos, y.pos.set, mcov, graphEst)
 {
@@ -3958,13 +3956,13 @@ idaFast <- function(x.pos, y.pos.set, mcov, graphEst)
   ## Author: Markus Kalisch, Date: 7 Jan 2010, 11:18
 
   ## prepare adjMatrix and skeleton
-  amat <- wgtMatrix(graphEst)
+  amat <- ad.g <- wgtMatrix(graphEst)
   amat[which(amat!=0)] <- 1 ## i->j if amat[j,i]==1
   amatSkel <- amat + t(amat)
   amatSkel[amatSkel!=0] <- 1
 
   ## find unique and ambiguous parents of x
-  wgt.est <- (wgtMatrix(graphEst)!=0)
+  wgt.est <- (ad.g != 0)
   tmp <- wgt.est-t(wgt.est)
   tmp[which(tmp<0)] <- 0
   wgt.unique <- tmp
@@ -4113,7 +4111,7 @@ plotSG <- function(graphObj, y, dist, amat = NA, directed = TRUE,
 
 ##Functions used by all algorithms
 ##########################################################
-pc.cons.intern <- function(sk, suffStat, indepTest, alpha, 
+pc.cons.intern <- function(sk, suffStat, indepTest, alpha,
                            version.unf=c(NA,NA), maj.rule=FALSE, verbose=FALSE)
 {
   ## Purpose:  For any unshielded triple A-B-C, consider all subsets D of
@@ -5653,7 +5651,7 @@ find.unsh.triple <- function(g,p)
   ## Author: Diego Colombo, Date: 21 Oct 2010, 14:05
 
   stopifnot( all(g == t(g)) )
-  
+
   if (any(g!=0)) {
     unshtmp <- unshTripl <- NULL
     ##find all unshielded triple in g
