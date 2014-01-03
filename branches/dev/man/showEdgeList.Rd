@@ -9,10 +9,10 @@
 showEdgeList(pc.fit, labels = NULL)
 }
 \arguments{
-  \item{pc.fit}{Object of class pcAlgo (as returned from
-    \code{\link{skeleton}} or \code{\link{pc}}).}
-  \item{labels}{Optional labels for nodes; by default, the labels from the pcAlgo % 
-    object are used.}
+  \item{pc.fit}{an \R object of class \code{\linkS4class{pcAlgo}}, as returned
+    from \code{\link{skeleton}()} or \code{\link{pc}()}.}
+  \item{labels}{optional labels for nodes; by default, the labels from
+    the \code{pc.fit} object are used.}
 }
 \value{none; the purpose is in (the side effect of) printing
   the edge list.
@@ -22,34 +22,8 @@ showEdgeList(pc.fit, labels = NULL)
   There is no corresponding function for fciAlgo objects.
 }
 \seealso{
+  \code{\link{showAmat}} for the adjacency matrix of a \code{\linkS4class{pcAlgo}} object.
   \code{\link{iplotPC}} for plotting a pcAlgo object using the package
-  \pkg{igraph}; \code{\link{showAmat}} for showing the adjacency matrix of a
-  pcAlgo object.
-}
-\examples{
-## Load predefined data
-data(gmG)
-n <- nrow(gmG$x)
-p <- ncol(gmG$x)
-
-## define independence test (partial correlations)
-indepTest <- gaussCItest
-## define sufficient statistics
-suffStat <- list(C = cor(gmG$x), n = n)
-## estimate CPDAG
-alpha <- 0.01
-pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
-
-## Edge list
-showEdgeList(pc.fit)
-
-## Adjacency matrix
-showAmat(pc.fit)
-
-## Plot using package igraph
-if (require(igraph)) {
- ## show estimated CPDAG using igraph
- iplotPC(pc.fit)
-}
+  \pkg{igraph}, also for an example of \code{showEdgeList()}.
 }
 \keyword{graphs}

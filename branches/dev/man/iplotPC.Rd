@@ -1,22 +1,22 @@
 \name{iplotPC}
 \alias{iplotPC}
-%- Also NEED an '\alias' for EACH other topic documented here.
-\title{Function for plotting a pcAlgo object using the package igraph}
-\description{Function for plotting a pcAlgo object using the package igraph}
+\title{Plotting a pcAlgo object using the package igraph}
+\description{
+  Notably, when the \pkg{Rgraphviz} package is not easily available,
+  \code{iplotPC()} is an alternative for plotting a \code{"\linkS4class{pcAlgo}"} object,
+  making use of package \pkg{igraph}.
+
+  It extracts the adjacency matrix and converts it into an
+  object from package \pkg{igraph} which is then plotted.
+}
 \usage{
 iplotPC(pc.fit, labels = NULL)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{pc.fit}{Object of class \code{\linkS4class{pcAlgo}} (as returned
-    from \code{\link{skeleton}} or \code{\link{pc}}).}
-  \item{labels}{Optional labels for nodes; by default, the labels from \code{pc.fit}
-    object are used.}
-}
-\details{
-  This function is an alternative to the plot method of pcAlgo objects if
-  the \pkg{Rgraphviz} package does not work.  It extracts the adjacency matrix
-  and converts it into an object from package \pkg{igraph} which is then plotted.
+  \item{pc.fit}{an \R object of class \code{\linkS4class{pcAlgo}}, as returned
+    from \code{\link{skeleton}()} or \code{\link{pc}()}.}
+  \item{labels}{optional labels for nodes; by default, the labels from
+    the \code{pc.fit} object are used.}
 }
 \value{
   Nothing.  As side effect, the plot of pcAlgo object \code{pc.fit}.
@@ -25,8 +25,8 @@ iplotPC(pc.fit, labels = NULL)
   Markus Kalisch \email{kalisch@stat.math.ethz.ch}
 }
 \note{
-  Note that this function does not work on fciAlgo objects, because
-  different edge marks are needed there.
+  Note that this function does not work on \code{\linkS4class{fciAlgo}}
+  objects, as those need different edge marks.
 }
 \seealso{
   \code{\link{showEdgeList}} for printing the edge list of a
@@ -36,16 +36,14 @@ iplotPC(pc.fit, labels = NULL)
 \examples{
 ## Load predefined data
 data(gmG)
-n <- nrow(gmG$x)
-p <- ncol(gmG$x)
+n <- nrow    (gmG8$x)
+V <- colnames(gmG8$x)
 
-## define independence test (partial correlations)
-indepTest <- gaussCItest
 ## define sufficient statistics
-suffStat <- list(C = cor(gmG$x), n = n)
+suffStat <- list(C = cor(gmG8$x), n = n)
 ## estimate CPDAG
-alpha <- 0.01
-pc.fit <- pc(suffStat, indepTest, p, alpha, verbose = TRUE)
+pc.fit <- pc(suffStat, indepTest = gaussCItest,
+             alpha = 0.01, labels = V, verbose = TRUE)
 
 ## Edge list
 showEdgeList(pc.fit)
@@ -56,6 +54,4 @@ showAmat(pc.fit)
 ## Plot using package igraph; show estimated CPDAG:
 iplotPC(pc.fit)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
 \keyword{graphs}
