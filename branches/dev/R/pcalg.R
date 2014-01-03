@@ -4185,29 +4185,29 @@ pc.cons.intern <- function(sk, suffStat, indepTest, alpha,
             cat("\nTriple:", a,b,c,"and sepset by skelet:",
                 unique(sk@sepset[[a]][[c]],sk@sepset[[c]][[a]]),"\n")
           }
-          resTriple <- checkTriple(a, b, c, nbrsA, nbrsC,
-                                   sk@sepset[[a]][[c]], sk@sepset[[c]][[a]],
-                                   suffStat, indepTest, alpha,
-                                   version.unf=version.unf, maj.rule=maj.rule, verbose=verbose)
+          r.abc <- checkTriple(a, b, c, nbrsA, nbrsC,
+                               sk@sepset[[a]][[c]], sk@sepset[[c]][[a]],
+                               suffStat=suffStat, indepTest=indepTest, alpha=alpha,
+                               version.unf=version.unf, maj.rule=maj.rule, verbose=verbose)
           ## 1: in NO set; 2: in ALL sets; 3: in SOME but not all
           ## Take action only if case "3"
-          if (resTriple$decision == 3) {
+          if (r.abc$decision == 3) {
             ## record ambiguous triple
             counter <- counter + 1
             unfTripl[counter] <- triple2numb(p,a,b,c)
-            vers[counter] <- resTriple$version
+            vers[counter] <- r.abc$version
           }
           ## can happen the case in Tetrad, so we must save the triple
           ## as ambiguous:
           ## a and c independent given S but not given subsets of the
           ## adj(a) or adj(c)
-          if ((version.unf[1]==2) && (resTriple$version==2) && (resTriple$decision!=3)){
+          if ((version.unf[1]==2) && (r.abc$version==2) && (r.abc$decision!=3)){
             counter <- counter + 1
             unfTripl[counter] <- triple2numb(p,a,b,c)
-            vers[counter] <- resTriple$version
+            vers[counter] <- r.abc$version
           }
-          sk@sepset[[a]][[c]] <- resTriple$SepsetA
-          sk@sepset[[c]][[a]] <- resTriple$SepsetC
+          sk@sepset[[a]][[c]] <- r.abc$SepsetA
+          sk@sepset[[c]][[a]] <- r.abc$SepsetC
       }
     }
   }
@@ -4252,11 +4252,12 @@ checkTriple <- function(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC,
   ##        - sepsetA and sepsetC: updated separation sets
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 12 Feb 2010, 12:13
-  ## Modifications: Diego Colombo
+  ## Modifications: Diego Colombo, Martin Maechler
 
 
     ## loop through all subsets of parents
-    indep.true <- NULL
+
+    nr.indep <- 0
     ##Tetrad
     tmp <- if (version.unf[2] == 2) ## our version
       (b %in% sepsetA || b %in% sepsetC) ## else NULL = Tetrad version
@@ -4265,15 +4266,15 @@ checkTriple <- function(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC,
     if ((nn <- length(nbrsA)) > 0) {
         allComb <- expand.grid(lapply(integer(nn), function(.) 0:1))
         ## loop through all subsets of neighbours
-        for (i in 1:nrow(allComb)) {
+	for (i in 1:nrow(allComb)) { ## == 1:(2^nn)
             S <- nbrsA[which(allComb[i,]!=0)]
             pval <- indepTest(a, c, S, suffStat)
             ##save the pval and the set that produced this pval
             if (verbose) cat("a: S =",S," - pval =",pval,"\n")
             if (pval >= alpha) {
-                indep.true <- c(indep.true,TRUE)
+		nr.indep <- nr.indep + 1
                 ## is b in set?
-                tmp <- c(tmp,(b %in% S))
+                tmp <- c(tmp, b %in% S)
                 version <- 1
             }
         }
@@ -4282,20 +4283,20 @@ checkTriple <- function(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC,
     if ((nn <- length(nbrsC)) > 0) {
         allComb <- expand.grid(lapply(integer(nn), function(.) 0:1))
         ## loop through all subsets of neighbours
-        for (i in 1:nrow(allComb)) {
+	for (i in 1:nrow(allComb)) { ## == 1:(2^nn)
             S <- nbrsC[which(allComb[i,]!=0)]
             pval <- indepTest(a, c, S, suffStat)
             ##save the pval and the set that produced this pval
             if (verbose) cat("c: S =",S," - pval =",pval,"\n")
             if (pval >= alpha) {
-                indep.true <- c(indep.true,TRUE)
+                nr.indep <- nr.indep + 1
                 ## is b in set?
-                tmp <- c(tmp,(b %in% S))
+                tmp <- c(tmp, b %in% S)
                 version <- 1
             }
         }
     }
-    if (version.unf[1]==2 && (length(indep.true) == 0)) {
+    if (version.unf[1] == 2  && nr.indep == 0) {
         version <- 2
     }
     if (is.null(tmp)) tmp <- FALSE
@@ -4358,12 +4359,10 @@ checkTriple <- function(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC,
     if (verbose && res == 3) cat("Triple ambiguous\n")
 
     ##if you save a variable <- NULL into a list it will delete this element!
-    ##set any NULL into integer(0) so it will not be a problem when saving
-    ##them back into the skelet object!
-    if (is.null(sepsetA)) sepsetA <- integer(0)
-    if (is.null(sepsetC)) sepsetC <- integer(0)
-    list(decision = res, version=version, SepsetA=sepsetA, SepsetC=sepsetC)
-}
+    ## The following also transforms NULL sepset* to integer(0):
+    lapply(list(decision = res, version=version, SepsetA=sepsetA, SepsetC=sepsetC),
+	   as.integer)
+} ## {checkTriple}
 
 ##For R5 and R9-R10
 ######################################################
@@ -5724,7 +5723,7 @@ rfci.vStruc <- function(suffStat, indepTest, p, alpha, sepset, graph, unshTripl,
     ##save the updated objects
     graph <- checktmp$graph
     sepset <- checktmp$sepset
-    ##note that no column is deleted from the matrix, we can add new triples instead
+    ## note that no column is deleted from the matrix, we can add new triples instead
     unshTripl <- checktmp$triple
     unshVect <- checktmp$vect
     trueVstruct <- checktmp$trueVstruct
@@ -5735,86 +5734,74 @@ rfci.vStruc <- function(suffStat, indepTest, p, alpha, sepset, graph, unshTripl,
 =====================================\n"
       else "\nOrient the v-structures\n=======================\n")
 
-    ##if there is at least one triple with the desired properties
-    if (any(trueVstruct)){
+    ## if there is at least one triple with the desired properties
+    if (any(trueVstruct)) {
       for (i in 1:dim(unshTripl)[2]) {
         if (trueVstruct[i]) {
           x <- unshTripl[1, i]
           y <- unshTripl[2, i]
           z <- unshTripl[3, i]
           if (!conservative) {
-            if ((graph[x, z] == 0) && !((y %in% sepset[[x]][[z]]) || (y %in% sepset[[z]][[x]]))) {
-              ##this is to avoid the problem of:
-              ##assume that <a,b,c> was saved in finalList because a "true" unshielded triple
-              ##but after in the matrix appears <b,c,d> and the edge b-c is deleted
-              ##of course the triple <a,b,c> stays in the finalList but we cannot orient the edge
-              ##b-c because it doesn'e exist anymore
-              if (graph[x,y]!=0 && graph[z,y]!=0) {
-                graph[x, y] <- 2
-                graph[z, y] <- 2
-                if (verbose) {
-                  cat("\n", x, "*->", y, "<-*", z, "\n")
-                  cat("Sxz=", sepset[[z]][[x]], "and",
-                      "Szx=", sepset[[x]][[z]], "\n")
-                }
-              }
+            if (graph[x, z] == 0 && graph[x,y] != 0 && graph[z,y] != 0 &&
+                !((y %in% sepset[[x]][[z]]) || (y %in% sepset[[z]][[x]]))) {
+              ## this is to avoid the problem of:
+              ## assume that <a,b,c> was saved in finalList because a "true" unshielded triple
+              ## but after in the matrix appears <b,c,d> and the edge b-c is deleted
+              ## of course the triple <a,b,c> stays in the finalList but we cannot orient the edge
+              ## b-c because it doesn'e exist anymore
+
+              if (verbose)
+                cat("\n", x, "*->", y, "<-*", z,
+                  "\nSxz=", sepset[[z]][[x]], "and",
+                    "Szx=", sepset[[x]][[z]], "\n")
+              graph[c(x,z), y] <- 2
             }
-          }
-          ##conservative version
-          else {
+          } else { ## conservative version
             ##check if x-y-z is faithful
             ##find neighbours of x and z
             nbrsX <- which(graph[,x]!=0) ## G symm; x no nbr of z
             nbrsZ <- which(graph[,z]!=0)
-            if (verbose) {
+            if (verbose)
               cat("\nTriple:",x,y,z,"and sepset by skelet:",
                   unique(sepset[[x]][[z]],sepset[[z]][[x]]),"\n")
-            }
-            resTriple <- checkTriple(x, y, z, nbrsX, nbrsZ,
-                                     sepset[[x]][[z]], sepset[[z]][[x]],
-                                     suffStat, indepTest, alpha,
-                                     version.unf=version.unf, maj.rule=maj.rule,
-                                     verbose=verbose)
+            r.abc <- checkTriple(x, y, z, nbrsX, nbrsZ,
+                                 sepset[[x]][[z]], sepset[[z]][[x]],
+                                 suffStat=suffStat, indepTest=indepTest, alpha=alpha,
+                                 version.unf=version.unf, maj.rule=maj.rule,
+                                 verbose=verbose)
             ## 1: in NO set; 2: in ALL sets; 3: in SOME but not all
-            ## Take action only if case "3"
-            if (resTriple$decision == 3) {
+            if (r.abc$decision == 3 || ## <- take action if case "3", or
+                ## can happen the case in Tetrad, so we must save the triple as unfaithful
+                ## a and c independent given S but not given subsets of the adj(x) or adj(z)
+                (version.unf[1] == 2 && r.abc$version == 2)) {
+
               ## record unfaithful triple
               unfTripl <- c(unfTripl, triple2numb(p, x, y, z))
               ##if (verbose) {
               ##  cat("new unfTriple:", x, y, z, "\n")
               ##}
             }
-            ## can happen the case in Tetrad, so we must save the triple as unfaithful
-            ## a and c independent given S but not given subsets of the adj(x) or adj(z)
-            if ((version.unf[1]==2) && (resTriple$version==2) && (resTriple$decision!=3)){
-              unfTripl <- c(unfTripl, triple2numb(p, x, y, z))
-              ##if (verbose) {
-              ##  cat("new unfTriple:", x, y, z, "\n")
-              ##}
+            sepset[[x]][[z]] <- r.abc$SepsetA
+            sepset[[z]][[x]] <- r.abc$SepsetC
+            if (graph[x,z] == 0 && graph[x,y] != 0 && graph[z,y] != 0 &&
+                !((y %in% sepset[[x]][[z]]) ||
+                  (y %in% sepset[[z]][[x]])) &&
+                !any(unfTripl==triple2numb(p, x, y, z), na.rm=TRUE) &&
+                !any(unfTripl==triple2numb(p, z, y, x), na.rm=TRUE)) {
+              if (verbose)
+                cat("\nOrient:", x, "*->", y, "<-*", z,
+                  "\nSxz=", sepset[[z]][[x]], "and",
+                    "Szx=", sepset[[x]][[z]], "\n")
+              graph[c(x,z), y] <- 2
             }
-            sepset[[x]][[z]] <- resTriple$SepsetA
-            sepset[[z]][[x]] <- resTriple$SepsetC
-            if ((graph[x, z] == 0) && !((y %in% sepset[[x]][[z]]) || (y %in% sepset[[z]][[x]]))) {
-              if (!any(unfTripl==triple2numb(p, x, y, z), na.rm=TRUE) &&
-                  !any(unfTripl==triple2numb(p, z, y, x), na.rm=TRUE)) {
-                if (graph[x,y]!=0 && graph[z,y]!=0) {
-                  graph[x, y] <- 2
-                  graph[z, y] <- 2
-                  if (verbose) {
-                    cat("\nOrient:", x, "*->", y, "<-*", z, "\n")
-                    cat("Sxz=", sepset[[z]][[x]], "and",
-                        "Szx=", sepset[[x]][[z]], "\n")
-                  }
-                }
-              }
-            }
-          }
+          } ## else : conservative
         }
-      }
+      } ## for (i ...)
     }
   }
-  list(sepset = sepset, graph = graph, unfTripl=unfTripl)
-}
+  list(sepset = sepset, graph = graph, unfTripl = unfTripl)
+} ## {}
+
 
 
 dep.triple <- function(suffStat, indepTest, p, alpha, sepset, apag,
