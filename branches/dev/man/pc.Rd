@@ -6,8 +6,8 @@
   graph (DAG) from observational data, using the PC-algorithm.
 }
 \usage{
-pc(suffStat, indepTest, p, alpha, fixedGaps = NULL,
-   fixedEdges = NULL, NAdelete = TRUE, m.max = Inf,
+pc(suffStat, indepTest, alpha, labels, p,
+   fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf,
    u2pd = c("relaxed", "rand", "retry"),
    skel.method = c("stable", "original"),
    conservative = FALSE, maj.rule = FALSE, solve.confl = FALSE, verbose = FALSE)
@@ -25,8 +25,13 @@ pc(suffStat, indepTest, p, alpha, fixedGaps = NULL,
     in the adjacency matrix).  \code{suffStat} is a list, see the
     argument above.  The return value of \code{indepTest} is the p-value
     of the test for conditional independence.}
-  \item{p}{Number of variables.}
-  \item{alpha}{Significance level for the individual conditional independence tests.}
+  \item{alpha}{significance level (number in \eqn{(0,1)} for the
+    individual conditional independence tests.}
+  \item{labels}{(optional) character vector of variable (or
+    \dQuote{node}) names.  Typically preferred to specifying \code{p}.}
+  \item{p}{(optional) number of variables (or nodes).  May be specified
+    if \code{labels} are not, in which case \code{labels} is set to
+    \code{1:p}.}
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
   \item{fixedGaps}{A logical matrix of dimension p*p. If entry
     \code{[i,j]} or \code{[j,i]} (or both) are TRUE, the edge i-j is
@@ -247,34 +252,31 @@ pc(suffStat, indepTest, p, alpha, fixedGaps = NULL,
 ##################################################
 ## Load predefined data
 data(gmG)
-n <- nrow(gmG$x)
-p <- ncol(gmG$x)
+n <- nrow    (gmG8$ x)
+V <- colnames(gmG8$ x) # labels aka node names
 
 ## estimate CPDAG
-pc.fit <- pc(suffStat = list(C = cor(gmG$x), n = n),
+pc.fit <- pc(suffStat = list(C = cor(gmG8$x), n = n),
              indepTest = gaussCItest, ## indep.test: partial correlations
-             p=p,
-             alpha=0.01, verbose = TRUE)
+             alpha=0.01, labels = V, verbose = TRUE)
 if (require(Rgraphviz)) {
   ## show estimated CPDAG
   par(mfrow=c(1,2))
   plot(pc.fit, main = "Estimated CPDAG")
-  plot(gmG$g, main = "True DAG")
+  plot(gmG8$g, main = "True DAG")
 }
 ##################################################
 ## Using d-separation oracle
 ##################################################
-## define independence test
-indepTest <- dsepTest
 ## define sufficient statistics (d-separation oracle)
-suffStat <- list(g = gmG$g, jp = RBGL::johnson.all.pairs.sp(gmG$g))
+suffStat <- list(g = gmG8$g, jp = RBGL::johnson.all.pairs.sp(gmG8$g))
 ## estimate CPDAG
-alpha <- 0.01 ## value is irrelevant as dsepTest returns either 0 or 1
-fit <- pc(suffStat, indepTest, p, alpha)
+fit <- pc(suffStat, indepTest = dsepTest, labels = V,
+          alpha= 0.01) ## value is irrelevant as dsepTest returns either 0 or 1
 if (require(Rgraphviz)) {
   ## show estimated CPDAG
   plot(fit, main = "Estimated CPDAG")
-  plot(gmG$g, main = "True DAG")
+  plot(gmG8$g, main = "True DAG")
 }
 
 ##################################################
@@ -282,14 +284,13 @@ if (require(Rgraphviz)) {
 ##################################################
 ## Load data
 data(gmD)
-p <- ncol(gmD$x)
+V <- colnames(gmD$x)
 ## define sufficient statistics
 suffStat <- list(dm = gmD$x, nlev = c(3,2,3,4,2), adaptDF = FALSE)
 ## estimate CPDAG
 pc.D <- pc(suffStat,
            ## independence test: G^2 statistic
-           indepTest = disCItest, p=p,
-           alpha = 0.01, verbose = TRUE)
+           indepTest = disCItest, alpha = 0.01, labels = V, verbose = TRUE)
 if (require(Rgraphviz)) {
   ## show estimated CPDAG
   par(mfrow = c(1,2))
@@ -302,11 +303,10 @@ if (require(Rgraphviz)) {
 ##################################################
 ## Load binary data
 data(gmB)
-p <- ncol(gmB$x)
+V <- colnames(gmB$x)
 ## estimate CPDAG
 pc.B <- pc(suffStat = list(dm = gmB$x, adaptDF = FALSE),
-           indepTest = binCItest, p=p,
-           alpha = 0.01, verbose = TRUE)
+           indepTest = binCItest, alpha = 0.01, labels = V, verbose = TRUE)
 pc.B
 if (require(Rgraphviz)) {
   ## show estimated CPDAG

@@ -13,18 +13,18 @@
 backdoor(amat, x, y, type = "pag", max.chordal = 10, verbose=FALSE)
 }
 \arguments{
-  \item{amat}{Adjacency matrix (see Details for coding) of the given
-    graph specified in \code{type}.} 
-  \item{x,y}{Integer: position of variable \code{x} or \code{y} in the
+  \item{amat}{adjacency matrix (see Details for coding) of the given
+    graph specified in \code{type}.}
+  \item{x,y}{(integer) position of variable \code{x} or \code{y} in the
     adjacency matrix.}
-  \item{type}{A string specifying the type of graph of the adjacency matrix
+  \item{type}{string specifying the type of graph of the adjacency matrix
     \code{amat}.  It can be a DAG (type="dag"), a CPDAG (type="cpdag"), a
     MAG (type="mag"), or a PAG (type="pag").}
-  \item{max.chordal}{Only if \code{type = "mag"}, is used in
+  \item{max.chordal}{only if \code{type = "mag"}, is used in
     \code{\link{pag2magAM}} to determine paths too large to be checked
     for chordality.}
-  \item{verbose}{Logical; if true, some output is produced during
-    computation.}  
+  \item{verbose}{logical; if true, some output is produced during
+    computation.}
 }
 \details{
   This function is a generalization of Pearl's backdoor criterion, see
@@ -122,8 +122,12 @@ backdoor(true.amat, 5, 7, type="dag")
 
 ## create the graph
 p <- 5
-amat <- t(matrix(c(0,0,1,1,1, 0,0,1,1,1, 0,0,0,1,0,
-                   0,0,0,0,1, 0,0,0,0,0),  5,5))
+. <- 0
+amat <- rbind(c(.,.,1,1,1),
+              c(.,.,1,1,1),
+              c(.,.,.,1,.),
+              c(.,.,.,.,1),
+              c(.,.,.,.,.))
 colnames(amat) <- rownames(amat) <- as.character(1:5)
 V <- as.character(1:5)
 edL <- vector("list",length=5)

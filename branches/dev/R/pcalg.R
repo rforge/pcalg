@@ -636,9 +636,8 @@ dag2cpdag <- function(g)
     if ((m <- nrow(tripleMatrix)) > 0) {
         deleteDupl <- logical(m)# all FALSE
         for (i in seq_len(m))
-            if (tripleMatrix[i,1] > tripleMatrix[i,3]) {
+            if (tripleMatrix[i,1] > tripleMatrix[i,3])
                 deleteDupl[i] <- TRUE
-            }
         if(any(deleteDupl))
           tripleMatrix <- tripleMatrix[!deleteDupl,, drop=FALSE]
 
@@ -2309,13 +2308,12 @@ Please use ida or idaFast instead\n")
           }
         }
         ## higher order subsets
-        if (length(pa2)>1) {
+        if (length(pa2) > 1) {
           for (i in 2:length(pa2)) {
-            pa.tmp <- combn(pa2,i,simplify=TRUE)
-            n.comb <- ncol(pa.tmp)
-            for (j in 1:n.comb) {
-              pa2.f <- setdiff(pa2,pa.tmp[,j])
+            pa.tmp <- combn(pa2, i, simplify=TRUE)
+            for (j in seq_len(ncol(pa.tmp))) {
               pa2.t <- pa.tmp[,j]
+              pa2.f <- setdiff(pa2,pa2.t)
               ## teste auf neuen collider
               if (collTest) {
                 tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
@@ -2326,9 +2324,9 @@ Please use ida or idaFast instead\n")
                   cat("Y in Parents: ",y.pos," in ",pa2.t,"\n")
                   beta.hat[ii] <- 0
                 } else {
-                  beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1,pa.tmp[,j]))
+                  beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1,pa2.t))
                 }
-                if (verbose==2) {cat("\ny:",y.pos,"x:",c(x.pos,pa1,pa.tmp[,j]),
+                if (verbose==2) {cat("\ny:",y.pos,"x:",c(x.pos,pa1,pa2.t),
                       "|b.hat=",beta.hat[ii])}
               } else {
                 ## cat("\nx:",x.pos," pa1:",pa1," pa2.t:",pa2.t," pa2.f:",pa2.f)
@@ -2480,12 +2478,11 @@ Please use ida or idaFast instead\n")
       ## higher order subsets
       if (length(pa2)>1) {
         for (i in 2:length(pa2)) {
-          pa.tmp <- combn(pa2,i,simplify=TRUE)
-          n.comb <- ncol(pa.tmp)
-          for (j in 1:n.comb) {
+          pa.tmp <- combn(pa2, i, simplify=TRUE)
+          for (j in seq_len(ncol(pa.tmp))) {
             ## teste auf neuen collider
-            pa2.f <- setdiff(pa2,pa.tmp[,j])
             pa2.t <- pa.tmp[,j]
+            pa2.f <- setdiff(pa2,pa2.t)
             tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
             if (!tmpColl) {
               ii <- ii+1
@@ -2493,7 +2490,7 @@ Please use ida or idaFast instead\n")
                 cat("Y in Parents: ",y.pos," in ",pa2.t,"\n")
                 beta.hat[ii] <- 0
               } else {
-                beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1,pa.tmp[,j]))
+                beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1,pa2.t))
               }
             }
           }
@@ -2911,7 +2908,7 @@ plotAG <- function(amat)
   Rgraphviz::renderGraph(Rgraphviz::layoutGraph(g))
 }
 
-skeleton <- function(suffStat, indepTest, p, alpha,
+skeleton <- function(suffStat, indepTest, alpha, labels, p,
 		     method = c("stable", "original"), m.max = Inf,
 		     fixedGaps = NULL, fixedEdges = NULL,
 		     NAdelete = TRUE, verbose = FALSE)
@@ -2924,7 +2921,6 @@ skeleton <- function(suffStat, indepTest, p, alpha,
   ## - suffStat: List containing all necessary elements for the conditional
   ##             independence decisions in the function "indepTest".
   ## - indepTest: predefined function for testing conditional independence
-  ## - p: number of variables !! NEU
   ## - alpha: Significance level of individual partial correlation tests
   ## - fixedGaps: the adjacency matrix of the graph from which the algorithm
   ##      should start (logical); gaps fixed here are not changed
@@ -2943,33 +2939,43 @@ skeleton <- function(suffStat, indepTest, p, alpha,
   ##-   if(inherits(tst, "try-error"))
   ##-     stop("the 'indepTest' function does not work correctly with 'obj'")
 
-  stopifnot((p <- as.integer(p)) >= 2)
   cl <- match.call()
+  if(!missing(p)) stopifnot(is.numeric(p), length(p <- as.integer(p)) == 1, p >= 2)
+  if(missing(labels)) {
+    if(missing(p)) stop("need to specify 'labels' or 'p'")
+    labels <- as.character(seq_len(p))
+  } else { ## use labels ==> p  from it
+    stopifnot(is.character(labels))
+    if(missing(p)) {
+      p <- length(labels)
+    } else if(p != length(labels))
+      stop("'p' is not needed when 'labels' is specified, and must match length(labels)")
+    else
+      message("No need to specify 'p', when 'labels' is given")
+  }
+  seq_p <- seq_len(p)
   method <- match.arg(method)
+
+  ## G := !fixedGaps, i.e. G[i,j] is true  iff  i--j  will be investigated
   if (is.null(fixedGaps)) {
     G <- matrix(TRUE, nrow = p, ncol = p)
     diag(G) <- FALSE
   }
-  else {
-    if (!identical(dim(fixedGaps), c(p, p)))
-      stop("Dimensions of the dataset and fixedGaps do not agree.")
-    else {
-      if (fixedGaps != t(fixedGaps))
-        stop("fixedGaps must be symmetric")
-      G <- !fixedGaps
-    }
-  }
-  if (any(is.null(fixedEdges))) {
+  else if (!identical(dim(fixedGaps), c(p, p)))
+    stop("Dimensions of the dataset and fixedGaps do not agree.")
+  else if (fixedGaps != t(fixedGaps))
+    stop("fixedGaps must be symmetric")
+  else
+    G <- !fixedGaps
+
+  if (any(is.null(fixedEdges))) { ## MM: could be sparse
     fixedEdges <- matrix(rep(FALSE, p * p), nrow = p, ncol = p)
   }
-  else {
-    if (!identical(dim(fixedEdges), c(p, p)))
-      stop("Dimensions of the dataset and fixedEdges do not agree.")
-    if (fixedEdges != t(fixedEdges))
-      stop("fixedEdges must be symmetric")
-  }
+  else if (!identical(dim(fixedEdges), c(p, p)))
+    stop("Dimensions of the dataset and fixedEdges do not agree.")
+  else if (fixedEdges != t(fixedEdges))
+    stop("fixedEdges must be symmetric")
 
-  seq_p <- seq_len(p)
   pval <- NULL
   sepset <- lapply(seq_p, function(.) vector("list",p))# a list of lists [p x p]
   ## save maximal p value
@@ -3037,12 +3043,11 @@ skeleton <- function(suffStat, indepTest, p, alpha,
   }
 
   ## transform matrix to graph object :
-  nnms <- as.character(seq_p)
   Gobject <-
     if (sum(G) == 0) {
-      new("graphNEL", nodes = nnms)
+      new("graphNEL", nodes = labels)
     } else {
-      colnames(G) <- rownames(G) <- nnms
+      colnames(G) <- rownames(G) <- labels
       as(G,"graphNEL")
     }
 
@@ -3056,8 +3061,8 @@ skeleton <- function(suffStat, indepTest, p, alpha,
 
 
 
-pc <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL,
-               fixedEdges = NULL, NAdelete = TRUE, m.max = Inf,
+pc <- function(suffStat, indepTest, alpha, labels, p,
+               fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf,
                u2pd = c("relaxed", "rand", "retry"),
                skel.method = c("stable", "original"),
                conservative = FALSE, maj.rule = FALSE,
@@ -3089,6 +3094,21 @@ pc <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL,
 
   ## Initial Checks
   cl <- match.call()
+  if(!missing(p)) stopifnot(is.numeric(p), length(p <- as.integer(p)) == 1, p >= 2)
+  if(missing(labels)) {
+    if(missing(p)) stop("need to specify 'labels' or 'p'")
+    labels <- as.character(seq_len(p))
+  } else { ## use labels ==> p  from it
+    stopifnot(is.character(labels))
+    if(missing(p)) {
+      p <- length(labels)
+    } else if(p != length(labels))
+      stop("'p' is not needed when 'labels' is specified, and must match length(labels)")
+    else
+      message("No need to specify 'p', when 'labels' is given")
+  }
+  seq_p <- seq_len(p)
+
   u2pd <- match.arg(u2pd)
   skel.method <- match.arg(skel.method)
   if(u2pd != "relaxed") {
@@ -3102,9 +3122,10 @@ pc <- function(suffStat, indepTest, p, alpha, fixedGaps = NULL,
   if (conservative && maj.rule) stop("Choose either conservative PC or majority rule PC!")
 
   ## Skeleton
-  skel <- skeleton(suffStat, indepTest, p, alpha, method = skel.method,
+  skel <- skeleton(suffStat, indepTest, alpha, labels=labels, method = skel.method,
                    fixedGaps=fixedGaps, fixedEdges=fixedEdges,
                    NAdelete=NAdelete, m.max=m.max, verbose=verbose)
+  skel@call <- cl # so that makes it into result
 
   ## Orient edges
   if (!conservative && !maj.rule) {
@@ -3852,18 +3873,17 @@ ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
         if (length(pa2) > 1)
           for (i in 2:length(pa2)) {
             pa.tmp <- combn(pa2,i,simplify=TRUE)
-            n.comb <- ncol(pa.tmp)
-            for (j in 1:n.comb) {
-              pa2.f <- setdiff(pa2,pa.tmp[,j])
+            for (j in seq_len(ncol(pa.tmp))) {
               pa2.t <- pa.tmp[,j]
+              pa2.f <- setdiff(pa2,pa2.t)
               if (!check.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)) {
                 ii <- ii+1
                 if (y %in% pa2.t) {
                   beta.hat[ii] <- 0
                 } else {
-                  beta.hat[ii] <- lm.cov(mcov,y,c(x,pa1,pa.tmp[,j]))
+                  beta.hat[ii] <- lm.cov(mcov,y,c(x,pa1,pa2.t))
                   if (verbose)
-                    cat("Fit - y:",y,"x:",c(x,pa1,pa.tmp[,j]),
+                    cat("Fit - y:",y,"x:",c(x,pa1,pa2.t),
                         "|b.hat=",beta.hat[ii],"\n")
                 }
               } ## if (!check..)
@@ -3986,8 +4006,7 @@ idaFast <- function(x.pos, y.pos.set, mcov, graphEst)
     if (length(pa2) > 1)
       for (i in 2:length(pa2)) {
         pa.tmp <- combn(pa2,i,simplify=TRUE)
-        n.comb <- ncol(pa.tmp)
-        for (j in seq_len(n.comb)) {
+        for (j in seq_len(ncol(pa.tmp))) {
           pa2.t <- pa.tmp[,j]
           pa2.f <- setdiff(pa2, pa2.t)
           if (!check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
@@ -4156,29 +4175,25 @@ pc.cons.intern <- function(sk, suffStat, indepTest, alpha,
       tripleMatrix <- rbind(tripleMatrix,tmpMatrix)
       colnames(tripleMatrix) <- c("","","")
     }
-    if (dim(tripleMatrix)[1]>=1) {
-      deleteDupl <- rep(0,dim(tripleMatrix)[1])
+    if ((m <- nrow(tripleMatrix)) > 0) {
+      deleteDupl <- logical(m)# all FALSE
+      for (i in seq_len(m))
+        if (tripleMatrix[i,1] > tripleMatrix[i,3])
+          deleteDupl[i] <- TRUE
+      if(any(deleteDupl))
+        tripleMatrix <- tripleMatrix[!deleteDupl,, drop=FALSE]
+
       for (i in seq_len(nrow(tripleMatrix))) {
-        if (tripleMatrix[i,1]>tripleMatrix[i,3]) {
-          deleteDupl[i] <- 1
-        }
-      }
-      deletedupl <- which(deleteDupl==1)
-      if (length(deletedupl)>0) {
-        finalMatrix <- tripleMatrix[-deletedupl,, drop=FALSE]
-      } else {
-        finalMatrix <- tripleMatrix
-      }
-      for (i in seq_len(nrow(finalMatrix))) {
-          ##pay attention to the size of counter
-          if (counter==(length(unfTripl)-1)) {
-            tmp.vec <- rep(NA,min(p*p,100000))
-            unfTripl <- c(unfTripl,tmp.vec)
-            vers <- c(vers,tmp.vec)
+          ## pay attention to the size of counter
+          if (counter+1L == length(unfTripl)) {
+            n.xtra <- min(p*p, 100000)
+            new.len <- counter+1L + n.xtra
+            length(unfTripl) <- new.len
+            length(vers)     <- new.len
           }
-          a <- finalMatrix[i,1]
-          b <- finalMatrix[i,2]
-          c <- finalMatrix[i,3]
+          a <- tripleMatrix[i,1]
+          b <- tripleMatrix[i,2]
+          c <- tripleMatrix[i,3]
           nbrsA <- which(g[,a]!=0) ## G symm; c no nbr of a
           nbrsC <- which(g[,c]!=0)
           if (verbose) {
@@ -4258,7 +4273,8 @@ checkTriple <- function(a, b, c, nbrsA, nbrsC, sepsetA, sepsetC,
     ## loop through all subsets of parents
 
     nr.indep <- 0
-    ##Tetrad
+    stopifnot(length(version.unf) == 2, version.unf %in% 1:2)
+    ## Tetrad
     tmp <- if (version.unf[2] == 2) ## our version
       (b %in% sepsetA || b %in% sepsetC) ## else NULL = Tetrad version
     version <- 0
@@ -4652,13 +4668,13 @@ find.min.discr.path <- function(pag, path, verbose = FALSE)
 ##FCI
 ###############################################################################
 
-fci <- function (suffStat, indepTest, p, alpha,
-                 skel.method = c("stable", "original"),
-                 type = c("normal", "anytime", "adaptive"),
-                 fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
-                 m.max = Inf, pdsep.max = Inf, rules = rep(TRUE, 10),
-                 doPdsep = TRUE, biCC = FALSE, conservative = FALSE,
-                 maj.rule = FALSE, labels = NA, verbose = FALSE)
+fci <- function(suffStat, indepTest, alpha, labels, p,
+                skel.method = c("stable", "original"),
+                type = c("normal", "anytime", "adaptive"),
+                fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
+                m.max = Inf, pdsep.max = Inf, rules = rep(TRUE, 10),
+                doPdsep = TRUE, biCC = FALSE, conservative = FALSE,
+                maj.rule = FALSE, verbose = FALSE)
 {
   ## Purpose: Perform FCI-Algorithm, i.e., estimate PAG
   ## ----------------------------------------------------------------------
@@ -4684,7 +4700,7 @@ fci <- function (suffStat, indepTest, p, alpha,
   ##          have to be oriented conservatively or nor
   ## - maj.rule: TRUE or FALSE variable containing if the majority rule is
   ##             used instead of the normal conservative
-  ## - labels: names of the variables
+  ## - labels: names of the variables or nodes
   ## - type: it specifies the version of the FCI that has to be used.
   ##         Per default it is normal, the normal FCI algorithm. It can also be
   ##         anytime for the Anytime FCI and in this cas m.max must be specified;
@@ -4692,31 +4708,41 @@ fci <- function (suffStat, indepTest, p, alpha,
   ##         m.max must not be specified.
 
   ## ----------------------------------------------------------------------
-  ## Author: Markus Kalisch, Date: Dec 2009; update: Diego Colombo, 2012
+  ## Author: Markus Kalisch, Date: Dec 2009; update: Diego Colombo, 2012; Martin Maechler, 2013
 
-    if (all(!is.na(labels))) {
-        stopifnot(length(labels) == p)
+    cl <- match.call()
+  if(!missing(p)) stopifnot(is.numeric(p), length(p <- as.integer(p)) == 1, p >= 2)
+    if(missing(labels)) {
+      if(missing(p)) stop("need to specify 'labels' or 'p'")
+      labels <- as.character(seq_len(p))
+    } else { ## use labels ==> p  from it
+      stopifnot(is.character(labels))
+      if(missing(p)) {
+	p <- length(labels)
+      } else if(p != length(labels))
+	stop("'p' is not needed when 'labels' is specified, and must match length(labels)")
+      else
+	message("No need to specify 'p', when 'labels' is given")
     }
-    else {
-        labels <- as.character(1:p)
-    }
+    seq_p <- seq_len(p)
+
     ## Check that the type is a valid one
     type <- match.arg(type)
-
     if (type == "anytime" && m.max == Inf)
         stop("To use the Anytime FCI you must specify a finite 'm.max'.")
     if (type == "adaptive" && m.max != Inf)
         stop("To use the Adaptive Anytime FCI you must not specify 'm.max'.")
 
-    if(conservative && maj.rule )
+    if (conservative && maj.rule)
         stop("Choose either conservative FCI or majority rule FCI")
 
     cl <- match.call()
     if (verbose) cat("Compute Skeleton\n================\n")
 
-    skel <- skeleton(suffStat, indepTest, p, alpha, method = skel.method,
+    skel <- skeleton(suffStat, indepTest, alpha, labels=labels, method = skel.method,
                      fixedGaps=fixedGaps, fixedEdges=fixedEdges,
                      NAdelete=NAdelete, m.max=m.max, verbose=verbose)
+    skel@call <- cl # so that makes it into result
     G <- as(skel@graph, "matrix")
     sepset <- skel@sepset
     pMax <- skel@pMax
@@ -5372,25 +5398,20 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
           if (length(indA) > 0) {
             if (length(unfVect) == 0) {
               pag[c, b] <- 3
-              if (verbose) {
-                cat("\nRule 7","\n")
-                cat("Orient:", indA, "-o", b, "o-*",
+              if (verbose)
+                cat("\nRule 7",
+                    "\nOrient:", indA, "-o", b, "o-*",
                     c, "as", b, "-*", c, "\n")
-              }
             }
-            else {
-              for (a in indA) {
-                if (!any(unfVect == triple2numb(p, a, b, c), na.rm=TRUE) &&
-                    !any(unfVect == triple2numb(p, c, b, a), na.rm=TRUE)) {
-                  pag[c, b] <- 3
-                  if (verbose) {
-                    cat("\nRule 7","\n")
-                    cat("Conservatively orient:", a, "-o", b, "o-*",
-                        c, "as", b, "-*", c, "\n")
-                  }
-                }
+            else for (a in indA)
+              if (!any(unfVect == triple2numb(p, a, b, c), na.rm=TRUE) &&
+                  !any(unfVect == triple2numb(p, c, b, a), na.rm=TRUE)) {
+                pag[c, b] <- 3
+                if (verbose)
+                  cat("\nRule 7",
+                      "\nConservatively orient:", a, "-o", b, "o-*",
+                      c, "as", b, "-*", c, "\n")
               }
-            }
           }
         }
       }
@@ -5400,15 +5421,15 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
         for (i in seq_len(nrow(ind))) {
           a <- ind[i, 1]
           c <- ind[i, 2]
-          indB <- which(((pag[a, ] == 2 & pag[, a] == 3) | (pag[a, ] == 1 & pag[, a] == 3)) & (pag[c, ] == 3 & pag[, c] == 2))
+          indB <- which(pag[, a] == 3 & (pag[a, ] == 2 | pag[a, ] == 1) &
+                        pag[c, ] == 3 & pag[, c] == 2)
           if (length(indB) > 0) {
             pag[c, a] <- 3
-            if (verbose) {
-              cat("\nRule 8","\n")
-              cat("Orient:", a, "->", indB, "->", c,
+            if (verbose)
+              cat("\nRule 8",
+                  "\nOrient:", a, "->", indB, "->", c,
                   "or", a, "-o", indB, "->", c, "with", a,
                   "o->", c, "as", a, "->", c, "\n")
-            }
           }
         }
       }
@@ -5420,7 +5441,9 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
           c <- ind[1, 2]
           ind <- ind[-1,, drop=FALSE]
           ##find all b s.t. a (o-)--(o>) b and b and c are not connected
-          indB <- which((pag[a, ] == 2 | pag[a, ] == 1) & (pag[, a] == 1 | pag[, a] == 3) & (pag[c, ] == 0 & pag[, c] == 0))
+          indB <- which((pag[a, ] == 2 | pag[a, ] == 1) &
+                        (pag[, a] == 1 | pag[, a] == 3) &
+                        (pag[c, ] == 0 & pag[, c] == 0))
           ##delete c from indB since it is surely inside
           indB <- setdiff(indB, c)
           ##chose one b s.t. the initial structure exists and the edge hasn't been oriented yet
@@ -5434,10 +5457,10 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
             ##there is a path ---> orient it
             if (length(tmp.upd) > 1) {
               pag[c, a] <- 3
-              if (verbose) {
-                cat("\nRule 9", "\n")
-                cat("There exists an uncovered potentially directed path between", a, "and", c, ". Orient:", a, " ->",c, "\n")
-              }
+              if (verbose)
+                cat("\nRule 9",
+                    "\nThere exists an uncovered potentially directed path between", a, "and", c,
+                    ". Orient:", a, " ->",c, "\n")
             }
           }
         }
@@ -5466,16 +5489,13 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
                     (pag[b, a] == 1 || pag[b, a] == 3) &&
                     (pag[a, d] == 1 || pag[a, d] == 2) &&
                     (pag[d, a] == 1 || pag[d, a] == 3) && pag[d, b] == 0 && pag[b, d] == 0) {
-                  ##normal version
-                  if (length(unfVect)==0) {
+                  if (length(unfVect)==0) { ## normal version
                     pag[c, a] <- 3
                     if (verbose)
                       cat("\nRule 10 [easy]",
                           "\nOrient:", a, "->", c, "\n")
                   }
-                  ##conservative version
-                  else {
-                    ##check faithfulness of b-a-d
+                  else ## conservative version: check faithfulness of b-a-d
                     if (!any(unfVect==triple2numb(p,b,a,d), na.rm=TRUE) &&
                         !any(unfVect==triple2numb(p,d,a,b), na.rm=TRUE)) {
                       pag[c, a] <- 3
@@ -5483,7 +5503,6 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
                         cat("\nRule 10 [easy]",
                             "\nConservatively orient:", a, "->", c, "\n")
                     }
-                  }
                 }
                 ##search with a breitensuche two minimal uncovered circle paths
                 else {
@@ -5493,32 +5512,30 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
                   indX <- setdiff(indX, c)
                   if (length(indX >= 2)) {
                     counterX1 <- 0
-                    while ((counterX1 < length(indX)) && (pag[c, a] == 1)) {
+                    while (counterX1 < length(indX) && pag[c, a] == 1) {
                       counterX1 <- counterX1 + 1
                       first.pos <- indA[counterX1]
                       indX2 <- setdiff(indX, first.pos)
                       counterX2 <- 0
-                      while ((counterX2 < length(indX2) && (pag[c, a] == 1))) {
+                      while (counterX2 < length(indX2) && pag[c, a] == 1) {
                         counterX2 <- counterX2 + 1
                         sec.pos <- indX2[counterX2]
-                        tmp1 <- minUncovPdPath(p, pag = pag, path = c(a, first.pos, b),
+                        t1 <- minUncovPdPath(p, pag = pag, path = c(a, first.pos, b),
+                                             unfVect = unfVect, verbose = verbose)
+                        if (length(t1) > 1) { # otherwise, can skip next minUnc..()
+                          t2 <- minUncovPdPath(p, pag = pag, path = c(a, sec.pos, d),
                                                unfVect = unfVect, verbose = verbose)
-                        tmp2 <- minUncovPdPath(p, pag = pag, path = c(a, sec.pos, d),
-                                               unfVect = unfVect, verbose = verbose)
-                        ##we found 2 uncovered pd paths
-                        if (length(tmp1) > 1 && length(tmp2) > 1 &&
-                            first.pos != sec.pos && pag[first.pos, sec.pos] == 0) {
-                          ##normal version
-                          if (length(unfVect)==0) {
-                            pag[c, a] <- 3
-                            if (verbose)
-                              cat("\nRule 10",
-                                  "\nOrient:", a, "->", c, "\n")
-                          }
-                          ##conservative version
-                          else {
-                            if (!any(unfVect==triple2numb(p,first.pos, a, sec.pos), na.rm=TRUE) &&
-                                !any(unfVect==triple2numb(p,sec.pos, a, first.pos), na.rm=TRUE)) {
+                          if (length(t2) > 1 &&
+                              first.pos != sec.pos && pag[first.pos, sec.pos] == 0) {
+                            ## we found 2 uncovered pd paths
+                            if (length(unfVect)==0) { ## normal version
+                              pag[c, a] <- 3
+                              if (verbose)
+                                cat("\nRule 10", "\nOrient:", a, "->", c, "\n")
+                            }
+                            else if(!any(unfVect==triple2numb(p,first.pos, a, sec.pos), na.rm=TRUE) &&
+                                    !any(unfVect==triple2numb(p,sec.pos, a, first.pos), na.rm=TRUE)) {
+                              ## conservative version
                               pag[c, a] <- 3
                               if (verbose)
                                 cat("\nRule 10",
@@ -5526,15 +5543,15 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
                             }
                           }
                         }
-                      }
+                      } #  # while ( counterX2 .. )
                     }
                   }
-                }
-              }
-            }
-          }
+                } # else
+              } # while ( counterD .. )
+            } # while ( counterB .. )
+          } # if (length(indB) .)
         }
-      }
+      } ## if (rules[10] ..)
     }
   }
   pag
@@ -5546,12 +5563,12 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
 ##RFCI
 ################################################################################
 
-rfci <- function(suffStat, indepTest, p, alpha,
+rfci <- function(suffStat, indepTest, alpha, labels, p,
                  skel.method = c("stable", "original"),
                  fixedGaps = NULL, fixedEdges = NULL,
                  NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10),
                  conservative = FALSE, maj.rule = FALSE,
-                 labels = NA, verbose = FALSE)
+                 verbose = FALSE)
 {
   ## Purpose: Perform RFCI-Algorithm, i.e., estimate PAG
   ## ----------------------------------------------------------------------
@@ -5572,46 +5589,53 @@ rfci <- function(suffStat, indepTest, p, alpha,
   ##                 the skeleton have to be oriented conservatively or nor
   ## - maj.rule: TRUE or FALSE variable containing if the majority rule is
   ##             used instead of the normal conservative
-  ## - labels: names of the variables
+  ## - labels: names of the variables or nodes
 
   ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, 2011
-
-  if (all(!is.na(labels))) {
-    stopifnot(length(labels <- as.character(labels)) == p)
-  }
-  else {
-    labels <- as.character(1:p)
-  }
-  if (conservative && maj.rule)
-      stop("Can only choose one of conservative or majority rule RFCI")
+  ## Author: Diego Colombo, 2011; modifications: Martin Maechler
 
   cl <- match.call()
+  if(!missing(p)) stopifnot(is.numeric(p), length(p <- as.integer(p)) == 1, p >= 2)
+  if(missing(labels)) {
+    if(missing(p)) stop("need to specify 'labels' or 'p'")
+    labels <- as.character(seq_len(p))
+  } else { ## use labels ==> p  from it
+    stopifnot(is.character(labels))
+    if(missing(p)) {
+      p <- length(labels)
+    } else if(p != length(labels))
+      stop("'p' is not needed when 'labels' is specified, and must match length(labels)")
+    else
+      message("No need to specify 'p', when 'labels' is given")
+  }
+  seq_p <- seq_len(p)
+
+  if (conservative && maj.rule)
+      stop("Can only choose one of conservative or majority rule RFCI")
   if (verbose) cat("Compute Skeleton\n================\n")
 
-  skel <- skeleton(suffStat, indepTest, p, alpha, method = skel.method,
+  skel <- skeleton(suffStat, indepTest, alpha, labels=labels, method = skel.method,
                    fixedGaps=fixedGaps, fixedEdges=fixedEdges,
                    NAdelete=NAdelete, m.max=m.max, verbose=verbose)
-  g <- as(skel@graph, "matrix")
+  sk.A <- as(skel@graph, "matrix")
   sepset <- skel@sepset
   ##the list of all ordered unshielded triples (the graph g does not change it is just a search!)
-  tmp <- find.unsh.triple(g,p)
-  listM <- tmp$unshTripl
-  vectM <- tmp$unshVect
+  u.t <- find.unsh.triple(sk.A, check=FALSE)
 
   ## check and orient v-structures recursively
-  r.v. <- rfci.vStruc(suffStat, indepTest, p, alpha, sepset, g, listM, vectM,
+  r.v. <- rfci.vStruc(suffStat, indepTest, alpha, sepset, sk.A,
+                      unshTripl = u.t$unshTripl, unshVect = u.t$unshVect,
                       conservative = (conservative || maj.rule),
                       version.unf=c(1,1), maj.rule=maj.rule, verbose=verbose)
-  g <- r.v.$graph
+  A <- r.v.$amat
   sepset <- r.v.$sepset
 
   ## orient as many edge marks as possible
   if (verbose)
     cat("\nDirect egdes:\n=============\nUsing rules:", which(rules), "\n")
 
-  res <- udag2apag(g, suffStat, indepTest, alpha, sepset,
-                   rules=rules, unfVect = r.v.$unfTripl, verbose=verbose)
+  res <- udag2apag(A, suffStat, indepTest, alpha, sepset,
+		   rules=rules, unfVect = r.v.$unfTripl, verbose=verbose)
   Amat <- res$graph
   colnames(Amat) <- rownames(Amat) <- labels
   new("fciAlgo", amat = Amat, call = cl, n = integer(0),
@@ -5620,7 +5644,7 @@ rfci <- function(suffStat, indepTest, p, alpha,
         sepset = res$sepset, pMax = skel@pMax, allPdsep = vector("list", p))
 } ## {rfci}
 
-find.unsh.triple <- function(g,p)
+find.unsh.triple <- function(g, check=TRUE)
 {
   ## Purpose: find the ordered (<x,y,z> with x<z) list of all the unshielded
   ##          triples in the graph
@@ -5632,60 +5656,45 @@ find.unsh.triple <- function(g,p)
   ##         - unshVect: containing the unique number for each column
   ##                     in unshTripl
   ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 21 Oct 2010, 14:05
+  ## Author: Diego Colombo, Date: 21 Oct 2010; clean- and speed-up: Martin Maechler
 
-  stopifnot( all(g == t(g)) )
-
-  if (any(g!=0)) {
-    unshtmp <- unshTripl <- NULL
-    ##find all unshielded triple in g
+  if(check) stopifnot( all(g == t(g)) )
+  m <- 0L
+  unshTripl <- matrix(integer(), 3, m)
+  if (any(g!=0)) { # if( at least one edge) -- find all unshielded triples in g
+    p <- nrow(g)
     indS <- which(g == 1, arr.ind = TRUE) ##x-y
     for (i in seq_len(nrow(indS))) {
       x <- indS[i, 1]
       y <- indS[i, 2]
       allZ <- setdiff(which(g[y, ] == 1), x) ##x-y-z
-      if (length(allZ) > 0) {
-        for (j in seq_along(allZ)) {
-          z <- allZ[j]
-          if (g[x,z]==0 && g[z,x]==0) {
-            ##save the matrix
-            unshtmp <- cbind(unshtmp,c(x,y,z))
-          }
+      for (z in allZ) {
+        if (g[x,z]==0 && g[z,x]==0) {
+          ##save the matrix
+          unshTripl <- cbind(unshTripl, c(x,y,z))
         }
       }
     }
     ##delete duplicates in the matrix
-    if (!is.null(unshtmp)) {
-      deleteDupl <- rep(0,dim(unshtmp)[2])
-      for (i in 1:dim(unshtmp)[2]) {
-        if (unshtmp[1,i]>unshtmp[3,i]) {
-          deleteDupl[i] <- 1
-        }
-      }
-      deletedupl <- which(deleteDupl==1)
-      if (length(deletedupl)>0) {
-        unshTripl <- unshtmp[,-deletedupl, drop=FALSE]
-      }
-      else {
-        unshTripl <- unshtmp
-      }
-    }
-    ##define the vector with the unique number for each triple
-    if (!is.null(unshTripl)) {
-      unshVect <- rep(NA, dim(unshTripl)[2])
-      for (k in 1 : dim(unshTripl)[2]) {
-        unshVect[k] <- triple2numb(p, unshTripl[1,k], unshTripl[2,k], unshTripl[3,k])
-      }
-    }
-    else {
-      unshVect <- NULL
+    if ((m <- ncol(unshTripl)) > 0) {
+      deleteDupl <- logical(m)# all FALSE
+      for (i in seq_len(m)) ## FIXME -- make faster!
+        if (unshTripl[1,i] > unshTripl[3,i])
+          deleteDupl[i] <- TRUE
+      if(any(deleteDupl))
+        m <- ncol(unshTripl <- unshTripl[,!deleteDupl, drop=FALSE])
     }
   }
-  list(unshTripl=unshTripl, unshVect=unshVect)
-}
+  ## define the vector with the unique number for each triple
+  unshVect <- vapply(seq_len(m), function(k)
+                     triple2numb(p, unshTripl[1,k], unshTripl[2,k], unshTripl[3,k]),
+                     numeric(1))
+  list(unshTripl = unshTripl, unshVect=unshVect)
+} ## {find.unsh.triple}
 
-rfci.vStruc <- function(suffStat, indepTest, p, alpha, sepset, graph, unshTripl,
-                        unshVect, conservative = FALSE,
+##' called only from  rfci()  and  checkEdges()
+rfci.vStruc <- function(suffStat, indepTest, alpha, sepset, g.amat,
+                        unshTripl, unshVect, conservative = FALSE,
                         version.unf=c(2,1), maj.rule = FALSE, verbose = FALSE)
 {
   ## Purpose: check the unshielded triples in unshTripl as v-structures
@@ -5693,7 +5702,7 @@ rfci.vStruc <- function(suffStat, indepTest, p, alpha, sepset, graph, unshTripl,
   ##          then save and orient the final ones in finalList and finalVect
   ## ----------------------------------------------------------------------
   ## Arguments: - suffStat, indepTest, p ,alpha: arguments from the algorithm
-  ##            - sepset, graph: output of the function skeleton
+  ##            - sepset, g.amat: output of the function skeleton
   ##            - unshTripl, unshVect: list/numbers of the unshielded triples
   ##                                   in graph
   ##            - conservative: TRUE or FALSE
@@ -5701,32 +5710,34 @@ rfci.vStruc <- function(suffStat, indepTest, p, alpha, sepset, graph, unshTripl,
   ##            - maj.rule: TRUE or FALSE variable containing if the majority
   ##             rule is used instead of the normal conservative
   ## ----------------------------------------------------------------------
-  ## Values: - updated sepset, graph and list of unfaithful v-structures
+  ## Values: - updated sepset, graph (g.amat) and list of unfaithful v-structures
   ## ----------------------------------------------------------------------
   ## Author: Diego Colombo, Date: 21 Oct 2010, 14:15
 
-  ##check every column (unshielded triple) of unshTripl
-  ##NOTE: what's done is done!!!! I don't look back in the matrix
+  ## check every column (unshielded triple) of unshTripl
+  ## NOTE: what's done is done!!!! I don't look back in the matrix
 
-  ##list of all unfaithful v-structures
+  stopifnot(is.matrix(unshTripl), nrow(unshTripl) == 3)
+  nT <- ncol(unshTripl)
+
+  ## list of all unfaithful v-structures
   unfTripl <- NULL
-  if (!is.null(unshTripl)) {
-    if (verbose) {
+  if (nT) {
+    if (verbose)
       cat("\nCheck unshielded triples for conditional dependence
 ================================================\n")
-    }
-    ##per default every triple is defined as a v-structure
-    trueVstruct <- rep(TRUE,dim(unshTripl)[2])
-    ##check all the columns in unshTripl as v-structure or not
-    checktmp <- dep.triple(suffStat, indepTest, p, alpha, sepset, graph,
-                           unshTripl, unshVect, trueVstruct, verbose = verbose)
+    ## check all the columns in unshTripl as v-structure or not
+    checktmp <- dep.triple(suffStat, indepTest, alpha, sepset=sepset, apag=g.amat,
+                           unshTripl=unshTripl, unshVect=unshVect,
+                           ##per default every triple is defined as a v-structure :
+                           trueVstruct = rep(TRUE, nT), verbose=verbose)
     ##save the updated objects
-    graph <- checktmp$graph
-    sepset <- checktmp$sepset
+    A          <- checktmp$ apag
+    sepset     <- checktmp$ sepset
     ## note that no column is deleted from the matrix, we can add new triples instead
-    unshTripl <- checktmp$triple
-    unshVect <- checktmp$vect
-    trueVstruct <- checktmp$trueVstruct
+    unshTripl  <- checktmp$ triple
+    unshVect   <- checktmp$ vect
+    trueVstruct<- checktmp$ trueVstruct
 
     if (verbose) cat(
       if (conservative)
@@ -5742,7 +5753,7 @@ rfci.vStruc <- function(suffStat, indepTest, p, alpha, sepset, graph, unshTripl,
           y <- unshTripl[2, i]
           z <- unshTripl[3, i]
           if (!conservative) {
-            if (graph[x, z] == 0 && graph[x,y] != 0 && graph[z,y] != 0 &&
+            if (A[x, z] == 0 && A[x,y] != 0 && A[z,y] != 0 &&
                 !((y %in% sepset[[x]][[z]]) || (y %in% sepset[[z]][[x]]))) {
               ## this is to avoid the problem of:
               ## assume that <a,b,c> was saved in finalList because a "true" unshielded triple
@@ -5754,13 +5765,13 @@ rfci.vStruc <- function(suffStat, indepTest, p, alpha, sepset, graph, unshTripl,
                 cat("\n", x, "*->", y, "<-*", z,
                   "\nSxz=", sepset[[z]][[x]], "and",
                     "Szx=", sepset[[x]][[z]], "\n")
-              graph[c(x,z), y] <- 2
+              A[c(x,z), y] <- 2
             }
           } else { ## conservative version
-            ##check if x-y-z is faithful
-            ##find neighbours of x and z
-            nbrsX <- which(graph[,x]!=0) ## G symm; x no nbr of z
-            nbrsZ <- which(graph[,z]!=0)
+            ## check if x-y-z is faithful
+            ## find neighbours of x and z
+            nbrsX <- which(A[,x]!=0) ## G symm; x no nbr of z
+            nbrsZ <- which(A[,z]!=0)
             if (verbose)
               cat("\nTriple:",x,y,z,"and sepset by skelet:",
                   unique(sepset[[x]][[z]],sepset[[z]][[x]]),"\n")
@@ -5769,6 +5780,7 @@ rfci.vStruc <- function(suffStat, indepTest, p, alpha, sepset, graph, unshTripl,
                                  suffStat=suffStat, indepTest=indepTest, alpha=alpha,
                                  version.unf=version.unf, maj.rule=maj.rule,
                                  verbose=verbose)
+            p <- nrow(A)
             ## 1: in NO set; 2: in ALL sets; 3: in SOME but not all
             if (r.abc$decision == 3 || ## <- take action if case "3", or
                 ## can happen the case in Tetrad, so we must save the triple as unfaithful
@@ -5783,7 +5795,7 @@ rfci.vStruc <- function(suffStat, indepTest, p, alpha, sepset, graph, unshTripl,
             }
             sepset[[x]][[z]] <- r.abc$SepsetA
             sepset[[z]][[x]] <- r.abc$SepsetC
-            if (graph[x,z] == 0 && graph[x,y] != 0 && graph[z,y] != 0 &&
+            if (A[x,z] == 0 && A[x,y] != 0 && A[z,y] != 0 &&
                 !((y %in% sepset[[x]][[z]]) ||
                   (y %in% sepset[[z]][[x]])) &&
                 !any(unfTripl==triple2numb(p, x, y, z), na.rm=TRUE) &&
@@ -5792,19 +5804,19 @@ rfci.vStruc <- function(suffStat, indepTest, p, alpha, sepset, graph, unshTripl,
                 cat("\nOrient:", x, "*->", y, "<-*", z,
                   "\nSxz=", sepset[[z]][[x]], "and",
                     "Szx=", sepset[[x]][[z]], "\n")
-              graph[c(x,z), y] <- 2
+              A[c(x,z), y] <- 2
             }
           } ## else : conservative
         }
       } ## for (i ...)
     }
   }
-  list(sepset = sepset, graph = graph, unfTripl = unfTripl)
-} ## {}
+  list(sepset = sepset, amat = A, unfTripl = unfTripl)
+} ## {rfci.vStruc}
 
 
-
-dep.triple <- function(suffStat, indepTest, p, alpha, sepset, apag,
+## only called from rfci.vStruc() - with trueVstruct a vector of TRUE
+dep.triple <- function(suffStat, indepTest, alpha, sepset, apag,
                        unshTripl, unshVect, trueVstruct, verbose = FALSE)
 {
   ## Purpose: test the two edges of any unshielded triple in unshTripl (column)
@@ -5813,8 +5825,7 @@ dep.triple <- function(suffStat, indepTest, p, alpha, sepset, apag,
   ##          trueVstruct and search in the graph for new triple or destroyed
   ##          ones. Otherwise do nothing.
   ## ----------------------------------------------------------------------
-  ## Arguments: - suffStat, indepTest, p, alpha, sepset, apag: skeleton
-  ##              parameters
+  ## Arguments: - suffStat, indepTest, alpha, sepset, apag: skeleton parameters / result
   ##            - unshTripl: matrix containing the unshielded triples (columns)
   ##            - unshVect: triple2numb of unshTripl
   ##            - trueVstruct: vector containing T/F for the v-structures
@@ -5822,248 +5833,162 @@ dep.triple <- function(suffStat, indepTest, p, alpha, sepset, apag,
   ## Values: - updated sepset, apag, unshTripl, unshVect, trueVstruct
   ## Author: Diego Colombo, Date: 16 Aug 2010, 15:07
 
-  k <- 0
-  while (k < dim(unshTripl)[2]) {
-    k <- k + 1
-    if (trueVstruct[k]) {
-      ##triple under inspection x-y-z
+  p <- nrow(apag) ## == length(sepset)
+  for(k in seq_len(ncol(unshTripl))) {
+    ## Note that trueVstruct[.] is changed *inside* !
+    if (trueVstruct[k]) { ## triple under inspection x-y-z
       x <- unshTripl[1, k]
       y <- unshTripl[2, k]
       z <- unshTripl[3, k]
-      SepSet <- unique(c(sepset[[x]][[z]],sepset[[z]][[x]]))
-      SepSet <- setdiff(SepSet,y)
-      if (verbose) {
-        cat("\nTriple:",x, y, z, "and sepSet", SepSet, "\n")
-      }
-      if (length(SepSet)!=0) {
+      SepSet <- setdiff(unique(c(sepset[[x]][[z]],
+				 sepset[[z]][[x]])), y)
+      nSep <- length(SepSet)
+      if (verbose)
+        cat("\nTriple:", x, y, z, "and sepSet (of size", nSep,") ", SepSet,"\n")
+      if (nSep != 0) {
+        x. <- min(x,y)
+        y. <- max(x,y)
+        y_ <- min(y,z)
+        z_ <- max(y,z)
+
+        ## Check x-y ---------------------------------------------------------------
+
         del1 <- FALSE
-        ##check x-y
-        ##check first x and y given the whole sepset(x,z)
-        pvalue1.whole <- indepTest(x, y, SepSet, suffStat)
-        if (pvalue1.whole >= alpha) {
+        ## check first x and y given the whole sepset(x,z)
+        if ((pv1 <- indepTest(x, y, SepSet, suffStat)) >= alpha) {
           ##afterwards we have to define this triple as FALSE in trueVstruct
           del1 <- TRUE
           ## x and y are independent, then find the minimal sepset
           done <- FALSE
           ord <- 0
-          while (!done && ord < length(SepSet)) {
+          while (!done && ord < nSep) {
             ord <- ord + 1
-            ##all combinations of SepSet of size ord
-            if (length(SepSet) == 1 && ord == 1) {
-              tmp.combn <- matrix(SepSet,1,1)
-            } else {
-              tmp.combn <- combn(SepSet, ord)
-            }
-            for (i in 1:dim(tmp.combn)[2]) {
-              pval <- indepTest(x, y, tmp.combn[,i], suffStat)
-              if (verbose) {
-                cat("x=", x, " y=", y, "S=", tmp.combn[,i], ": pval =", pval, "\n")
-              }
+            ## all combinations of SepSet of size ord
+            S.j <- if (ord == 1 && nSep == 1) matrix(SepSet,1,1) else combn(SepSet, ord)
+            for (i in seq_len(ncol(S.j))) {
+              pval <- indepTest(x, y, S.j[,i], suffStat)
+              if (verbose) cat("x=", x, " y=", y, "S=", S.j[,i], ": pval =", pval, "\n")
               if (pval >= alpha) {
                 ##delete edge and save set in sepset
                 apag[x, y] <- apag[y, x] <- 0
-                sepset[[x]][[y]] <- sepset[[y]][[x]] <- tmp.combn[,i]
+                sepset[[x]][[y]] <- sepset[[y]][[x]] <- S.j[,i]
                 done <- TRUE
                 break
               }
             }
           }
 
-          ##case 1: before we had a triangle and now it is an unshielded triple x-m-y
+          ## case 1: before we had a triangle and now it is an unshielded triple x-m-y
           indM <- which((apag[x, ] == 1 & apag[, x] == 1) & (apag[y, ] == 1 & apag[, y] == 1))
-          indM <- setdiff(indM,c(x,y,z))##just to be sure
-          if (length(indM) > 0) {
-            for (j in seq_along(indM)) {
-              m <- indM[j]
-              ##in the matrix the first column is always smaller than the third
-              if (x < y) {
-                unshTripl <- cbind(unshTripl, c(x,m,y))
-                unshVect <- c(unshVect, triple2numb(p, x, m, y))
-              }
-              else {
-                unshTripl <- cbind(unshTripl, c(y,m,x))
-                unshVect <- c(unshVect, triple2numb(p, y, m, x))
-              }
-              ##per default this new triple is set as TRUE in trueVstruct
-              trueVstruct <- c(trueVstruct,TRUE)
-            }
+          indM <- setdiff(indM, c(x,y,z)) ##just to be sure
+          for (m in indM) {
+            ## in the matrix the first column is always smaller than the third
+            unshTripl <- cbind(unshTripl,        c(x., m, y.))
+            unshVect <- c(unshVect, triple2numb(p, x., m, y.))
+            ##per default this new triple is set as TRUE in trueVstruct
+            trueVstruct <- c(trueVstruct, TRUE)
           }
-          ##case 2: an existent unshielded triple has been destroyed
-          ##case 2.a): we had q-x-y or y-x-q in the matrix but not anymore
+          ## case 2: an existent unshielded triple has been destroyed
+          ## case 2.a): we had q-x-y or y-x-q in the matrix but not anymore
           indQ <- which((apag[x, ] == 1 & apag[, x] == 1) & (apag[y, ] == 0 & apag[, y] == 0))
-          indQ <- setdiff(indQ,c(x,y,z))##just to be sure
-          if (length(indQ) > 0) {
-            for (j in seq_along(indQ)) {
-              q <- indQ[j]
-              ##define the triple as FALSE in trueVstruct
-              if (q < y) {
-                ##first check if it exists
-                delTripl <- unshVect == triple2numb(p, q, x, y)
-                if (any(delTripl)) {
-                  ##if we haven't checked the triple yet, define it as FALSE
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-              else {
-                delTripl <- unshVect == triple2numb(p, y, x, q)
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-            }
+          indQ <- setdiff(indQ, c(x,y,z)) ##just to be sure
+          for (q in indQ) {
+            ## define the triple as FALSE in trueVstruct
+            delTripl <- unshVect == (
+              if (q < y) triple2numb(p, q, x, y) else triple2numb(p, y, x, q))
+            ## if we haven't checked the triple yet, define it as FALSE
+            if (any(delTripl))
+              trueVstruct[which.max(delTripl)] <- FALSE
           }
-          ##case 2.b): we had r-y-x or x-y-r in the matrix but not anymore
+
+          ## case 2.b): we had r-y-x or x-y-r in the matrix but not anymore
           indR <- which((apag[x, ] == 0 & apag[, x] == 0) & (apag[y, ] == 1 & apag[, y] == 1))
-          indR <- setdiff(indQ,c(x,y,z))##just to be sure
-          if (length(indR) > 0) {
-            for (j in seq_along(indR)) {
-              r <- indR[j]
-              ##define the triple as FALSE in trueVstruct
-              if (r < x) {
-                ##first check if it exists
-                delTripl <- unshVect == triple2numb(p, r, y, x)
-                ##if we haven't checked the triple yet, save it as FALSE
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-              else {
-                delTripl <- unshVect == triple2numb(p, x, y, r)
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-            }
+          indR <- setdiff(indR, c(x,y,z)) ##just to be sure
+          ##                ^^^ (had typo here: 'indQ' !!)
+          for (r in indR) {
+            ##define the triple as FALSE in trueVstruct
+            delTripl <- unshVect == (
+              if (r < x) triple2numb(p, r, y, x) else triple2numb(p, x, y, r))
+            if (any(delTripl))
+              trueVstruct[which.max(delTripl)] <- FALSE
           }
-        }
-        ##check z-y
+
+        } ## if (pv1 .. indepTest(..) )
+
+        ## Check z-y ---------------------------------------------------------------
+
         del2 <- FALSE
-        ##check first z and y given the whole sepset(x,z)
-        pvalue2.whole <- indepTest(z, y, SepSet, suffStat)
-        if (pvalue2.whole >= alpha) {
-          ##afterwards we have to set this triple as FALSE in trueVstruct
-          del2 <- TRUE
+        ## check first z and y given the whole sepset(x,z)
+        if ((pv2 <- indepTest(z, y, SepSet, suffStat)) >= alpha) {
+          del2 <- TRUE ## will have to set this triple as FALSE in trueVstruct
           ## z and y are independent, then find the minimal sepset
           Done <- FALSE
           Ord <- 0
-          while (!Done && Ord < length(SepSet)) {
+          while (!Done && Ord < nSep) {
             Ord <- Ord + 1
-            ##all combinations of SepSet of size Ord
-            if (length(SepSet) == 1 && Ord == 1) {
-              tmp.combn <- matrix(SepSet,1,1)
-            } else {
-              tmp.combn <- combn(SepSet, Ord)
-            }
-            for (i in 1:dim(tmp.combn)[2]) {
-              pval <- indepTest(z, y, tmp.combn[,i], suffStat)
-              if (verbose) {
-                cat("x=", z, " y=", y, " S=", tmp.combn[,i], ": pval =", pval, "\n")
-              }
+            ## all combinations of SepSet of size Ord
+            S.j <- if (Ord == 1 && nSep == 1) matrix(SepSet,1,1) else combn(SepSet, Ord)
+            for (i in seq_len(ncol(S.j))) {
+              pval <- indepTest(z, y, S.j[,i], suffStat)
+              if (verbose) cat("x=", z, " y=", y, " S=", S.j[,i], ": pval =", pval, "\n")
               if (pval >= alpha) {
                 ##delete edge and save set in sepset
                 apag[z, y] <- apag[y, z] <- 0
-                sepset[[z]][[y]] <- sepset[[y]][[z]] <- tmp.combn[,i]
+                sepset[[z]][[y]] <- sepset[[y]][[z]] <- S.j[,i]
                 Done <- TRUE
                 break
               }
             }
+          } ## while( . )
+
+          ## case 1: before we had a triangle and now it is an unshielded triple z-m-y
+          indM <- which((apag[z, ] == 1 & apag[, z] == 1) & (apag[y, ] == 1 & apag[, y] == 1))
+          indM <- setdiff(indM,c(x,y,z)) ##just to be sure
+          for (m in indM) {
+            ##in the matrix the first column is always smaller than the third
+            unshTripl <- cbind(unshTripl,        c(y_, m, z_))
+            unshVect <- c(unshVect, triple2numb(p, y_, m, z_))
+            ##per default the triple is defined as TRUE
+            trueVstruct <- c(trueVstruct,TRUE)
           }
 
-          ##case 1: before we had a triangle and now it is an unshielded triple z-m-y
-          indM <- which((apag[z, ] == 1 & apag[, z] == 1) & (apag[y, ] == 1 & apag[, y] == 1))
-          indM <- setdiff(indM,c(x,y,z))##just to be sure
-          if (length(indM) > 0) {
-            for (j in seq_along(indM)) {
-              m <- indM[j]
-              ##in the matrix the first column is always smaller than the third
-              if (z < y) {
-                unshTripl <- cbind(unshTripl, c(z,m,y))
-                unshVect <- c(unshVect, triple2numb(p, z, m, y))
-              }
-              else {
-                unshTripl <- cbind(unshTripl, c(y,m,z))
-                unshVect <- c(unshVect, triple2numb(p, y, m, z))
-              }
-              ##per default the triple is defined as TRUE
-              trueVstruct <- c(trueVstruct,TRUE)
-            }
-          }
-          ##case 2: an existent unshielded triple has been destroyed
-          ##case 2.a): we had q-z-y or y-z-q in the matrix but not anymore
+          ## case 2: an existent unshielded triple has been destroyed
+          ## case 2.a): we had q-z-y or y-z-q in the matrix but not anymore
           indQ <- which((apag[z, ] == 1 & apag[, z] == 1) & (apag[y, ] == 0 & apag[, y] == 0))
-          indQ <- setdiff(indQ,c(x,y,z))##just to be sure
-          if (length(indQ) > 0) {
-            for (j in seq_along(indQ)) {
-              q <- indQ[j]
-              ##define the triple as FALSE in trueVstruct
-              if (q < y) {
-                ##first check if it exists
-                delTripl <- unshVect == triple2numb(p, q, z, y)
-                ##if we haven't checked the triple yet, save it as FALSE
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-              else {
-                delTripl <- unshVect == triple2numb(p, y, z, q)
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-            }
+          indQ <- setdiff(indQ, c(x,y,z)) ##just to be sure
+          for (q in indQ) {
+            ## define the triple as FALSE in trueVstruct
+            delTripl <- unshVect == (if (q < y) triple2numb(p, q, z, y) else triple2numb(p, y, z, q))
+            ## if we haven't checked the triple yet, save it as FALSE
+            if (any(delTripl))
+              trueVstruct[which.max(delTripl)] <- FALSE
           }
-          ##case 2.b): we had r-y-z or z-y-r in the matrix but not anymore
+          ## case 2.b): we had r-y-z or z-y-r in the matrix but not anymore
           indR <- which((apag[z, ] == 0 & apag[, z] == 0) & (apag[y, ] == 1 & apag[, y] == 1))
-          indR <- setdiff(indQ,c(x,y,z))##just to be sure
-          if (length(indR) > 0) {
-            for (j in seq_along(indR)) {
-              r <- indR[j]
-              ##define the triple as FALSE in trueVstruct
-              if (r < z) {
-                ##first check if it exists
-                delTripl <- unshVect == triple2numb(p, r, y, z)
-                ##if we haven't checked the triple yet, save it as FALSE
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-              else {
-                delTripl <- unshVect == triple2numb(p, z, y, r)
-                if (any(delTripl)) {
-                  ##if (k < which.max(delTripl)) {
-                    trueVstruct[which.max(delTripl)] <- FALSE
-                  ##}
-                }
-              }
-            }
+          indR <- setdiff(indR, c(x,y,z)) ##just to be sure
+          ##                ^^^ (had typo here: 'indQ' !!)
+          for (r in indR) {
+            ## define the triple as FALSE in trueVstruct
+            delTripl <- unshVect == (
+              if (r < z) triple2numb(p, r, y, z) else triple2numb(p, z, y, r))
+            if (any(delTripl))
+              trueVstruct[which.max(delTripl)] <- FALSE
           }
+
         }
-        ##if at least one edge has been deleted this is not a future v-structure
-        if (any(del1,del2)) {
-          trueVstruct[k] <- FALSE
-        }
-      }
-      ##the sepset is empty
-      ##so surely <x,y,z> is an unshielded triple because they cannot be indep given the empty set
-      ##nothing changed in sepset and in graph
-      else{
-        sepset <- sepset
-        apag <- apag
-      }
+        ## if at least one edge has been deleted this is not a future v-structure
+        if (any(del1, del2)) trueVstruct[k] <- FALSE
+
+      } ## if (nSep != 0)
+      ##
+      ## ELSE: the sepset is empty
+      ##   so surely <x,y,z> is an unshielded triple because they cannot be indep given the empty set
+      ##   nothing changed in sepset and in graph
+      ## else{
+      ##   sepset <- sepset
+      ##   apag <- apag
+      ## }
+
       ##recursion on the next column of unshTripl
       ##rec.res <- dep.triple(suffStat, indepTest, p, alpha, sepset, apag, unshTripl, unshVect, trueVstruct, k, verbose=verbose)
       ##save the modified objects
@@ -6073,24 +5998,26 @@ dep.triple <- function(suffStat, indepTest, p, alpha, sepset, apag,
       ##apag <- rec.res$graph
       ##trueVstruct <- rec.res$trueVstruct
     }
-  }
+  }## for ( k )
+
   list(triple = unshTripl, vect = unshVect, sepset = sepset,
-       graph = apag, trueVstruct = trueVstruct)
+       apag = apag, trueVstruct = trueVstruct)
 } ## {dep.triple}
 
-##Additional function to check the dependence of the edges for R4
-checkEdges <- function(suffStat, indepTest, p, alpha, apag, sepset, path,
+##' Check the dependence of the edges for R4
+##' only called from  udag2apag()
+checkEdges <- function(suffStat, indepTest, alpha, apag, sepset, path,
                        unfVect=NULL, verbose = FALSE)
 {
   ## Purpose: check if every edge on the path should exist in R4
   ## ----------------------------------------------------------------------
-   ## Values: - updated sepset and apag
+  ## Values: - updated sepset and apag
   ##         - checked==FALSE no edge has been deleted on the path
   ##                  ==TRUE the discriminating path doesn't exist anymore
   ## ----------------------------------------------------------------------
   ## Author: Diego Colombo, Date: 17 Aug 2010, 16:21
 
-  n.path <- length(path)
+  stopifnot((n.path <- length(path)) >= 2)
   ##did we delete an edge?
   done <- FALSE
   ## conservative v-structures or not?
@@ -6104,67 +6031,61 @@ checkEdges <- function(suffStat, indepTest, p, alpha, apag, sepset, path,
     if (verbose) {
       cat("\nCheck discriminating path:", path, "for dependence of any edge given sepset", SepSet.tot,"\n")
     }
+    p <- nrow(apag)
     ##check every edge on the path for independence given every possible subset of SepSet
-    for (i in 1 : (n.path-1)) {
+    for (i in seq_len(n.path-1)) {
       x <- path[i]
       y <- path[i+1]
-      SepSet <- setdiff(SepSet.tot,c(x,y))
+      SepSet <- setdiff(SepSet.tot, c(x,y))
+      x. <- min(x,y)
+      y. <- max(x,y)
       ##if (verbose) {
       ##  cat("\nEdge:",x,"*-*",y,";Sepset=",SepSet,"\n")
       ##}
       if (length(SepSet)!=0) {
         j <- 0
-        while ((j < length(SepSet)) && !done) {
+        while (!done && j < length(SepSet)) {
           j <- j + 1
-          ##all combinations of SepSet of size j
-          if (length(SepSet) == 1 && j == 1) {
-            tmp.combn <- matrix(SepSet,1,1)
-          } else {
-            tmp.combn <- combn(SepSet, j)
-          }
+          ## all combinations of SepSet of size j
+          S.j <- if (j == 1 && length(SepSet) == 1) matrix(SepSet,1,1) else combn(SepSet, j)
           ii <- 0
-          while ((ii < dim(tmp.combn)[2]) && !done) {
+          while (!done && ii < ncol(S.j)) {
             ii <- ii + 1
-            pval <- indepTest(x, y, tmp.combn[,ii], suffStat)
-            if (verbose) {
-              cat("x=", x, " y=", y, " S=", tmp.combn[,ii], ": pval =", pval,"\n")
-            }
+            pval <- indepTest(x, y, S.j[,ii], suffStat)
+            if (verbose)
+              cat("x=", x, " y=", y, " S=", S.j[,ii], ": pval =", pval,"\n")
             if (pval >= alpha) {
               ##delete edge and save set in sepset
               if (verbose) {
                 cat("Independence found: delete edge between",x,"and",y,"\n")
               }
               apag[x, y] <- apag[y, x] <- 0
-              sepset[[x]][[y]] <- sepset[[y]][[x]] <- tmp.combn[,ii]
+              sepset[[x]][[y]] <- sepset[[y]][[x]] <- S.j[,ii]
               done <- TRUE
               ##before we had a triangle and now it is an unshielded triple x-m-y
-              newList <- NULL
-              newVect <- NULL
-              indM <- which((apag[x, ] != 0 & apag[, x] != 0) & (apag[y, ] != 0 & apag[, y] != 0))
-              indM <- setdiff(indM,c(x,y))##just to be sure
+              indM <- setdiff(which(apag[x, ] != 0 & apag[, x] != 0 &
+                                    apag[y, ] != 0 & apag[, y] != 0),
+                              c(x,y))## just to be sure
               ##create the list with all the new unshielded triples to be tested
-              if (length(indM) > 0) {
-                for (jj in seq_along(indM)) {
+              if ((nI <- length(indM)) > 0) {
+                triplM <- matrix(integer(), 3, nI)
+                newVect <- numeric(nI)
+                for (jj in seq_len(nI)) {
                   m <- indM[jj]
-                  if (x < y) {
-                    newList <- cbind(newList, c(x,m,y))
-                    newVect <- c(newVect, triple2numb(p,x,m,y))
-                  }
-                  else {
-                    newList <- cbind(newList, c(y,m,x))
-                    newVect <- c(newVect, triple2numb(p,y,m,x))
-                  }
+                  triplM[,jj] <- c(x.,m,y.)
+                  newVect[jj] <- triple2numb(p, x.,m,y.)
                 }
                 ##new unshielded triple to be tested
-                tmp <- rfci.vStruc(suffStat, indepTest, p, alpha, sepset, apag, newList, newVect,
-                                        conservative=conservative, verbose=verbose)
+                r.v <- rfci.vStruc(suffStat, indepTest, alpha, sepset, apag,
+                                   unshTripl = triplM, unshVect = newVect,
+                                   conservative=conservative, verbose=verbose)
                 ##save the modified graph g in apag
-                apag <- tmp$graph
+                apag <- r.v$amat
                 ##save the new sepset
-                sepset <- tmp$sepset
+                sepset <- r.v$sepset
                 ##save the new unfTripl, since we tested new v-structures and some can be unfaithful
                 ##for the conservative version
-                unfTripl <- tmp$unfTripl
+                unfTripl <- r.v$unfTripl
               }
             }
           }
@@ -6176,6 +6097,7 @@ checkEdges <- function(suffStat, indepTest, p, alpha, apag, sepset, path,
   list(deleted = done, apag = apag, sepset = sepset, unfTripl = unfTripl)
 }
 
+##' called only from  rfci()
 udag2apag <- function (apag, suffStat, indepTest, alpha, sepset,
                        rules = rep(TRUE, 10), unfVect=NULL,
                        verbose = FALSE)
@@ -6339,8 +6261,9 @@ udag2apag <- function (apag, suffStat, indepTest, alpha, sepset,
               else {
                 ##a path exists and needs to be checked and maybe oriented
                 ##first check every single edge for independence
-                chkE <- checkEdges(suffStat, indepTest, p, alpha, apag, sepset,
-                                   md.path, unfVect=unfVect, verbose = verbose)
+		chkE <- checkEdges(suffStat, indepTest, alpha=alpha,
+				   apag=apag, sepset=sepset, path = md.path,
+				   unfVect=unfVect, verbose = verbose)
                 ##save updated graph, sepset,and UnfVect
                 sepset <- chkE$sepset
                 apag <- chkE$apag
@@ -6808,44 +6731,48 @@ skeleton.dag2pag <- function(suffStat, indepTest, graph, ancList, L, alpha,
 
 iplotPC <- function(pc.fit, labels = NULL) {
   ## igraph alternative to Rgraphviz (only for pcAlgo objects)
-  adjm <- wgtMatrix(pc.fit@graph, transpose=FALSE)
+  adjm <- wgtMatrix(getGraph(pc.fit), transpose=FALSE)
   if (!is.null(labels)) dimnames(adjm) <- list(labels, labels)
   g1 <- graph.adjacency( adjm )
   plot(g1)
 }
 
-showEdgeList <- function(pc.fit, labels = NULL)
+showEdgeList <- function(object, labels = NULL)
 {
     cat("\nEdge List: \n")
-    g <- pc.fit@graph
-    if (is.null(labels)) labels <- g@nodes
-
+    g <- getGraph(object)
+    if (is.null(labels)) labels <- nodes(g)
+    isDir <- isDirected(g)
     wm <- wgtMatrix(g)
+
+    if(isDir && !is(object,"pcAlgo"))
+      stop("implementation only for 'pcAlgo', currently ...") ##-> Markus
+
+    ## MM: in general, maybe rather look at each pair (i,j) in the lower triangular part of [W, t(W)]
     wmU <- wm + t(wm)   # weights for undirected e.
     wmD <- t(wm - t(wm))# weights for   directed e.
     u <- which(wmU == 2 & upper.tri(wmU), arr.ind = TRUE)
-    d <- which(wmD == 1, arr.ind = TRUE)
-    d <- d[order(d[,1]),]
-    cat("\nUndirected Edges:\n")
-    for (i in seq_len(nrow(u))) {
-        x <- u[i,1]
-        y <- u[i,2]
-        cat(paste(labels[x], " --- ", labels[y], "\n"))
-    }
-    cat("\nDirected Edges:\n")
-    for (i in seq_len(nrow(d))) {
-        x <- d[i,1]
-        y <- d[i,2]
-        cat(paste(labels[x], " --> ", labels[y], "\n"))
+    cat("\n", if(isDir) "Undirected Edges" else "Undirected graph with Edges",
+	":\n", sep="")
+    for (i in seq_len(nrow(u)))
+      cat(" ", paste(labels[u[i,1]], " --- ", labels[u[i,2]], "\n"))
+    if(isDir) {
+      d <- which(wmD == 1, arr.ind = TRUE)
+      d <- d[order(d[,1]),]
+      cat("\nDirected Edges:\n")
+      for (i in seq_len(nrow(d)))
+	cat(" ", paste(labels[d[i,1]], " --> ", labels[d[i,2]], "\n"))
+    } else {
+      d <- matrix(0,0,0)
     }
     invisible(list(undir = u, direct = d))
 }
 
-showAmat <- function(pc.fit) {
+showAmat <- function(object) {
+  g <- getGraph(object)
   cat("\nAdjacency Matrix G:",
       "G[i,j] = 1/2 if edge mark of edge i-j at j is head/tail.",
       "", sep="\n")
-  g <- pc.fit@graph
   wm <- wgtMatrix(g)
   mTmp <- t(wm - 2*t(wm))
   mTmp[ mTmp < 0 ] <- 2

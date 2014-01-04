@@ -23,6 +23,12 @@ setClass("pcAlgo",
          contains = "gAlgo")
 
 ## Methods
+
+##' Extract graph part of an R object:
+setGeneric("getGraph", function(x) as(x,"graph"))
+setMethod("getGraph", "pcAlgo", function(x) x@graph)
+setMethod("getGraph", "fciAlgo", function(x) as(x@amat, "graphAM"))
+
 setMethod("summary", "pcAlgo",
           function(object) {
  	    cat("\nObject of class 'pcAlgo', from Call: \n",
@@ -183,7 +189,7 @@ setRefClass("ParDAG",
         .nodes = "vector",
         .in.edges = "list",
         .params = "list"),
-    
+
     validity = function(object) {
       if (anyDuplicated(object$.nodes))
         return("The node names must be unique")
@@ -191,53 +197,53 @@ setRefClass("ParDAG",
         return("The elements of 'in.edges' must be named after the nodes.")
       if (!all(sapply(object$.in.edges, is.numeric)))
         return("The vectors in 'in.edges' must contain numbers.")
-      
+
       edgeRange <- range(unlist(object$.in.edges))
       if (object$edge.count() > 0 &&
           (edgeRange[1] < 1 || edgeRange[2] > object$node.count()))
         return("Invalid range of edge sources.")
-      
+
       return(TRUE)
     },
-    
+
     methods = list(
         #' Constructor
         initialize = function(nodes, in.edges = NULL, params = list()) {
           .nodes <<- nodes
-          
+
           if (is.null(in.edges))
             .in.edges <<- replicate(length(nodes), integer(0), simplify = FALSE)
           else
             .in.edges <<- lapply(1:length(in.edges), function(i) as.integer(in.edges[[i]]))
           names(.in.edges) <<- nodes
-          
+
           .params <<- params
         },
-        
+
         #' Yields the number of nodes
         node.count = function() {
           length(.nodes)
         },
-        
+
         #' Yields the total number of edges in the graph
         edge.count = function() {
           sum(sapply(.in.edges, length))
         },
-        
+
         #' Simulates (draws a sample of) interventional (or observational) data
         simulate = function(n, target = integer(0), int.level = numeric(0)) {
           stop("simulate() is not implemented in this class.")
         }
         ),
-        
+
     "VIRTUAL")
 
 #' Coercion to a graphNEL instance
 setAs("ParDAG", "graphNEL",
     def = function(from) {
-      result <- new("graphNEL", 
-          nodes = from$.nodes, 
-          edgeL = from$.in.edges, 
+      result <- new("graphNEL",
+          nodes = from$.nodes,
+          edgeL = from$.in.edges,
           edgemode = "directed")
       return(reverseEdgeDirections(result))
     })
@@ -250,11 +256,11 @@ setAs("ParDAG", "matrix",
     })
 
 #' Plot method (needs Rgraphviz to work!!)
-setMethod("plot", "ParDAG", 
+setMethod("plot", "ParDAG",
     function(x, y, ...) {
       if (!validObject(x))
         stop("The parametric DAG model to be plotted is not valid")
-      
+
       if (missing(y))
         y <- "dot"
       invisible(plot(as(x, "graphNEL"), y, ...))
@@ -268,7 +274,7 @@ setRefClass("Score",
         c.fcn = "character",
         pp.dat = "list",
         .pardag.class = "character"),
-    
+
     validity = function(object) {
       ## Check if targets are valid (i.e., unique)
       targets.tmp <- object$pp.dat$targets
@@ -279,29 +285,29 @@ setRefClass("Score",
       }
       if (length(unique(targets.tmp)) != length(targets.tmp))
         return("Targets must not be listed multiple times.")
-      
+
       ## Check whether data is available from all intervention targets
       if (unique(object$pp.dat$target.index) != 1:length(object$pp.dat$targets))
         return("Data from all intervention targets must be available")
-      
+
       ## Check if dimensions of target.index and data conincide
       if (length(object$pp.dat$target.index) != nrow(object$pp.dat$data))
         return("Length of target index vector does not coincide with sample size.")
-      
+
       return(TRUE)
     },
-    
+
     methods = list(
         #' Constructor
-        #' 
+        #'
         #' Note: all arguments must have a default value for inheritance,
         #' see ?setRefClass; apart from that, the default values are meaningless
-        initialize = function(data = matrix(1, 1, 1), 
+        initialize = function(data = matrix(1, 1, 1),
             targets = list(integer(0)),
             target.index = rep(as.integer(1), nrow(data)),
             ...) {
           ## Order by ascending target indices (necessary for certain scoring objects)
-          if (is.unsorted(target.index)) 
+          if (is.unsorted(target.index))
             perm <- order(target.index)
           else
             perm <- 1:length(target.index)
@@ -311,10 +317,10 @@ setRefClass("Score",
           pp.dat$data <<- data[perm, ]
           pp.dat$vertex.count <<- ncol(data)
           pp.dat$total.data.count <<- as.integer(nrow(data))
-          
+
           ## Declare scores as not decomposable "by default"
           decomp <<- FALSE
-              
+
           ## No C++ scoring object by default
           c.fcn <<- "none"
 
@@ -326,31 +332,31 @@ setRefClass("Score",
 
           callSuper(...)
         },
-            
+
         #' Checks whether a vertex is valid
         validate.vertex = function(vertex) {
           stopifnot(is.whole(vertex))
           stopifnot(1 <= vertex && vertex <= pp.dat$vertex.count)
         },
-        
+
         #' Checks whether a vector is a valid list of parents
         validate.parents = function(parents) {
           stopifnot(is.whole(parents))
           stopifnot(length(unique(parents)) == length(parents))
           stopifnot(1 <= parents, parents <= pp.dat$vertex.count)
         },
-        
+
         #' Creates a list of options for the C++ functions for the internal
         #' calculation of scores and MLEs
         c.fcn.options = function(DEBUG.LEVEL = 0) {
           list(DEBUG.LEVEL = DEBUG.LEVEL)
         },
-        
+
         #' Calculates the local score of a vertex and its parents
         local.score = function(vertex, parents, ...) {
           stop("local.score is not implemented in this class.")
         },
-        
+
         #' Calculates the global score of a DAG which is only specified
         #' by its list of in-edges
         global.score.int = function(edges, ...) {
@@ -360,19 +366,19 @@ setRefClass("Score",
                     function(i) local.score(i, edges[[i]], ...)))
           ## Calculate score with the C++ library
           else
-            .Call("globalScore", c.fcn, pp.dat, edges, c.fcn.options(...), PACKAGE = "pcalg")          
+            .Call("globalScore", c.fcn, pp.dat, edges, c.fcn.options(...), PACKAGE = "pcalg")
         },
-        
+
         #' Calculates the global score of a DAG
         global.score = function(dag, ...) {
           global.score.int(dag$.in.edges, ...)
         },
-        
+
         #' Calculates the local MLE for a vertex and its parents
         local.mle = function(vertex, parents, ...) {
           stop("local.mle is not implemented in this class.")
         },
-        
+
         #' Calculates the global MLE
         global.mle = function(dag, ...) {
           ## Calculate score in R
@@ -384,7 +390,7 @@ setRefClass("Score",
             .Call("globalMLE", c.fcn, pp.dat, dag$.in.edges, c.fcn.options(...), PACKAGE = "pcalg")
         }
         ),
-        
+
     "VIRTUAL")
 
 #' l0-penalized log-likelihood for Gaussian models, with freely
@@ -392,7 +398,7 @@ setRefClass("Score",
 #' Special case: BIC where \lambda = 1/2 \log n (default value for lambda)
 setRefClass("GaussL0penIntScore",
     contains = "Score",
-    
+
     validity = function(object) {
       if (unique(object$pp.dat$scatter.index) != 1:length(object$pp.dat$scatter))
         return("The index list of distinct scatter matrices has an invalid range.")
@@ -400,49 +406,49 @@ setRefClass("GaussL0penIntScore",
       if (any(sapply(1:length(object$pp.dat$scatter),
               function(i) dim(object$pp.dat$scatter[[i]]) != c(p, p))))
         return("The scatter matrices have invalid dimensions.")
-      
+
       return(TRUE)
     },
-    
+
     methods = list(
         #' Constructor
         initialize = function(data = matrix(1, 1, 1),
-            targets = list(integer(0)), 
-            target.index = rep(as.integer(1), nrow(data)), 
-            lambda = 0.5*log(nrow(data)), 
-            intercept = FALSE, 
-            use.cpp = TRUE, 
+            targets = list(integer(0)),
+            target.index = rep(as.integer(1), nrow(data)),
+            lambda = 0.5*log(nrow(data)),
+            intercept = FALSE,
+            use.cpp = TRUE,
             ...) {
           ## Store supplied data in sorted form
           callSuper(data = data, targets = targets, target.index = target.index, ...)
 
           ## l0-penalty is decomposable
           decomp <<- TRUE
-          
+
           ## Underlying causal model class: Gaussian
           .pardag.class <<- "GaussParDAG"
-          
+
           ## Store penalty constant
           pp.dat$lambda <<- lambda
-          
+
           ## Use C++ functions if requested
           if (use.cpp)
             c.fcn <<- "gauss.l0pen"
-          
+
           ## Number of variables
           p <- ncol(data)
-          
+
           ## Add column of ones to data matrix; this allows the computation
           ## of an intercept if requested
           pp.dat$intercept <<- intercept
           data <- cbind(data, 1)
-          
+
           ## Create scatter matrices for different targets
-          ti.lb <- c(sapply(1:length(pp.dat$targets), function(i) match(i, pp.dat$target.index)), 
+          ti.lb <- c(sapply(1:length(pp.dat$targets), function(i) match(i, pp.dat$target.index)),
               length(pp.dat$target.index) + 1)
-          scatter.mat <- lapply(1:length(pp.dat$targets), 
+          scatter.mat <- lapply(1:length(pp.dat$targets),
               function(i) crossprod(data[ti.lb[i]:(ti.lb[i + 1] - 1), , drop = FALSE]))
-          
+
           ## Find all interventions in which the different variables
           ## are _not_ intervened
           non.ivent <- matrix(FALSE, ncol = p, nrow = length(pp.dat$targets))
@@ -451,7 +457,7 @@ setRefClass("GaussL0penIntScore",
           max.si <- 0
           for (i in 1:p) {
             ## Generate indices of (distinct) scatter matrices
-            non.ivent[ , i] <- sapply(seq_along(pp.dat$targets), 
+            non.ivent[ , i] <- sapply(seq_along(pp.dat$targets),
                                       function(j) i %nin% pp.dat$targets[[j]])
             pp.dat$scatter.index[i] <<- max.si + 1
             j <- 1
@@ -464,65 +470,65 @@ setRefClass("GaussL0penIntScore",
             }
             if (pp.dat$scatter.index[i] == max.si + 1)
               max.si <- max.si + 1
-            
+
             ## Count data samples from "non-interventions" at i
             pp.dat$data.count[i] <<- sum(ti.lb[which(non.ivent[, i]) + 1] - ti.lb[which(non.ivent[, i])])
           }
-                    
+
           ## Calculate the distinct scatter matrices for the
           ## "non-interventions"
-          pp.dat$scatter <<- lapply(1:max.si, 
+          pp.dat$scatter <<- lapply(1:max.si,
              function(i) Reduce("+", scatter.mat[non.ivent[, match(i, pp.dat$scatter.index)]]))
         },
-        
+
         #' Calculates the local score of a vertex and its parents
         local.score = function(vertex, parents, ...) {
           ## Check validity of arguments
           validate.vertex(vertex)
           validate.parents(parents)
-          
+
           ## Calculate score in R
           if (c.fcn == "none") {
             ## If an intercept is allowed, add a fake parent node
             parents <- sort(parents)
             if (pp.dat$intercept)
               parents <- c(pp.dat$vertex.count + 1, parents)
-            
+
             sigma2 <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, vertex]
             if (length(parents) != 0) {
               b <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents]
               sigma2 <- sigma2 - as.numeric(b %*% solve(pp.dat$scatter[[pp.dat$scatter.index[vertex]]][parents, parents], b))
             }
-            
+
             return(-0.5*pp.dat$data.count[vertex]*(1 + log(sigma2/pp.dat$data.count[vertex])) - pp.dat$lambda*(1 + length(parents)))
           }
           ## Calculate score with the C++ library
-          else 
+          else
             return(.Call("localScore", c.fcn, pp.dat, vertex, parents, c.fcn.options(...), PACKAGE = "pcalg"))
         },
-                
+
         #' Calculates the local MLE for a vertex and its parents
         local.mle = function(vertex, parents, ...) {
           ## Check validity of arguments
           validate.vertex(vertex)
           validate.parents(parents)
-          
+
           ## Calculate score in R
           if (c.fcn == "none") {
             ## If an intercept is allowed, add a fake parent node
             parents <- sort(parents)
             if (pp.dat$intercept)
               parents <- c(pp.dat$vertex.count + 1, parents)
-            
+
             sigma2 <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, vertex]
             if (length(parents) != 0) {
-              beta <- solve(pp.dat$scatter[[pp.dat$scatter.index[vertex]]][parents, parents], 
+              beta <- solve(pp.dat$scatter[[pp.dat$scatter.index[vertex]]][parents, parents],
                   pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents])
               sigma2 <- sigma2 - pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents] %*% beta
             }
             else
               beta <- numeric(0)
-            
+
             if (pp.dat$intercept)
               return(c(sigma2/pp.dat$data.count[vertex], beta))
             else
@@ -534,24 +540,24 @@ setRefClass("GaussL0penIntScore",
         }
         )
     )
-       
+
 ##' Observational score as special case
 setRefClass("GaussL0penObsScore",
     contains = "GaussL0penIntScore",
-    
+
     methods = list(
         #' Constructor
-        initialize = function(data = matrix(1, 1, 1), 
-            lambda = 0.5*log(nrow(data)), 
-            intercept = FALSE, 
-            use.cpp = TRUE, 
+        initialize = function(data = matrix(1, 1, 1),
+            lambda = 0.5*log(nrow(data)),
+            intercept = FALSE,
+            use.cpp = TRUE,
             ...) {
-          callSuper(data = data, 
-              targets = list(integer(0)), 
-              target.index = rep(as.integer(1), nrow(data)), 
-              lambda = lambda, 
-              intercept = intercept, 
-              use.cpp = use.cpp, 
+          callSuper(data = data,
+              targets = list(integer(0)),
+              target.index = rep(as.integer(1), nrow(data)),
+              lambda = lambda,
+              intercept = intercept,
+              use.cpp = use.cpp,
               ...)
           }
         )
@@ -565,21 +571,21 @@ setRefClass("EssGraph",
         targets = "list",
         score = "Score"
     ),
-    
+
     validity = function(object) {
       if (any(names(object$.in.edges) != object$.nodes))
         return("The elements of 'in.edges' must be named after the nodes.")
       if (!all(sapply(object$.in.edges, is.numeric)))
         return("The vectors in 'in.edges' must contain numbers.")
-      
+
       edgeRange <- range(unlist(object$.in.edges))
       if (object$edge.count() > 0 &&
           (edgeRange[1] < 1 || edgeRange[2] > object$node.count()))
         return("Invalid range of edge sources.")
-      
+
       return(TRUE)
     },
-    
+
     methods = list(
         #' Constructor
         initialize = function(nodes, in.edges, ...) {
@@ -589,7 +595,7 @@ setRefClass("EssGraph",
           else
             .in.edges <<- in.edges
           names(.in.edges) <<- nodes
-          
+
           callSuper(...)
         },
 
@@ -597,16 +603,16 @@ setRefClass("EssGraph",
         node.count = function() {
           length(.nodes)
         },
-        
+
         #' Yields the total number of edges in the graph
         edge.count = function() {
           sum(sapply(.in.edges, length))
         },
-        
+
         #' Creates a list of options for the C++ function "causalInference";
         #' internal function
-        causal.inf.options = function(caching = TRUE, 
-            turning = TRUE, 
+        causal.inf.options = function(caching = TRUE,
+            turning = TRUE,
             maxdegree = integer(0),
             maxsteps = 0,
             childrenonly = integer(0),
@@ -618,7 +624,7 @@ setRefClass("EssGraph",
               childrenonly = childrenonly,
               DEBUG.LEVEL = DEBUG.LEVEL)
         },
-        
+
         #' Performs one greedy step
         greedy.step = function(direction = c("forward", "backward", "turning")) {
           ## Cast direction
@@ -627,61 +633,61 @@ setRefClass("EssGraph",
               forward = "GIES-F",
               backward = "GIES-B",
               turning = "GIES-T")
-                    
+
           substr(direction, 1, 1) <- toupper(substr(direction, 1, 1))
-          
-          new.graph <- .Call("causalInference", 
+
+          new.graph <- .Call("causalInference",
               .in.edges,
               score$pp.dat,
               alg.name,
-              score$c.fcn, 
+              score$c.fcn,
               causal.inf.options(caching = FALSE, maxsteps = 1),
               PACKAGE = "pcalg")
           if (new.graph$steps > 0) {
             .in.edges <<- new.graph$.in.edges
             names(.in.edges) <<- .nodes
           }
-          
+
           return(new.graph$steps == 1)
         },
-        
+
         greedy.search = function(direction) {
-          score.fcn <- ifelse(score$decomp, 
+          score.fcn <- ifelse(score$decomp,
               function(vertex, parents) score$local.score(vertex, parents),
               function(edges) score$global.score.int(edges))
           substr(direction, 1, 1) <- toupper(substr(direction, 1, 1))
-          
+
           new.graph <- .Call(sprintf("greedy%s", direction), .in.edges, score.fcn)
           if (new.graph$steps > 0)
             .in.edges <<- new.graph$in.edges
-          
+
           return(new.graph$steps)
         },
-        
+
         #' Performs a causal inference from an arbitrary start DAG
         #' with a specified algorithm
         caus.inf = function(algorithm, ...) {
-          new.graph <- .Call("causalInference", 
+          new.graph <- .Call("causalInference",
               .in.edges,
               score$pp.dat,
               algorithm,
-              score$c.fcn, 
+              score$c.fcn,
               causal.inf.options(...),
               PACKAGE = "pcalg")
-          
+
           .in.edges <<- new.graph$in.edges
           names(.in.edges) <<- .nodes
         },
-        
+
         #' Performs GIES from an arbitrary start DAG
         gies = function(...) caus.inf("GIES", ...),
-        
+
         #' Performs GDS from an arbitrary start DAG
         gds = function(...) caus.inf("GDS", ...),
-        
+
         #' DP search of Silander and Myllymäki (ignores the start DAG!)
         silander = function(...) caus.inf("DP", ...),
-        
+
         #' Calculates the parameters of a DAG via MLE (wrapper function only)
         mle.fit = function(dag) {
           dag$.params <- score$global.mle(dag)
@@ -693,12 +699,12 @@ setRefClass("EssGraph",
           in.edges <- .Call("representative", .in.edges, PACKAGE = "pcalg")
           result <- new(score$.pardag.class, nodes = .nodes, in.edges = in.edges)
           result$.params <- score$global.mle(result)
-          
+
           return(result)
         },
-        
+
         #' Calculates an optimal intervention target
-        #' 
+        #'
         #' @param   max.size    maximum target size; allowed values: 1, p (= # nodes)
         ## TODO document that function... or better: provide a documented wrapper function
         opt.target = function(max.size) {
@@ -709,9 +715,9 @@ setRefClass("EssGraph",
 #' Coercion to a graphNEL instance
 setAs("EssGraph", "graphNEL",
     def = function(from) {
-      result <- new("graphNEL", 
-          nodes = from$.nodes, 
-          edgeL = from$.in.edges, 
+      result <- new("graphNEL",
+          nodes = from$.nodes,
+          edgeL = from$.in.edges,
           edgemode = "directed")
       return(reverseEdgeDirections(result))
     })
@@ -726,55 +732,55 @@ setAs("EssGraph", "matrix",
 #' Plot method (needs Rgraphviz to work!!)
 ## TODO maybe adapt method to make sure that undirected edges are not plotted as
 ## bidirected
-setMethod("plot", "EssGraph", 
+setMethod("plot", "EssGraph",
     function(x, y, ...) {
       if (!validObject(x))
         stop("The parametric DAG model to be plotted is not valid")
-      
+
       if (missing(y))
         y <- "dot"
       invisible(plot(as(x, "graphNEL"), y, ...))
     })
-        
+
 #' Gaussian causal model
 setRefClass("GaussParDAG",
     contains = "ParDAG",
-    
+
     validity = function(object) {
       if (any(names(object$.params) != object$.nodes))
         return("The elements of 'params' must be named after the nodes.")
-      if (!all(sapply(1:object$node.count(), 
+      if (!all(sapply(1:object$node.count(),
           function(i) length(object$.params[[i]]) == length(object$.in.edges[[i]]) + 2)))
         return("The number of parameters does not match the number of in-edges.")
-      
+
       return(TRUE)
     },
-    
+
     methods = list(
         #' Yields the intercept
         intercept = function() {
           sapply(.params, function(par.vec) par.vec[2])
         },
-        
+
         #' Sets the intercept
         set.intercept = function(value) {
           for (i in 1:node.count())
             .params[[i]][2] <<- value[i]
         },
-        
+
         #' Yields the error variances
         err.var = function() {
           sapply(.params, function(par.vec) par.vec[1])
         },
-        
+
         #' Sets the error variances
         set.err.var = function(value) {
           for (i in 1:node.count())
             .params[[i]][1] <<- value[i]
         },
-        
+
         #' Yields the weight matrix w.r.t. an intervention target
-        #' 
+        #'
         #' TODO add a method for sparse matrices...
         weight.mat = function(target = integer(0)) {
           ## Fill in weights
@@ -784,16 +790,16 @@ setRefClass("GaussParDAG",
           for (i in 1:p)
             if (as.integer(i) %nin% target)
               result[.in.edges[[i]], i] <- .params[[i]][-(1:2)]
-          
+
           ## Set row and column names
           rownames(result) <- .nodes
           colnames(result) <- .nodes
-          
+
           return(result)
         },
-        
+
         #' Yields an observational or interventional covariance matrix
-        #' 
+        #'
         #' @param   target    intervention target
         #' @param   ivent.var variances of the intervention variables
         #' @return  (observational or interventional) covariance matrix
@@ -802,20 +808,20 @@ setRefClass("GaussParDAG",
           A[, target] <- 0
           diag(A) <- 1
           A <- solve(A)
-          
+
           all.var <- err.var()
           all.var[target] <- ivent.var
-          
+
           return(t(A) %*% diag(all.var) %*% A)
         },
-                
+
         #' Simulates (draws a sample of) interventional (or observational)
         #' data
-        #' 
+        #'
         #' @param   n
-        #' @param   target  
+        #' @param   target
         #' @param   int.level   intervention level: values of the intervened
-        #'                      variables. Either a vector of the same length 
+        #'                      variables. Either a vector of the same length
         #'                      as "target", or a matrix with dimensions
         #'                      n x length(target)
         #' @return  a vector with the simulated values if n = 1, or a matrix
@@ -836,11 +842,11 @@ setRefClass("GaussParDAG",
             else
               Y[target, ] <- int.level
           }
-          
+
           ## Modified weight matrix (w.r.t. intervention target)
           D <- - weight.mat(target)
           diag(D) <- 1.
-          
+
           ## Calculate results: simulation samples
           result <- solve(D, Y)
           if (n == 1)
@@ -858,8 +864,8 @@ setAs("matrix", "GaussParDAG",
       if (!isAcyclic(from))
         stop("Input matrix does not correspond to an acyclic DAG.")
       edgeL <- lapply(1:p, function(i) which(from[, i] != 0))
-      new("GaussParDAG", 
-          nodes = as.character(1:p), 
+      new("GaussParDAG",
+          nodes = as.character(1:p),
           in.edges = edgeL,
           param = lapply(1:p, function(i) c(0, 0, from[edgeL[[i]], i])))
     })
@@ -871,10 +877,10 @@ setAs("graphNEL", "GaussParDAG",
       A <- as(from, "matrix")
       as(A, "GaussParDAG")
     })
-    
-#' Predict interventional or observational data points.  Intervention values 
+
+#' Predict interventional or observational data points.  Intervention values
 #' must be provided, the value of all non-intervened variables is calculated
-#' 
+#'
 #' @param   object    an instance of GaussParDAG
 #' @param   newdata   list with two entries:
 #'                    target:     list of intervention targets (or single
@@ -883,7 +889,7 @@ setAs("graphNEL", "GaussParDAG",
 #'                                vector of intervention levels)
 #' @return  a matrix with rows containing the predicted values, or a vector,
 #'          if a single prediction is requested
-setMethod("predict", "GaussParDAG", 
+setMethod("predict", "GaussParDAG",
     function(object, newdata) {
       ## Check validity of parameters
       if (!validObject(object))
@@ -898,7 +904,7 @@ setMethod("predict", "GaussParDAG",
           is.list(newdata$int.level),
           length(newdata$target) == length(newdata$int.level),
           all(sapply(newdata$target, length) == sapply(newdata$int.level, length)))
-      
+
       if (length(newdata$target > 1))
         fit <- matrix(0, nrow = length(newdata$target), ncol = object$node.count())
       for (i in 1:length(newdata$target)) {
@@ -912,6 +918,6 @@ setMethod("predict", "GaussParDAG",
         else
           fit <- solve(D, y)
       }
-      
+
       fit
     })

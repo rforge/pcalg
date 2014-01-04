@@ -9,25 +9,25 @@
 
   \code{binCItest()} is a wrapper of \code{gSquareBin()}, to be easily
   used in \code{\link{skeleton}}, \code{\link{pc}} and
-  \code{\link{fci}}. 
+  \code{\link{fci}}.
 }
 \usage{
 gSquareBin(x, y, S, dm, adaptDF = FALSE, verbose = FALSE)
 binCItest (x, y, S, suffStat)
 }
 \arguments{
-  \item{x,y}{Integer scalars: position of variable \eqn{X} and \eqn{Y},
-    respectively, in the adjacency matrix.} 
-  \item{S}{Positions of zero or more conditioning variables in the
-    adjacency matrix.} 
-  \item{dm}{Data matrix (with \eqn{\{0,1\}} entries).}
-  \item{adaptDF}{Logical specifying if the degrees of freedom should be
+  \item{x,y}{(integer) position of variable \eqn{X} and \eqn{Y},
+    respectively, in the adjacency matrix.}
+  \item{S}{(integer) positions of zero or more conditioning variables in the
+    adjacency matrix.}
+  \item{dm}{data matrix (with \eqn{\{0,1\}} entries).}
+  \item{adaptDF}{logical specifying if the degrees of freedom should be
     lowered by one for each zero count.  The value for the degrees of
     freedom cannot go below 1.}
-  \item{suffStat}{A \code{\link{list}} with two elements,
+  \item{suffStat}{a \code{\link{list}} with two elements,
     \code{"dm"}, and \code{"adaptDF"} corresponding to the above two
     arguments of \code{gSquareBin()}.}
-  \item{verbose}{Logical indicating if detailed output is to be provided.}
+  \item{verbose}{logical indicating if detailed output is to be provided.}
 }
 \value{
   The p-value of the test.
@@ -46,7 +46,7 @@ binCItest (x, y, S, suffStat)
 \seealso{
   \code{\link{gSquareDis}} for a (conditional) independence test
   for discrete variables with more than two levels.
-  
+
   \code{\link{dsepTest}}, \code{\link{gaussCItest}} and
   \code{\link{disCItest}} for similar functions for a d-separation
   oracle, a conditional independence test for Gaussian variables and

@@ -6,20 +6,20 @@
   intended to be an alternative if \pkg{Rgraphviz} does not work.
 }
 \usage{
-showEdgeList(pc.fit, labels = NULL)
+showEdgeList(object, labels = NULL)
 }
 \arguments{
-  \item{pc.fit}{an \R object of class \code{\linkS4class{pcAlgo}}, as returned
+  \item{object}{an \R object of class \code{\linkS4class{pcAlgo}}, as returned
     from \code{\link{skeleton}()} or \code{\link{pc}()}.}
   \item{labels}{optional labels for nodes; by default, the labels from
-    the \code{pc.fit} object are used.}
+    the \code{object} are used.}
 }
 \value{none; the purpose is in (the side effect of) printing
   the edge list.
 }
 \author{Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 \note{
-  There is no corresponding function for fciAlgo objects.
+  This is not quite ok for \code{"\linkS4class{fciAlgo}"} objects, yet.% FIXME: do the work
 }
 \seealso{
   \code{\link{showAmat}} for the adjacency matrix of a \code{\linkS4class{pcAlgo}} object.

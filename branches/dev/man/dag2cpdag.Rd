@@ -3,18 +3,18 @@
 \title{Convert a DAG to a CPDAG}
 \description{
   Convert a DAG (Directed Acyclic Graph) to a Completed Partially
-  Directed Acyclic Graph (CPDAG). 
+  Directed Acyclic Graph (CPDAG).
 }
 \usage{
 dag2cpdag(g)
 }
 \arguments{
-  \item{g}{An \R object of class \code{"graph"} (package \pkg{graph}),
-    representing a DAG.} 
+  \item{g}{an \R object of class \code{"graph"} (package \pkg{graph}),
+    representing a DAG.}
 }
 \details{
   This function converts a DAG into its corresponding
-  (unique) CPDAG as follows. Because every DAG in the
+  (unique) CPDAG as follows.  Because every DAG in the
   Markov equivalence class described by a CPDAG shares the same skeleton
   and the same v-structures, this function takes the skeleton and the
   v-structures of the given DAG \code{g}.  Afterwards it simply uses the
@@ -22,10 +22,10 @@ dag2cpdag(g)
   many of the remaining undirected edges as possible.
 
   The output of this function is exactly the same as the one using
-  \preformatted{pc(suffStat, indepTest, p, alpha)}
+  \preformatted{pc(suffStat, indepTest, alpha, labels)}
   using the true correlation matrix in the function \code{gaussCItest}
   with a large virtual sample size and a large alpha, but it is much
-  faster. 
+  faster.
 }
 \value{
   A graph object containing the CPDAG.
@@ -47,18 +47,20 @@ s <- 0.4 ## sparseness of the graph
 
 ## generate a random DAG
 set.seed(42)
-g <- randomDAG(p, s) 
+g <- randomDAG(p, s)
 
 ## compute its unique CPDAG
-system.time(res <- dag2cpdag(g))
+system.time(
+  res <- dag2cpdag(g)
+)
 
 ## Find CPDAG with PC algorithm:
-## As dependence oracle, we use the true correlation matrix in 
+## As dependence oracle, we use the true correlation matrix in
 ## gaussCItest() with a large "virtual sample size" and a large alpha:
 system.time(
 rpc <- pc(suffStat = list(C = cov2cor(trueCov(g)), n = 10^9),
-          indepTest = gaussCItest, p, alpha = 0.9999) )
-
+          indepTest = gaussCItest, alpha = 0.9999, p = p)
+)
 ## confirm that it coincides with dag2cpdag()'s result:
 stopifnot(all.equal(as( res,     "matrix"),
                     as(rpc@graph,"matrix"), tol=0))

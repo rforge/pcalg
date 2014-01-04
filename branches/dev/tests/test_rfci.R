@@ -24,8 +24,7 @@ colnames(amat) <- rownames(amat) <- as.character(1:8)
 Matrix::Matrix(amat) # to "visualize"
 L <- c(1,2)
 V <- as.character(1:8)
-edL <- vector("list",length=8)
-names(edL) <- V
+edL <- setNames(vector("list", length=length(V)), V)
 edL[[6]] <- list(edges=NULL, weights=NULL)
 edL[[8]] <- list(edges=NULL, weights=NULL)
 edL[[4]] <- list(edges=c(7,8),   weights=c(abs(rnorm(1)),abs(rnorm(1))))
@@ -34,39 +33,34 @@ edL[[5]] <- list(edges=c(6,8),   weights=c(abs(rnorm(1)),abs(rnorm(1))))
 edL[[7]] <- list(edges= 8,       weights=abs(rnorm(1)))
 edL[[1]] <- list(edges=c(4,6),   weights=c(abs(rnorm(1)),abs(rnorm(1))))
 edL[[2]] <- list(edges=c(5,7),   weights=c(abs(rnorm(1)),abs(rnorm(1))))
-g <- new("graphNEL", nodes=V, edgeL=edL,edgemode="directed")
+g <- new("graphNEL", nodes=V, edgeL=edL, edgemode="directed")
 if(dev.interactive())
     plot(g)
 
 ## Compute the true covariance matrix of g
 cov.mat <- trueCov(g)
-
 ## Delete rows and columns which belong to L
 true.cov <- cov.mat[-L,-L]
-
 ## Transform it in a correlation matrix
 true.corr <- cov2cor(true.cov)
-suffStat <- list(C=true.corr, n=10^9)
-indepTest <- gaussCItest
 
+suffStat <- list(C=true.corr, n=10^9)
 showSys.time(pop.fci1 <-
-             fci(suffStat, indepTest, dim(true.corr)[1],
+             fci(suffStat, gaussCItest, labels=V[-L],
                  alpha=0.9999, doPdsep=TRUE,verbose=FALSE)@amat)
 
 showSys.time(pop.rfci1 <-
-             rfci(suffStat, indepTest, dim(true.corr)[1],
+             rfci(suffStat, gaussCItest, labels=V[-L],
                   alpha=0.9999, verbose=FALSE)@amat)
 
-if (any(pop.fci1!=pop.rfci1)) {
+if (any(pop.fci1 != pop.rfci1)) {
   stop("Test of RFCI wrong: small example!")
 }
 
 ## Thomas' example (version number 8) about discriminating path orientation rule
 
-L <- c(1:13)
 V <- as.character(1:25)
-edL <- vector("list",length=25)
-names(edL) <- V
+edL <- setNames(vector("list", length=length(V)), V)
 edL[[ 1]] <- list(edges=c(14,18),weights=c(abs(rnorm(1)),abs(rnorm(1))))
 edL[[ 2]] <- list(edges=c(16,18),weights=c(abs(rnorm(1)),abs(rnorm(1))))
 edL[[ 3]] <- list(edges=c(16,24),weights=c(abs(rnorm(1)),abs(rnorm(1))))
@@ -97,6 +91,9 @@ edL[[25]] <- list(edges=NULL,weights=NULL)
 if(dev.interactive())
     plot(g)
 
+## Latent variables (all having no parents):
+L <- c(1:13)
+
 ## Compute the true covariance matrix of g
 cov.mat <- trueCov(g)
 ## Delete rows and columns which belong to L
@@ -104,14 +101,12 @@ true.cov <- cov.mat[-L,-L]
 ## Transform it in a correlation matrix
 true.corr <- cov2cor(true.cov)
 suffStat <- list(C=true.corr, n=10^9)
-indepTest <- gaussCItest
 p.tr <- dim(true.corr)[1]
-showSys.time(pop.fci2  <-  fci(suffStat, indepTest, p=p.tr,
+showSys.time(pop.fci2  <-  fci(suffStat, gaussCItest, p=p.tr,
                                alpha=0.9999, doPdsep=TRUE)@amat)
-showSys.time(pop.rfci2 <- rfci(suffStat, indepTest, p=p.tr,
+showSys.time(pop.rfci2 <- rfci(suffStat, gaussCItest, p=p.tr,
                                alpha=0.9999)@amat)
 
-if (any(pop.fci2!=pop.rfci2)) {
+if (any(pop.fci2 != pop.rfci2)) {
   stop("Test of RFCI wrong: big example!")
 }
-

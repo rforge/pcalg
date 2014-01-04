@@ -11,7 +11,7 @@
   directed acyclic graph (CPDAG).  The functions first determine the
   v-structures, and then apply the three orientation rules as described
   in Sprirtes et al (2000) and Meek (1995) to orient as many of the
-  remaining edges as possible.  
+  remaining edges as possible.
 
   In the oracle version and when all assumptions hold, all three
   functions yield the same CPDAG.  In the sample version, however, the
@@ -20,27 +20,27 @@
   undirecting edges.  This can for example happen due to errors in the
   conditional indepedence tests or violations of the faithfulness
   assumption.  The three functions deal with such conflicts in different
-  ways, as described in Details.  
+  ways, as described in Details.
 }
 \usage{
    udag2pdag(gInput, verbose)
    udag2pdagRelaxed(gInput, verbose, unfVect=NULL, solve.confl=FALSE)
-   udag2pdagSpecial(gInput,verbose,n.max=100)   
+   udag2pdagSpecial(gInput,verbose,n.max=100)
 }
 \arguments{
   \item{gInput}{\code{"pcAlgo"}-object containing skeleton and
     conditional indepedence information.}
   \item{verbose}{0: No output; 1: Details}
-  \item{unfVect}{Vector containing numbers that encode ambiguous
-    triples (as returned by \code{\link{pc.cons.intern}}). This is
-    needed in the conservative and majority rule PC algorithms.} 
-  \item{solve.confl}{If \code{TRUE}, the orientation of the v-structures and the
+  \item{unfVect}{vector containing numbers that encode ambiguous
+    triples (as returned by \code{\link{pc.cons.intern}}).  This is
+    needed in the conservative and majority rule PC algorithms.}
+  \item{solve.confl}{if \code{TRUE}, the orientation of the v-structures and the
     orientation rules work with lists for candidate sets and allow
     bi-directed edges to resolve conflicting edge orientations. Note that
     therefore the resulting object is order-independent but might not be
     a PDAG because bi-directed edges can be present.}
-  \item{n.max}{Maximum number of tries for re-orienting doubly visited
-    edges in \code{udag2pdagSpecial}.} 
+  \item{n.max}{maximum number of tries for re-orienting doubly visited
+    edges in \code{udag2pdagSpecial}.}
 }
 \details{
   \describe{
@@ -51,7 +51,7 @@
       ones.  Thus, if a -> b <- c is considered first, the edge b - c is
       first oriented as b <- c and later overwritten by b -> c.  The
       v-structures are considered in lexicographical ordering.
-      
+
       If the resulting graph is extendable to a DAG without additional
       v-structures, then the rules of Meek (1995) and Spirtes et al
       (2000) are applied to obtain the corresponding CPDAG.  Otherwise,
@@ -60,7 +60,7 @@
       resulting DAG is then transformed into its CPDAG.  Note that the
       output of \code{udag2pdag} is random whenever the initial graph
       was not extendable. %%TODO: please check if this is correct
-      
+
       Although the output of \code{\link{udag2pdag}} is always
       extendable, it is not necessarily a valid CPDAG in the sense that
       it describes a Markov equivalence class of DAGs.  For example, two
@@ -72,7 +72,7 @@
     }
 
     \item{for \code{\link{udag2pdagSpecial}}:}{%
-      
+
       If the graph after orienting the v-structures as in
       \code{udag2pdag} is extendable to a DAG without additional
       v-structures, then the rules of Meek (1995) and Spirtes et al
@@ -97,10 +97,10 @@
     }
 
     \item{for \code{\link{udag2pdagRelaxed}}:}{%
-      
+
       This is the default version in the PC/RFCI/FCI algorithm.  It does
       \bold{not} test whether the output is extendable to a DAG without
-      additional v-structures. 
+      additional v-structures.
 
       If \code{unfVect = NULL} (no ambiguous triples), the three
       orientation rules are applied to each eligible structure until no
@@ -115,7 +115,7 @@
       If \code{solve.confl = FALSE}, earlier edge orientations are
       overwritten by later ones as in \code{udag2pdag} and
       \code{udag2pdagSpecial}.
-      
+
       If \code{solv.confl = TRUE}, both the v-structures and the
       orientation rules work with lists for the candidate edges and
       allow bi-directed edges if there are conflicting orientations. For
@@ -123,7 +123,7 @@
       -> b <-> c <-d.  This option can be used to get an
       order-independent version of the PC algorithm (see Colombo and
       Maathuis (2013)).
-      
+
       We denote bi-directed edges, for example between two variables i
       and j, in the adjacency matrix M of the graph as M[i,j]=2 and
       M[j,i]=2.  Such edges should be interpreted as indications of
@@ -152,7 +152,7 @@
 	\item{amat1}{Adjacency matrix of final graph with v-structures
 	  after changing the ordering in which the v-structures are
       considered (coding 0/1 for no edge or tail / arrowhead;
-      e.g. \code{amat[a,b] = 0} and \code{amat[b,a] = 1} implies a -> b) .} 
+      e.g. \code{amat[a,b] = 0} and \code{amat[b,a] = 1} implies a -> b) .}
 	\item{status}{Integer code with values \describe{
 	    \item{0:}{Original try is extendable;}
 	    \item{1:}{Reorienting double edge visits helps;}
@@ -193,17 +193,15 @@ trueCPDAG <- dag2cpdag(myDAG)
 n <- 1000
 d.mat <- rmvDAG(n, myDAG, errDist = "normal")
 
-## define independence test (partial correlations)
-indepTest <- gaussCItest
-## define sufficient statistics
-suffStat <- list(C = cor(d.mat), n = n)
 ## estimate skeleton
-resU <- skeleton(suffStat, indepTest, p, 0.05)
+resU <- skeleton(suffStat = list(C = cor(d.mat), n = n),
+                 indepTest = gaussCItest, ## (partial correlations)
+                 alpha = 0.05, p=p)
 
 ## orient edges using three different methods
-resD1 <- udag2pdagRelaxed(resU,verbose=0)
-resD2 <- udag2pdagSpecial(resU,verbose=0,n.max=100)
-resD3 <- udag2pdag(resU,verbose=0)
+resD1 <- udag2pdagRelaxed(resU, verbose=0)
+resD2 <- udag2pdagSpecial(resU, verbose=0, n.max=100)
+resD3 <- udag2pdag       (resU, verbose=0)
 
 }
 \keyword{multivariate}

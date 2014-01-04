@@ -6,10 +6,10 @@
   intended to be an alternative if the \pkg{Rgraphviz} package does not work.
 }
 \usage{
-showAmat(pc.fit)
+showAmat(object)
 }
 \arguments{
-  \item{pc.fit}{an \R object of class \code{\linkS4class{pcAlgo}}, as returned
+  \item{object}{an \R object of class \code{\linkS4class{pcAlgo}}, as returned
     from \code{\link{skeleton}()} or \code{\link{pc}()}.}
 }
 \value{

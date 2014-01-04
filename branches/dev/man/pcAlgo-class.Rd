@@ -72,10 +72,8 @@ set.seed(45)
 myDAG <- randomDAG(p, prob = 0.3)
 n <- 10000
 d.mat <- rmvDAG(n, myDAG, errDist = "normal")
-indepTest <- gaussCItest
 suffStat <- list(C = cor(d.mat), n = n)
-alpha <- 0.01
-pc.fit <- pc(suffStat, indepTest, p, alpha)
+pc.fit <- pc(suffStat, indepTest = gaussCItest, alpha = 0.01, p = p)
 
 ## use methods of class pcAlgo
 show(pc.fit)
@@ -87,5 +85,4 @@ summary(pc.fit)
 (g  <- pc.fit@graph)
 str(ss <- pc.fit@sepset, max=1)
 }
-
 \keyword{classes}

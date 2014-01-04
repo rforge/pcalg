@@ -4,13 +4,12 @@
 \description{
   Estimate an RFCI-PAG from observational data, using the RFCI-algorithm.
 }
-
 \usage{
-rfci(suffStat, indepTest, p, alpha, 
+rfci(suffStat, indepTest, alpha, labels, p,
      skel.method = c("stable", "original"),
-     fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, 
+     fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
      m.max = Inf, rules = rep(TRUE, 10),
-     conservative = FALSE, maj.rule = FALSE, labels = NA, verbose = FALSE) 
+     conservative = FALSE, maj.rule = FALSE, verbose = FALSE)
 }
 
 \arguments{
@@ -27,9 +26,13 @@ rfci(suffStat, indepTest, p, alpha,
     all relevant elements for the conditional independence
     decisions. The return value of \code{indepTest} is the p-value of
     the test for conditional independence.}
-  \item{p}{Number of variables.}
-  \item{alpha}{Significance level for the individual conditional
-    independence tests.}
+  \item{alpha}{significance level (number in \eqn{(0,1)} for the
+    individual conditional independence tests.}
+  \item{labels}{(optional) character vector of variable (or
+    \dQuote{node}) names.  Typically preferred to specifying \code{p}.}
+  \item{p}{(optional) number of variables (or nodes).  May be specified
+    if \code{labels} are not, in which case \code{labels} is set to
+    \code{1:p}.}
   \item{skel.method}{Character string specifying method; the default,
     \code{"stable"} provides an \emph{order-independent} skeleton, see
     \code{\link{skeleton}}.}
@@ -51,12 +54,10 @@ rfci(suffStat, indepTest, p, alpha,
     from Zhang (2009).}
   \item{conservative}{Logical indicating if the unshielded triples
     should be checked for ambiguity after the skeleton has been found,
-    similar to the conservative PC algorithm.}   
+    similar to the conservative PC algorithm.}
   \item{maj.rule}{Logical indicating if the unshielded triples should be
     checked for ambiguity after the skeleton has been found using a
     majority rule idea, which is less strict than the conservative.}
-  \item{labels}{Character vector of length p with node names. If
-    \code{NA}, \code{as.character{1:p}} is used instead.}
   \item{verbose}{If true, more detailed output is provided.}
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
@@ -143,7 +144,7 @@ rfci(suffStat, indepTest, p, alpha,
   was found. If b is in less than 50 percent of the separating sets it
   is set as a v-structure, and if in more than 50 percent it is set as a
   non v-structure (for more details see Colombo and Maathuis,
-  2013). 
+  2013).
 
   The implementation uses the stabilized skeleton
   \code{\link{skeleton}}, which produces an initial order-independent
@@ -155,10 +156,10 @@ rfci(suffStat, indepTest, p, alpha,
   D. Colombo and M.H. Maathuis (2013).
   Order-independent constraint-based causal structure learning. arXiv
   preprint arXiv:1211.3295v2.
-  
+
   D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson (2012).
   Learning high-dimensional directed acyclic graphs with latent and
-  selection variables. \emph{Ann. Statist.} \bold{40}, 294-321.  
+  selection variables. \emph{Ann. Statist.} \bold{40}, 294-321.
 }
 \seealso{\code{\link{fci}} for estimating a PAG using the FCI algorithm;
   \code{\link{skeleton}} for estimating an initial skeleton
@@ -182,55 +183,50 @@ myDAG <- randomDAG(p, prob = 0.4)
 ## find skeleton and PAG using the RFCI algorithm
 suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
 indepTest <- gaussCItest
-res <- rfci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE)
+res <- rfci(suffStat, indepTest, alpha = 0.9999, p=p, verbose=TRUE)
 
-
-##################################################
+% The following: 1st part is *identical* to >>>>>>>> ./udag2apag.Rd
+##################################################%  --------------
 ## Example with hidden variables
 ## Zhang (2008), Fig. 6, p.1882
 ##################################################
 
-## create the graph
-p <- 4
-amat <- t(matrix(c(0,1,0,0,1, 0,0,1,0,0, 0,0,0,1,0, 0,0,0,0,0, 0,0,0,1,0),5,5))
-colnames(amat) <- rownames(amat) <- as.character(1:5)
-L <- 1
-V <- as.character(1:5)
-edL <- vector("list",length=5)
-names(edL) <- V
+## create the DAG :
+V <- LETTERS[1:5]
+edL <- setNames(vector("list", length = 5), V)
 edL[[1]] <- list(edges=c(2,4),weights=c(1,1))
 edL[[2]] <- list(edges=3,weights=c(1))
 edL[[3]] <- list(edges=5,weights=c(1))
 edL[[4]] <- list(edges=5,weights=c(1))
+## and leave  edL[[ 5 ]] empty
 g <- new("graphNEL", nodes=V, edgeL=edL, edgemode="directed")
+if (require(Rgraphviz))
+  plot(g)
+
+## define the latent variable
+L <- 1
 
 ## compute the true covariance matrix of g
 cov.mat <- trueCov(g)
-
 ## delete rows and columns belonging to latent variable L
 true.cov <- cov.mat[-L,-L]
-
 ## transform covariance matrix into a correlation matrix
 true.corr <- cov2cor(true.cov)
 
 ## find PAG with RFCI algorithm
-## as dependence "oracle", we use the true correlation matrix in the
-## function gaussCItest with a large "virtual sample size" and a large
-## alpha
-suffStat <- list(C = true.corr, n = 10^9)
-indepTest <- gaussCItest
-rfci.pag <- rfci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE)
+## as dependence "oracle", we use the true correlation matrix in
+## gaussCItest() with a large "virtual sample size" and a large alpha :
+rfci.pag <- rfci(suffStat = list(C = true.corr, n = 10^9),
+                 indepTest = gaussCItest, alpha = 0.9999, labels = V[-L],
+                 verbose=TRUE)
 
 ## define PAG given in Zhang (2008), Fig. 6, p.1882
-corr.pag <- matrix(0,4,4)
-corr.pag[1,] <- c(0,1,1,0)
-corr.pag[2,] <- c(1,0,0,2)
-corr.pag[3,] <- c(1,0,0,2)
-corr.pag[4,] <- c(0,3,3,0)
-
-## check if estimated and correct PAG are in agreement
-all(corr.pag == rfci.pag@amat)
-
+corr.pag <- rbind(c(0,1,1,0),
+                  c(1,0,0,2),
+                  c(1,0,0,2),
+                  c(0,3,3,0))
+## check that estimated and correct PAG are in agreement:
+stopifnot(corr.pag == rfci.pag@amat)
 }
 \keyword{multivariate}
 \keyword{models}

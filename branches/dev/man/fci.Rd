@@ -72,8 +72,7 @@ fci(suffStat, indepTest, p, alpha,
     sets in the conditional independence tests, if not defined otherwise
     in \code{pdsep.max}. If \code{FALSE}, Possible-D-SEP
     is not computed, so that the algorithm simplifies to the
-    Modified PC algorithm of Spirtes, Glymour and Scheines (2000, page
-    84).}
+    Modified PC algorithm of Spirtes, Glymour and Scheines (2000, p.84).}
   \item{biCC}{If \code{TRUE}, only nodes on paths between nodes \code{x}
     and \code{y} are considered to be in Possible-D-SEP(\code{x}) when
     testing independence between \code{x} and \code{y}. Uses
@@ -104,7 +103,7 @@ fci(suffStat, indepTest, p, alpha,
   the FCI algorithm (Fast Causal Inference algorithm) (Spirtes, Glymour
   and Scheines, 2000) estimates the Markov equivalence class of MAGs
   that describe the conditional independence relationships between the
-  observed variables. 
+  observed variables.
 
   We estimate an equivalence class of \bold{maximal ancestral graph}s (\bold{MAG}s)
   instead of DAGs, since DAGs are not closed under marginalization and
@@ -124,7 +123,7 @@ fci(suffStat, indepTest, p, alpha,
   there is a at least one MAG in the Markov equivalence class where the
   edgemark is a tail, and at least one where the edgemark is an
   arrowhead. Information on the interpretation of edges in a MAG can be
-  found in the references given below. 
+  found in the references given below.
 
   The first part of the FCI algorithm is analogous to the PC algorithm. It
   starts with a complete undirected graph and estimates an initial skeleton
@@ -139,7 +138,7 @@ fci(suffStat, indepTest, p, alpha,
   requires some orientations.  Therefore, the v-structures
   are determined using the conservative method (see discussion on
   \code{conservative} below).
-  
+
   After the v-structures have been oriented, Possible-D-SEP sets for each
   node in the graph are computed at once. To decide whether edge
   \code{x o-o y} should be removed, one performs conditional indepedence
@@ -150,7 +149,7 @@ fci(suffStat, indepTest, p, alpha,
   the v-structures are newly determined on the final skeleton (using
   information in sepset). Finally, as many as possible undetermined edge
   marks (o) are determined using (a subset of) the 10 orientation rules
-  given by Zhang (2009). 
+  given by Zhang (2009).
 
   The \dQuote{Anytime FCI} algorithm was introduced by Spirtes (2001).  It
   can be viewed as a modification of the FCI algorithm that only performs
@@ -200,7 +199,7 @@ fci(suffStat, indepTest, p, alpha,
   non v-structure (for more details see Colombo and Maathuis,
   2013). Colombo and Maathuis (2013) showed that with both these
   modifications, the final skeleton and the decisions about the
-  v-structures of the FCI algorithm are fully order-independent. 
+  v-structures of the FCI algorithm are fully order-independent.
 
   Note that the order-dependence issues on the 10 orientation rules are
   still present, see Colombo and Maathuis (2013) for more details.
@@ -209,7 +208,7 @@ fci(suffStat, indepTest, p, alpha,
   D. Colombo and M.H. Maathuis (2013). Order-independent
   constraint-based causal structure learning. arXiv preprint
   arXiv:1211.3295v2.
-  
+
   D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
   (2012). Learning high-dimensional directed acyclic graphs with latent
   and selection variables. \emph{Ann. Statist.} \bold{40}, 294-321.
@@ -222,7 +221,7 @@ fci(suffStat, indepTest, p, alpha,
   P. Spirtes (2001). An anytime algorithm for causal inference. \emph{In
   Proc. of the Eighth International Workshop on Artifiial Intelligence
   and Statistics} 213-221. Morgan Kaufmann, San Francisco.
-  
+
   P. Spirtes, C. Glymour and R. Scheines (2000).
   \emph{Causation, Prediction, and Search}, 2nd edition, MIT Press,
   Cambridge (MA).
@@ -265,23 +264,20 @@ myDAG <- randomDAG(p, prob = 0.4)
 
 ## find skeleton and PAG using the FCI algorithm
 suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
-indepTest <- gaussCItest
-res <- fci(suffStat, indepTest, p, alpha = 0.9999, doPdsep = FALSE)
-
+res <- fci(suffStat, indepTest=gaussCItest,
+           alpha = 0.9999, p=p, doPdsep = FALSE)
+%FIXME showEdgeList(res)
 
 ##################################################
 ## Example with hidden variables
 ## Zhang (2008), Fig. 6, p.1882
 ##################################################
 
-## create the graph
+## create the graph g
 p <- 4
-amat <- t(matrix(c(0,1,0,0,1, 0,0,1,0,0, 0,0,0,1,0, 0,0,0,0,0, 0,0,0,1,0),5,5))
-colnames(amat) <- rownames(amat) <- as.character(1:5)
-L <- 1
-V <- as.character(1:5)
-edL <- vector("list",length=5)
-names(edL) <- V
+L <- 1 # '1' is latent
+V <- c("Ghost", "Max","Urs","Anna","Eva")
+edL <- setNames(vector("list", length=length(V)), V)
 edL[[1]] <- list(edges=c(2,4),weights=c(1,1))
 edL[[2]] <- list(edges=3,weights=c(1))
 edL[[3]] <- list(edges=5,weights=c(1))
@@ -293,26 +289,29 @@ cov.mat <- trueCov(g)
 
 ## delete rows and columns belonging to latent variable L
 true.cov <- cov.mat[-L,-L]
-
 ## transform covariance matrix into a correlation matrix
 true.corr <- cov2cor(true.cov)
 
-## find PAG with FCI algorithm.
-## As dependence "oracle", we use the true correlation matrix in the
-## function gaussCItest with a large "virtual sample size" and a large
-## alpha
-suffStat <- list(C = true.corr, n = 10^9)
+## The same, for the following three examples
 indepTest <- gaussCItest
-normal.pag <- fci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE,
-doPdsep= TRUE, labels = as.character(2:5)) 
+suffStat <- list(C = true.corr, n = 10^9)
+
+## find PAG with FCI algorithm.
+## As dependence "oracle", we use the true correlation matrix in
+## gaussCItest() with a large "virtual sample size" and a large alpha:
+
+normal.pag <- fci(suffStat, indepTest, alpha = 0.9999, labels = V[-L],
+                  verbose=TRUE)
+%FIXME showEdgeList(normal.pag)
 
 ## find PAG with Anytime FCI algorithm with m.max = 1
 ## This means that only conditioning sets of size 0 and 1 are considered.
 ## As dependence "oracle", we use the true correlation matrix in the
 ## function gaussCItest with a large "virtual sample size" and a large
 ## alpha
-anytime.pag <- fci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE,
-m.max = 1, doPdsep = TRUE, labels = as.character(2:5), type = "anytime")
+anytime.pag <- fci(suffStat, indepTest, alpha = 0.9999, labels = V[-L],
+                   type = "anytime", m.max = 1,
+                   verbose=TRUE)
 
 ## find PAG with Adaptive Anytime FCI algorithm.
 ## This means that only conditining sets up to size K are considered
@@ -321,20 +320,30 @@ m.max = 1, doPdsep = TRUE, labels = as.character(2:5), type = "anytime")
 ## As dependence "oracle", we use the true correlation matrix in the
 ## function gaussCItest with a large "virtual sample size" and a large
 ## alpha
-adaptive.pag <- fci(suffStat, indepTest, p, alpha = 0.9999, verbose=TRUE,
-doPdsep = TRUE, labels = as.character(2:5), type = "adaptive")
+adaptive.pag <- fci(suffStat, indepTest, alpha = 0.9999, labels = V[-L],
+                    type = "adaptive",
+                    verbose=TRUE)
 
 ## define PAG given in Zhang (2008), Fig. 6, p.1882
-corr.pag <- matrix(0,4,4)
-corr.pag[1,] <- c(0,1,1,0)
-corr.pag[2,] <- c(1,0,0,2)
-corr.pag[3,] <- c(1,0,0,2)
-corr.pag[4,] <- c(0,3,3,0)
+corr.pag <- rbind(c(0,1,1,0),
+                  c(1,0,0,2),
+                  c(1,0,0,2),
+                  c(0,3,3,0))
 
 ## check if estimated and correct PAG are in agreement
-all(corr.pag == normal.pag@amat)
-all(corr.pag == anytime.pag@amat)
-all(corr.pag == adaptive.pag@amat)
+all(corr.pag == normal.pag  @ amat) # TRUE
+all(corr.pag == anytime.pag @ amat) # FALSE
+all(corr.pag == adaptive.pag@ amat) # TRUE
+ij <- rbind(cbind(1:4,1:4), c(2,3), c(3,2))
+all(corr.pag[ij] == anytime.pag @ amat[ij]) # TRUE
+
+\dontshow{stopifnot(
+  corr.pag == normal.pag  @ amat
+  ,
+  corr.pag[ij] == normal.pag@amat[ij]
+  ,
+  corr.pag == adaptive.pag@ amat
+  )}
 }
 \keyword{multivariate}
 \keyword{models}

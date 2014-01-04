@@ -2,7 +2,7 @@
 \alias{pdsep}
 \title{Estimate Final Skeleton in the FCI algorithm}
 \description{
-  Estimate the final skeleton in the FCI algorithm (Spirtes et al, 2000), 
+  Estimate the final skeleton in the FCI algorithm (Spirtes et al, 2000),
   as described in Steps 2 and 3 of Algorithm 3.1 in Colombo et
   al. (2012).  The input of this function consists of an initial
   skeleton that was estimated by the PC algorithm (Step 1 of Algorithm
@@ -85,9 +85,9 @@ pdsep(skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = Inf,
 }
 \details{
   To make the code more efficient, we only perform tests that were not
-  performed in the estimation of the initial skeleton.  
+  performed in the estimation of the initial skeleton.
 
-  Note that the Possible-D-SEP sets are computed once in the beginning. They are  not updated after edge deletions, in order to make sure that the output of the algorithm does not depend on the ordering of the variables (see also Colombo and Maathuis (2013)). 
+  Note that the Possible-D-SEP sets are computed once in the beginning. They are  not updated after edge deletions, in order to make sure that the output of the algorithm does not depend on the ordering of the variables (see also Colombo and Maathuis (2013)).
 }
 \references{
   P. Spirtes, C. Glymour and R. Scheines (2000).
@@ -95,9 +95,9 @@ pdsep(skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = Inf,
 
   D. Colombo, M.H. Maathuis, M. Kalisch and T.S. Richardson (2012).
   Learning high-dimensional directed acyclic graphs with latent and
-  selection variables. 
+  selection variables.
   \emph{Annals of Statistics} \bold{40}, 294--321.
-  
+
   D. Colombo and M.H. Maathuis (2013).
   Order-independent constraint-based causal structure learning. arXiv:1211.3295v2.
 }
@@ -122,7 +122,7 @@ d.mat <- rmvDAG(n, myDAG, errDist = "normal")
 indepTest <- gaussCItest
 suffStat <- list(C = cor(d.mat), n = n)
 alpha <- 0.01
-skel <- skeleton(suffStat, indepTest, p, alpha)
+skel <- skeleton(suffStat, indepTest, alpha=alpha, p=p)
 
 ## prepare input for pdsep
 sepset <- skel@sepset
@@ -130,8 +130,8 @@ pMax <- skel@pMax
 
 ## call pdsep to find Possible-D-Sep and enhance the skeleton
 pdsepRes <- pdsep(skel@graph, suffStat, indepTest, p, sepset, alpha,
-pMax, verbose = TRUE)
+                  pMax, verbose = TRUE)
 ## call pdsep with biconnected components to find Possible-D-Sep and enhance the skeleton
 pdsepResBicc <- pdsep(skel@graph, suffStat, indepTest, p, sepset, alpha,
-pMax, biCC= TRUE, verbose = TRUE)
+                      pMax, biCC= TRUE, verbose = TRUE)
 }

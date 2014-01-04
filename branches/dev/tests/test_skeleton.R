@@ -19,7 +19,7 @@ for (i in 1:nreps) {
   suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
   indepTest <- gaussCItest
 
-  resU <- skeleton(suffStat, indepTest, p, 0.99)
+  resU <- skeleton(suffStat, indepTest, 0.99, p = p)
 
   resG[i] <- all(as(resU@graph,"matrix") == amat)
   resP[i] <- all(resU@pMax[as(resU@graph,"matrix") == TRUE] < 0.99)
@@ -34,7 +34,7 @@ if(!doExtras && !interactive()) q("no")
 
 ## ../inst/xtraR/graph2ftmatrix.R :
 source(system.file(package="pcalg", "xtraR", "graph2ftmatrix.R", mustWork=TRUE))
-##-> graph2ftM(), perm.ftM()   
+##-> graph2ftM(), perm.ftM()
 
 ##' checks the simulation results below, assuming that res[[1]] is *un*permuted
 isEqPerms <- function(res) {

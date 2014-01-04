@@ -4,16 +4,16 @@
 \description{
   Tests for d-separation of nodes in a DAG.  \code{dsepTest()} is
   written to be easily used in \code{\link{skeleton}}, \code{\link{pc}},
-  \code{\link{fci}}. 
+  \code{\link{fci}}.
 }
 \usage{
 dsepTest(x, y, S=NULL, suffStat)
 }
 \arguments{
-  \item{x,y}{Position of variable x and y in the adjacency matrix.}
-  \item{S}{Positions of conditioning variables in the adjacency matrix,
+  \item{x,y}{integer position of variable x and y in the adjacency matrix.}
+  \item{S}{integer positions of conditioning variables in the adjacency matrix,
     possibly empty.}
-  \item{suffStat}{A \code{\link{list}} with two elements,
+  \item{suffStat}{a \code{\link{list}} with two elements,
     \describe{
       \item{\code{"g"}}{Containing the Directed Acyclic Graph (object of
 	\code{\link{class}} \code{"graph"}, see

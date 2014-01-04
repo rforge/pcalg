@@ -60,25 +60,35 @@ covTrue <- trueCov(myDAG) ## true covariance matrix
 ## simulate data from the true DAG
 n <- 10000
 dat <- rmvDAG(n, myDAG)
+cov.d <- cov(dat)
 
 ## estimate CPDAG (see help on the function "pc")
-alpha <- 0.01
-indepTest <- gaussCItest
 suffStat <- list(C = cor(dat), n = n)
-pc.fit <- pc(suffStat, indepTest, p, alpha)
+pc.fit <- pc(suffStat, indepTest = gaussCItest, alpha = 0.01, p=p)
 
-if(require(Rgraphviz))
-  plot(myDAG)
+if(require(Rgraphviz)) {
+  op <- par(mfrow=c(1,3))
+  plot(myDAG,        main="true DAG")
+  plot(myCPDAG,      main="true CPDAG")
+  plot(pc.fit@graph, main="pc()-estimated CPDAG")
+  par(op)
+}
 
-(eff.est1 <- ida(2,5,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
-(eff.est2 <- ida(2,6,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
-(eff.est3 <- ida(2,7,cov(dat),pc.fit@graph,method="local",verbose=FALSE))
+(eff.est1 <- ida(2,5, cov.d, pc.fit@graph))## method = "local" is default
+(eff.est2 <- ida(2,6, cov.d, pc.fit@graph))
+(eff.est3 <- ida(2,7, cov.d, pc.fit@graph))
 ## These three computations can be combinded in an efficient way
 ## by using idaFast :
-(eff.estF <- idaFast(2,c(5,6,7),cov(dat),pc.fit@graph))
+(eff.estF <- idaFast(2, c(5,6,7), cov.d, pc.fit@graph))
+\dontshow{
+stopifnot(all.equal(eff.estF, tol = 1e-15,
+                    rbind("5"= eff.est1, "6"= eff.est2, "7"= eff.est3)) ,
+          all.equal(idaFast(2, c(7,5), covTrue, myCPDAG),
+                    rbind("7"= ida(2, 7, covTrue, myCPDAG),
+                          "5"= ida(2, 5, covTrue, myCPDAG)), tol = 1e-15)
+ )
+}%dont
 }
 \keyword{multivariate}
 \keyword{models}
 \keyword{graphs}
-
-
