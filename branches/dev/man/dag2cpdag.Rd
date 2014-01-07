@@ -48,11 +48,19 @@ s <- 0.4 ## sparseness of the graph
 ## generate a random DAG
 set.seed(42)
 g <- randomDAG(p, s)
+g01 <- 1*(as(g,"matrix") > 0) # 0/1-version of adjacency matrix
+print.table(g01, zero.=".")
 
 ## compute its unique CPDAG
 system.time(
   res <- dag2cpdag(g)
 )
+## res has some bidirected edges
+##  ==> adj.matrix: no longer upper triangular, but {0,1}
+print.table(as(res, "matrix"), zero.=".")
+dm <- as(res, "matrix") - g01 ## difference: 2 entries in lower tri.
+print.table(dm, zero.=".")
+stopifnot(all(dm \%in\% 0:1), sum(dm == 1) == 2)
 
 ## Find CPDAG with PC algorithm:
 ## As dependence oracle, we use the true correlation matrix in
@@ -68,4 +76,3 @@ stopifnot(all.equal(as( res,     "matrix"),
 \keyword{multivariate}
 \keyword{models}
 \keyword{graphs}
-
