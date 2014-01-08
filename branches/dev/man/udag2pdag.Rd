@@ -23,9 +23,9 @@
   ways, as described in Details.
 }
 \usage{
-   udag2pdag(gInput, verbose)
-   udag2pdagRelaxed(gInput, verbose, unfVect=NULL, solve.confl=FALSE)
-   udag2pdagSpecial(gInput,verbose,n.max=100)
+udag2pdag       (gInput, verbose)
+udag2pdagRelaxed(gInput, verbose, unfVect=NULL, solve.confl=FALSE)
+udag2pdagSpecial(gInput, verbose, n.max=100)
 }
 \arguments{
   \item{gInput}{\code{"pcAlgo"}-object containing skeleton and
@@ -138,30 +138,33 @@
     \item{for \code{udag2pdag()} and \code{udag2pdagRelaxed()}:}{%
       oriented \code{"pcAlgo"}-object.}
 
-    \item{for \code{udag2pdagSpecial}:}{A \code{\link{list}} with
+    \item{for \code{udag2pdagSpecial}:}{a \code{\link{list}} with
       components \describe{
 	\item{pcObj}{An oriented \code{"pcAlgo"}-object.}
 	\item{evisit}{Matrix counting the number of orientation attempts per edge}
 	%% TODO both xtbl.orig and xtbl:  what is different from 'status'  <<<<<,
 	\item{xtbl.orig}{Logical indicating whether the original graph
 	  with v-structures is extendable.}
-	\item{xtbl}{Logical indicating whether the final graph with v-structures is extendable}
+	\item{xtbl}{Logical indicating whether the final graph with
+	  v-structures is extendable}
 	\item{amat0}{Adjacency matrix of original graph with
-      v-structures (coding 0/1 for no edge or tail / arrowhead;
-      e.g. \code{amat[a,b] = 0} and \code{amat[b,a] = 1} implies a -> b) .}
+	  v-structures (coding 0/1 for no edge or tail / arrowhead;
+	  e.g. \code{amat[a,b] = 0} and \code{amat[b,a] = 1} implies a -> b) .}
 	\item{amat1}{Adjacency matrix of final graph with v-structures
 	  after changing the ordering in which the v-structures are
-      considered (coding 0/1 for no edge or tail / arrowhead;
-      e.g. \code{amat[a,b] = 0} and \code{amat[b,a] = 1} implies a -> b) .}
+	  considered (coding 0/1 for no edge or tail / arrowhead;
+	  e.g. \code{amat[a,b] = 0} and \code{amat[b,a] = 1} implies a -> b) .}
 	\item{status}{Integer code with values \describe{
 	    \item{0:}{Original try is extendable;}
 	    \item{1:}{Reorienting double edge visits helps;}
 	    \item{2:}{Original try is not extendable; reorienting double
 	      visits does not help; result is acyclic, has original
 	      v-structures, but perhaps additional v-structures.}
-	}}
-	\item{counter}{Number of orderings of the v-structures until success or max.tries}
-    }}
+	  }
+	}
+	\item{counter}{Number of orderings of the v-structures until
+	  success or \code{n.max}.}
+      }}
   }
 }
 \references{
@@ -207,5 +210,3 @@ resD3 <- udag2pdag       (resU, verbose=0)
 \keyword{multivariate}
 \keyword{models}
 \keyword{graphs}
-
-
