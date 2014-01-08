@@ -1696,12 +1696,12 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
                 if (!solve.confl) {
                     pdag[x, y] <- pdag[z, y] <- 1
                     pdag[y, x] <- pdag[y, z] <- 0
-                } else if (((pdag[y, x] == 1 && pdag[x, y] == 1) &&
-                            (pdag[y, z] == 1 && pdag[z, y] == 1)) ||
-                           ((pdag[x, y] == 1 && pdag[y, x] == 0) &&
-                            (pdag[y, z] == 1 && pdag[z, y] == 1)) ||
-                           ((pdag[x, y] == 1 && pdag[y, x] == 1) &&
-                            (pdag[y, z] == 0 && pdag[z, y] == 1))) {
+                } else if ((pdag[y, x] == 1 && pdag[x, y] == 1 &&
+                            pdag[y, z] == 1 && pdag[z, y] == 1) ||
+                           (pdag[x, y] == 1 && pdag[y, x] == 0 &&
+                            pdag[y, z] == 1 && pdag[z, y] == 1) ||
+                           (pdag[x, y] == 1 && pdag[y, x] == 1 &&
+                            pdag[y, z] == 0 && pdag[z, y] == 1)) {
                     pdag[x, y] <- pdag[z, y] <- 1
                     pdag[y, x] <- pdag[y, z] <- 0
                 } else if (pdag[y, x] == 1 && pdag[x, y] == 0 &&
@@ -1743,10 +1743,11 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
                            pdag[y, z] == 2 && pdag[z, y] == 2) {
                     pdag[x, y] <- pdag[y, x] <- 2
                 }
-            }
+            }##__end-copy-paste
             else ## length(unfVect) > 0 :
                 if (!any(unfVect == triple2numb(p, x, y, z), na.rm=TRUE) &&
                     !any(unfVect == triple2numb(p, z, y, x), na.rm=TRUE)) {
+## from next line till line 148: = copy-paste of lines 43-93
                     if (!solve.confl) {
                         pdag[x, y] <- pdag[z, y] <- 1
                         pdag[y, x] <- pdag[y, z] <- 0
@@ -1797,31 +1798,33 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
                                pdag[y, z] == 2 && pdag[z, y] == 2) {
                         pdag[x, y] <- pdag[y, x] <- 2
                     }
-                }
+                  }##__end-copy-paste
         } ## for( z ) if(...)
     } ## for ( i )
+    ##---------------------------------------------------------------------------
 
     if (length(unfVect) == 0) {
         if (!solve.confl) {
             repeat {
                 old_pdag <- pdag
-                ##Rule 1
-                ind <- which((pdag == 1 & t(pdag) == 0), arr.ind = TRUE)
+                ## Rule 1
+                ind <- which(pdag == 1 & t(pdag) == 0, arr.ind = TRUE)
                 for (i in seq_len(nrow(ind))) {
                     a <- ind[i, 1]
                     b <- ind[i, 2]
-                    isC <- ((pdag[b, ] == 1 & pdag[, b] == 1) & (pdag[a, ] == 0 & pdag[, a] == 0))
+                    ## find all neighbours of b not adjacent to a
+                    isC <- pdag[b, ] == 1 & pdag[, b] == 1 & pdag[a, ] == 0 & pdag[, a] == 0
                     if (any(isC)) {
-                        indC <- which(isC)
-                        pdag[b, indC] <- 1
-                        pdag[indC, b] <- 0
+                        c <- which(isC)
+                        pdag[b, c] <- 1
+                        pdag[c, b] <- 0
                         if (verbose)
                             cat("\nRule 1:", a, "->", b, " and ", b,
-                                "-", indC, " where ", a, " and ", indC,
-                                " not connected: ", b, "->", indC, "\n")
+                                "-", c, " where ", a, " and ", c,
+                                " not connected: ", b, "->", c, "\n")
                     }
                 }
-                ##Rule 2
+                ## Rule 2
                 ind <- which((pdag == 1 & t(pdag) == 1), arr.ind = TRUE)
                 for (i in seq_len(nrow(ind))) {
                     a <- ind[i, 1]
@@ -1836,20 +1839,20 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
                                 "->", b, ":", a, "->", b, "\n")
                     }
                 }
-                ##Rule 3
+                ## Rule 3
                 ind <- which((pdag == 1 & t(pdag) == 1), arr.ind = TRUE)
                 for (i in seq_len(nrow(ind))) {
                     a <- ind[i, 1]
                     b <- ind[i, 2]
-                    indC <- which((pdag[a, ] == 1 & pdag[, a] == 1) &
+                    c <- which((pdag[a, ] == 1 & pdag[, a] == 1) &
                                   (pdag[, b] == 1 & pdag[b, ] == 0))
-                    if (length(indC) >= 2) {
-                        g2 <- pdag[indC, indC]
+                    if (length(c) >= 2) {
+                        g2 <- pdag[c, c]
                         if (length(g2) <= 1) {
                             g2 <- 0
                         }
                         else {
-                            diag(g2) <- rep(1, length(indC))
+                            diag(g2) <- rep(1, length(c))
                         }
                         if (any(g2 == 0)) {
                             pdag[a, b] <- 1
@@ -1858,7 +1861,7 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
                                 cat("\nRule 3:", a, "->", b, "\n")
                         }
                         else {
-                            cmb.C <- combn(indC, 2)
+                            cmb.C <- combn(c, 2)
                             cC1 <- cmb.C[1, ]
                             cC2 <- cmb.C[2, ]
                             for (j in seq_along(cC1)) {
@@ -1874,25 +1877,27 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
                             }
                         }
                     }
-                }
+                  } ## for( i )
                 if (all(pdag == old_pdag))
                     break
-            }
+              } ## {repeat}
 
         } else { ## solve.conf
-
+### close but *not* copy-paste from line 153 : {diff.: extra for(ii ...))
             repeat {
                 old_pdag <- search.pdag <- pdag
-                ind <- which((search.pdag == 1 & t(search.pdag) == 0), arr.ind = TRUE)
+                ## Rule 1
+                ind <- which(pdag == 1 & t(pdag) == 0, arr.ind = TRUE)
                 for (i in seq_len(nrow(ind))) {
                     a <- ind[i, 1]
                     b <- ind[i, 2]
-                    ##find all neighbours of b not adjacent to a
+                    ## find all neighbours of b not adjacent to a
                     isC <- which(search.pdag[b, ] == 1 & search.pdag[, b] == 1 &
                                  search.pdag[a, ] == 0 & search.pdag[, a] == 0)
                     for (ii in seq_along(isC)) {
                             c <- isC[ii]
-                            ##if the edge between b and c has not been oriented previously, orient it using normal R1
+                            ## if the edge between b and c has not been oriented previously,
+                            ## orient it using normal R1
                             if (pdag[b,c] == 1 & pdag[c,b] == 1) {
                                 pdag[b, c] <- 1
                                 pdag[c, b] <- 0
@@ -1901,7 +1906,7 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
                                         b, "-", c, " where ", a, " and ", c,
                                         " not connected:", b, "->", c, "\n")
                             }
-                            ##else if the edge is b <- c because of a previous orientation then output <->
+                            ## else if the edge is b <- c because of a previous orientation then output <->
                             else if (pdag[b,c] == 0 & pdag[c,b] == 1) {
                                 pdag[b, c] <- 2
                                 pdag[c, b] <- 2
@@ -1913,13 +1918,13 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
                     }
                 }
                 search.pdag <- pdag
-                ##Rule 2
-                ind <- which((search.pdag == 1 & t(search.pdag) == 1), arr.ind = TRUE)
+                ## Rule 2
+                ind <- which(search.pdag == 1 & t(search.pdag) == 1, arr.ind = TRUE)
                 for (i in seq_len(nrow(ind))) {
                     a <- ind[i, 1]
                     b <- ind[i, 2]
-                    isC <- which((search.pdag[a, ] == 1 & search.pdag[, a] == 0) &
-                                 (search.pdag[, b] == 1 & search.pdag[b, ] == 0))
+                    isC <- which(search.pdag[a, ] == 1 & search.pdag[, a] == 0 &
+                                 search.pdag[, b] == 1 & search.pdag[b, ] == 0)
                     for (ii in seq_along(isC)) {
                             c <- isC[ii]
                             ##if the edge has not been oriented yet, orient it with R2
@@ -1941,15 +1946,15 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
                     }
                 }
                 search.pdag <- pdag
-                ##Rule 3
-                ind <- which((search.pdag == 1 & t(search.pdag) == 1), arr.ind = TRUE)
+                ## Rule 3
+                ind <- which(search.pdag == 1 & t(search.pdag) == 1, arr.ind = TRUE)
                 for (i in seq_len(nrow(ind))) {
                     a <- ind[i, 1]
                     b <- ind[i, 2]
-                    indC <- which((search.pdag[a, ] == 1 & search.pdag[, a] == 1) &
-                                  (search.pdag[, b] == 1 & search.pdag[b, ] == 0))
-                    if (length(indC) >= 2) {
-                        cmb.C <- combn(indC, 2)
+                    c <- which(search.pdag[a, ] == 1 & search.pdag[, a] == 1 &
+                               search.pdag[, b] == 1 & search.pdag[b, ] == 0)
+                    if (length(c) >= 2) {
+                        cmb.C <- combn(c, 2)
                         cC1 <- cmb.C[1, ]
                         cC2 <- cmb.C[2, ]
                         for (j in seq_along(cC1)) {
@@ -2060,7 +2065,8 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
         } else { ## solve.conf
             repeat {
                 old_pdag <- search.pdag <- pdag
-                ind <- which((search.pdag == 1 & t(search.pdag) == 0), arr.ind = TRUE)
+                ## Rule 1
+                ind <- which(pdag == 1 & t(pdag) == 0, arr.ind = TRUE)
                 for (i in seq_len(nrow(ind))) {
                     a <- ind[i, 1]
                     b <- ind[i, 2]
@@ -2069,7 +2075,8 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
                                  search.pdag[a, ] == 0 & search.pdag[, a] == 0)
                     for (ii in seq_along(isC)) {
                             c <- isC[ii]
-                            ##if the edge between b and c has not been oriented previously, orient it using normal R1
+                            ## if the edge between b and c has not been oriented previously,
+                            ## orient it using normal R1
                             if (pdag[b,c] == 1 & pdag[c,b] == 1) {
                                 if (!any(unfVect == triple2numb(p, a, b, c), na.rm=TRUE) &&
                                     !any(unfVect == triple2numb(p, c, b, a), na.rm=TRUE)) {
@@ -2082,7 +2089,7 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
                                             b, "->", c, "\n")
                                 }
                             }
-                            ##else if the edge is b <- c because of a previous orientation then output <->
+                            ## else if the edge is b <- c because of a previous orientation then output <->
                             else if (pdag[b,c] == 0 & pdag[c,b] == 1) {
                                 if (!any(unfVect == triple2numb(p, a, b, c), na.rm=TRUE) &&
                                     !any(unfVect == triple2numb(p, c, b, a), na.rm=TRUE)) {
@@ -2097,15 +2104,14 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
                     }
                 }
                 search.pdag <- pdag
-                ##Rule 2
-                ind <- which((search.pdag == 1 & t(search.pdag) == 1), arr.ind = TRUE)
+                ## Rule 2
+                ind <- which(search.pdag == 1 & t(search.pdag) == 1, arr.ind = TRUE)
                 for (i in seq_len(nrow(ind))) {
                     a <- ind[i, 1]
                     b <- ind[i, 2]
-                    isC <- which((search.pdag[a, ] == 1 & search.pdag[, a] == 0) &
-                                 (search.pdag[, b] == 1 & search.pdag[b, ] == 0))
-                    if (length(isC) > 0) {
-                        for (ii in seq_along(isC)) {
+                    isC <- which(search.pdag[a, ] == 1 & search.pdag[, a] == 0 &
+                                 search.pdag[, b] == 1 & search.pdag[b, ] == 0)
+                    for (ii in seq_along(isC)) {
                             c <- isC[ii]
                             ##if the edge has not been oriented yet, orient it with R2
                             if (pdag[a, b] == 1 & pdag[b, a] == 1) {
@@ -2124,18 +2130,17 @@ udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FA
                                         "->", b, ":", a, "<->", b, "\n")
                             }
                         }
-                    }
                 }
                 search.pdag <- pdag
-                ##Rule 3
-                ind <- which((search.pdag == 1 & t(search.pdag) == 1), arr.ind = TRUE)
+                ## Rule 3
+                ind <- which(search.pdag == 1 & t(search.pdag) == 1, arr.ind = TRUE)
                 for (i in seq_len(nrow(ind))) {
                     a <- ind[i, 1]
                     b <- ind[i, 2]
-                    indC <- which((search.pdag[a, ] == 1 & search.pdag[, a] == 1) &
-                                  (search.pdag[, b] == 1 & search.pdag[b, ] == 0))
-                    if (length(indC) >= 2) {
-                        cmb.C <- combn(indC, 2)
+                    c <- which(search.pdag[a, ] == 1 & search.pdag[, a] == 1 &
+                               search.pdag[, b] == 1 & search.pdag[b, ] == 0)
+                    if (length(c) >= 2) {
+                        cmb.C <- combn(c, 2)
                         cC1 <- cmb.C[1, ]
                         cC2 <- cmb.C[2, ]
                         for (j in seq_along(cC1)) {
@@ -2388,7 +2393,8 @@ Please use ida or idaFast instead\n")
     } ## if n.dags
   } ## if method
   beta.hat
-}
+} ## {beta.special}
+
 
 
 ## DEPRECATED! -- use  ida() / idafast() --
@@ -2499,7 +2505,7 @@ Please use ida or idaFast instead\n")
     } ## length(pa2)
   } ## y.pos %in% pa2
   beta.hat
-}
+} ## {beta.special.pcObj}
 
 ##- lm.cov <- function(C,y,x) {
 ##-   sig <- C[x,x]
