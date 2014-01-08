@@ -84,7 +84,7 @@ causalEffect(g, y, x)
   out, where all DAGs in the equivalene class of the estimated CPDAG
   \code{graphEst} are computed using the function \code{\link{allDags}}.
   This method is suitable for small graphs (say, up to 10 nodes).
-  
+
   If \code{method="local"}, we do not determine all DAGs in the
   equivalence class of the CPDAG.  Instead, we only consider the local
   neighborhood of \code{x} in the CPDAG.  In particular, we consider all
@@ -92,7 +92,7 @@ causalEffect(g, y, x)
   endpoint, such that no new v-structure is created.  For each such
   configuration, we estimate the total causal effect of \code{x} on
   \code{y} as above, using linear regression.
-  
+
   At first sight, it is not clear that such a local configuration
   corresponds to a DAG in the equivalence class of the CPDAG, since it
   may be impossible to direct the remaining undirected edges without
@@ -103,7 +103,7 @@ causalEffect(g, y, x)
   As a result, it follows that the multisets of total causal effects of
   the "global" and the "local" method have the same unique values. They
   may, however, have different multiplicities.
-  
+
   For example, a CPDAG may represent eight DAGs, and the global method
   may produce the multiset \{1.3, -0.5, 0.7, 1.3, 1.3, -0.5, 0.7, 0.7\}.
   The unique values in this set are -0.5, 0.7 and 1.3, and the
@@ -114,7 +114,7 @@ causalEffect(g, y, x)
   are identical implies that summary measures of the multiset that only
   depend on the unique values (such as the minimum absolute value) can
   be estimate by the local method.
-  
+
 }
 \value{
   A vector that represents the multiset containing the estimated
@@ -132,9 +132,9 @@ causalEffect(g, y, x)
   Markus Kalisch, Martin Maechler, Diego Colombo, Marloes H. Maathuis,
   Peter Buehlmann (2012).
   Causal Inference Using Graphical Models with the R Package pcalg.
-  \emph{Journal of Statistical Software} \bold{47}(11) 1--26, 
+  \emph{Journal of Statistical Software} \bold{47}(11) 1--26,
   \url{http://www.jstatsoft.org/v47/i11/}.
-  
+
   Pearl (2005). \emph{Causality. Models, reasoning and inference}.
   Cambridge University Press, New York.
 }
@@ -162,10 +162,10 @@ suffStat <- list(C = cor(dat), n = n)
 pc.fit <- pc(suffStat, indepTest = gaussCItest, p=p, alpha = 0.01)
 
 if (require(Rgraphviz)) {
-## plot the true and estimated graphs
-par(mfrow = c(1,2))
-plot(myDAG, main = "True DAG")
-plot(pc.fit, main = "Estimated CPDAG")
+  ## plot the true and estimated graphs
+  par(mfrow = c(1,2))
+  plot(myDAG, main = "True DAG")
+  plot(pc.fit, main = "Estimated CPDAG")
 }
 
 ## Supppose that we know the true CPDAG and covariance matrix

@@ -14,12 +14,12 @@
 idaFast(x.pos, y.pos.set, mcov, graphEst)
 }
 \arguments{
-\item{x.pos}{Position of variable \code{x} in the covariance matrix}
-\item{y.pos.set}{Vector containing the position of the target variables
-  \code{y} in the covariance matrix}
-\item{mcov}{Covariance matrix that was used to estimate \code{graphEst}}
-\item{graphEst}{Estimated CPDAG from the function
-  \code{\link{pc}}. If the output of \code{\link{pc}} is \code{pc.fit},
+\item{x.pos}{integer position of variable \code{x} in the covariance matrix.}
+\item{y.pos.set}{integer vector of positions of the target variables
+  \code{y} in the covariance matrix.}
+\item{mcov}{covariance matrix that was used to estimate \code{graphEst}}
+\item{graphEst}{estimated CPDAG from the function
+  \code{\link{pc}}.  If the output of \code{\link{pc}} is \code{pc.fit},
   then the estimated CPDAG can be obtained by \code{pc.fit@graph}.}
 }
 \details{
@@ -47,7 +47,7 @@ idaFast(x.pos, y.pos.set, mcov, graphEst)
 \seealso{\code{\link{pc}} for estimating a CPDAG, and
   \code{\link{ida}} for estimating the multiset of possible total causal
   effects from observational data on only one target variable but with many more
-  options (than here in \code{\link{idaFast}}).
+  options (than here in \code{idaFast}).
 }
 \examples{
 ## Simulate the true DAG

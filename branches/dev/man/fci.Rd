@@ -7,14 +7,14 @@
 }
 
 \usage{
-fci(suffStat, indepTest, p, alpha, 
+fci(suffStat, indepTest, alpha, labels, p,
     skel.method = c("stable", "original"),
-    type = c("normal", "anytime", "adaptive"), 
-    fixedGaps = NULL, fixedEdges = NULL, 
+    type = c("normal", "anytime", "adaptive"),
+    fixedGaps = NULL, fixedEdges = NULL,
     NAdelete = TRUE, m.max = Inf, pdsep.max = Inf,
     rules = rep(TRUE, 10), doPdsep = TRUE, biCC = FALSE,
     conservative = FALSE, maj.rule = FALSE,
-    labels = NA, verbose = FALSE)
+    verbose = FALSE)
 }
 
 \arguments{
@@ -31,9 +31,13 @@ fci(suffStat, indepTest, p, alpha,
     all relevant elements for the conditional independence
     decisions. The return value of \code{indepTest} is the p-value of
     the test for conditional independence.}
-  \item{p}{Number of variables.}
   \item{alpha}{Significance level for the individual conditional
     independence tests.}
+  \item{labels}{(optional) character vector of variable (or
+    \dQuote{node}) names.  Typically preferred to specifying \code{p}.}
+  \item{p}{(optional) number of variables (or nodes).  May be specified
+    if \code{labels} are not, in which case \code{labels} is set to
+    \code{1:p}.}
   \item{skel.method}{Character string specifying method; the default,
     \code{"stable"} provides an \emph{order-independent} skeleton, see
     \code{\link{skeleton}}.}
@@ -79,13 +83,11 @@ fci(suffStat, indepTest, p, alpha,
     biconnected components, \code{\link[RBGL]{biConnComp}} from \pkg{RBGL}.}
   \item{conservative}{Logical indicating if the unshielded triples
     should be checked for ambiguity the second time when v-structures
-    are determined.  For more information, see details.} 
+    are determined.  For more information, see details.}
   \item{maj.rule}{Logical indicating if the unshielded triples should
     be checked for ambiguity the second time when v-structures are
     determined using a majority rule idea, which is less strict than the
-    standard conservative.  For more information, see details.}  
-  \item{labels}{Character vector of length p with node names. If
-    \code{NA}, \code{as.character{1:p}} is used instead.}
+    standard conservative.  For more information, see details.}
   \item{verbose}{If true, more detailed output is provided.}
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
@@ -129,7 +131,7 @@ fci(suffStat, indepTest, p, alpha,
   starts with a complete undirected graph and estimates an initial skeleton
   using \code{\link{skeleton}(*, method="stable")} which produces an
   initial order-independent skeleton, see \code{\link{skeleton}} for
-  more details.  All edges of this skeleton are of 
+  more details.  All edges of this skeleton are of
   the form o-o.  Due to the presence of hidden variables, it is no longer
   sufficient to consider only subsets of the neighborhoods of nodes \code{x}
   and \code{y} to decide whether the edge \code{x o-o y} should be removed.
@@ -172,7 +174,7 @@ fci(suffStat, indepTest, p, alpha,
 
   \emph{Conservative} versions of FCI, Anytime FCI, and Adaptive Anytime FCI
   are computed if \code{conservative = TRUE} is specified.  After the
-  final skeleton is computed, all potential 
+  final skeleton is computed, all potential
   v-structures a-b-c are checked in the following way. We test whether a
   and c are independent conditioning on any subset of the neighbors of a
   or any subset of the neighbors of c. When a subset makes a and c
@@ -203,7 +205,7 @@ fci(suffStat, indepTest, p, alpha,
 
   Note that the order-dependence issues on the 10 orientation rules are
   still present, see Colombo and Maathuis (2013) for more details.
-}  
+}
 \references{
   D. Colombo and M.H. Maathuis (2013). Order-independent
   constraint-based causal structure learning. arXiv preprint
@@ -247,7 +249,7 @@ fci(suffStat, indepTest, p, alpha,
 
   \code{\link{gaussCItest}}, \code{\link{disCItest}},
   \code{\link{binCItest}} and \code{\link{dsepTest}} as examples for
-  \code{indepTest}. 
+  \code{indepTest}.
 }
 \author{
   Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch}).
