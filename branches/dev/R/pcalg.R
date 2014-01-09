@@ -2529,7 +2529,6 @@ lm.cov <- function (C, y, x) {
 causalEffect <- function(g,y,x) {
   ## Compute true causal effect of x on y in g
   wmat <- wgtMatrix(g)
-
   p <- ncol(wmat)
   vec <- matrix(0,p,1)
   vec[x] <- 1
@@ -4449,18 +4448,18 @@ triple2numb <- function(p,i,j,k)
 updateList <- function(path, set, old.list)
 {
   ## Purpose: update the list of all paths in the iterative functions
-  ## find.min.discr.path, minUncovCircPath and minUncovPdPath
+  ## minDiscrPath, minUncovCircPath and minUncovPdPath
   ## ----------------------------------------------------------------------
   ## Arguments: - path: the path under investigation
   ##            - set: (integer) index set of variables to be added to path
   ##            - old.list: the list to update
   ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 21 Oct 2011; Rewritten w/o for() by Martin Maechler
+  ## Author: Diego Colombo, Date: 21 Oct 2011; Without for() by Martin Maechler
   c(old.list, lapply(set, function(s) c(path,s)))
 }
 
-##R9-R10
-minUncovPdPath <- function(p, pag, path, unfVect, verbose = FALSE)
+## R9-R10
+minUncovPdPath <- function(p, pag, a,b,c, unfVect, verbose = FALSE)
 {
   ## Purpose: find a minimal uncovered pd path for a,b,c saved in path.
   ## Check also for the conservative case that it is unambiguous
@@ -4468,16 +4467,13 @@ minUncovPdPath <- function(p, pag, path, unfVect, verbose = FALSE)
   ## ----------------------------------------------------------------------
   ## Arguments: - p: number of nodes in the graph
   ##            - pag: adjacency matrix
-  ##            - path: a,b,c under interest
+  ##            - a,b,c : nodes under interest
   ##            - unfVect: vector containing the ambiguous triples
   ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 19 Oct 2011, 14:27
+  ## Author: Diego Colombo, Date: 19 Oct 2011; small changes: Martin Maechler
 
   visited <- rep(FALSE, p)
-  a <- path[1]
-  b <- path[2]
-  c <- path[3]
-  visited[path] <- TRUE
+  visited[c(a,b,c)] <- TRUE
   min.upd.path <- NA
   ## find all neighbours of b not visited yet
   indD <- which((pag[b,] == 1 | pag[b,] == 2) &
@@ -4486,46 +4482,36 @@ minUncovPdPath <- function(p, pag, path, unfVect, verbose = FALSE)
   if (length(indD) > 0) {
     path.list <- updateList(b, indD, NULL)
     done <- FALSE
-    min.path <- NA
     while ((length(path.list) > 0) && (!done)) {
       ##next element in the queue
-      min.path <- path.list[[1]]
-      m <- length(min.path)
-      d <- min.path[m]
+      mpath <- path.list[[1]]
+      m <- length(mpath)
+      d <- mpath[m]
       path.list[[1]] <- NULL
       visited[d] <- TRUE
       if (any(pag[d,c] == 1:2) && any(pag[c,d] == c(1,3))) {
         ## pd path found
-        min.path <- c(a,min.path,c)
-        n <- length(min.path)
+        mpath <- c(a, mpath, c)
+        n <- length(mpath)
         ##check the path to be uncovered
-        check.uncov <- 0
-        for (l in seq_len(n - 2)) {
-          if (pag[min.path[l], min.path[l + 2]] == 0 &&
-              pag[min.path[l + 2], min.path[l]] == 0) {
-            ## check.uncov <- check.uncov
-          }
-          else {
-            check.uncov <- check.uncov + 1
-          }
-        }
+        uncov <- TRUE
+	for (l in seq_len(n - 2)) {
+	  if (!(pag[mpath[l], mpath[l + 2]] == 0 &&
+		pag[mpath[l + 2], mpath[l]] == 0)) {
+	    
+	    uncov <- FALSE
+	    break ## speed up!
+	  }
+	}
         ##if it is uncovered
-        if (check.uncov == 0) {
-          ##normal version, just save the path to be returned
-          if (length(unfVect) == 0) {
-            min.upd.path <- min.path
-            done <- TRUE
-          }
-          ##conservative version
-          else {
-            ## check the path to be faithful
-            if (faith.check(min.path, unfVect, p)) {
-              ##it is faithful so save it
-              min.upd.path <- min.path
+        if (uncov)
+          if (length(unfVect) == 0 || ## <<- normal version: just save
+              ## conservative version, check the path to be faithful:
+              faith.check(mpath, unfVect, p)) {
+              ## save the path to be returned
+              min.upd.path <- mpath
               done <- TRUE
-            }
           }
-        }
       }
       else {
         ##d and c are either not connected or connected with a "wrong" edge -----> search iteratively
@@ -4534,18 +4520,18 @@ minUncovPdPath <- function(p, pag, path, unfVect, verbose = FALSE)
                       (pag[,d] == 1 | pag[,d] == 3) & !visited)
         if (length(indR) > 0) {
           ##update the queues
-          path.list <- updateList(min.path, indR, path.list)
+          path.list <- updateList(mpath, indR, path.list)
         }
       }
-    }
+    } ## {while}
   }
   min.upd.path
 } ## {minUncovPdPath}
 
-##R5
+## R5
 minUncovCircPath <- function(p, pag, path, unfVect, verbose = FALSE)
 {
-  ## Purpose: find a minimal uncovered circle path for a,b,c,d saved in path.
+  ## Purpose: find a minimal uncovered circle path for a,c,d,b saved in path.
   ## Check also for the conservative case that it is unambiguous
   ## If a path exists this is the output, otherwise NA
   ## ----------------------------------------------------------------------
@@ -4568,111 +4554,96 @@ minUncovCircPath <- function(p, pag, path, unfVect, verbose = FALSE)
   if (length(indX) > 0) {
     path.list <- updateList(c, indX, NULL)
     done <- FALSE
-    min.path <- NA
-    while ((length(path.list) > 0) & (!done)) {
+    while (!done && length(path.list) > 0) {
       ##next element in the queue
-      min.path <- path.list[[1]]
-      m <- length(min.path)
-      x <- min.path[m]
+      mpath <- path.list[[1]]
+      x <- mpath[length(mpath)]
       path.list[[1]] <- NULL
       visited[x] <- TRUE
       if (pag[x,d] == 1 && pag[d,x] == 1) {
-        ##circle path found
-        min.path <- c(a, min.path, c(d,b))
-        n <- length(min.path)
+        ## circle path found
+        mpath <- c(a, mpath, d, b)
+        n <- length(mpath)
         ##check the path to be uncovered
-        check.uncov <- 0
-        for (l in 1:(n - 2)) {
-          if (pag[min.path[l], min.path[l + 2]] == 0 && pag[min.path[l + 2], min.path[l]] == 0) {
-            check.uncov <- check.uncov
-          }
-          else {
-            check.uncov <- check.uncov + 1
-          }
-        }
+        uncov <- TRUE
+	for (l in seq_len(n - 2)) {
+	  if (!(pag[mpath[l], mpath[l + 2]] == 0 &&
+		pag[mpath[l + 2], mpath[l]] == 0)) {
+	    
+	    uncov <- FALSE
+	    break ## speed up!
+	  }
+	}
         ##if it is uncovered
-        if (check.uncov == 0) {
-          ##normal version, just save the path to be returned
-          if (length(unfVect) == 0) {
-            min.ucp.path <- min.path
+        if (uncov)
+          if (length(unfVect) == 0 || ## <<- normal version: just save
+              ## conservative version, check the path to be faithful:
+              faith.check(mpath, unfVect, p)) {
+            ## save the path to be returned
+            min.ucp.path <- mpath
             done <- TRUE
           }
-          ##conservative version
-          else {
-            ##check the path to be faithful
-            if (faith.check(min.path, unfVect, p)) {
-              ##it is faithful so save it
-              min.ucp.path <- min.path
-              done <- TRUE
-            }
-          }
-        }
       }
       else {
-        ##x and d are either not connected or connected with an edge which is not o--o -----> search iteratively
+    ##x and d are either not connected or connected with an edge which is not o--o -----> search iteratively
         ##find all neighbours of x not visited yet
         indR <- which(pag[x,] == 1 & pag[,x] == 1 & !visited) ## x o--o r
         if (length(indR) > 0) {
           ##update the queues
-          path.list <- updateList(min.path, indR, path.list)
+          path.list <- updateList(mpath, indR, path.list)
         }
       }
-    }
+    }## {while}
   }
   return(min.ucp.path)
 }
 
 ##R4
-find.min.discr.path <- function(pag, path, verbose = FALSE)
+minDiscrPath <- function(pag, a,b,c, verbose = FALSE)
 {
-  ## Purpose: find a minimal discrimating path for a,b,c saved in path.
+  ## Purpose: find a minimal discriminating path for a,b,c.
   ## If a path exists this is the output, otherwise NA
   ## ----------------------------------------------------------------------
   ## Arguments: - pag: adjacency matrix
-  ##            - path: a,b,c under interest
+  ##            - a,b,c: node positions under interest
   ## ----------------------------------------------------------------------
-  ## Author: Diego Colombo, Date: 25 Jan 2011, 10:49
+  ## Author: Diego Colombo, Date: 25 Jan 2011; speedup: Martin Maechler
 
   p <- as.numeric(dim(pag)[1])
   visited <- rep(FALSE, p)
-  visited[path] <- TRUE # {a,b,c} "visited"
-  a <- path[1]
-  b <- path[2]
-  c <- path[3]
+  visited[c(a,b,c)] <- TRUE # {a,b,c} "visited"
   min.discr.path <- NA
-  ##find all neighbours of a not visited yet
+  ## find all neighbours of a  not visited yet
   indD <- which(pag[a,] != 0 & pag[,a] == 2 & !visited) ## d *-> a
   if (length(indD) > 0) {
     path.list <- updateList(a, indD, NULL)
-    min.path <- NA
     while (length(path.list) > 0) {
       ##next element in the queue
-      min.path <- path.list[[1]]
-      m <- length(min.path)
-      d <- min.path[m]
-      pred <- min.path[m-1]
-      path.list[[1]] <- NULL
-      visited[d] <- TRUE
+      mpath <- path.list[[1]]
+      m <- length(mpath)
+      d <- mpath[m]
       if (pag[c,d] == 0 & pag[d,c] == 0)
 	## minimal discriminating path found :
-	return( c(rev(min.path), b,c) )
+	return( c(rev(mpath), b,c) )
 
       ## else :
+      pred <- mpath[m-1]
+      path.list[[1]] <- NULL
+      visited[d] <- TRUE
 
       ## d is connected to c -----> search iteratively
       if (pag[d,c] == 2 && pag[c,d] == 3 && pag[pred,d] == 2) {
         ## find all neighbours of d not visited yet
         indR <- which(pag[d,] != 0 & pag[,d] == 2 & !visited) ## r *-> d
-        if (length(indR) > 0) {
+        if (length(indR) > 0)
           ## update the queues
-          path.list <- updateList(min.path, indR, path.list)
-        }
+          path.list <- updateList(mpath, indR, path.list)
       }
-    }
+    } ## {while}
   }
   ## nothing found:  return
   NA
-} ## {find.min.discr.path}
+} ## {minDiscrPath}
 
 
 ###############################################################################
@@ -5265,20 +5236,21 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
           c <- ind[1, 2]
           ind <- ind[-1,, drop=FALSE]
           ##find all a s.t. a -> c and a <-* b
-          indA <- which((pag[b, ] == 2 & pag[, b] != 0) & (pag[c, ] == 3 & pag[, c] == 2))
+          indA <- which((pag[b, ] == 2 & pag[, b] != 0) &
+                        (pag[c, ] == 3 & pag[, c] == 2))
           ##chose one a s.t. the initial triangle structure exists and the edge hasn't been oriented yet
-          while ((length(indA) > 0) && (pag[c,b] == 1)) {
+          while (length(indA) > 0 && pag[c,b] == 1) {
             a <- indA[1]
             indA <- indA[-1]
             ##path is the initial triangle
-            path <- c(a, b, c)
+            abc <- c(a, b, c)
             ##Done is TRUE if either we found a minimal path or no path exists for this triangle
             Done <- FALSE
 ### MM: FIXME?? Isn't  Done  set to TRUE in *any* case inside the following
 ### while(.), the very first time already ??????????
-            while ((!Done) && (pag[a,b] != 0) && (pag[a,c] != 0) && (pag[b,c] != 0)) {
+            while (!Done && pag[a,b] != 0 && pag[a,c] != 0 && pag[b,c] != 0) {
               ##find a minimal discriminating path for a,b,c
-              md.path <- find.min.discr.path(pag = pag, path = path, verbose = verbose)
+              md.path <- minDiscrPath(pag, a,b,c, verbose=verbose)
               ## if the path doesn't exists, we are done with this triangle
               if ((N.md <- length(md.path)) == 1) {
                 Done <- TRUE
@@ -5368,15 +5340,15 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
                   ## Find a minimal uncovered circle path for these a,b,c, and d.
                   ## This path has already been checked to be uncovered and
                   ## to be faithful for the conservative case
-                  tmp.ucp <- minUncovCircPath(p, pag = pag, path=c(a,c,d,b),
-                                              unfVect=unfVect, verbose=verbose)
+		  ucp <- minUncovCircPath(p, pag = pag, path=c(a,c,d,b),
+					  unfVect=unfVect, verbose=verbose)
                   ##there is a path ---> orient
-                  if (length(tmp.ucp) > 1) {
+                  if (length(ucp) > 1) {
                     ##orient every edge on the path as --
-                    n <- length(tmp.ucp)
-                    pag[tmp.ucp[1], tmp.ucp[n]] <- pag[tmp.ucp[n], tmp.ucp[1]] <- 3 ## a--b
-                    for (j in 1:(length(tmp.ucp)-1)) ## each edge on the path --
-                      pag[tmp.ucp[j], tmp.ucp[j + 1]] <- pag[tmp.ucp[j + 1], tmp.ucp[j]] <- 3
+                    n <- length(ucp)
+                    pag[ucp[1], ucp[n]] <- pag[ucp[n], ucp[1]] <- 3 ## a--b
+                    for (j in 1:(length(ucp)-1)) ## each edge on the path --
+                      pag[ucp[j], ucp[j + 1]] <- pag[ucp[j + 1], ucp[j]] <- 3
                   }
                 }
               }
@@ -5461,20 +5433,19 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
           while ((length(indB) > 0) && (pag[c,a] == 1)) {
             b <- indB[1]
             indB <- indB[-1]
-            ##path is the initial structure
-            path <- c(a, b, c)
-            ##find a minimal uncovered pd path
-            tmp.upd <- minUncovPdPath(p, pag = pag, path = path, unfVect= unfVect, verbose = verbose)
-            ##there is a path ---> orient it
-            if (length(tmp.upd) > 1) {
-              pag[c, a] <- 3
-              if (verbose)
-                cat("\nRule 9",
-                    "\nThere exists an uncovered potentially directed path between", a, "and", c,
-                    ". Orient:", a, " ->",c, "\n")
-            }
-          }
-        }
+	    ## find a minimal uncovered pd path from initial (a,b,c) :
+	    upd <- minUncovPdPath(p, pag, a,b,c,
+				  unfVect=unfVect, verbose=verbose)
+	    ##there is a path ---> orient it
+	    if (length(upd) > 1) {
+	      pag[c, a] <- 3
+	      if (verbose)
+		cat("\nRule 9",
+		    "\nThere exists an uncovered potentially directed path between", a, "and", c,
+		    ". Orient:", a, " ->",c, "\n")
+	    }
+	  }
+	}
       }
       ##-- R10 ------------------------------------------------------------------
       if (rules[10]) {
@@ -5531,10 +5502,10 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
                       while (counterX2 < length(indX2) && pag[c, a] == 1) {
                         counterX2 <- counterX2 + 1
                         sec.pos <- indX2[counterX2]
-                        t1 <- minUncovPdPath(p, pag = pag, path = c(a, first.pos, b),
+                        t1 <- minUncovPdPath(p, pag, a, first.pos, b,
                                              unfVect = unfVect, verbose = verbose)
                         if (length(t1) > 1) { # otherwise, can skip next minUnc..()
-                          t2 <- minUncovPdPath(p, pag = pag, path = c(a, sec.pos, d),
+                          t2 <- minUncovPdPath(p, pag, a, sec.pos, d,
                                                unfVect = unfVect, verbose = verbose)
                           if (length(t2) > 1 &&
                               first.pos != sec.pos && pag[first.pos, sec.pos] == 0) {
@@ -6112,6 +6083,7 @@ checkEdges <- function(suffStat, indepTest, alpha, apag, sepset, path,
 udag2apag <- function (apag, suffStat, indepTest, alpha, sepset,
                        rules = rep(TRUE, 10), unfVect=NULL,
                        verbose = FALSE)
+### FIXME part of this is cut-n-paste from udag2pag()
 {
   ## Purpose: use the 10 orientation rules to orient the skeleton. R4 about
   ##          discriminating paths also checks every edge for dependence
@@ -6257,13 +6229,11 @@ udag2apag <- function (apag, suffStat, indepTest, alpha, sepset,
           while (length(indA) > 0 && apag[c,b] == 1) {
             a <- indA[1]
             indA <- indA[-1]
-            ##path is the initial triangle
-            path <- c(a, b, c)
             ##Done is TRUE if either we found a minimal path or no path exists for this triangle
             Done <- FALSE
             while (!Done && apag[a,b] != 0 && apag[a,c] != 0 && apag[b,c] != 0) {
               ##find a minimal disciminating path for a,b,c
-              md.path <- find.min.discr.path(pag = apag, path = path, verbose = verbose)
+              md.path <- minDiscrPath(apag, a,b,c, verbose=verbose)
               N.md <- length(md.path)
               ##if the path doesn't exists, we are done with this triangle
               if (N.md == 1) {
@@ -6368,16 +6338,18 @@ udag2apag <- function (apag, suffStat, indepTest, alpha, sepset,
                 }
                 ##search with a breitensuche a minimal uncovered circle path
                 else {
-                  ##find a minimal uncovered circle path for these a,b,c, and d
-                  ##this path has already been checked to be uncovered and to be faithful for the conservative case
-                  tmp.ucp <- minUncovCircPath(p, pag = apag, path=c(a,c,d,b), unfVect = unfVect, verbose = verbose)
+                  ## Find a minimal uncovered circle path for these a,b,c, and d.
+                  ## This path has already been checked to be uncovered and
+                  ## to be faithful for the conservative case
+		  ucp <- minUncovCircPath(p, pag = apag, path=c(a,c,d,b),
+					  unfVect=unfVect, verbose=verbose)
                   ##there is a path ---> orient
-                  if (length(tmp.ucp) > 1) {
+                  if (length(ucp) > 1) {
                     ##orient every edge on the path as --
-                    n <- length(tmp.ucp)
-                    apag[tmp.ucp[1], tmp.ucp[n]] <- apag[tmp.ucp[n], tmp.ucp[1]] <- 3 ## a--b
-                    for (j in seq_len(length(tmp.ucp)-1)) {
-                      apag[tmp.ucp[j], tmp.ucp[j + 1]] <- apag[tmp.ucp[j + 1], tmp.ucp[j]] <- 3 ## each edge on the path --
+                    n <- length(ucp)
+                    apag[ucp[1], ucp[n]] <- apag[ucp[n], ucp[1]] <- 3 ## a--b
+                    for (j in seq_len(length(ucp)-1)) {
+                      apag[ucp[j], ucp[j + 1]] <- apag[ucp[j + 1], ucp[j]] <- 3 ## each edge on the path --
                     }
                   }
                 }
@@ -6471,12 +6443,11 @@ udag2apag <- function (apag, suffStat, indepTest, alpha, sepset,
           while ((length(indB) > 0) && (apag[c,a] == 1)) {
             b <- indB[1]
             indB <- indB[-1]
-            ##path is the initial structure
-            path <- c(a, b, c)
-            ##find a minimal uncovered pd path
-            tmp.upd <- minUncovPdPath(p, pag = apag, path = path, unfVect= unfVect, verbose = verbose)
+            ## find a minimal uncovered pd path from initial (a, b, c) :
+	    upd <- minUncovPdPath(p, apag, a, b, c,
+				  unfVect=unfVect, verbose=verbose)
             ##there is a path ---> orient it
-            if (length(tmp.upd) > 1) {
+            if (length(upd) > 1) {
               apag[c, a] <- 3
               if (verbose) {
                 cat("\nRule 9", "\n")
@@ -6542,8 +6513,10 @@ udag2apag <- function (apag, suffStat, indepTest, alpha, sepset,
                       while (i2 < length(indX2) && apag[c, a] == 1) {
                         i2 <- i2 + 1
                         pos.2 <- indX2[i2]
-                        tmp1 <- minUncovPdPath(p, pag = apag, path = c(a, pos.1, b), unfVect=unfVect, verbose=verbose)
-                        tmp2 <- minUncovPdPath(p, pag = apag, path = c(a, pos.2, d), unfVect=unfVect, verbose=verbose)
+			tmp1 <- minUncovPdPath(p, apag, a, pos.1, b,
+					       unfVect=unfVect, verbose=verbose)
+			tmp2 <- minUncovPdPath(p, apag, a, pos.2, d,
+					       unfVect=unfVect, verbose=verbose)
                         ##we found 2 uncovered pd paths
                         if (length(tmp1) > 1 && length(tmp2) > 1 &&
                             pos.1 != pos.2 && apag[pos.1, pos.2] == 0) {
@@ -6818,14 +6791,11 @@ visibleEdge <- function(amat, x, z)
   ##		  every vertex on the path is a parent of z
 
   ## c <--> x --> z and c is a parent of z :
-  indC2 <- which(amat[x,] == 2 & amat[,x] == 2 & amat[z,] == 3 & amat[,z] == 2)
-  while (length(indC2) > 0) {
-    c <- indC2[1]
-    indC2 <- indC2[-1]
-    path <- c(c,x,z)
+  indC2 <- which(amat[x,] == 2 & amat[,x] == 2 &
+		 amat[z,] == 3 & amat[,z] == 2)
+  for(c in indC2) {
     ## find a minimal discriminating path for c,x,z
-    md.path <- find.min.discr.path(pag = amat, path = path)
-    if (length(md.path) > 1)
+    if (length(minDiscrPath(amat, c,x,z)) > 1)
       ## a path exists
       return(TRUE)
   }
@@ -7152,18 +7122,17 @@ backdoor <- function(amat, x, y, type = "pag", max.chordal = 10, verbose = FALSE
     ## CASE A: in a CPDAG or DAG every directed edge out of X is visible
     ##        then delete them all
     if (type == "cpdag" || type == "dag") {
-        for (i in seq_along(indD)) {
-            ## delete visible edges out of x edges
-            amat.r[indD[i],x] <- amat.r[x,indD[i]] <- 0
-        }
+	for (z in indD)
+	    ## delete visible edges out of x edges
+	    amat.r[z,x] <- amat.r[x,z] <- 0
     } else {
         ## CASE B: in a MAG or PAG the directed edges out of X need
         ##        to be checked for visibility
         if (length(indD) > 0) {
-            del.edges <- vapply(seq_along(indD), function(i) {
-                ## check each directed edge out of X for visibility
-		visibleEdge(amat, x, indD[i])
-            }, NA)
+	    del.edges <- vapply(indD, function(z) {
+		## check each directed edge out of X for visibility
+		visibleEdge(amat, x, z)
+	    }, NA)
             ## delete visible edges out of x edges
             amat.r[indD[del.edges],x] <- amat.r[x,indD[del.edges]] <- 0
             ## transform invisible edges out of x by bi-directed
