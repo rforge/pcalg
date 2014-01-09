@@ -2159,8 +2159,6 @@ beta.special <- function(dat=NA, x.pos, y.pos, verbose=0, a=0.01,
   cat("This function is deprecated and is only kept for backward compatibility.
 Please use ida or idaFast instead\n")
 
-  if(!collTest) tmpColl <- FALSE
-
   ## Covariance matrix: Perfect case / standard case
   if (perfect) {
     if(!is(myDAG, "graphNEL")) stop("For perfect-option the true DAG is needed!")
@@ -2221,25 +2219,19 @@ Please use ida or idaFast instead\n")
         pa2.f <- pa2
         pa2.t <- NA
         ## check for new collider
-        if (collTest) {
-          tmpColl <- has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
-        }
-        if (!tmpColl | !collTest) {
+        if (!collTest || !has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
           beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1))
           if (verbose==2) {cat("\ny:",y.pos,"x:",c(x.pos,pa1),"|b.hat=",
                 beta.hat[ii])}
-        } else {
-          ## cat("\nx:",x.pos," pa1:",pa1," pa2.t:",pa2.t," pa2.f:",pa2.f)
-        }
+        }## else {
+        ##   cat("\nx:",x.pos," pa1:",pa1," pa2.t:",pa2.t," pa2.f:",pa2.f)
+        ## }
         ## exactly one member of pa2
         for (i2 in seq_along(pa2)) {
           ## check for new collider
           pa2.f <- pa2[-i2]
           pa2.t <- pa2[i2]
-          if (collTest) {
-            tmpColl <- has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
-          }
-          if (!tmpColl | !collTest) {
+          if (!collTest || !has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
             ii <-  ii+1
             if (y.pos %in% pa2.t) {
               ## cat("Y in Parents: ",y.pos," in ",pa2.t,"\n")
@@ -2261,10 +2253,7 @@ Please use ida or idaFast instead\n")
               pa2.t <- pa.tmp[,j]
               pa2.f <- setdiff(pa2,pa2.t)
               ## teste auf neuen collider
-              if (collTest) {
-                tmpColl <- has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
-              }
-              if (!tmpColl | !collTest) {
+              if (!collTest || !has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
                 ii <- ii+1
                 if (y.pos %in% pa2.t) {
                   cat("Y in Parents: ",y.pos," in ",pa2.t,"\n")
@@ -2402,8 +2391,7 @@ Please use ida or idaFast instead\n")
       ## check for new collider
       pa2.f <- pa2
       pa2.t <- NA
-      tmpColl <- has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
-      if (!tmpColl) {
+      if (!has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
         beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1))
       }
       ## exactly one member of pa2
@@ -2411,15 +2399,13 @@ Please use ida or idaFast instead\n")
         ## check for new collider
         pa2.f <- pa2[-i2]
         pa2.t <- pa2[i2]
-        tmpColl <- has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
-        if (!tmpColl) {
+        if (!has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
           ii <-  ii+1
-          if (y.pos %in% pa2.t) {
-            cat("Y in Parents: ",y.pos," in ",pa2.t,"\n")
-            beta.hat[ii] <- 0
-          } else {
-            beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1,pa2[i2]))
-          }
+          beta.hat[ii] <-
+            if (y.pos %in% pa2.t) {
+              cat("Y in Parents: ",y.pos," in ",pa2.t,"\n")
+              0
+            } else lm.cov(mcov,y.pos,c(x.pos,pa1,pa2[i2]))
         }
       }
       ## higher order subsets
@@ -2430,15 +2416,13 @@ Please use ida or idaFast instead\n")
             ## teste auf neuen collider
             pa2.t <- pa.tmp[,j]
             pa2.f <- setdiff(pa2,pa2.t)
-            tmpColl <- has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
-            if (!tmpColl) {
+            if (!has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
               ii <- ii+1
-              if (y.pos %in% pa2.t) {
-                cat("Y in Parents: ",y.pos," in ",pa2.t,"\n")
-                beta.hat[ii] <- 0
-              } else {
-                beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1,pa2.t))
-              }
+              beta.hat[ii] <- 
+                if (y.pos %in% pa2.t) {
+                  cat("Y in Parents: ",y.pos," in ",pa2.t,"\n")
+                  0
+                } else lm.cov(mcov,y.pos,c(x.pos,pa1,pa2.t))
             }
           }
         }
@@ -3748,7 +3732,6 @@ ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
             y.pos == (y <- as.integer(y.pos)),
             length(x) == 1, length(y) == 1)
   method <- match.arg(method)
-  tmpColl <- FALSE
 
   ## prepare adjMatrix and skeleton
   amat <- ad.g <- wgtMatrix(graphEst)
