@@ -63,8 +63,12 @@
 ##   xcov
 ## }
 
-trueCov <- function(dag)
+trueCov <- function(dag, back.compatible = FALSE)
 {
+  ##  as(.,"matrix") now {for some versions of 'graph' pkg} is 0/1
+  ## weightMatrix <- t(as(dag,"matrix"))
+  wm <- if(back.compatible) wgtMatrix.0(dag) else wgtMatrix(dag)
+
   wm <- wgtMatrix(dag)
   p <- length(dag@nodes)
   ## SS'  where S = (I - W)^{-1} :
@@ -102,7 +106,7 @@ randomDAG <- function (n, prob, lB = 0.1, uB = 1, V = as.character(1:n))
 
 ## A version of this is also in	/u/maechler/R/MM/Pkg-ex/graph/weightmatrix.R
 ## another on in  Matrix/R/sparseMatrix.R  function graph.wgtMatrix() :
-## No longer in use __apart__ for  rmDAG(..., back.compatible=TRUE)
+## No longer in use __apart__ for  rmvDAG(..., back.compatible=TRUE)
 wgtMatrix.0 <- function(g, transpose = TRUE)
 {
   ## Purpose: work around "graph" package's  as(g, "matrix") bug
@@ -2525,6 +2529,7 @@ lm.cov <- function (C, y, x) {
 causalEffect <- function(g,y,x) {
   ## Compute true causal effect of x on y in g
   wmat <- wgtMatrix(g)
+
   p <- ncol(wmat)
   vec <- matrix(0,p,1)
   vec[x] <- 1

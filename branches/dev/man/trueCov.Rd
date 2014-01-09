@@ -7,11 +7,14 @@ Covariance matrix of a DAG.
 Compute the (true) covariance matrix of a generated DAG.
 }
 \usage{
-trueCov(dag)
+trueCov(dag, back.compatible = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dag}{Graph object containing the DAG.}
+  \item{back.compatible}{logical indicating if the data generated should
+    be the same as with \pkg{pcalg} version 1.0-6 and earlier (where
+    \code{wgtMatrix()} differed).}
 }
 \value{
 Covariance matrix.
