@@ -12,29 +12,20 @@
   Objects of this class have methods for the functions plot, show and
   summary.}
 \section{Creation of objects}{
-  Objects can be created by calls of the form \code{new("pcAlgo", ...)} or
-  by calling \code{\link{skeleton}} or \code{\link{pc}}.
+  Objects are typically created as result from
+  \code{\link{skeleton}()} or \code{\link{pc}()}, but could be
+  be created by calls of the form \code{new("pcAlgo", ...)}.
 }
 \section{Slots}{
+  The slots \code{call}, \code{n}, \code{max.ord}, \code{n.edgetests},
+  \code{sepset}, and \code{pMax} are inherited from class
+  \code{"\linkS4class{gAlgo}"}, see there.
+
+  In addition, \code{"pcAlgo"} has slots
   \describe{
-    \item{\code{graph}:}{Object of the class \code{"graph"}:
+    \item{\code{graph}:}{Object of class \code{"\linkS4class{graph}"}:
       the undirected or partially directed graph that was estimated.}
-    \item{\code{call}:}{Object of the class \code{"call"}: the
-      original function call.}
-    \item{\code{n}:}{Object of the class \code{"integer"}: the
-      sample size used to estimate the graph.}
-    \item{\code{max.ord}:}{Object of class \code{"integer"}: the
-      maximum size of the conditioning set used in the conditional
-      independence tests of the algorithm.}
-    \item{\code{n.edgetests}:}{Object of class \code{"numeric"}: the number
-      of conditional independence tests performed by the algorithm.}
-    \item{\code{sepset}:}{Object of class \code{"list"}: the
-      conditioning sets that led to edge deletions. The set that led to
-    the removal of the edge \code{i-j} is saved in either
-    sepset[[i]][[j]] or in sepset[[j]][[i]].}
-    \item{\code{pMax}:}{Object of class \code{"matrix"}: the (i,j)th
-      entry of the matrix contains the maximum p-value of all
-      conditional independence tests for edge i-j.}
+
     \item{\code{zMin}:}{Deprecated.}
   }
 }
