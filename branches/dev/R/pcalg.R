@@ -3147,8 +3147,8 @@ pc <- function(suffStat, indepTest, alpha, labels, p,
     ## see comment on pc.cons.intern for description of version.unf
     pc. <- pc.cons.intern(skel, suffStat, indepTest, alpha,
                           version.unf=c(2,1), maj.rule=maj.rule, verbose=verbose)
-    tripleList <- pc.$unfTripl
-    udag2pdagRelaxed(pc.$sk, verbose=verbose, unfVect=tripleList, solve.confl=solve.confl)
+    udag2pdagRelaxed(pc.$sk, verbose=verbose,
+                     unfVect=pc.$unfTripl, solve.confl=solve.confl)
   }
 }
 
