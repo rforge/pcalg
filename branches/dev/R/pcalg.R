@@ -2478,7 +2478,7 @@ causalEffect <- function(g,y,x) {
   }
 }
 
-check.new.coll <- function(amat,amatSkel,x,pa1,pa2.t,pa2.f) {
+has.new.coll <- function(amat,amatSkel, x, pa1, pa2.t, pa2.f) {
   ## Check if undirected edges that are pointed to x create a new v-structure
   ## Additionally check, if edges that are pointed away from x create
   ## new v-structure; i.e. x -> pa <- papa would be problematic
@@ -2488,33 +2488,31 @@ check.new.coll <- function(amat,amatSkel,x,pa1,pa2.t,pa2.f) {
   ## pa2.f are the nodes in pa2 that are directed away from pa2
   ## Value is TRUE, if new collider is introduced
   res <- FALSE
-  if ((length(pa2.t)>0) && any(!is.na(pa2.t))) {
+  if (length(pa2.t) > 0 && !all(is.na(pa2.t))) {
     ## check whether all pa1 and all pa2.t are connected;
     ## if no, there is a new collider
-    if ((length(pa1)>0) && any(!is.na(pa1))) {
-      res <- (min(amatSkel[pa1,pa2.t])==0) ## TRUE if new collider
+    if (length(pa1) > 0 && !all(is.na(pa1))) {
+      res <- min(amatSkel[pa1, pa2.t]) == 0 ## TRUE if new collider
     }
     ## in addition, all pa2.t have to be connected
-    if ((length(pa2.t)>1) && (!res)) {
-      tmp <- amatSkel[pa2.t,pa2.t]
-      diag(tmp) <- 1
-      res2 <- (min(tmp)==0) ## TRUE if new collider
-      res <- (res|res2)
+    if (!res && length(pa2.t) > 1) {
+      A2 <- amatSkel[pa2.t,pa2.t]
+      diag(A2) <- 1
+      res <- min(A2) == 0 ## TRUE if new collider
     }
   }
-  if (!res && ((length(pa2.f)>0) && any(!is.na(pa2.f)))) {
+  if (!res && length(pa2.f) > 0 && !all(is.na(pa2.f))) {
     ## consider here only the DIRECTED Parents of pa2.f
     ## remove undirected edges
-    amatTmp <- amat
-    amatTmp <- amatTmp-t(amatTmp)
-    amatTmp[amatTmp<0] <- 0
-    tmp <- amatTmp[pa2.f,,drop=FALSE]
+    A <- amat-t(amat)
+    A[A<0] <- 0
     ## find parents of pa2.f
-    papa <- setdiff(which(apply(tmp,2,sum)!=0),x)
+    cA <- colSums(A[pa2.f,,drop=FALSE])
+    papa <- setdiff(which(cA != 0), x)
     ## if any node in papa is not directly connected to x, there is a new
     ## collider
     if (length(papa) > 0)
-      res <- res | (min(amatSkel[x,papa])==0) ## TRUE if new collider
+      res <- min(amatSkel[x,papa]) == 0 ## TRUE if new collider
   }
   res
 }
@@ -3795,7 +3793,7 @@ ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
         ## no member of pa2
         pa2.f <- pa2
         pa2.t <- NA
-        if (!check.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)) {
+        if (!has.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)) {
           beta.hat[ii] <- lm.cov(mcov,y,c(x,pa1))
           if (verbose) cat("Fit - y:",y,"x:",c(x,pa1),
                            "|b.hat=",beta.hat[ii],"\n")
@@ -3804,7 +3802,7 @@ ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
         for (i2 in seq_along(pa2)) {
           pa2.f <- pa2[-i2]
           pa2.t <- pa2[i2]
-          if (!check.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)) {
+          if (!has.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)) {
             ii <-  ii+1
             if (y %in% pa2.t) {
               beta.hat[ii] <- 0
@@ -3823,7 +3821,7 @@ ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
             for (j in seq_len(ncol(pa.tmp))) {
               pa2.t <- pa.tmp[,j]
               pa2.f <- setdiff(pa2,pa2.t)
-              if (!check.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)) {
+              if (!has.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)) {
                 ii <- ii+1
                 if (y %in% pa2.t) {
                   beta.hat[ii] <- 0
@@ -3932,7 +3930,7 @@ idaFast <- function(x.pos, y.pos.set, mcov, graphEst)
     pa2.f <- pa2
     pa2.t <- NA
     beta.hat <-
-      if (!check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
+      if (!has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
 	beta.tmp <- lm.cov(mcov,y.pos.set,c(x.pos,pa1)) ####
 	beta.tmp[y.pos.set %in% pa1] <- 0
 	cbind(beta.tmp)
@@ -3942,7 +3940,7 @@ idaFast <- function(x.pos, y.pos.set, mcov, graphEst)
     for (i2 in seq_along(pa2)) {
       pa2.f <- pa2[-i2]
       pa2.t <- pa2[i2]
-      if (!check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
+      if (!has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
         beta.tmp <- lm.cov(mcov,y.pos.set,c(x.pos,pa1,pa2.t)) ####
         beta.tmp[y.pos.set %in% c(pa1,pa2.t)] <- 0
         beta.hat <- cbind(beta.hat, beta.tmp)
@@ -3956,7 +3954,7 @@ idaFast <- function(x.pos, y.pos.set, mcov, graphEst)
         for (j in seq_len(ncol(pa.tmp))) {
           pa2.t <- pa.tmp[,j]
           pa2.f <- setdiff(pa2, pa2.t)
-          if (!check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
+          if (!has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
             beta.tmp <- lm.cov(mcov,y.pos.set,c(x.pos,pa1,pa2.t)) ####
             beta.tmp[y.pos.set %in% c(pa1,pa2.t)] <- 0
             beta.hat <- cbind(beta.hat, beta.tmp)
