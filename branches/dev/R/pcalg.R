@@ -2222,7 +2222,7 @@ Please use ida or idaFast instead\n")
         pa2.t <- NA
         ## check for new collider
         if (collTest) {
-          tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
+          tmpColl <- has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
         }
         if (!tmpColl | !collTest) {
           beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1))
@@ -2237,7 +2237,7 @@ Please use ida or idaFast instead\n")
           pa2.f <- pa2[-i2]
           pa2.t <- pa2[i2]
           if (collTest) {
-            tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
+            tmpColl <- has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
           }
           if (!tmpColl | !collTest) {
             ii <-  ii+1
@@ -2262,7 +2262,7 @@ Please use ida or idaFast instead\n")
               pa2.f <- setdiff(pa2,pa2.t)
               ## teste auf neuen collider
               if (collTest) {
-                tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
+                tmpColl <- has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
               }
               if (!tmpColl | !collTest) {
                 ii <- ii+1
@@ -2402,7 +2402,7 @@ Please use ida or idaFast instead\n")
       ## check for new collider
       pa2.f <- pa2
       pa2.t <- NA
-      tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
+      tmpColl <- has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
       if (!tmpColl) {
         beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1))
       }
@@ -2411,7 +2411,7 @@ Please use ida or idaFast instead\n")
         ## check for new collider
         pa2.f <- pa2[-i2]
         pa2.t <- pa2[i2]
-        tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
+        tmpColl <- has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
         if (!tmpColl) {
           ii <-  ii+1
           if (y.pos %in% pa2.t) {
@@ -2430,7 +2430,7 @@ Please use ida or idaFast instead\n")
             ## teste auf neuen collider
             pa2.t <- pa.tmp[,j]
             pa2.f <- setdiff(pa2,pa2.t)
-            tmpColl <- check.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
+            tmpColl <- has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)
             if (!tmpColl) {
               ii <- ii+1
               if (y.pos %in% pa2.t) {

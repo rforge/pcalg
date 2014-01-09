@@ -1,15 +1,19 @@
 \name{pcAlgo}
+\title{PC-Algorithm [OLD]: Estimate Skeleton or Equivalence Class of a DAG}
 \alias{pcAlgo}
-\title{PC-Algorithm: Estimate the Underlying Graph (Skeleton) or
-  Equivalence Class (CPDAG) of a DAG}
+\alias{pcAlgo.Perfect}
 \description{
   This function is DEPRECATED! Use \code{\link{skeleton}}, \code{\link{pc}} or
   \code{\link{fci}} instead.
+
+  Use the PC-algorithm to estimate the underlying graph
+  (\dQuote{skeleton}) or the equivalence class (CPDAG) of a DAG.
 }
 \usage{
 pcAlgo(dm = NA, C = NA, n=NA, alpha, corMethod = "standard",
        verbose=FALSE, directed=FALSE, G=NULL, datatype = "continuous",
        NAdelete=TRUE, m.max=Inf, u2pd = "rand", psepset=FALSE)
+%% pcAlgo.Perfect() is also deprecated and was never documented
 }
 \arguments{
   \item{dm}{Data matrix; rows correspond to samples, cols correspond to

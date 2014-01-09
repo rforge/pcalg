@@ -5,7 +5,7 @@
 \alias{adj.check}
 \alias{ancTS}
 \alias{caus.inf}
-\alias{check.new.coll}
+\alias{has.new.coll}
 \alias{ci.test}
 \alias{dep.triple}
 \alias{faith.check}
@@ -13,15 +13,13 @@
 \alias{flipEdges}
 \alias{minUncovCircPath}
 \alias{minUncovPdPath}
+\alias{minDiscrPath}
 \alias{my.SpecialDag}
-\alias{pcAlgo.Perfect}
 \alias{reach}
 \alias{rfci.vStruc}% <- renamed; TODO (MM)
-\alias{triple2numb}
 \alias{updateList}
 %--------------------------------------------------------------------------
 % FIXME: *do* document [says Martin]  (((or confirm current status))):
-\alias{gAlgo-class}
 \alias{allDags}%<- mentioned in other help pages !!
 \alias{amat2dag}% in ../tests/test_amat2dag.R
 %
@@ -34,6 +32,8 @@ wgtMatrix(g, transpose=TRUE)
 adj.check(gm,x)
 amat2dag(amat)
 find.sink(gm)
+.....
+.....
 }
 \details{
   These are not to be called by the user.
