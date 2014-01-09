@@ -6,7 +6,7 @@
 
 setClass("gAlgo",
          representation(call = "call",
-                        n	   = "integer",
+                        n = "integer",
                         max.ord = "integer",
                         n.edgetests= "numeric",
                         sepset= "list",

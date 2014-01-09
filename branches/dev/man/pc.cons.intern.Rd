@@ -1,8 +1,9 @@
 \name{pc.cons.intern}
 \alias{pc.cons.intern}
+\alias{triple2numb}
 \title{Utility for conservative and majority rule in PC and FCI}
 \description{
-  This function is used in \code{\link{pc}} and
+  The \code{pc.cons.intern()} function is used in \code{\link{pc}} and 
   \code{\link{fci}}, notably when
   \code{conservative = TRUE} (conservative orientation of v-structures) or
   \code{maj.rule = TRUE} (majority rule orientation of v-structures). 
@@ -10,6 +11,7 @@
 \usage{
 pc.cons.intern(sk, suffStat, indepTest, alpha, version.unf = c(NA, NA),
                maj.rule = FALSE, verbose = FALSE)
+%% triple2numb(p,i,j,k)
 }
 \arguments{
   \item{sk}{A skeleton object as returned from \code{\link{skeleton}()}.}
@@ -70,8 +72,8 @@ pc.cons.intern(sk, suffStat, indepTest, alpha, version.unf = c(NA, NA),
   v-structures/non v-structures. 
 }
 \value{
-  \item{unfTripl}{Vector with triples (coded as number using
-    \code{\link{triple2numb}}) that were marked as ambiguous.}
+  \item{unfTripl}{numeric vector of triples coded as numbers (via
+    \code{triple2numb()}) that were marked as ambiguous.}
   \item{vers}{
     Vector containing the version (1 or 2) of the corresponding triple
     saved in unfTripl (1=normal ambiguous triple, i.e., B is in some
