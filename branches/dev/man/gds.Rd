@@ -3,8 +3,7 @@
 \encoding{UTF-8}
 \concept{greedy DAG search}
 \concept{essential graph}
-\title{Greedily estimate the observational or interventional Markov equivalence 
-  class of a DAG.}
+\title{Greedy DAG Search to Estimate Markov Equivalence Class of DAG}
 \description{
   Estimate the observational or interventional essential graph representing the 
   Markov equivalence class of a DAG by greedily optimizing a score function in 
