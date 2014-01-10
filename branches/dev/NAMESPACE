@@ -4,12 +4,18 @@ useDynLib(pcalg)
 
 importFrom("utils", str)# for all the help examples
 
+importFrom("graphics", plot.default, plot)
+
 ## try to import all we need, but not more
 importFrom("methods",
            setClass, setClassUnion, setMethod, setOldClass, setValidity,
            getClass, getClassDef, callGeneric, as, is, extends,
 	   new, validObject,
 	   signature, representation, prototype)
+
+## aargh: slow loading {currently just for getGraph() and similar}
+## importFrom("Matrix", coerce)
+## importClassesFrom("Matrix", Matrix, sparseMatrix, TsparseMatrix)
 
 importFrom("abind", abind)
 importFrom("corpcor", pseudoinverse)
@@ -19,8 +25,7 @@ importFrom("robustbase",
 	   Qn, s_Qn, scaleTau2 #, Sn, s_Sn, s_mad, s_IQR
 	   )
 
-#import(graph)# importFrom(graph, )
-importClassesFrom("graph", graph, graphNEL)
+importClassesFrom("graph", graph, graphAM, graphNEL)
 importMethodsFrom("graph",
 		  ## addEdge,
 		  coerce,# as(., ...)
@@ -29,7 +34,8 @@ importMethodsFrom("graph",
 		  nodes, numNodes, numEdges,
 		  subGraph, ugraph)
 
-importFrom("igraph", graph.adjacency, igraph.from.graphNEL, is.chordal, plot.igraph)
+importFrom("igraph", graph.adjacency, igraph.from.graphNEL, is.chordal,
+	   plot.igraph)
 
 importFrom("RBGL",
 	   biConnComp, johnson.all.pairs.sp, separates, bfs, connectedComp)
@@ -37,12 +43,11 @@ importFrom("RBGL",
 
 importFrom("ggm", isAcyclic, transClos, topOrder)
 
-importFrom("graphics", plot.default, plot)
-
 
 ###----- Exports ------------------------------------------------------
 
-## FIXME??: do not export those that are "internal" <--> man/pcalg-internal.Rd
+export(getGraph)# our S4 generic including methods
+
 export(trueCov,
        randomDAG,
        wgtMatrix,
@@ -57,22 +62,16 @@ export(trueCov,
        pcSelect.presel,
        corGraph,
        dag2cpdag,
-       find.sink,
        adj.check,
-       amat2dag,
        udag2pdag, udag2pdagSpecial, udag2pdagRelaxed,
        shd,
-       ci.test,
        pcAlgo, pcAlgo.Perfect,
-       flipEdges,
        pdag2dag,
        udag2pag,
        beta.special,
        beta.special.pcObj,
        causalEffect,
-       has.new.coll,
-       allDags,
-       reach, dreach, qreach,
+       dreach, qreach,
        plotAG,
        skeleton,
        pc,
@@ -89,19 +88,12 @@ export(trueCov,
        plotSG,
        pc.cons.intern,
        checkTriple,
-       faith.check,
        triple2numb,
-       updateList,
-       minUncovPdPath,
-       minUncovCircPath,
-       minDiscrPath,
        fci,
        pdsep,
-       rfci, rfci.vStruc,
+       rfci,
        find.unsh.triple,
-       dep.triple,
        udag2apag,
-       ancTS,
        dag2pag, # skeleton.dag2pag,
        iplotPC,
        showEdgeList,
@@ -109,16 +101,37 @@ export(trueCov,
        visibleEdge,
        possibleDe,
        pag2magAM,
-       my.SpecialDag,
        backdoor,
+       ## Alain's :
        r.gauss.pardag,
        rmvnorm.ivent,
        gies,
        ges,
        gds,
-       caus.inf,
        simy,
        dag2essgraph)
+
+## These are "internal" i.e., in man/pcalg-internal.Rd
+## _FIXME ?_                     ---------------------  
+export(ancTS,
+       caus.inf,
+       has.new.coll,
+       ci.test,
+       dep.triple,
+       faith.check,
+       find.sink,
+       flipEdges,
+       minUncovCircPath,
+       minUncovPdPath,
+       minDiscrPath,
+       my.SpecialDag,
+       reach, # NB: dreach(), qreach() *are* non-internal
+       rfci.vStruc,
+       updateList,
+       ## FIXME{MM}: document !
+       allDags,
+       amat2dag)
+       
 
 exportClasses("pcAlgo",
               "fciAlgo",

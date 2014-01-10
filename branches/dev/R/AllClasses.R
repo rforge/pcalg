@@ -26,6 +26,11 @@ setClass("pcAlgo",
 
 ##' Extract graph part of an R object:
 setGeneric("getGraph", function(x) as(x,"graph"))
+setMethod("getGraph", "matrix", function(x) as(x, "graphAM"))
+if(FALSE) {## if we would importFrom("Matrix", ....) in NAMESPACE
+    setMethod("getGraph", "sparseMatrix", function(x) as(x, "graphNEL"))
+    setMethod("getGraph", "Matrix", function(x) as(x, "graphAM"))
+}
 setMethod("getGraph", "pcAlgo", function(x) x@graph)
 setMethod("getGraph", "fciAlgo", function(x) as(x@amat, "graphAM"))
 
