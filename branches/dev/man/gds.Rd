@@ -15,11 +15,13 @@
 gds(p, targets, score, ...)
 }
 \arguments{
-  \item{p}{Number of variables.}
-  \item{targets}{A list of intervention targets (cf. details).  A list of
-    vectors, each vector listing the vertices of one intervention target.}
-  \item{score}{An instance of a class derived from \code{\linkS4class{Score}}.}
-  \item{\dots}{Additional arguments for debugging purposes and fine tuning.}
+  \item{p}{number of variables.}
+  \item{targets}{a \code{\link{list}} of intervention targets
+    (cf. details).  A list of vectors, each vector listing the vertices
+    of one intervention target.}
+  \item{score}{an instance of a class derived from \code{\linkS4class{Score}}.}
+  \item{\dots}{additional arguments for debugging purposes and fine tuning.}
+  %% those in    getClass("EssGraph")@refMethods$causal.inf.options
 }
 \details{
   This function estimates the observational or interventional Markov 
