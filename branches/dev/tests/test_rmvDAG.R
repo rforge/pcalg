@@ -42,8 +42,9 @@ x <- rmvDAG(n, gGtrue, back.compatible=TRUE)
 
 data(gmG)
 
-stopifnot(identical(gGtrue, gmG$ g),
-          all.equal(x,      gmG$ x,  tol=1e-15))
+## gmG, gmI were produced on 64-bit -> very small difference even in weights:
+stopifnot(all.equal(gGtrue, gmG$g,  tol=6e-16),
+          all.equal(x,      gmG$ x, tol=1e-15))
 
 ###----- Check  gmI  generation: ---> ../man/gmI.Rd
 
@@ -55,6 +56,6 @@ myDAG <- randomDAG(p, prob = 0.2) ## true DAG
 datI <- rmvDAG(n, myDAG, back.compatible=TRUE)
 
 data(gmI)
-stopifnot(identical(myDAG, gmI$ g),
+stopifnot(all.equal(myDAG, gmI$ g, tol=6e-16),# for 32-bit
           all.equal(datI,  gmI$ x, tol=1e-15))
 
