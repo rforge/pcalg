@@ -206,7 +206,7 @@ double ScoreGaussL0PenScatter::local(const uint vertex, const std::set<uint>& pa
 {
 	double a;
 
-	dout.level(2) << "Calculating local score...\n";
+	dout.level(3) << "Calculating local score...\n";
 
 	// Cast parents set to Armadillo uvec
 	arma::uvec parVec(_allowIntercept ? parents.size() + 1 : parents.size());
@@ -259,7 +259,7 @@ std::vector<double> ScoreGaussL0PenScatter::localMLE(const uint vertex, const st
 	arma::uvec parVec;
 	arma::uvec vVec(1);
 
-	dout.level(2) << "Calculating local MLE...\n";
+	dout.level(3) << "Calculating local MLE...\n";
 
 	// Get parents, copy them to Armadillo vector
 	parVec.set_size(_allowIntercept ? parents.size() + 1 : parents.size());

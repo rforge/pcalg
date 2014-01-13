@@ -5,22 +5,29 @@
  * $Id$
  */
 
-#include "Rcpp.h"
+#include <Rcpp.h>
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
+#include <boost/graph/adjacency_list.hpp>
+
 
 // For Mac g++ compiler... that bastard doesn't know uint...
 typedef unsigned int uint;
 
+// Define BGL class for undirected graph
+typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> UndirectedGraph;
+
 #include "score.hpp"
 #include "greedy.hpp"
+#include "constraint.hpp"
 #define DEFINE_GLOBAL_DEBUG_STREAM
 #include "gies_debug.hpp"
 
 using namespace boost::lambda;
+
 
 /**
  * Reads in a graph from a list of in-edges passed as a SEXP to
@@ -451,3 +458,95 @@ RcppExport SEXP optimalTarget(SEXP argGraph, SEXP argMaxSize)
 
 	END_RCPP
 }
+
+/**
+ * Calculate the p-value for a conditional independence test on Gaussian data
+ */
+RcppExport SEXP condIndTestGauss(
+		SEXP argVertex1,
+		SEXP argVertex2,
+		SEXP argCondSet,
+		SEXP argSampleSize,
+		SEXP argCor)
+{
+	// Exception handling
+	BEGIN_RCPP
+
+	int i;
+
+	// Cast arguments; note index shift between R and C++!
+	uint u = Rcpp::as<uint>(argVertex1) - 1;
+	uint v = Rcpp::as<uint>(argVertex2) - 1;
+	std::vector<uint> S = Rcpp::as<std::vector<uint> >(argCondSet);
+	for (i = 0; i < S.size(); ++i) S[i]--;
+	uint n = Rcpp::as<uint>(argSampleSize);
+	Rcpp::NumericMatrix cor(argCor);
+
+	// Create test object and calculate p-value
+	IndepTestGauss indepTest(n, cor);
+	return Rcpp::wrap(indepTest.test(u, v, S));
+
+	END_RCPP
+}
+
+
+/**
+ * Perform undirected version of PC algorithm, i.e., estimate skeleton of DAG
+ * given data
+ *
+ */
+RcppExport SEXP estimateSkeleton(
+		SEXP argAdjMatrix,
+		SEXP argSuffStat,
+		SEXP argIndepTest,
+		SEXP argAlpha,
+		SEXP argOptions)
+{
+	// Exception handling
+	BEGIN_RCPP
+
+	// Cast debug level from options
+	Rcpp::List options(argOptions);
+	dout.setLevel(Rcpp::as<int>(options["DEBUG.LEVEL"]));
+
+	int i, j;
+
+	dout.level(1) << "Casting arguments...\n";
+
+	// Cast sufficient statistic and significance level
+	dout.level(2) << "Casting sufficient statistic...\n";
+	double alpha = Rcpp::as<double>(argAlpha);
+	Rcpp::List suffStat(argSuffStat);
+	Rcpp::NumericMatrix cor((SEXP)(suffStat["C"]));
+
+	// Cast independence test
+	dout.level(2) << "Casting independence test...\n";
+	// TODO cast indep test
+	IndepTestGauss indepTest(Rcpp::as<uint>(suffStat["n"]), cor);
+
+	// Cast graph
+	dout.level(2) << "Casting graph...\n";
+	Rcpp::LogicalMatrix adjMatrix(argAdjMatrix);
+	int p = adjMatrix.nrow();
+	Skeleton graph(p);
+	std::vector<uint> emptySet;
+	double pval;
+	for (i = 0; i < p; i++)
+		for (j = i + 1; j < p; j++)
+			if (adjMatrix(i, j)) {
+				pval = indepTest.test(i, j, emptySet);
+				dout.level(2) << "  x = " << i << ", y = " << j << ", S = () : pval = " << pval << std::endl;
+				if (pval < alpha) graph.addEdge(i, j);
+			}
+
+	// Create test object and estimate skeleton
+	graph.setIndepTest(&indepTest);
+	dout.level(1) << "Fitting skeleton to data...\n";
+	graph.fitCondInd(alpha);
+
+	// Return adjacency matrix
+	return graph.getAdjacencyMatrix();
+
+	END_RCPP
+}
+

@@ -22,6 +22,8 @@ EssentialGraph::EssentialGraph(const uint vertexCount) :
 	disableCaching();
 }
 
+double EssentialGraph::_minScoreDiff = sqrt(std::numeric_limits<double>::epsilon());
+
 void EssentialGraph::clear()
 {
 	boost::graph_traits<InternalEssentialGraph>::edge_iterator ei, ei_end, next;
@@ -1160,7 +1162,7 @@ bool EssentialGraph::greedyForward()
 	dout.level(3) << "== starting forward phase...\n";
 
 	// Initialize optimal score gain
-	optInsertion.score = 0.;
+	optInsertion.score = _minScoreDiff;
 
 	// If caching is disabled calculate the score differences for all possible edges
 	if (!_doCaching) {
@@ -1192,7 +1194,7 @@ bool EssentialGraph::greedyForward()
 	}
 
 	// If the score can be augmented, do it
-	if (optInsertion.score > 0.) {
+	if (!check_interrupt() && optInsertion.score > _minScoreDiff) {
 		// For DEBUGGING purposes: print inserted arrow
 		dout.level(3) << "  inserting edge (" << optInsertion.source << ", " << v_opt << ") with C = "
 				<< optInsertion.clique << ", S = " << optInsertion.score << "\n";
@@ -1215,7 +1217,7 @@ bool EssentialGraph::greedyBackward()
 	dout.level(3) << "== starting backward phase...\n" ;
 
 	// Initialize optimal score gain
-	optDeletion.score = 0.;
+	optDeletion.score = _minScoreDiff;
 
 	// TODO Allow caching for backward phase. At the moment, assumes no caching.
 	for (v = 0; v < getVertexCount(); v++) {
@@ -1235,7 +1237,7 @@ bool EssentialGraph::greedyBackward()
 		_actualPhase = SD_BACKWARD;
 
 	// If the score can be augmented, do it
-	if (optDeletion.score > 0.) {
+	if (!check_interrupt() && optDeletion.score > _minScoreDiff) {
 		// For DEBUGGING purposes
 		dout.level(1) << "  deleting edge (" << optDeletion.source << ", " << v_opt << ") with C = "
 				<< optDeletion.clique << ", S = " << optDeletion.score << "\n";
@@ -1256,7 +1258,7 @@ bool EssentialGraph::greedyTurn()
 	dout.level(3) << "== starting turning phase...\n" ;
 
 	// Initialize optimal score gain
-	optTurning.score = 0.;
+	optTurning.score = _minScoreDiff;
 
 	// TODO Allow caching for turning phase. At the moment, assumes no caching.
 	for (v = 0; v < getVertexCount(); v++) {
@@ -1277,7 +1279,7 @@ bool EssentialGraph::greedyTurn()
 
 	// Turn the highest-scoring edge
 	// If the score can be augmented, do it
-	if (optTurning.score > 0.) {
+	if (!check_interrupt() && optTurning.score > _minScoreDiff) {
 		// For DEBUGGING purposes
 		dout.level(1) << "  turning edge (" << v_opt << ", " << optTurning.source << ") with C = "
 				<< optTurning.clique << ", S = " << optTurning.score << "\n";
@@ -1299,7 +1301,7 @@ step_dir EssentialGraph::greedyStep()
 	dout.level(3) << "== looking for optimal step...\n" ;
 
 	// Initialize optimal score gain
-	optChange.score = 0.;
+	optChange.score = _minScoreDiff;
 	optDir = SD_NONE;
 
 	// Look for optimal arrow insertion
@@ -1371,8 +1373,10 @@ bool EssentialGraph::greedyDAGForward()
 	double diffScore, diffScore_opt;
 	std::set<uint> parents, C_new;
 
+	dout.level(2) << "= Starting forward step...\n";
+
 	// Initialize help variables
-	diffScore_opt = 0.;
+	diffScore_opt = _minScoreDiff;
 	p = getVertexCount();
 
 	// Find edge that maximally increases BIC score when added
@@ -1385,6 +1389,8 @@ bool EssentialGraph::greedyDAGForward()
 				diffScore = - _score->local(v, C_new);
 				C_new.insert(u);
 				diffScore += _score->local(v, C_new);
+				dout.level(2) << "  Score diff. for edge " << u << " --> " << v << " : " <<
+						diffScore << std::endl;
 
 				// If new score is better than previous optimum
 				if (diffScore > diffScore_opt) {
@@ -1396,7 +1402,8 @@ bool EssentialGraph::greedyDAGForward()
 	}
 
 	// Add this edge, if it incrases the BIC score
-	if (diffScore_opt > 0.) {
+	if (!check_interrupt() && diffScore_opt > _minScoreDiff) {
+		dout.level(2) << "  Adding edge " << u_opt << " --> " << v_opt << std::endl;
 		addEdge(u_opt, v_opt);
 		return true;
 	}
@@ -1411,8 +1418,10 @@ bool EssentialGraph::greedyDAGBackward()
 	std::set<uint> parents, C_new;
 	std::set<uint>::iterator ui;
 
+	dout.level(2) << "= Starting backward step...\n";
+
 	// Initialize help variables
-	diffScore_opt = 0.;
+	diffScore_opt = _minScoreDiff;
 	p = getVertexCount();
 
 	// Find edge that maximally increases BIC score when removed
@@ -1424,6 +1433,8 @@ bool EssentialGraph::greedyDAGBackward()
 			diffScore = - _score->local(v, C_new);
 			C_new.erase(*ui);
 			diffScore += _score->local(v, C_new);
+			dout.level(2) << "  Score diff. for edge " << *ui << " --> " << v << " : " <<
+					diffScore << std::endl;
 
 			// If new score is better than previous optimum, store (u, v, C) as new optimum
 			if (diffScore > diffScore_opt) {
@@ -1435,7 +1446,8 @@ bool EssentialGraph::greedyDAGBackward()
 	}
 
 	// Remove this edge, if this incrases the BIC score
-	if (diffScore_opt > 0.) {
+	if (!check_interrupt() && diffScore_opt > _minScoreDiff) {
+		dout.level(2) << "  Removing edge " << u_opt << " --> " << v_opt << std::endl;
 		removeEdge(u_opt, v_opt);
 		return true;
 	}
@@ -1450,8 +1462,10 @@ bool EssentialGraph::greedyDAGTurn()
 	std::set<uint> parents, C_new, D_new, emptyset;
 	std::set<uint>::iterator ui;
 
+	dout.level(2) << "= Starting turning step...\n";
+
 	// Initialize help variables
-	diffScore_opt = 0.;
+	diffScore_opt = _minScoreDiff;
 	p = getVertexCount();
 
 	// Find edge that maximally increases BIC score when turned, i.e. when its
@@ -1466,6 +1480,8 @@ bool EssentialGraph::greedyDAGTurn()
 				C_new.erase(*ui);
 				D_new.insert(v);
 				diffScore += _score->local(v, C_new) + _score->local(*ui, D_new);
+				dout.level(2) << "  Score diff. for edge " << *ui << " --> " << v << " : " <<
+						diffScore << std::endl;
 
 				// If new score is better than previous optimum, store (u, v, C) as new optimum
 				if (diffScore > diffScore_opt) {
@@ -1478,7 +1494,8 @@ bool EssentialGraph::greedyDAGTurn()
 	}
 
 	// Turn this edge, if this incrases the BIC score
-	if (diffScore_opt > 0.) {
+	if (!check_interrupt() && diffScore_opt > _minScoreDiff) {
+		dout.level(2) << "  Turning edge " << u_opt << " --> " << v_opt << std::endl;
 		removeEdge(u_opt, v_opt);
 		addEdge(v_opt, u_opt);
 		return true;
@@ -1498,6 +1515,8 @@ void EssentialGraph::siMySearch()
 	int i;
 	uint32_t subset, subsubset, pattern;
 	bool unset;
+
+	// TODO check for user interrupts
 
 	// Table of best parents given a variable and a set of candidate parents
 	std::vector< std::vector<uint32_t> > bestParents(getVertexCount(), std::vector<uint32_t>(1 << (getVertexCount() - 1)));

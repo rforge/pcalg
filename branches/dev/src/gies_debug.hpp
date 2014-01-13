@@ -9,6 +9,7 @@
 #define GIES_DEBUG_HPP_
 
 #include <iostream>
+#include <Rcpp.h>
 
 // Define default debug level
 #ifndef DEBUG_OUTPUT_LEVEL
@@ -23,7 +24,7 @@ namespace std {
 template <typename T> ostream& operator<<(ostream& out, const vector<T>& vec) {
 	int i;
 	out << "(";
-	for (i = 0; i < vec.size() - 1; i++)
+	for (i = 0; i + 1 < vec.size(); i++)
 		out << vec[i] << ", ";
 	if (!vec.empty())
 		out << vec.back();
@@ -48,6 +49,17 @@ template <typename T> ostream& operator<<(ostream& out, const set<T>& s) {
 }
 
 } // NAMESPACE std
+
+/**
+ * Handling user interrupt
+ */
+static inline void check_interrupt_impl(void* /*dummy*/) {
+	R_CheckUserInterrupt();
+}
+
+inline bool check_interrupt() {
+	return (R_ToplevelExec(check_interrupt_impl, NULL) == FALSE);
+}
 
 // Macro for outputting debug messages depending on debug level
 #if DEBUG_OUTPUT_LEVEL >= 1

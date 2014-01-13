@@ -140,7 +140,7 @@ class EssentialGraph
 {
 	friend class EssentialGraphTest;
 	friend class BICScoreTest;
-private:
+protected:
 	/**
 	 * Boost graph internally storing the graph structure
 	 */
@@ -166,6 +166,14 @@ private:
 	 * Pointer to scoring object
 	 */
 	Score* _score;
+
+	/**
+	 * Constant defining minimal score difference.
+	 *
+	 * "Very small" score differences are often due to rounding errors and
+	 * involves the danger of infinite loops
+	 */
+	static double _minScoreDiff;
 
 	/**
 	 * Pointer to object representing family of targets
@@ -478,7 +486,7 @@ public:
 	 * Sets and gets score object
 	 */
 	void setScore(Score* score) { _score = score; }
-	Score* getScore() { return _score; }
+	Score* getScore() const { return _score; }
 
 	/**
 	 * Sets and gets the family of targets
