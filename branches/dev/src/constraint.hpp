@@ -83,9 +83,10 @@ class Skeleton
 {
 protected:
 	/**
-	 * Boost graph internally storing the graph structure
+	 * Boost graph internally storing the graph structure and the fixed edges
 	 */
 	InternalUndirectedGraph _graph;
+	InternalUndirectedGraph _fixedEdges;
 
 	/**
 	 * Pointer to a conditional independence test
@@ -96,7 +97,7 @@ public:
 	/**
 	 * Constructor
 	 */
-	Skeleton(const uint vertexCount) : _graph(vertexCount) {};
+	Skeleton(const uint vertexCount) : _graph(vertexCount), _fixedEdges(vertexCount) {};
 
 	/**
 	 * Adds an edge to the graph
@@ -104,9 +105,19 @@ public:
 	void addEdge(const uint a, const uint b) { boost::add_edge(a, b, _graph); }
 
 	/**
-	 * Removes an edge from the graph
+	 * Adds a fixed edge to the graph.  Also adds the edge itself
 	 */
-	void removeEdge(const uint a, const uint b)  { boost::remove_edge(a, b, _graph); }
+	void addFixedEdge(const uint a, const uint b);
+
+	/**
+	 * Checks whether an edge is fixed
+	 */
+	bool isFixed(const uint a, const uint b) const;
+
+	/**
+	 * Removes an edge from the graph, if it is not fixed
+	 */
+	void removeEdge(const uint a, const uint b);
 
 	/**
 	 * Number of vertices
@@ -150,5 +161,9 @@ public:
 	 *
 	 * TODO: return things needed by R function "skeleton"; create arguments with options
 	 */
-	void fitCondInd(const double alpha, int maxCondSize = -1);
+	void fitCondInd(
+			const double alpha,
+			Rcpp::NumericMatrix& pMax,
+			std::vector<int>& edgeTests,
+			int maxCondSize = -1);
 };

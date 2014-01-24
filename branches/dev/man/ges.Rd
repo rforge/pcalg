@@ -11,15 +11,19 @@
   algorithm of Chickering (2002).
 }
 \usage{
-ges(p, score, turning = TRUE, maxdegree = integer(0), ...)
+ges <- function(p, score, fixedGaps = NULL, 
+  turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...) 
 }
 \arguments{
   \item{p}{Number of variables.}
   \item{score}{An instance of a class derived from \code{\linkS4class{Score}}
     which only accounts for observational data.}
+  \item{fixedGaps}{logical \emph{symmetric} matrix of dimension p*p.  If entry
+    \code{[i, j]} is \code{TRUE}, the result is guaranteed to have no edge
+    between nodes \eqn{i} and \eqn{j}.}
   \item{turning}{Logical indicating whether the function should try to augment
     the score by turning edges (cf. details).}
-  \item{maxdegree}{Parameter used to limit the vertex degree of the estimated
+  \item{maxDegree}{Parameter used to limit the vertex degree of the estimated
     graph.  Valid arguments:
     \enumerate{
       \item Vector of length 0 (default): vertex degree is not limited.
@@ -32,6 +36,7 @@ ges(p, score, turning = TRUE, maxdegree = integer(0), ...)
         for the vertex degrees.
     }
     }
+  \item{verbose}{if \code{TRUE}, detailed output is provided.}
   \item{\dots}{Additional arguments for debugging purposes and fine tuning.}
 }
 \details{

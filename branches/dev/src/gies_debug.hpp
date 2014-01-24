@@ -89,7 +89,7 @@ public:
 	DebugStream() : _level(0), _nullstream(&_nullbuf) {}
 	DebugStream(int level) : _level(level), _nullstream(&_nullbuf) {}
 
-	void setLevel(const int level) { _level = level; }
+	void setLevel(const int level) { _level = level;	}
 
 	int getLevel() const { return _level; }
 

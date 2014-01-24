@@ -16,6 +16,8 @@
 
 EssentialGraph::EssentialGraph(const uint vertexCount) :
 	_graph(vertexCount),
+	_fixedGaps(vertexCount),
+	_gapsInverted(false),
 	_maxVertexDegree(vertexCount, vertexCount),
 	_childrenOnly(vertexCount)
 {
@@ -46,6 +48,13 @@ void EssentialGraph::removeEdge(const uint a, const uint b, bool bothDirections)
 	boost::remove_edge(a, b, _graph);
 	if (bothDirections)
 		boost::remove_edge(b, a, _graph);
+}
+
+bool EssentialGraph::gapFixed(const uint a, const uint b) const
+{
+	bool result;
+	boost::tie(boost::tuples::ignore, result) = boost::edge(a, b, _fixedGaps);
+	return result ^ _gapsInverted;
 }
 
 bool EssentialGraph::existsPath(const uint a, const uint b, const std::set<uint>& C, const bool undirected)
@@ -274,6 +283,12 @@ uint EssentialGraph::getDegree(const uint vertex) const
 	return getAdjacent(vertex).size();
 }
 
+void EssentialGraph::setFixedGaps(const EssentialGraph& fixedGaps, const bool inverted)
+{
+	_fixedGaps = fixedGaps._graph;
+	_gapsInverted = inverted;
+}
+
 void EssentialGraph::limitVertexDegree(const std::vector<uint>& maxVertexDegree)
 {
 	if (maxVertexDegree.size() != getVertexCount())
@@ -442,6 +457,8 @@ ArrowChange EssentialGraph::getOptimalArrowInsertion(const uint v)
 	// Respect maximum vertex degree and vertices that can only have children
 	if (_childrenOnly.test(v) || (_maxVertexDegree[v] < getVertexCount() && getDegree(v) >= _maxVertexDegree[v]))
 		return result;
+	else
+		result.score = _minScoreDiff;
 
 	std::set<uint> C, C_par, C_sub, N;
 	std::set<uint> neighbors, parents, adjacent;
@@ -471,9 +488,10 @@ ArrowChange EssentialGraph::getOptimalArrowInsertion(const uint v)
 		forbidden.set(*si);
 	// - v itself :-)
 	forbidden.set(v);
-	// - vertices which have reached the maximum degree
+	// - vertices which have reached the maximum degree, or which have a fixed
+	//   gap to v
 	for (u = 0; u < getVertexCount(); ++u)
-		if (getDegree(u) >= _maxVertexDegree[u])
+		if (getDegree(u) >= _maxVertexDegree[u] || gapFixed(u, v))
 			forbidden.set(u);
 
 	// Calculate vertices not reachable from v: for those, the "path condition"
@@ -546,6 +564,8 @@ ArrowChange EssentialGraph::getOptimalArrowInsertion(const uint v)
 			}
 		}
 
+	if (result.score == _minScoreDiff)
+		result.score = 0.;
 	return result;
 }
 
@@ -566,7 +586,7 @@ ArrowChange EssentialGraph::getOptimalArrowDeletion(const uint v)
 
 	// Initialize optimal score gain
 	ArrowChange result;
-	result.score = 0.;
+	result.score = _minScoreDiff;
 
 	// Get neighbors and parents of v (used for calculation of BIC score later on)
 	neighbors = getNeighbors(v);
@@ -622,6 +642,8 @@ ArrowChange EssentialGraph::getOptimalArrowDeletion(const uint v)
 		} // for i
 	} // for ui
 
+	if (result.score == _minScoreDiff)
+		result.score = 0.;
 	return result;
 }
 
@@ -639,7 +661,7 @@ ArrowChange EssentialGraph::getOptimalArrowTurning(const uint v)
 
 	// Initialize optimal score gain
 	ArrowChange result;
-	result.score = 0.;
+	result.score = _minScoreDiff;
 
 	// Respect vertices that are not allowed to have parents, but only children
 	if (!_childrenOnly.test(v))  {
@@ -765,6 +787,8 @@ ArrowChange EssentialGraph::getOptimalArrowTurning(const uint v)
 		} // for ui
 	} // IF !_childrenOnly.test(v)
 
+	if (result.score == _minScoreDiff)
+		result.score = 0.;
 	return result;
 }
 
@@ -1383,7 +1407,7 @@ bool EssentialGraph::greedyDAGForward()
 	for (v = 0; v < p; ++v) {
 		parents = getParents(v);
 		for (u = 0; u < p; ++u)
-			if (u != v && !isAdjacent(u, v) && !existsPath(v, u)) {
+			if (u != v && !isAdjacent(u, v) && !gapFixed(u, v) && !existsPath(v, u)) {
 				// Calculate BIC score difference for adding edge (u, v)
 				C_new = parents;
 				diffScore = - _score->local(v, C_new);
@@ -1401,7 +1425,7 @@ bool EssentialGraph::greedyDAGForward()
 			}
 	}
 
-	// Add this edge, if it incrases the BIC score
+	// Add this edge, if it increases the BIC score
 	if (!check_interrupt() && diffScore_opt > _minScoreDiff) {
 		dout.level(2) << "  Adding edge " << u_opt << " --> " << v_opt << std::endl;
 		addEdge(u_opt, v_opt);

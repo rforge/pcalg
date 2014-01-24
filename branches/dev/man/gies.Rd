@@ -10,16 +10,20 @@
   (GIES) algorithm of Hauser and Bühlmann (2012).
 }
 \usage{
-gies(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
+gies <- function(p, targets, score, fixedGaps = NULL, 
+  turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
 }
 \arguments{
   \item{p}{Number of variables.}
   \item{targets}{A list of intervention targets (cf. details).  A list of
     vectors, each vector listing the vertices of one intervention target.}
   \item{score}{An instance of a class derived from \code{\linkS4class{Score}}.}
+  \item{fixedGaps}{logical \emph{symmetric} matrix of dimension p*p.  If entry
+    \code{[i, j]} is \code{TRUE}, the result is guaranteed to have no edge
+    between nodes \eqn{i} and \eqn{j}.}
   \item{turning}{Logical indicating whether the function should try to augment
     the score by turning edges (cf. details).}
-  \item{maxdegree}{Parameter used to limit the vertex degree of the estimated
+  \item{maxDegree}{Parameter used to limit the vertex degree of the estimated
     graph.  Possible values:
     \enumerate{
       \item Vector of length 0 (default): vertex degree is not limited.
@@ -32,6 +36,7 @@ gies(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
         for the vertex degrees.
     }
   }
+  \item{verbose}{if \code{TRUE}, detailed output is provided.}
   \item{\dots}{Additional arguments for debugging purposes and fine tuning.}
 }
 \details{

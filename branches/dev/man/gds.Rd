@@ -12,7 +12,7 @@
   \code{\link{gies}} or \code{\link{ges}} the preference over \code{gds}.
 }
 \usage{
-gds(p, targets, score, ...)
+gds(p, targets, score, verbose = FALSE, ...)
 }
 \arguments{
   \item{p}{number of variables.}
@@ -20,6 +20,7 @@ gds(p, targets, score, ...)
     (cf. details).  A list of vectors, each vector listing the vertices
     of one intervention target.}
   \item{score}{an instance of a class derived from \code{\linkS4class{Score}}.}
+  \item{verbose}{if \code{TRUE}, detailed output is provided.}
   \item{\dots}{additional arguments for debugging purposes and fine tuning.}
   %% those in    getClass("EssGraph")@refMethods$causal.inf.options
 }

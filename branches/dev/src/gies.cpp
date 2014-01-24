@@ -252,6 +252,7 @@ RcppExport SEXP causalInference(
 	// Cast graph
 	dout.level(1) << "Casting graph...\n";
 	EssentialGraph graph = castGraph(argGraph);
+	uint p = graph.getVertexCount();
 
 	// Cast list of targets
 	dout.level(1) << "Casting list of targets...\n";
@@ -271,10 +272,11 @@ RcppExport SEXP causalInference(
 	graph.setTargets(&targets);
 
 	std::vector<int> steps;
+	uint i, j;
 
 	// Cast option for limits in vertex degree
 	dout.level(1) << "Casting maximum vertex degree...\n";
-	Rcpp::NumericVector maxDegree = options["maxdegree"];
+	Rcpp::NumericVector maxDegree = options["maxDegree"];
 	if (maxDegree.size() > 0) {
 		if (maxDegree.size() == 1) {
 			if (maxDegree[0] >= 1.) {
@@ -287,15 +289,33 @@ RcppExport SEXP causalInference(
 			}
 		}
 		else {
-			std::vector<uint> maxDegrees = Rcpp::as< std::vector<uint> >(options["maxdegree"]);
+			std::vector<uint> maxDegrees = Rcpp::as< std::vector<uint> >(options["maxDegree"]);
 			graph.limitVertexDegree(maxDegrees);
 		}
 	}
 	
 	// Cast option for vertices which are not allowed to have parents
-	std::vector<uint> childrenOnly = Rcpp::as< std::vector<uint> >(options["childrenonly"]);
+	std::vector<uint> childrenOnly = Rcpp::as< std::vector<uint> >(options["childrenOnly"]);
 	std::for_each(childrenOnly.begin(), childrenOnly.end(), bind(&EssentialGraph::setChildrenOnly, &graph, _1, true));
 	int stepLimit;
+
+	// Cast option for fixed gaps: logical matrix, assumed to be symmetric by now
+	if (!Rf_isNull(options["fixedGaps"])) {
+		Rcpp::LogicalMatrix gapsMatrix((SEXP)(options["fixedGaps"]));
+		uint n_gaps;
+		for (i = 0; i < p; ++i)
+			for (j = i + 1; j < p; ++j)
+				if (gapsMatrix(i, j))
+					n_gaps++;
+		// Invert gaps if more than half of the possible edges are fixed gaps
+		bool gapsInverted = 4*n_gaps > p*(p - 1);
+		EssentialGraph fixedGaps(p);
+		for (i = 0; i < p; ++i)
+			for (j = i + 1; j < p; ++j)
+				if (gapsMatrix(i, j) ^ gapsInverted)
+					fixedGaps.addEdge(i, j, true);
+		graph.setFixedGaps(fixedGaps, gapsInverted);
+	}
 
 	// Perform inference algorithm:
 	// GIES
@@ -400,6 +420,8 @@ RcppExport SEXP causalInference(
 
 	// Return new list of in-edges and steps
 	delete score;
+	// TODO "interrupt" zurückgeben, falls Ausführung unterbrochen wurde. Problem:
+	// check_interrupt() scheint nur einmal true zurückzugeben...
 	return Rcpp::List::create(Rcpp::Named("in.edges") = wrapGraph(graph),
 			Rcpp::Named("steps") = steps);
 
@@ -499,15 +521,17 @@ RcppExport SEXP estimateSkeleton(
 		SEXP argAdjMatrix,
 		SEXP argSuffStat,
 		SEXP argIndepTest,
+		SEXP argIndepTestFn,
 		SEXP argAlpha,
+		SEXP argFixedEdges,
 		SEXP argOptions)
 {
 	// Exception handling
 	BEGIN_RCPP
 
-	// Cast debug level from options
+	// Cast options and set debug level
 	Rcpp::List options(argOptions);
-	dout.setLevel(Rcpp::as<int>(options["DEBUG.LEVEL"]));
+	dout.setLevel(Rcpp::as<int>(options["verbose"]));
 
 	int i, j;
 
@@ -517,35 +541,64 @@ RcppExport SEXP estimateSkeleton(
 	dout.level(2) << "Casting sufficient statistic...\n";
 	double alpha = Rcpp::as<double>(argAlpha);
 	Rcpp::List suffStat(argSuffStat);
-	Rcpp::NumericMatrix cor((SEXP)(suffStat["C"]));
 
 	// Cast independence test
 	dout.level(2) << "Casting independence test...\n";
-	// TODO cast indep test
-	IndepTestGauss indepTest(Rcpp::as<uint>(suffStat["n"]), cor);
+	std::string indepTestName = Rcpp::as<std::string>(argIndepTest);
+	IndepTest* indepTest;
+	if (indepTestName == "gauss") {
+		Rcpp::NumericMatrix cor((SEXP)(suffStat["C"]));
+		indepTest = new IndepTestGauss(Rcpp::as<uint>(suffStat["n"]), cor);
+	}
+	else if (indepTestName == "rfun")
+		indepTest = new IndepTestRFunction(&suffStat, Rcpp::Function(argIndepTestFn));
+	// Invalid independence test name: throw error
+	else throw std::runtime_error(indepTestName + ": Invalid independence test name");
 
-	// Cast graph
-	dout.level(2) << "Casting graph...\n";
+	// Cast graph and fixed edges
+	dout.level(2) << "Casting graph and fixed edges...\n";
 	Rcpp::LogicalMatrix adjMatrix(argAdjMatrix);
+	Rcpp::LogicalMatrix fixedMatrix(argFixedEdges);
 	int p = adjMatrix.nrow();
 	Skeleton graph(p);
+	Rcpp::NumericMatrix pMax(p, p);
+	pMax.fill(-1.);
 	std::vector<uint> emptySet;
+	std::vector<int> edgeTests(1);
 	double pval;
 	for (i = 0; i < p; i++)
-		for (j = i + 1; j < p; j++)
-			if (adjMatrix(i, j)) {
-				pval = indepTest.test(i, j, emptySet);
-				dout.level(2) << "  x = " << i << ", y = " << j << ", S = () : pval = " << pval << std::endl;
-				if (pval < alpha) graph.addEdge(i, j);
+		for (j = i + 1; j < p; j++) {
+			if (fixedMatrix(i, j))
+				graph.addFixedEdge(i, j);
+			else if (adjMatrix(i, j)) {
+				pMax(i, j) = indepTest->test(i, j, emptySet);
+				edgeTests[0]++;
+				dout.level(1) << "  x = " << i << ", y = " << j << ", S = () : pval = " << pMax(i, j) << std::endl;
+				if (pMax(i, j) < alpha)
+					graph.addEdge(i, j);
 			}
+		}
 
-	// Create test object and estimate skeleton
-	graph.setIndepTest(&indepTest);
+	/*
+	// Create list of lists for separation sets
+	Rcpp::List sepSets(getVertexCount());
+	for (i = 0; i < getVertexCount(); ++i)
+		sepSets[i] = Rcpp::List(getVertexCount);
+	 */
+
+	// Estimate skeleton
+	graph.setIndepTest(indepTest);
 	dout.level(1) << "Fitting skeleton to data...\n";
-	graph.fitCondInd(alpha);
+	graph.fitCondInd(alpha, pMax, edgeTests, options["m.max"]);
 
-	// Return adjacency matrix
-	return graph.getAdjacencyMatrix();
+	// Delete test object
+	delete indepTest;
+
+	// Return list
+	return Rcpp::List::create(
+			Rcpp::Named("amat") = graph.getAdjacencyMatrix(),
+			Rcpp::Named("pMax") = pMax,
+			Rcpp::Named("n.edgetests") = edgeTests);
 
 	END_RCPP
 }

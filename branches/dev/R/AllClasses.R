@@ -618,16 +618,18 @@ setRefClass("EssGraph",
         #' internal function
         causal.inf.options = function(caching = TRUE,
             turning = TRUE,
-            maxdegree = integer(0),
-            maxsteps = 0,
-            childrenonly = integer(0),
-            DEBUG.LEVEL = 0) {
+            maxDegree = integer(0),
+            maxSteps = 0,
+            childrenOnly = integer(0),
+            fixedGaps = NULL,
+            verbose = 0) {
           list(caching = caching,
               turning = turning,
-              maxdegree = maxdegree,
-              maxsteps = maxsteps,
-              childrenonly = childrenonly,
-              DEBUG.LEVEL = DEBUG.LEVEL)
+              maxDegree = maxDegree,
+              maxSteps = maxSteps,
+              childrenOnly = childrenOnly,
+              fixedGaps = fixedGaps,
+              DEBUG.LEVEL = as.integer(verbose))
         },
 
         #' Performs one greedy step
@@ -648,6 +650,9 @@ setRefClass("EssGraph",
               score$c.fcn,
               causal.inf.options(caching = FALSE, maxsteps = 1),
               PACKAGE = "pcalg")
+          if (identical(new.graph, "interrupt"))
+            return(FALSE)
+          
           if (new.graph$steps > 0) {
             .in.edges <<- new.graph$.in.edges
             names(.in.edges) <<- .nodes
@@ -680,8 +685,13 @@ setRefClass("EssGraph",
               causal.inf.options(...),
               PACKAGE = "pcalg")
 
-          .in.edges <<- new.graph$in.edges
-          names(.in.edges) <<- .nodes
+          if (identical(new.graph, "interrupt"))
+            return(FALSE)
+          else {
+            .in.edges <<- new.graph$in.edges
+            names(.in.edges) <<- .nodes
+            return(TRUE)
+          }
         },
 
         #' Performs GIES from an arbitrary start DAG

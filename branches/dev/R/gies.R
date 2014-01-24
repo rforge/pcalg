@@ -143,21 +143,27 @@ is.whole <- function(a, tol = .Machine$double.eps^0.5) {
 caus.inf <- function(algorithm, p, targets, score, ...)
 {
   essgraph <- new("EssGraph", nodes = as.character(1:p), targets = targets, score = score)
-  essgraph$caus.inf(algorithm, ...)
-  return(list(essgraph = essgraph, repr = essgraph$repr()))
+  if (essgraph$caus.inf(algorithm, ...))
+    return(list(essgraph = essgraph, repr = essgraph$repr()))
 }
 
-gies <- function(p, targets, score, turning = TRUE, maxdegree = integer(0), ...)
-  caus.inf("GIES", p, targets, score, turning = turning, maxdegree = maxdegree, ...)
+gies <- function(p, targets, score, fixedGaps = NULL, 
+  turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
+  caus.inf("GIES", p, targets, score, fixedGaps = fixedGaps, 
+    turning = turning, maxDegree = maxDegree, verbose = verbose, ...)
 
-ges <- function(p, score, turning = TRUE, maxdegree = integer(0), ...) 
-  caus.inf("GIES", p, list(integer(0)), score, turning = turning, maxdegree = maxdegree, ...)
+ges <- function(p, score, fixedGaps = NULL, 
+  turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...) 
+  caus.inf("GIES", p, list(integer(0)), score, fixedGaps = fixedGaps, 
+    turning = turning, maxDegree = maxDegree, verbose = verbose, ...)
 
 ## TODO: make sure that the "representative" in the result is actually the last
 ## visited DAG instead of a random representative; adapt documentation accordingly
-gds <- function(p, targets, score, ...) caus.inf("GDS", p, targets, score, ...)
+gds <- function(p, targets, score, verbose = FALSE, ...) 
+  caus.inf("GDS", p, targets, score, verbose = verbose, ...)
 
-simy <- function(p, targets, score, ...) caus.inf("SiMy", p, targets, score, ...)
+simy <- function(p, targets, score, verbose = FALSE, ...) 
+  caus.inf("SiMy", p, targets, score, verbose = verbose, ...)
 
 dag2essgraph <- function(dag, targets = list(integer(0))) {
   new("EssGraph", 
@@ -166,3 +172,6 @@ dag2essgraph <- function(dag, targets = list(integer(0))) {
       targets = targets)
 }
 
+#' Fast version of "gaussCItest", implemented in C++
+gaussCItest.fast <- function(x, y, S, suffStat)
+  .Call("condIndTestGauss", x, y, S, suffStat$n, suffStat$C)

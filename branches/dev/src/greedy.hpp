@@ -147,6 +147,20 @@ protected:
 	InternalEssentialGraph _graph;
 
 	/**
+	 * Fixed gaps: (undirected) graph representing edges that must not be filled
+	 * in the essential graph.
+	 *
+	 * When only a sparse graph is allowed, _fixedGaps would be dense; then, it
+	 * is more efficient to store the allowed edges than the fixed gaps. This is
+	 * indicated by the flag _gapsInverted.
+	 *
+	 * TODO Allow for fixed edges or directed gaps; all in all, more complex
+	 * restrictions
+	 */
+	InternalEssentialGraph _fixedGaps;
+	bool _gapsInverted;
+
+	/**
 	 * Indicates whether optimal cliques and corresponding score differences
 	 * should be cached during greedy search.
 	 */
@@ -193,6 +207,11 @@ protected:
 	 * in intervention targets. However, this is not checked in the algorithm...
 	 */
 	boost::dynamic_bitset<> _childrenOnly; 
+
+	/**
+	 * Checks whether there is a fixed gap between two vertices.
+	 */
+	bool gapFixed(const uint a, const uint b) const;
 
 	/**
 	 * Checks whether there is a path from a to b in the graph that does not
@@ -457,6 +476,11 @@ public:
 
 		return result;
 	}
+
+	/**
+	 * Sets the fixed gaps
+	 */
+	void setFixedGaps(const EssentialGraph& fixedGaps, const bool inverted);
 
 	/**
 	 * Sets the maximum vertex degrees

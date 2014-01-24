@@ -2838,7 +2838,7 @@ plotAG <- function(amat)
 }
 
 skeleton <- function(suffStat, indepTest, alpha, labels, p,
-		     method = c("stable", "original"), m.max = Inf,
+		     method = c("stable", "original", "stable.fast"), m.max = Inf,
 		     fixedGaps = NULL, fixedEdges = NULL,
 		     NAdelete = TRUE, verbose = FALSE)
 {
@@ -2905,72 +2905,90 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
   else if (fixedEdges != t(fixedEdges))
     stop("fixedEdges must be symmetric")
 
-  pval <- NULL
-  sepset <- lapply(seq_p, function(.) vector("list",p))# a list of lists [p x p]
-  ## save maximal p value
-  pMax <- matrix(-Inf, nrow = p, ncol = p)
-  diag(pMax) <- 1
-  done <- FALSE
-  ord <- 0
-  n.edgetests <- numeric(1)# final length = max { ord}
-  while (!done && any(G) && ord <= m.max) {
-    n.edgetests[ord1 <- ord+1L] <- 0
-    done <- TRUE
-    ind <- which(G, arr.ind = TRUE)
-    ## For comparison with C++ sort according to first row
-    ind <- ind[order(ind[, 1]), ]
-    remainingEdgeTests <- nrow(ind)
-    if (verbose)
-      cat("Order=", ord, "; remaining edges:", remainingEdgeTests,"\n",sep="")
-    if(method == "stable") {
-      ## Order-independent version: Compute the adjacency sets for any vertex
-      ## Then don't update when edges are deleted
-      G.l <- split(G, gl(p,p))
-    }
-    for (i in 1:remainingEdgeTests) {
-      if (verbose && i%%100 == 0) cat("|i=", i, "|iMax=", nrow(ind), "\n")
-      x <- ind[i, 1]
-      y <- ind[i, 2]
-      if (G[y, x] && !fixedEdges[y, x]) {
-	nbrsBool <- if(method == "stable") G.l[[x]] else G[,x]
-        nbrsBool[y] <- FALSE
-        nbrs <- seq_p[nbrsBool]
-        length_nbrs <- length(nbrs)
-        if (length_nbrs >= ord) {
-          if (length_nbrs > ord)
-            done <- FALSE
-          S <- seq_len(ord)
-          repeat { ## condition w.r.to all  nbrs[S] of size 'ord'
-            n.edgetests[ord1] <- n.edgetests[ord1] + 1
-            pval <- indepTest(x, y, nbrs[S], suffStat)
-            if (verbose)
-              cat("x=", x, " y=", y, " S=", nbrs[S], ": pval =", pval, "\n")
-            if(is.na(pval))
-              pval <- as.numeric(NAdelete) ## = if(NAdelete) 1 else 0
-            if (pMax[x, y] < pval)
-              pMax[x, y] <- pval
-            if(pval >= alpha) { # independent
-              G[x, y] <- G[y, x] <- FALSE
-              sepset[[x]][[y]] <- nbrs[S]
-              break
-            }
-            else {
-              nextSet <- getNextSet(length_nbrs, ord, S)
-              if (nextSet$wasLast)
-                break
-              S <- nextSet$nextSet
-            }
-          } ## repeat
-        }
-      }
-    }# for( i )
-    ord <- ord + 1
-  } ## while()
-  for (i in 1:(p - 1)) {
-    for (j in 2:p)
-      pMax[i, j] <- pMax[j, i] <- max(pMax[i, j], pMax[j,i])
+  if (method == "stable.fast") {
+    ## Do calculation in C++...
+    if (identical(indepTest, gaussCItest.fast))
+      indepTestName <- "gauss"
+    else
+      indepTestName <- "rfun"
+    options <- list(verbose = as.integer(verbose), m.max = ifelse(m.max == Inf, -1, m.max))
+    res <- .Call("estimateSkeleton", G, suffStat, indepTestName, indepTest, alpha, fixedEdges, options);
+    G <- res$amat
+    sepset <- lapply(seq_p, function(.) vector("list",p)) # TODO change...
+    pMax <- res$pMax
+    n.edgetests <- res$n.edgetests
+    ord <- length(n.edgetests) - 1
   }
-
+  else {
+    ## Original version
+  
+    pval <- NULL
+    sepset <- lapply(seq_p, function(.) vector("list",p))# a list of lists [p x p]
+    ## save maximal p value
+    pMax <- matrix(-Inf, nrow = p, ncol = p)
+    diag(pMax) <- 1
+    done <- FALSE
+    ord <- 0
+    n.edgetests <- numeric(1)# final length = max { ord}
+    while (!done && any(G) && ord <= m.max) {
+      n.edgetests[ord1 <- ord+1L] <- 0
+      done <- TRUE
+      ind <- which(G, arr.ind = TRUE)
+      ## For comparison with C++ sort according to first row
+      ind <- ind[order(ind[, 1]), ]
+      remainingEdgeTests <- nrow(ind)
+      if (verbose)
+        cat("Order=", ord, "; remaining edges:", remainingEdgeTests,"\n",sep="")
+      if(method == "stable") {
+        ## Order-independent version: Compute the adjacency sets for any vertex
+        ## Then don't update when edges are deleted
+        G.l <- split(G, gl(p,p))
+      }
+      for (i in 1:remainingEdgeTests) {
+        if (verbose && i%%100 == 0) cat("|i=", i, "|iMax=", nrow(ind), "\n")
+        x <- ind[i, 1]
+        y <- ind[i, 2]
+        if (G[y, x] && !fixedEdges[y, x]) {
+  	      nbrsBool <- if(method == "stable") G.l[[x]] else G[,x]
+          nbrsBool[y] <- FALSE
+          nbrs <- seq_p[nbrsBool]
+          length_nbrs <- length(nbrs)
+          if (length_nbrs >= ord) {
+            if (length_nbrs > ord)
+              done <- FALSE
+            S <- seq_len(ord)
+            repeat { ## condition w.r.to all  nbrs[S] of size 'ord'
+              n.edgetests[ord1] <- n.edgetests[ord1] + 1
+              pval <- indepTest(x, y, nbrs[S], suffStat)
+              if (verbose)
+                cat("x=", x, " y=", y, " S=", nbrs[S], ": pval =", pval, "\n")
+              if(is.na(pval))
+                pval <- as.numeric(NAdelete) ## = if(NAdelete) 1 else 0
+              if (pMax[x, y] < pval)
+                pMax[x, y] <- pval
+              if(pval >= alpha) { # independent
+                G[x, y] <- G[y, x] <- FALSE
+                sepset[[x]][[y]] <- nbrs[S]
+                break
+              }
+              else {
+                nextSet <- getNextSet(length_nbrs, ord, S)
+                if (nextSet$wasLast)
+                  break
+                S <- nextSet$nextSet
+              }
+            } ## repeat
+          }
+        }
+      }# for( i )
+      ord <- ord + 1
+    } ## while()
+    for (i in 1:(p - 1)) {
+      for (j in 2:p)
+        pMax[i, j] <- pMax[j, i] <- max(pMax[i, j], pMax[j,i])
+    }
+  }
+  
   ## transform matrix to graph object :
   Gobject <-
     if (sum(G) == 0) {
