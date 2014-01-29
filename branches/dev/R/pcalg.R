@@ -1594,532 +1594,268 @@ udag2pdagSpecial <- function(gInput, verbose=FALSE, n.max=100) {
 
 udag2pdagRelaxed <- function(gInput, verbose=FALSE, unfVect=NULL, solve.confl=FALSE)
 {
-  ## Purpose: Transform the Skeleton of a pcAlgo-object to a PDAG using
-  ## the rules of Pearl. The output is again a pcAlgo-object. There is
-  ## NO CHECK whether the resulting PDAG is really extendable. This function
-  ## can also work with conservative and majority rule PC (if unfVect is not
-  ## NULL) and can also use lists and bi-directed edges while orienting the
-  ## v-structures and the 3 orientation rules using solve.confl=TRUE (based
-  ## on Colombo and Maathuis 2013 results about order-independent PC). Note
-  ## that using this version the output CPDAG could contain bi-directed edges,
-  ## represented by the number 2 in the adjacency matrix, and therefore the
-  ## output cannot interpreted causally.
-  ## ----------------------------------------------------------------------
-  ## Arguments:
-  ## - gInput: pcAlgo object
-  ## - verbose: 0 - no output, 1 - detailed output
-  ## - unfVect: vector containing the numbers corresponding to the ambiguous
-  ##            unshielded triples (conservative and majority rule PC)
-  ## - solve.confl: if FALSE the v-structures and the orientation rules
-  ##                are used as usual; if TRUE it tries to resolve
-  ##                conflicts on the edge orientations using lists for candidate
-  ##                edges eligible for the orientation rules and allows
-  ##                bi-directed edges in the output if a conflict is present
-  ##                on an edge.
-  ## ----------------------------------------------------------------------
-  ## Author: Markus Kalisch, Date: Sep 2006, 15:03
-  ## Modification: Diego Colombo, Date: Sep 2013
 
-    if (numEdges(gInput@graph) == 0)
-	return(gInput)
-    g <- as(gInput@graph, "matrix")
-    p <- nrow(g)
-    pdag <- g
-    ind <- which(g == 1, arr.ind = TRUE)
+    ##################################################
+    ## Internal functions
+    ##################################################
+    
+## replace 'else if' branch in 'if( !solve.confl )' statement
+orientConflictCollider <- function(pdag, x, y, z) { ## x - y - z
+    ## pdag: amat, pdag[x,y] = 1 and pdag[y,x] = 0 means x -> y
+    ## x,y,z: colnumber of nodes in pdag
+    ## only used if conflicts should be solved
+
+    ## orient x - y
+    if (pdag[x,y] == 1) {
+        ## x --- y, x --> y => x --> y
+        pdag[y,x] <- 0
+    } else {
+        ## x <-- y, x <-> y => x <-> y
+        pdag[x,y] <- pdag[y,x] <- 2
+    }
+
+        ## orient z - y
+    if (pdag[z,y] == 1) {
+        ## z --- y, z --> y => z --> y
+        pdag[y,z] <- 0
+    } else {
+        ## z <-- y, z <-> y => z <-> y
+        pdag[z,y] <- pdag[y,z] <- 2
+    }
+
+    pdag
+}
+
+## TODO: include correct VERBOSE statements
+rule1 <- function(pdag, solve.confl = FALSE, unfVect = NULL) {
+    ## Rule 1: a -> b - c goes to a -> b -> c
+    ## Interpretation: No new collider is introduced
+    ## Out: Updated pdag
+    search.pdag <- pdag
+    ind <- which(pdag == 1 & t(pdag) == 0, arr.ind = TRUE)
     for (i in seq_len(nrow(ind))) {
-        x <- ind[i, 1]
-        y <- ind[i, 2]
-        allZ <- setdiff(which(g[y, ] == 1), x)
-        for (z in allZ) if (g[x, z] == 0 &&
-                            !((y %in% gInput@sepset[[x]][[z]]) ||
-                              (y %in% gInput@sepset[[z]][[x]]))) {
-            if (length(unfVect) == 0) {
-                if (!solve.confl) {
-                    pdag[x, y] <- pdag[z, y] <- 1
-                    pdag[y, x] <- pdag[y, z] <- 0
-                } else if ((pdag[y, x] == 1 && pdag[x, y] == 1 &&
-                            pdag[y, z] == 1 && pdag[z, y] == 1) ||
-                           (pdag[x, y] == 1 && pdag[y, x] == 0 &&
-                            pdag[y, z] == 1 && pdag[z, y] == 1) ||
-                           (pdag[x, y] == 1 && pdag[y, x] == 1 &&
-                            pdag[y, z] == 0 && pdag[z, y] == 1)) {
-                    pdag[x, y] <- pdag[z, y] <- 1
-                    pdag[y, x] <- pdag[y, z] <- 0
-                } else if (pdag[y, x] == 1 && pdag[x, y] == 0 &&
-                           pdag[y, z] == 1 && pdag[z, y] == 1) {
-                    pdag[x, y] <- pdag[y, x] <- 2
-                    pdag[z, y] <- 1
-                    pdag[y, z] <- 0
-                } else if (pdag[y, z] == 1 && pdag[z, y] == 0 &&
-                           pdag[y, x] == 1 && pdag[x, y] == 1) {
-                    pdag[z, y] <- pdag[y, z] <- 2
-                    pdag[x, y] <- 1
-                    pdag[y, x] <- 0
-                } else if (pdag[x, y] == 1 && pdag[y, x] == 0 &&
-                           pdag[y, z] == 1 && pdag[z, y] == 0) {
-                    pdag[z, y] <- pdag[y, z] <- 2
-                    pdag[x, y] <- 1
-                    pdag[y, x] <- 0
-                } else if (pdag[x, y] == 0 && pdag[y, x] == 1 &&
-                           pdag[y, z] == 0 && pdag[z, y] == 1) {
-                    pdag[x, y] <- pdag[y, x] <- 2
-                    pdag[z, y] <- 1
-                    pdag[y, z] <- 0
-                } else if (pdag[x, y] == 0 && pdag[y, x] == 1 &&
-                           pdag[y, z] == 1 && pdag[z, y] == 0) {
-                    pdag[x, y] <- pdag[y, x] <- 2
-                    pdag[z, y] <- pdag[y, z] <- 2
-                } else if (pdag[x, y] == 2 && pdag[y, x] == 2 &&
-                           pdag[y, z] == 1 && pdag[z, y] == 1) {
-                    pdag[z, y] <- 1
-                    pdag[y, z] <- 0
-                } else if (pdag[x, y] == 1 && pdag[y, x] == 1 &&
-                           pdag[y, z] == 2 && pdag[z, y] == 2) {
-                    pdag[x, y] <- 1
-                    pdag[y, x] <- 0
-                } else if (pdag[x, y] == 2 && pdag[y, x] == 2 &&
-                           pdag[y, z] == 1 && pdag[z, y] == 0) {
-                    pdag[z, y] <- pdag[y, z] <- 2
-                } else if (pdag[x, y] == 0 && pdag[y, x] == 1 &&
-                           pdag[y, z] == 2 && pdag[z, y] == 2) {
-                    pdag[x, y] <- pdag[y, x] <- 2
-                }
-            }##__end-copy-paste
-            else ## length(unfVect) > 0 :
-                if (!any(unfVect == triple2numb(p, x, y, z), na.rm=TRUE) &&
-                    !any(unfVect == triple2numb(p, z, y, x), na.rm=TRUE)) {
-## from next line till line 148: = copy-paste of lines 43-93
-                    if (!solve.confl) {
-                        pdag[x, y] <- pdag[z, y] <- 1
-                        pdag[y, x] <- pdag[y, z] <- 0
-                    } else if ((pdag[y, x] == 1 && pdag[x, y] == 1 &&
-                                pdag[y, z] == 1 && pdag[z, y] == 1) ||
-                               (pdag[x, y] == 1 && pdag[y, x] == 0 &&
-                                pdag[y, z] == 1 && pdag[z, y] == 1) ||
-                               (pdag[x, y] == 1 && pdag[y, x] == 1 &&
-                                pdag[y, z] == 0 && pdag[z, y] == 1)) {
-                        pdag[x, y] <- pdag[z, y] <- 1
-                        pdag[y, x] <- pdag[y, z] <- 0
-                    } else if (pdag[y, x] == 1 && pdag[x, y] == 0 &&
-                               pdag[y, z] == 1 && pdag[z, y] == 1) {
-                        pdag[x, y] <- pdag[y, x] <- 2
-                        pdag[z, y] <- 1
-                        pdag[y, z] <- 0
-                    } else if (pdag[y, z] == 1 && pdag[z, y] == 0 &&
-                               pdag[y, x] == 1 && pdag[x, y] == 1) {
-                        pdag[z, y] <- pdag[y, z] <- 2
-                        pdag[x, y] <- 1
-                        pdag[y, x] <- 0
-                    } else if (pdag[x, y] == 1 && pdag[y, x] == 0 &&
-                               pdag[y, z] == 1 && pdag[z, y] == 0) {
-                        pdag[z, y] <- pdag[y, z] <- 2
-                        pdag[x, y] <- 1
-                        pdag[y, x] <- 0
-                    } else if (pdag[x, y] == 0 && pdag[y, x] == 1 &&
-                               pdag[y, z] == 0 && pdag[z, y] == 1) {
-                        pdag[x, y] <- pdag[y, x] <- 2
-                        pdag[z, y] <- 1
-                        pdag[y, z] <- 0
-                    } else if (pdag[x, y] == 0 && pdag[y, x] == 1 &&
-                               pdag[y, z] == 1 && pdag[z, y] == 0) {
-                        pdag[x, y] <- pdag[y, x] <- 2
-                        pdag[z, y] <- pdag[y, z] <- 2
-                    } else if (pdag[x, y] == 2 && pdag[y, x] == 2 &&
-                               pdag[y, z] == 1 && pdag[z, y] == 1) {
-                        pdag[z, y] <- 1
-                        pdag[y, z] <- 0
-                    } else if (pdag[x, y] == 1 && pdag[y, x] == 1 &&
-                               pdag[y, z] == 2 && pdag[z, y] == 2) {
-                        pdag[x, y] <- 1
-                        pdag[y, x] <- 0
-                    } else if (pdag[x, y] == 2 && pdag[y, x] == 2 &&
-                               pdag[y, z] == 1 && pdag[z, y] == 0) {
-                        pdag[z, y] <- pdag[y, z] <- 2
-                    } else if (pdag[x, y] == 0 && pdag[y, x] == 1 &&
-                               pdag[y, z] == 2 && pdag[z, y] == 2) {
-                        pdag[x, y] <- pdag[y, x] <- 2
-                    }
-                  }##__end-copy-paste
-        } ## for( z ) if(...)
-    } ## for ( i )
-    ##---------------------------------------------------------------------------
-
-    if (length(unfVect) == 0) {
-        if (!solve.confl) {
-            repeat {
-                old_pdag <- pdag
-                ## Rule 1
-                ind <- which(pdag == 1 & t(pdag) == 0, arr.ind = TRUE)
-                for (i in seq_len(nrow(ind))) {
-                    a <- ind[i, 1]
-                    b <- ind[i, 2]
-                    ## find all neighbours of b not adjacent to a
-                    isC <- pdag[b, ] == 1 & pdag[, b] == 1 & pdag[a, ] == 0 & pdag[, a] == 0
-                    if (any(isC)) {
-                        c <- which(isC)
+        a <- ind[i, 1]
+        b <- ind[i, 2]
+        ##find all undirected neighbours of b not adjacent to a
+        isC <- which(search.pdag[b, ] == 1 & search.pdag[, b] == 1 &
+                     search.pdag[a, ] == 0 & search.pdag[, a] == 0)
+        if (length(isC) > 0) {
+            for (ii in seq_along(isC)) {
+                c <- isC[ii]
+                ## if the edge between b and c has not been oriented previously,
+                ## orient it using normal R1
+                if (!solve.confl | (pdag[b,c] == 1 & pdag[c,b] == 1) ) { ## no conflict
+                    ## !! before, we checked search.pdag, not pdag !!
+                    if (!is.null(unfVect)) { ## deal with unfaithful triples
+                        if (!any(unfVect == triple2numb(p, a, b, c), na.rm=TRUE) &&
+                            !any(unfVect == triple2numb(p, c, b, a), na.rm=TRUE)) {
+                            ## if unfaithful triple, don't orient
+                            pdag[b, c] <- 1
+                            pdag[c, b] <- 0
+                        } 
+                    } else {
+                        ## don't care about unfaithful triples -> just orient
                         pdag[b, c] <- 1
                         pdag[c, b] <- 0
-                        if (verbose)
-                            cat("\nRule 1:", a, "->", b, " and ", b,
-                                "-", c, " where ", a, " and ", c,
-                                " not connected: ", b, "->", c, "\n")
+                        ## cat("Rule 1\n")
                     }
-                }
-                ## Rule 2
-                ind <- which((pdag == 1 & t(pdag) == 1), arr.ind = TRUE)
-                for (i in seq_len(nrow(ind))) {
-                    a <- ind[i, 1]
-                    b <- ind[i, 2]
-                    isC <- ((pdag[a, ] == 1 & pdag[, a] == 0) &
-                            (pdag[, b] == 1 & pdag[b, ] == 0))
-                    if (any(isC)) {
-                        pdag[a, b] <- 1
-                        pdag[b, a] <- 0
+                    if (verbose)
+                        cat("\nRule 1':", a, "->", b, " and ",
+                            b, "-", c, " where ", a, " and ", c,
+                            " not connected and ", a, b, c, " faithful triple: ",
+                            b, "->", c, "\n")
+                } else if (pdag[b,c] == 0 & pdag[c,b] == 1) {
+                    ## conflict that must be solved
+                    ## solve conflict: if the edge is b <- c because of a previous
+                    ## orientation within for loop then output <->
+                    if (!is.null(unfVect)) { ## deal with unfaithful triples
+                        if (!any(unfVect == triple2numb(p, a, b, c), na.rm=TRUE) &&
+                            !any(unfVect == triple2numb(p, c, b, a), na.rm=TRUE)) {
+                            pdag[b, c] <- 2
+                            pdag[c, b] <- 2
+                            if (verbose)
+                                cat("\nRule 1':", a, "->", b, "<-",
+                                    c, " but ", b, "->", c, "also possible and",
+                                    a, b, c, " faithful triple: ", a,"->", b, "<->", c,"\n")
+                        }
+                    } else {
+                        ## don't care about unfaithful triples -> just orient
+                        pdag[b, c] <- 2
+                        pdag[c, b] <- 2
                         if (verbose)
-                            cat("\nRule 2: Chain ", a, "->", which(isC),
-                                "->", b, ":", a, "->", b, "\n")
-                    }
-                }
-                ## Rule 3
-                ind <- which((pdag == 1 & t(pdag) == 1), arr.ind = TRUE)
-                for (i in seq_len(nrow(ind))) {
-                    a <- ind[i, 1]
-                    b <- ind[i, 2]
-                    c <- which((pdag[a, ] == 1 & pdag[, a] == 1) &
-                                  (pdag[, b] == 1 & pdag[b, ] == 0))
-                    if (length(c) >= 2) {
-                        g2 <- pdag[c, c]
-                        if (length(g2) <= 1) {
-                            g2 <- 0
-                        }
-                        else {
-                            diag(g2) <- rep(1, length(c))
-                        }
-                        if (any(g2 == 0)) {
+                            cat("\nRule 1':", a, "->", b, "<-",
+                                c, " but ", b, "->", c, "also possible and",
+                                a, b, c, " faithful triple: ", a,"->", b, "<->", c,"\n")
+                    } ## unfVect: if else
+                } ## conflict: if else
+            } ## for c
+        } ## if length(isC)
+        if (!solve.confl) search.pdag <- pdag
+    } ## for ind
+    pdag
+}
+
+rule2 <- function(pdag, solve.confl = FALSE) {
+    ## Rule 2: a -> c -> b with a - b: a -> b
+    ## Interpretation: Avoid cycle
+    ## normal version = conservative version
+    search.pdag <- pdag
+    ind <- which(search.pdag == 1 & t(search.pdag) == 1, arr.ind = TRUE)
+    for (i in seq_len(nrow(ind))) {
+        a <- ind[i, 1]
+        b <- ind[i, 2]
+        isC <- which(search.pdag[a, ] == 1 & search.pdag[, a] == 0 &
+                     search.pdag[, b] == 1 & search.pdag[b, ] == 0)
+        for (ii in seq_along(isC)) {
+            c <- isC[ii]
+            ##if the edge has not been oriented yet, orient it with R2
+            ## always do this if you don't care about conflicts
+            if (!solve.confl | (pdag[a, b] == 1 & pdag[b, a] == 1) ) {
+                pdag[a, b] <- 1
+                pdag[b, a] <- 0
+                if (verbose)
+                    cat("\nRule 2: Chain ", a, "->", c,
+                        "->", b, ":", a, "->", b, "\n")
+            }
+            ##else if the edge has been oriented as a <- b by a previous R2
+            else if (pdag[a, b] == 0 & pdag[b, a] == 1) {
+                pdag[a, b] <- 2
+                pdag[b, a] <- 2
+                if (verbose)
+                    cat("\nRule 2: Chain ", a, "->", c,
+                        "->", b, ":", a, "<->", b, "\n")
+            }
+        }
+        if (!solve.confl) search.pdag <- pdag
+    }
+    pdag
+}
+
+rule3 <- function(pdag, solve.confl = FALSE, unfVect = NULL) {
+    ## Rule 3: a-b, a-c1, a-c2, c1->b, c2->b but c1 and c2 not connected;
+    ## then a-b => a -> b
+    search.pdag <- pdag
+    ind <- which(search.pdag == 1 & t(search.pdag) == 1, arr.ind = TRUE)
+    for (i in seq_len(nrow(ind))) {
+        a <- ind[i, 1]
+        b <- ind[i, 2]
+        c <- which(search.pdag[a, ] == 1 & search.pdag[, a] == 1 &
+                   search.pdag[, b] == 1 & search.pdag[b, ] == 0)
+        if (length(c) >= 2) {
+            cmb.C <- combn(c, 2)
+            cC1 <- cmb.C[1, ]
+            cC2 <- cmb.C[2, ]
+            for (j in seq_along(cC1)) {
+                c1 <- cC1[j]
+                c2 <- cC2[j]
+                if (search.pdag[c1, c2] == 0 && search.pdag[c2,c1] == 0) {
+                    if (!is.null(unfVect)) {
+                        if (!any(unfVect == triple2numb(p, c1, a, c2), na.rm=TRUE) &&
+                            !any(unfVect == triple2numb(p, c2, a, c1), na.rm=TRUE)) { 
+                            ##if the edge has not been oriented yet, orient it with R3
+                            if (!solve.confl | (pdag[a, b] == 1 & pdag[b, a] == 1) ) {
+                                pdag[a, b] <- 1
+                                pdag[b, a] <- 0
+                                if (!solve.confl) search.pdag <- pdag
+                                if (verbose)
+                                    cat("\nRule 3':", a, c1, c2, "faithful triple: ",
+                                        a, "->", b, "\n")
+                                break
+                            }
+                            ##else if: we care about conflicts and  the edge has been oriented as a <- b by a previous R3
+                            else if (pdag[a, b] == 0 & pdag[b, a] == 1) {
+                                pdag[a, b] <- pdag[b, a] <- 2
+                                if (verbose)
+                                    cat("\nRule 3':", a, c1, c2, "faithful triple: ",
+                                        a, "<->", b, "\n")
+                                break
+                            } ## if solve conflict
+                        } ## if unf. triple found
+                    } else { ## if care about unf. triples; else don't care
+                        if (!solve.confl | (pdag[a, b] == 1 & pdag[b, a] == 1) ) {
                             pdag[a, b] <- 1
                             pdag[b, a] <- 0
+                            if (!solve.confl) search.pdag <- pdag
                             if (verbose)
-                                cat("\nRule 3:", a, "->", b, "\n")
+                                cat("\nRule 3':", a, c1, c2, "faithful triple: ",
+                                    a, "->", b, "\n")
+                            break
                         }
-                        else {
-                            cmb.C <- combn(c, 2)
-                            cC1 <- cmb.C[1, ]
-                            cC2 <- cmb.C[2, ]
-                            for (j in seq_along(cC1)) {
-                                c1 <- cC1[j]
-                                c2 <- cC2[j]
-                                if (c1 != c2 && pdag[c1, c2] == 0 && pdag[c2,c1] == 0) {
-                                    pdag[a, b] <- 1
-                                    pdag[b, a] <- 0
-                                    if (verbose)
-                                        cat("\nRule 3:",a, "->", b, "\n")
-                                    break
-                                }
-                            }
-                        }
-                    }
-                  } ## for( i )
-                if (all(pdag == old_pdag))
-                    break
-              } ## {repeat}
+                        ##else if: we care about conflicts and  the edge has been oriented as a <- b by a previous R3
+                        else if (pdag[a, b] == 0 & pdag[b, a] == 1) {
+                            pdag[a, b] <- pdag[b, a] <- 2
+                            if (verbose)
+                                cat("\nRule 3':", a, c1, c2, "faithful triple: ",
+                                    a, "<->", b, "\n")
+                            break
+                        } ## if solve conflict
+                    } ## if care about unf. triples
+                } ## if c1 and c2 are not adjecent
+            } ## for all pairs of c's
+        } ## if at least two c's are found
+    } ## for all undirected edges
+    pdag
+}
+##################################################
+## Main
+##################################################
 
-        } else { ## solve.conf
-### close but *not* copy-paste from line 153 : {diff.: extra for(ii ...))
-            repeat {
-                old_pdag <- search.pdag <- pdag
-                ## Rule 1
-                ind <- which(pdag == 1 & t(pdag) == 0, arr.ind = TRUE)
-                for (i in seq_len(nrow(ind))) {
-                    a <- ind[i, 1]
-                    b <- ind[i, 2]
-                    ## find all neighbours of b not adjacent to a
-                    isC <- which(search.pdag[b, ] == 1 & search.pdag[, b] == 1 &
-                                 search.pdag[a, ] == 0 & search.pdag[, a] == 0)
-                    for (ii in seq_along(isC)) {
-                            c <- isC[ii]
-                            ## if the edge between b and c has not been oriented previously,
-                            ## orient it using normal R1
-                            if (pdag[b,c] == 1 & pdag[c,b] == 1) {
-                                pdag[b, c] <- 1
-                                pdag[c, b] <- 0
-                                if (verbose)
-                                    cat("\nRule 1:", a, "->", b, " and ",
-                                        b, "-", c, " where ", a, " and ", c,
-                                        " not connected:", b, "->", c, "\n")
-                            }
-                            ## else if the edge is b <- c because of a previous orientation then output <->
-                            else if (pdag[b,c] == 0 & pdag[c,b] == 1) {
-                                pdag[b, c] <- 2
-                                pdag[c, b] <- 2
-                                if (verbose)
-                                    cat("\nRule 1:", a, "->", b, "<-",
-                                        c, " but ", b, "->", c, "also possible:",
-                                        a,"->", b, "<->", c, "\n")
-                            }
+## prepare adjacency matrix of skeleton
+if (numEdges(gInput@graph) == 0)
+    return(gInput)
+g <- as(gInput@graph, "matrix")
+p <- nrow(g)
+pdag <- g
+
+## orient collider
+ind <- which(g == 1, arr.ind = TRUE)
+for (i in seq_len(nrow(ind))) {
+    x <- ind[i, 1]
+    y <- ind[i, 2]
+    allZ <- setdiff(which(g[y, ] == 1), x) ## x - y - z
+    for (z in allZ) {
+        ## check collider condition
+        if (g[x, z] == 0 &&
+            !((y %in% gInput@sepset[[x]][[z]]) ||
+              (y %in% gInput@sepset[[z]][[x]]))) {
+            if (length(unfVect) == 0) { ## no unfaithful triples
+                if (!solve.confl) { ## don't solve conflicts
+                    pdag[x, y] <- pdag[z, y] <- 1
+                    pdag[y, x] <- pdag[y, z] <- 0
+                } else { ## solve conflicts
+                    pdag <- orientConflictCollider(pdag, x, y, z)
+                }
+            } else { ## unfaithful triples are present
+                if (!any(unfVect == triple2numb(p, x, y, z), na.rm=TRUE) &&
+                    !any(unfVect == triple2numb(p, z, y, x), na.rm=TRUE)) {
+                    if (!solve.confl) { ## don't solve conflicts
+                        pdag[x, y] <- pdag[z, y] <- 1
+                        pdag[y, x] <- pdag[y, z] <- 0
+                    } else { ## solve conflicts
+                        pdag <- orientConflictCollider(pdag, x, y, z)
                     }
                 }
-                search.pdag <- pdag
-                ## Rule 2
-                ind <- which(search.pdag == 1 & t(search.pdag) == 1, arr.ind = TRUE)
-                for (i in seq_len(nrow(ind))) {
-                    a <- ind[i, 1]
-                    b <- ind[i, 2]
-                    isC <- which(search.pdag[a, ] == 1 & search.pdag[, a] == 0 &
-                                 search.pdag[, b] == 1 & search.pdag[b, ] == 0)
-                    for (ii in seq_along(isC)) {
-                            c <- isC[ii]
-                            ##if the edge has not been oriented yet, orient it with R2
-                            if (pdag[a, b] == 1 & pdag[b, a] == 1) {
-                                pdag[a, b] <- 1
-                                pdag[b, a] <- 0
-                                if (verbose)
-                                    cat("\nRule 2: Chain ", a, "->", c,
-                                        "->", b, ":", a, "->", b, "\n")
-                            }
-                            ##else if the edge has been oriented as a <- b by a previous R2
-                            else if (pdag[a, b] == 0 & pdag[b, a] == 1) {
-                                pdag[a, b] <- 2
-                                pdag[b, a] <- 2
-                                if (verbose)
-                                    cat("\nRule 2: Chain ", a, "->", c,
-                                        "->", b, ":", a, "<->", b, "\n")
-                            }
-                    }
-                }
-                search.pdag <- pdag
-                ## Rule 3
-                ind <- which(search.pdag == 1 & t(search.pdag) == 1, arr.ind = TRUE)
-                for (i in seq_len(nrow(ind))) {
-                    a <- ind[i, 1]
-                    b <- ind[i, 2]
-                    c <- which(search.pdag[a, ] == 1 & search.pdag[, a] == 1 &
-                               search.pdag[, b] == 1 & search.pdag[b, ] == 0)
-                    if (length(c) >= 2) {
-                        cmb.C <- combn(c, 2)
-                        cC1 <- cmb.C[1, ]
-                        cC2 <- cmb.C[2, ]
-                        for (j in seq_along(cC1)) {
-                            c1 <- cC1[j]
-                            c2 <- cC2[j]
-                            if (c1 != c2 && search.pdag[c1, c2] == 0 && search.pdag[c2,c1] == 0) {
-                                ##if the edge has not been oriented yet, orient it with R3
-                                if (pdag[a, b] == 1 & pdag[b, a] == 1) {
-                                    pdag[a, b] <- 1
-                                    pdag[b, a] <- 0
-                                    if (verbose)
-                                        cat("\nRule 3:",a, "->", b, "\n")
-                                    break
-                                }
-                                ##else if the edge has been oriented as a <- b by a previous R3
-                                else if (pdag[a, b] == 0 & pdag[b, a] == 1) {
-                                    pdag[a, b] <- pdag[b, a] <- 2
-                                    if (verbose)
-                                        cat("\nRule 3:", a, "<->", b, "\n")
-                                    break
-                                }
-                            }
-                        }
-                    }
-                }
-                if (all(pdag == old_pdag))
-                    break
             }
         }
+    } ## for z
+} ## for i
 
-    } else { ## length(unfVect) > 0 :
 
-        if (!solve.confl) {
-            repeat {
-                old_pdag <- pdag
-                ## Rule 1
-                ind <- which((pdag == 1 & t(pdag) == 0), arr.ind = TRUE)
-                for (i in seq_len(nrow(ind))) {
-                    a <- ind[i, 1]
-                    b <- ind[i, 2]
-                    isC <- ((pdag[b, ] == 1 & pdag[, b] == 1) &
-                            (pdag[a, ] == 0 & pdag[, a] == 0))
-                    if (any(isC)) {
-                        indC <- which(isC)
-                        for (c in indC) {
-                            ## check that a-b-c not unfaithful
-                            if (!any(unfVect == triple2numb(p, a,b,c), na.rm=TRUE) &&
-                                !any(unfVect == triple2numb(p, c,b,a), na.rm=TRUE)) {
-                                pdag[b, c] <- 1
-                                pdag[c, b] <- 0
-                                if (verbose)
-                                    cat("\nRule 1':", a, "->", b, " and ", b, "-", c,
-                                        " where ", a, " and ", c, " not connected and ",
-                                        a, b, c," faithful triple: ", b, "->", c, "\n")
-                            }
-                        }
-                    }
-                }##end for (i ..)
+## Rules 1 - 3
+repeat {
+    old_pdag <- pdag
+    pdag <- rule1(pdag, solve.confl = solve.confl, unfVect = unfVect)
+    pdag <- rule2(pdag, solve.confl = solve.confl)
+    pdag <- rule3(pdag, solve.confl = solve.confl, unfVect = unfVect)
+    if (all(pdag == old_pdag))
+        break
+} ## repeat
 
-                ## Rule 2
-                ## normal version = conservative version
-                ind <- which((pdag == 1 & t(pdag) == 1), arr.ind = TRUE)
-                for (i in seq_len(nrow(ind))) {
-                    a <- ind[i, 1]
-                    b <- ind[i, 2]
-                    isC <- ((pdag[a, ] == 1 & pdag[, a] == 0) &
-                            (pdag[, b] == 1 & pdag[b, ] == 0))
-                    if (any(isC)) {
-                        pdag[a, b] <- 1
-                        pdag[b, a] <- 0
-                        if (verbose)
-                            cat("\nRule 2: Chain ", a, "->", which(isC),
-                                "->", b, ":", a, "->", b, "\n")
-                    }
-                }
+gInput@graph <- as(pdag, "graphNEL")
+gInput
 
-                ## Rule 3
-                ind <- which((pdag == 1 & t(pdag) == 1), arr.ind = TRUE)
-                for (i in seq_len(nrow(ind))) {
-                    a <- ind[i, 1]
-                    b <- ind[i, 2]
-                    indC <- which((pdag[a, ] == 1 & pdag[, a] == 1) &
-                                  (pdag[, b] == 1 & pdag[b, ] == 0))
-                    if (length(indC) >= 2) {
-                        ## conservative version
-                        cmb.C <- combn(indC, 2)
-                        cC1 <- cmb.C[1,]
-                        cC2 <- cmb.C[2,]
-                        for (j in seq_along(cC1)) {
-                            c1 <- cC1[j]
-                            c2 <- cC2[j]
-                            if (c1 != c2 && pdag[c1,c2] == 0 && pdag[c2,c1] == 0 &&
-                                !any(unfVect == triple2numb(p, c1,a,c2), na.rm=TRUE) &&
-                                !any(unfVect == triple2numb(p, c2,a,c1), na.rm=TRUE)) { ## faithful triple found
-                                pdag[a, b] <- 1
-                                pdag[b, a] <- 0
-                                if (verbose)
-                                    cat("\nRule 3':", a, c1, c2, "faithful triple: ", a, "->", b, "\n")
-                                break
-                                ##=== out of loop
-                            }
-                        }
-                    }
-                }
-                if (all(pdag == old_pdag))
-                    break
-            }
-        } else { ## solve.conf
-            repeat {
-                old_pdag <- search.pdag <- pdag
-                ## Rule 1
-                ind <- which(pdag == 1 & t(pdag) == 0, arr.ind = TRUE)
-                for (i in seq_len(nrow(ind))) {
-                    a <- ind[i, 1]
-                    b <- ind[i, 2]
-                    ##find all neighbours of b not adjacent to a
-                    isC <- which(search.pdag[b, ] == 1 & search.pdag[, b] == 1 &
-                                 search.pdag[a, ] == 0 & search.pdag[, a] == 0)
-                    for (ii in seq_along(isC)) {
-                            c <- isC[ii]
-                            ## if the edge between b and c has not been oriented previously,
-                            ## orient it using normal R1
-                            if (pdag[b,c] == 1 & pdag[c,b] == 1) {
-                                if (!any(unfVect == triple2numb(p, a, b, c), na.rm=TRUE) &&
-                                    !any(unfVect == triple2numb(p, c, b, a), na.rm=TRUE)) {
-                                    pdag[b, c] <- 1
-                                    pdag[c, b] <- 0
-                                    if (verbose)
-                                        cat("\nRule 1':", a, "->", b, " and ",
-                                            b, "-", c, " where ", a, " and ", c,
-                                            " not connected and ", a, b, c, " faithful triple: ",
-                                            b, "->", c, "\n")
-                                }
-                            }
-                            ## else if the edge is b <- c because of a previous orientation then output <->
-                            else if (pdag[b,c] == 0 & pdag[c,b] == 1) {
-                                if (!any(unfVect == triple2numb(p, a, b, c), na.rm=TRUE) &&
-                                    !any(unfVect == triple2numb(p, c, b, a), na.rm=TRUE)) {
-                                    pdag[b, c] <- 2
-                                    pdag[c, b] <- 2
-                                    if (verbose)
-                                        cat("\nRule 1':", a, "->", b, "<-",
-                                            c, " but ", b, "->", c, "also possible and",
-                                            a, b, c, " faithful triple: ", a,"->", b, "<->", c,"\n")
-                                }
-                            }
-                    }
-                }
-                search.pdag <- pdag
-                ## Rule 2
-                ind <- which(search.pdag == 1 & t(search.pdag) == 1, arr.ind = TRUE)
-                for (i in seq_len(nrow(ind))) {
-                    a <- ind[i, 1]
-                    b <- ind[i, 2]
-                    isC <- which(search.pdag[a, ] == 1 & search.pdag[, a] == 0 &
-                                 search.pdag[, b] == 1 & search.pdag[b, ] == 0)
-                    for (ii in seq_along(isC)) {
-                            c <- isC[ii]
-                            ##if the edge has not been oriented yet, orient it with R2
-                            if (pdag[a, b] == 1 & pdag[b, a] == 1) {
-                                pdag[a, b] <- 1
-                                pdag[b, a] <- 0
-                                if (verbose)
-                                    cat("\nRule 2': Chain ", a, "->", c,
-                                        "->", b, ":", a, "->", b, "\n")
-                            }
-                            ##else if the edge has been oriented as a <- b by a previous R2
-                            else if (pdag[a, b] == 0 & pdag[b, a] == 1) {
-                                pdag[a, b] <- 2
-                                pdag[b, a] <- 2
-                                if (verbose)
-                                    cat("\nRule 2': Chain ", a, "->", c,
-                                        "->", b, ":", a, "<->", b, "\n")
-                            }
-                        }
-                }
-                search.pdag <- pdag
-                ## Rule 3
-                ind <- which(search.pdag == 1 & t(search.pdag) == 1, arr.ind = TRUE)
-                for (i in seq_len(nrow(ind))) {
-                    a <- ind[i, 1]
-                    b <- ind[i, 2]
-                    c <- which(search.pdag[a, ] == 1 & search.pdag[, a] == 1 &
-                               search.pdag[, b] == 1 & search.pdag[b, ] == 0)
-                    if (length(c) >= 2) {
-                        cmb.C <- combn(c, 2)
-                        cC1 <- cmb.C[1, ]
-                        cC2 <- cmb.C[2, ]
-                        for (j in seq_along(cC1)) {
-                            c1 <- cC1[j]
-                            c2 <- cC2[j]
-                            if (c1 != c2 && search.pdag[c1, c2] == 0 && search.pdag[c2,c1] == 0 &&
-                                !any(unfVect == triple2numb(p, c1, a, c2), na.rm=TRUE) &&
-                                !any(unfVect == triple2numb(p, c2, a, c1), na.rm=TRUE)) {
-                                ##if the edge has not been oriented yet, orient it with R3
-                                if (pdag[a, b] == 1 & pdag[b, a] == 1) {
-                                    pdag[a, b] <- 1
-                                    pdag[b, a] <- 0
-                                    if (verbose)
-                                        cat("\nRule 3':", a, c1, c2, "faithful triple: ",
-                                            a, "->", b, "\n")
-                                    break
-                                }
-                                ##else if the edge has been oriented as a <- b by a previous R3
-                                else if (pdag[a, b] == 0 & pdag[b, a] == 1) {
-                                    pdag[a, b] <- pdag[b, a] <- 2
-                                    if (verbose)
-                                        cat("\nRule 3':", a, c1, c2, "faithful triple: ",
-                                            a, "<->", b, "\n")
-                                    break
-                                }
-                            }
-                        }
-                    }
-                }
-                if (all(pdag == old_pdag))
-                    break
-            }
-        }
-    }
-    gInput@graph <- as(pdag, "graphNEL")
-    gInput
+}
 
-} ## {udag2pdagRelaxed}
 
 
 
