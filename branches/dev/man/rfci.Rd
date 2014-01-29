@@ -6,7 +6,7 @@
 }
 \usage{
 rfci(suffStat, indepTest, alpha, labels, p,
-     skel.method = c("stable", "original"),
+     skel.method = c("stable", "original", "stable.fast"),
      fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
      m.max = Inf, rules = rep(TRUE, 10),
      conservative = FALSE, maj.rule = FALSE, verbose = FALSE)

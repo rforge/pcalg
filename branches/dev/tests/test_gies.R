@@ -13,7 +13,7 @@ str(gauss.data)
 p <- ncol(gauss.data)
 
 (doExtras <- pcalg:::doExtras())
-DBG <- if(doExtras) 2 else 0 # no debugging by default
+DBG <- if(doExtras) TRUE else FALSE # no debugging by default
 ## Tolerance for numerical comparison
 tol <- sqrt(.Machine$double.eps) # = default for all.equal()
 
@@ -29,7 +29,7 @@ for (nf in names(fcns)) {
                  target.index = gauss.target.index, 
                  data = gauss.data,
                  use.cpp = cpp)
-    est.graph <- fcns[[nf]](p, gauss.targets, score, DEBUG.LEVEL = DBG)
+    est.graph <- fcns[[nf]](p, gauss.targets, score, verbose = DBG)
     for (i in 1:p) {
       if(doExtras) cat("  use.cpp = ", cpp,"; i = ", i, "\n", sep="")
       if (!isTRUE(all.equal(est.graph$essgraph$.in.edges[[i]],

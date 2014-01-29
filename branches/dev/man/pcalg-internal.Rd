@@ -22,6 +22,7 @@
 % FIXME: *do* document [says Martin]  (((or confirm current status))):
 \alias{allDags}%<- mentioned in other help pages !!
 \alias{amat2dag}% in ../tests/test_amat2dag.R
+\alias{gaussCItest.fast}% will be documented in next CRAN version
 %
 \title{Internal Pcalg Functions}
 \description{

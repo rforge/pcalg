@@ -11,7 +11,7 @@
   algorithm of Chickering (2002).
 }
 \usage{
-ges <- function(p, score, fixedGaps = NULL, 
+ges(p, score, fixedGaps = NULL, 
   turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...) 
 }
 \arguments{

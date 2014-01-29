@@ -20,7 +20,7 @@
 }
 \usage{
 skeleton(suffStat, indepTest, alpha, labels, p,
-         method = c("stable", "original"), m.max = Inf,
+         method = c("stable", "original", "stable.fast"), m.max = Inf,
          fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
          verbose = FALSE)
 }

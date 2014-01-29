@@ -4323,7 +4323,7 @@ minDiscrPath <- function(pag, a,b,c, verbose = FALSE)
 ###############################################################################
 
 fci <- function(suffStat, indepTest, alpha, labels, p,
-                skel.method = c("stable", "original"),
+                skel.method = c("stable", "original", "stable.fast"),
                 type = c("normal", "anytime", "adaptive"),
                 fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
                 m.max = Inf, pdsep.max = Inf, rules = rep(TRUE, 10),
@@ -5218,7 +5218,7 @@ udag2pag <- function(pag, sepset, rules=rep(TRUE,10), unfVect=NULL, verbose=FALS
 ################################################################################
 
 rfci <- function(suffStat, indepTest, alpha, labels, p,
-                 skel.method = c("stable", "original"),
+                 skel.method = c("stable", "original", "stable.fast"),
                  fixedGaps = NULL, fixedEdges = NULL,
                  NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10),
                  conservative = FALSE, maj.rule = FALSE,

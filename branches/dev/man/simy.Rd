@@ -11,13 +11,14 @@
   scoring criterion in exponential runtime.
 }
 \usage{
-simy(p, targets, score, ...)
+simy(p, targets, score, verbose = FALSE, ...)
 }
 \arguments{
   \item{p}{Number of variables.}
   \item{targets}{A list of intervention targets (cf. details).  A list of
     vectors, each vector listing the vertices of one intervention target.}
   \item{score}{An instance of a class derived from \code{\linkS4class{Score}}.}
+  \item{verbose}{if \code{TRUE}, detailed output is provided.}
   \item{\dots}{Additional arguments for debugging purposes and fine tuning.}
 }
 \details{

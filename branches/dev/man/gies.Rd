@@ -10,7 +10,7 @@
   (GIES) algorithm of Hauser and Bühlmann (2012).
 }
 \usage{
-gies <- function(p, targets, score, fixedGaps = NULL, 
+gies(p, targets, score, fixedGaps = NULL, 
   turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
 }
 \arguments{

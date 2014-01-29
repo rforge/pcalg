@@ -8,7 +8,7 @@
 
 \usage{
 fci(suffStat, indepTest, alpha, labels, p,
-    skel.method = c("stable", "original"),
+    skel.method = c("stable", "original", "stable.fast"),
     type = c("normal", "anytime", "adaptive"),
     fixedGaps = NULL, fixedEdges = NULL,
     NAdelete = TRUE, m.max = Inf, pdsep.max = Inf,
