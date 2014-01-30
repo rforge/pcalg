@@ -238,6 +238,11 @@ setRefClass("ParDAG",
         #' Simulates (draws a sample of) interventional (or observational) data
         simulate = function(n, target = integer(0), int.level = numeric(0)) {
           stop("simulate() is not implemented in this class.")
+        },
+    
+        #' Fits parameters by MLE using a scoring object
+        mle.fit = function(score) {
+          .params <<- score$global.mle(.self)
         }
         ),
 

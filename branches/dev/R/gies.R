@@ -165,6 +165,22 @@ gds <- function(p, targets, score, verbose = FALSE, ...)
 simy <- function(p, targets, score, verbose = FALSE, ...) 
   caus.inf("SiMy", p, targets, score, verbose = verbose, ...)
 
+#' Create a list of targets and a vector of target indices out of a
+#' matrix indicating interventions
+#' 
+#' @param 	A		a n x p boolean matrix; A[i, j] is TRUE iff vertex j is intervened
+#' 							in data point i
+#' @return 	list with two entries, "targets" and "target.index".
+#' 					targets is a list of unique intervention targets
+#' 					target.index is a vector of size n; the intervention target of data point
+#' 					i is given by targets[[target.index[i]]].
+mat2targets <- function(A)
+{
+  targets.raw <- as.list(apply(A, 1, which))
+  targets <- unique(targets.raw)
+  list(targets = targets, target.index = match(targets.raw, targets))
+}
+
 dag2essgraph <- function(dag, targets = list(integer(0))) {
   new("EssGraph", 
       nodes = dag$.nodes, 
@@ -175,3 +191,4 @@ dag2essgraph <- function(dag, targets = list(integer(0))) {
 #' Fast version of "gaussCItest", implemented in C++
 gaussCItest.fast <- function(x, y, S, suffStat)
   .Call("condIndTestGauss", x, y, S, suffStat$n, suffStat$C)
+

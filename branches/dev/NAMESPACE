@@ -110,6 +110,7 @@ export(trueCov,
        ges,
        gds,
        simy,
+       mat2targets,
        dag2essgraph)
 
 ## These are "internal" i.e., in man/pcalg-internal.Rd

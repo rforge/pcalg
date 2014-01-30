@@ -60,6 +60,8 @@
       \code{target} has entries, its rows are interpreted as individual
       intervention levels for each sample.}
     \item{\code{edge.count()}:}{Yields the number of edges (arrows) in the DAG.}
+    \item{\code{mle.fit(score)}:}{Fits the parameters using an appropriate
+      \code{\linkS4class{Score}} object.}
   }
 }
 \section{Methods}{

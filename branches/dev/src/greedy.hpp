@@ -460,7 +460,7 @@ public:
 	 * index 1, etc.
 	 */
 	template <typename InputIterator>
-	EssentialGraph inducedSubgraph(InputIterator first, InputIterator last)
+	EssentialGraph inducedSubgraph(InputIterator first, InputIterator last) const
 	{
 		EssentialGraph result(std::distance(first, last));
 
@@ -545,6 +545,11 @@ public:
 	 * TODO: perhaps change the class of the result...
 	 */
 	EssentialGraph getRepresentative() const;
+
+	/**
+	 * Yields all representatives of the equivalence class
+	 */
+	std::vector<boost::dynamic_bitset<> > getAllRepresentatives() const;
 
 	/**
 	 * Enable caching.

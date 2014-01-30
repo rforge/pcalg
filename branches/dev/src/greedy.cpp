@@ -412,6 +412,41 @@ EssentialGraph EssentialGraph::getRepresentative() const
 	return representative;
 }
 
+std::vector<boost::dynamic_bitset<> > EssentialGraph::getAllRepresentatives() const
+{
+	// TODO: implement! Idea:
+	// * get all chain components
+	// * for each chain component, use "one source lemma": each vertex of a chain
+	// compoment can be the unique source; orient edges away from that source, consider
+	// it as "intervention target". Go on iteratively.
+
+
+	// Get all chain components
+	boost::dynamic_bitset<> notVisited(getVertexCount());
+	notVisited.set();
+	std::vector<std::vector<uint> > chainComponents;
+	std::set<uint> chainComp;
+	std::set<uint>::iterator vi;
+	uint v;
+	while ((v = notVisited.find_first()) < getVertexCount()) {
+		chainComp = getChainComponent(v);
+		chainComponents.push_back(std::vector<uint>());
+		chainComponents.back().reserve(chainComp.size());
+		for (vi = chainComp.begin(); vi != chainComp.end(); ++vi) {
+			chainComponents.back().push_back(*vi);
+			notVisited.reset(*vi);
+		}
+	}
+
+	// Find all "representatives" on the chain components
+	EssentialGraph subgraph;
+	std::vector<std::vector<boost::dynamic_bitset<> > > orientations(chainComponents.size());
+	for (int i = 0; i < chainComponents.size(); ++i) {
+		subgraph = inducedSubgraph(chainComponents[i].begin(), chainComponents[i].end());
+		// TODO go on!!!
+	}
+}
+
 void EssentialGraph::enableCaching()
 {
 	if (!_doCaching) {
