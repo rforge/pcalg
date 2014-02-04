@@ -2628,7 +2628,7 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
   }
   else if (!identical(dim(fixedGaps), c(p, p)))
     stop("Dimensions of the dataset and fixedGaps do not agree.")
-  else if (fixedGaps != t(fixedGaps))
+  else if (!identical(fixedGaps, t(fixedGaps)) )
     stop("fixedGaps must be symmetric")
   else
     G <- !fixedGaps
