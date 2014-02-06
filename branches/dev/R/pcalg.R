@@ -2643,20 +2643,26 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
 
   if (method == "stable.fast") {
     ## Do calculation in C++...
-    if (identical(indepTest, gaussCItest.fast))
+    if (identical(indepTest, gaussCItest))
       indepTestName <- "gauss"
     else
       indepTestName <- "rfun"
-    options <- list(verbose = as.integer(verbose), m.max = ifelse(m.max == Inf, -1, m.max))
+    options <- list(
+        verbose = as.integer(verbose), 
+        m.max = as.integer(ifelse(m.max == Inf, -1, m.max)),
+        NAdelete = NAdelete)
     res <- .Call("estimateSkeleton", G, suffStat, indepTestName, indepTest, alpha, fixedEdges, options);
     G <- res$amat
-    sepset <- lapply(seq_p, function(.) vector("list",p)) # TODO change...
+    # sepset <- res$sepset
+    sepset <- lapply(seq_p, function(i) c(
+      lapply(res$sepset[[i]], function(v) if(identical(v, as.integer(-1))) NULL else v),
+      vector("list", p - length(res$sepset[[i]])))) # TODO change convention: make sepset triangular
     pMax <- res$pMax
     n.edgetests <- res$n.edgetests
     ord <- length(n.edgetests) - 1
   }
   else {
-    ## Original version
+    ## Original R version
   
     pval <- NULL
     sepset <- lapply(seq_p, function(.) vector("list",p))# a list of lists [p x p]
@@ -2747,7 +2753,7 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
 pc <- function(suffStat, indepTest, alpha, labels, p,
                fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf,
                u2pd = c("relaxed", "rand", "retry"),
-               skel.method = c("stable", "original"),
+               skel.method = c("stable", "original", "stable.fast"),
                conservative = FALSE, maj.rule = FALSE,
                solve.confl = FALSE, verbose = FALSE)
 {

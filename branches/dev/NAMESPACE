@@ -42,6 +42,8 @@ importFrom("RBGL",
 ## also    sp.between -- but only for deprecated beta.special(), hence RBGL::*
 
 importFrom("ggm", isAcyclic, transClos, topOrder)
+importFrom("Rcpp", evalCpp) # Needed for any package relying on Rcpp headers...
+  # Otherwise, there are runtime errors.
 
 
 ###----- Exports ------------------------------------------------------
@@ -78,7 +80,7 @@ export(trueCov,
        gSquareBin,
        gSquareDis,
        gaussCItest,
-       gaussCItest.fast,
+       # gaussCItest.fast,
        dsep,
        dsepTest,
        disCItest,

@@ -58,9 +58,9 @@ gies(p, targets, score, fixedGaps = NULL,
     \item a directed edge \eqn{a \longrightarrow b}{a → b} stands for an arrow
       that has the same orientation in all representatives of the 
       interventional Markov equivalence class;
-    \item an undirected edge a -- b stands for an arrow that is oriented in one 
-      way in some representatives of the equivalence class and in the other way 
-      in other representatives of the equivalence class.
+    \item an undirected edge \eqn{a} -- \eqn{b} stands for an arrow that is 
+      oriented in one  way in some representatives of the equivalence class and 
+      in the other way in other representatives of the equivalence class.
   }
   Note that when plotting the object, undirected and bidirected edges are 
   equivalent.

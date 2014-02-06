@@ -9,7 +9,7 @@
 pc(suffStat, indepTest, alpha, labels, p,
    fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf,
    u2pd = c("relaxed", "rand", "retry"),
-   skel.method = c("stable", "original"),
+   skel.method = c("stable", "original", "stable.fast"),
    conservative = FALSE, maj.rule = FALSE, solve.confl = FALSE, verbose = FALSE)
 }
 \arguments{

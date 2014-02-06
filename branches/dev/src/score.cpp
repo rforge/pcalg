@@ -71,7 +71,7 @@ Score* createScore(std::string name, TargetFamily* targets, Rcpp::List data)
 
 	dout.level(2) << "Creating score object of type '" << name << "'...\n";
 
-	if (name == "gauss.l0pen")
+	if (name == "gauss.l0pen.scatter")
 		result = new ScoreGaussL0PenScatter(Rcpp::as<uint>(data["vertex.count"]), targets);
 	else if (name == "none")
 		result = new ScoreRFunction(Rcpp::as<uint>(data["vertex.count"]), targets);

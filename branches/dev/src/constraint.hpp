@@ -15,6 +15,9 @@ typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> Inte
 typedef boost::graph_traits<InternalUndirectedGraph>::out_edge_iterator UndirOutEdgeIter;
 typedef boost::graph_traits<InternalUndirectedGraph>::edge_iterator UndirEdgeIter;
 
+// Define type for specification of separation sets
+typedef std::vector<std::vector<arma::ivec > > SepSets;
+
 /**
  * Virtual base class for conditional independence tests
  */
@@ -164,6 +167,8 @@ public:
 	void fitCondInd(
 			const double alpha,
 			Rcpp::NumericMatrix& pMax,
+			SepSets& sepSet,
 			std::vector<int>& edgeTests,
-			int maxCondSize = -1);
+			int maxCondSize = -1,
+			const bool NAdelete = true);
 };

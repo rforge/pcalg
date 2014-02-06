@@ -76,7 +76,7 @@ skeleton(suffStat, indepTest, alpha, labels, p,
   arrowheads from the DAG.  Edges in the skeleton of a DAG have the
   following interpretation:
   \cr
-  There is an edge between \eqn{i} and \eqn{j}, \eqn{i--j}{i-j},
+  There is an edge between \eqn{i} and \eqn{j}, \eqn{i} -- \eqn{j},
   if and only if variables \eqn{i} and \eqn{j} are conditionally
   dependent given \eqn{S} for all possible subsets \eqn{S} of the
   remaining nodes.
@@ -87,7 +87,7 @@ skeleton(suffStat, indepTest, alpha, labels, p,
   DAG.  Edges in this initial skeleton of a DAG have the
   following interpretation:
   \cr
-  There is an edge \eqn{i--j}{i-j} if and only if variables \eqn{i} and
+  There is an edge \eqn{i} -- \eqn{j} if and only if variables \eqn{i} and
   \eqn{j} are conditionally dependent given \eqn{S} for all possible
   subsets \eqn{S} of the neighbours of \eqn{i} and the neighbours of
   \eqn{j}.
@@ -106,7 +106,11 @@ skeleton(suffStat, indepTest, alpha, labels, p,
   are given.  Therefore, Colombo and Maathuis (2013) proposed a simple
   modification, called \dQuote{PC-stable}, which yields
   order-independent adjacencies in the skeleton, provided by \code{pc()}
-  with the new default \code{method = "stable"}.
+  with the new default \code{method = "stable"}.  This stable variant
+  of the algorithm is also available with the \code{method = "stable.fast"}:
+  it runs the algorithm of Colombo and Maathuis (2013) faster than
+  \code{method = "stable"} in general, but should be regarded as an
+  experimental option at the moment.
 
   The algorithm starts with a complete undirected graph.  In each
   step, it visits all pairs \eqn{(i,j)} of adjacent nodes in the

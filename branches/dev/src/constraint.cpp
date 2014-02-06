@@ -11,8 +11,10 @@
 #include <algorithm>
 #include <utility>
 #include <iterator>
+#include <limits>
 #include <boost/math/special_functions/log1p.hpp>
 #include <boost/math/distributions/normal.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 double IndepTestRFunction::test(uint u, uint v, std::vector<uint> S) const
 {
@@ -29,23 +31,30 @@ double IndepTestRFunction::test(uint u, uint v, std::vector<uint> S) const
 
 double IndepTestGauss::test(uint u, uint v, std::vector<uint> S) const
 {
+	// Return NaN if any of the correlation coefficients needed for calculation is NaN
+	arma::mat C_sub;
+	arma::uvec ind(S.size() + 2);
+	ind(0) = u;
+	ind(1) = v;
+	uint i, j;
+	for (i = 0; i < S.size(); ++i) ind(i + 2) = S[i];
+	C_sub = _correlation.submat(ind, ind);
+	for (i = 0; i < C_sub.n_rows; ++i)
+		for (j = 0; j < C_sub.n_cols; ++j)
+			if ((boost::math::isnan)(C_sub(i, j)))
+				return std::numeric_limits<double>::quiet_NaN();
+
 	// Calculate (absolute value of) z statistic
 	#define CUT_THR 0.9999999
 	double r, absz;
 	//dout.level(3) << " Performing independence test for conditioning set of size " << S.size() << std::endl;
 	if (S.empty())
 		r = _correlation(u, v);
-	else if (S.size() == 1) {
-		uint w = S[0];
-		r = (_correlation(u, v) - _correlation(u, w) * _correlation(v, w))/sqrt((1 - _correlation(v, w)*_correlation(v, w)) * (1 - _correlation(u, w)*_correlation(u, w)));
-	}
+	else if (S.size() == 1)
+		r = (C_sub(0, 1) - C_sub(0, 2) * C_sub(1, 2))/sqrt((1 - C_sub(1, 2)*C_sub(1, 2)) * (1 - C_sub(0, 2)*C_sub(0, 2)));
 	else {
 		arma::mat PM;
-		arma::uvec ind(S.size() + 2);
-		ind(0) = u;
-		ind(1) = v;
-		for (uint i = 0; i < S.size(); ++i) ind(i + 2) = S[i];
-		pinv(PM, _correlation.submat(ind, ind));
+		pinv(PM, C_sub);
 		// TODO include error handling
 		r = - PM(0, 1)/sqrt(PM(0, 0) * PM(1, 1));
 	}
@@ -117,14 +126,16 @@ Rcpp::LogicalMatrix Skeleton::getAdjacencyMatrix()
 void Skeleton::fitCondInd(
 		const double alpha,
 		Rcpp::NumericMatrix& pMax,
+		SepSets& sepSet,
 		std::vector<int>& edgeTests,
-		int maxCondSize) {
+		int maxCondSize,
+		const bool NAdelete) {
 	if (maxCondSize < 0)
 		maxCondSize = getVertexCount();
 
 	dout.level(2) << "Significance level " << alpha << std::endl;
-	uint condSize, u, v, a, m;
-	int i;
+	uint condSize, u, v, a, m, u_min, u_max;
+	int i, j;
 	double pval;
 	bool found = true;
 	bool edgeDone;
@@ -133,12 +144,11 @@ void Skeleton::fitCondInd(
 	std::vector<std::vector<uint>::iterator> si;
 	std::vector<uint> condSet, neighbors, commNeighbors;
 	std::vector<uint>::iterator vnext;
+	arma::ivec condSetR;
 
 	UndirEdgeIter ei, eiLast;
 	std::set< std::pair<uint, uint> > deleteEdges;
 	std::set< std::pair<uint, uint> >::iterator di;
-
-	// Skeleton oldSkel(getVertexCount());
 
 	// edgeTests lists the number of edge tests that have already been done; its size
 	// corresponds to the size of conditioning sets that have already been checked
@@ -156,6 +166,8 @@ void Skeleton::fitCondInd(
 			// Get endpoints u, v of edge; make sure that deg(u) >= deg(v)
 			u = boost::source(*ei, _graph);
 			v = boost::target(*ei, _graph);
+			u_min = std::min(u, v);
+			u_max = std::max(u, v);
 			if (getDegree(u) < getDegree(v))
 				std::swap(u, v);
 
@@ -187,8 +199,16 @@ void Skeleton::fitCondInd(
 					edgeTests.back()++;
 					dout.level(1) << "  x = " << u << ", y = " << v << ", S = " <<
 							condSet << " : pval = " << pval << std::endl;
+					if ((boost::math::isnan)(pval))
+						pval = (NAdelete ? 1. : 0.);
+					if (pval > pMax(u_min, u_max))
+						pMax(u_min, u_max) = pval;
 					if (pval >= alpha) {
 						deleteEdges.insert(std::make_pair(u, v));
+						condSetR.set_size(condSet.size());
+						for (j = 0; j < condSet.size(); ++j)
+							condSetR[j] = condSet[j] + 1;
+						sepSet[u_max][u_min] = condSetR;
 						edgeDone = true;
 						break; // Leave do-while-loop
 					}
@@ -243,11 +263,16 @@ void Skeleton::fitCondInd(
 						edgeTests.back()++;
 						dout.level(1) << "  x = " << v << ", y = " << u << ", S = " <<
 								condSet << " : pval = " << pval << std::endl;
-						// TODO cope with NAs
-						if (pval > pMax(std::min(u, v), std::max(u, v)))
-							pMax(std::min(u, v), std::max(u, v)) = pval;
+						if ((boost::math::isnan)(pval))
+							pval = (NAdelete ? 1. : 0.);
+						if (pval > pMax(u_min, u_max))
+							pMax(u_min, u_max) = pval;
 						if (pval >= alpha) {
 							deleteEdges.insert(std::make_pair(u, v));
+							condSetR.set_size(condSet.size());
+							for (j = 0; j < condSet.size(); ++j)
+								condSetR[j] = condSet[j] + 1;
+							sepSet[u_max][u_min] = condSetR;
 							edgeDone = true;
 							break; // Leave do-while-loop
 						}
@@ -274,6 +299,10 @@ void Skeleton::fitCondInd(
 		for (di = deleteEdges.begin(); di != deleteEdges.end(); ++di)
 			removeEdge(di->first, di->second);
 	} // FOR condSize
+
+	// Adjust vector of edge test numbers
+	if (edgeTests.back() == 0)
+		edgeTests.pop_back();
 }
 
 #endif /* CONSTRAINT_HPP_ */

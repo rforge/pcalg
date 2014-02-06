@@ -555,11 +555,18 @@ RcppExport SEXP estimateSkeleton(
 	// Invalid independence test name: throw error
 	else throw std::runtime_error(indepTestName + ": Invalid independence test name");
 
+	// Create list of lists for separation sets
+	Rcpp::LogicalMatrix adjMatrix(argAdjMatrix);
+	int p = adjMatrix.nrow();
+	SepSets sepSet(p, std::vector<arma::ivec>(p, arma::ivec(1)));
+	for (i = 0; i < p; ++i)
+		for (j = 0; j < p; ++j)
+			sepSet[i][j].fill(-1);
+	// TODO to save space, only create a triangular list only
+
 	// Cast graph and fixed edges
 	dout.level(2) << "Casting graph and fixed edges...\n";
-	Rcpp::LogicalMatrix adjMatrix(argAdjMatrix);
 	Rcpp::LogicalMatrix fixedMatrix(argFixedEdges);
-	int p = adjMatrix.nrow();
 	Skeleton graph(p);
 	Rcpp::NumericMatrix pMax(p, p);
 	pMax.fill(-1.);
@@ -576,20 +583,15 @@ RcppExport SEXP estimateSkeleton(
 				dout.level(1) << "  x = " << i << ", y = " << j << ", S = () : pval = " << pMax(i, j) << std::endl;
 				if (pMax(i, j) < alpha)
 					graph.addEdge(i, j);
+				else
+					sepSet[j][i].set_size(0);
 			}
 		}
-
-	/*
-	// Create list of lists for separation sets
-	Rcpp::List sepSets(getVertexCount());
-	for (i = 0; i < getVertexCount(); ++i)
-		sepSets[i] = Rcpp::List(getVertexCount);
-	 */
 
 	// Estimate skeleton
 	graph.setIndepTest(indepTest);
 	dout.level(1) << "Fitting skeleton to data...\n";
-	graph.fitCondInd(alpha, pMax, edgeTests, options["m.max"]);
+	graph.fitCondInd(alpha, pMax, sepSet, edgeTests, options["m.max"], options["NAdelete"]);
 
 	// Delete test object
 	delete indepTest;
@@ -598,6 +600,7 @@ RcppExport SEXP estimateSkeleton(
 	return Rcpp::List::create(
 			Rcpp::Named("amat") = graph.getAdjacencyMatrix(),
 			Rcpp::Named("pMax") = pMax,
+			Rcpp::Named("sepset") = Rcpp::wrap(sepSet),
 			Rcpp::Named("n.edgetests") = edgeTests);
 
 	END_RCPP

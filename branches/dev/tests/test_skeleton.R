@@ -4,7 +4,7 @@ source(system.file(package="Matrix", "test-tools-1.R", mustWork=TRUE))
 
 set.seed(234)
 p <- 10
-nreps <- 20
+nreps <- 30
 resG <- resP <- rep(FALSE,nreps)
 for (i in 1:nreps) {
   ## generate and draw random DAG :
@@ -19,7 +19,8 @@ for (i in 1:nreps) {
   suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
   indepTest <- gaussCItest
 
-  resU <- skeleton(suffStat, indepTest, 0.99, p = p)
+  resU <- skeleton(suffStat, indepTest, 0.99, p = p,
+      method = ifelse(i < nreps/2, "stable", "stable.fast"))
 
   resG[i] <- all(as(resU@graph,"matrix") == amat)
   resP[i] <- all(resU@pMax[as(resU@graph,"matrix") == TRUE] < 0.99)
@@ -74,7 +75,7 @@ p <- 100
 
 showProc.time()
 pr0 <- 1/ 2^ceiling(log2(p))
-for(skel.meth in c("stable", "original")) {
+for(skel.meth in c("stable", "original", "stable.fast")) {
     lin <-		"=============================="
     cat(sprintf("\n\n%s\nSkeleton method = \"%s\"\n%s\n",
 		lin, skel.meth, lin))

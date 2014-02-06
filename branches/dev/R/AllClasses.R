@@ -243,7 +243,7 @@ setRefClass("ParDAG",
         #' Fits parameters by MLE using a scoring object
         mle.fit = function(score) {
           .params <<- score$global.mle(.self)
-        }
+        } 
         ),
 
     "VIRTUAL")
@@ -409,13 +409,18 @@ setRefClass("Score",
 setRefClass("GaussL0penIntScore",
     contains = "Score",
 
+    fields = list(
+        .format = "character"),
+        
     validity = function(object) {
-      if (unique(object$pp.dat$scatter.index) != 1:length(object$pp.dat$scatter))
-        return("The index list of distinct scatter matrices has an invalid range.")
       p <- ncol(object$pp.dat$data)
-      if (any(sapply(1:length(object$pp.dat$scatter),
-              function(i) dim(object$pp.dat$scatter[[i]]) != c(p, p))))
-        return("The scatter matrices have invalid dimensions.")
+      if (!is.null(object$pp.dat$scatter)) {
+          ## Data storage with precalculated scatter matrices
+          if (unique(object$pp.dat$scatter.index) != 1:length(object$pp.dat$scatter))
+            return("The index list of distinct scatter matrices has an invalid range.")
+          if (any(sapply(object$pp.dat$scatter, function(mat) dim(mat) != c(p, p))))
+            return("The scatter matrices have invalid dimensions.")
+        }
 
       return(TRUE)
     },
@@ -427,10 +432,14 @@ setRefClass("GaussL0penIntScore",
             target.index = rep(as.integer(1), nrow(data)),
             lambda = 0.5*log(nrow(data)),
             intercept = FALSE,
+            format = c("raw", "scatter"),
             use.cpp = TRUE,
             ...) {
           ## Store supplied data in sorted form
           callSuper(data = data, targets = targets, target.index = target.index, ...)
+
+          ## Number of variables
+          p <- ncol(data)
 
           ## l0-penalty is decomposable
           decomp <<- TRUE
@@ -438,20 +447,28 @@ setRefClass("GaussL0penIntScore",
           ## Underlying causal model class: Gaussian
           .pardag.class <<- "GaussParDAG"
 
-          ## Store penalty constant
+          ## Store different settings
           pp.dat$lambda <<- lambda
 
+          ## Store data format. Currently supporting scatter matrices
+          ## and raw data only (recommended for high-dimensional data)
+          .format <<- match.arg(format)
+          ## If format not specified by user, choose it based on dimensions
+          ## TODO: check if this choice is reasonable...
+          if (length(format) > 1)
+            .format <<- ifelse(p >= nrow(data) || p >= 500, "raw", "scatter")
+          ## TODO change following line as soon as "raw" format is implemented and tested
+          .format <<- "scatter"
+          
           ## Use C++ functions if requested
           if (use.cpp)
-            c.fcn <<- "gauss.l0pen"
+            c.fcn <<- ifelse(.format == "scatter", "gauss.l0pen.scatter", "gauss.l0pen.raw")
 
-          ## Number of variables
-          p <- ncol(data)
-
-          ## Add column of ones to data matrix; this allows the computation
-          ## of an intercept if requested
+          ## Add column of ones to data matrix to calculate scatter matrices;
+          ## this allows the computation of an intercept if requested
           pp.dat$intercept <<- intercept
-          data <- cbind(data, 1)
+          data <- cbind(pp.dat$data, 1)# take matrix that is already pre-processed,
+          # having reordered rows!
 
           ## Create scatter matrices for different targets
           ti.lb <- c(sapply(1:length(pp.dat$targets), function(i) match(i, pp.dat$target.index)),

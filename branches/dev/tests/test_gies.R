@@ -18,26 +18,36 @@ DBG <- if(doExtras) TRUE else FALSE # no debugging by default
 tol <- sqrt(.Machine$double.eps) # = default for all.equal()
 
 fcns <- c(GIES = gies, GDS = gds)
+nreps <- 10
 
 for (nf in names(fcns)) {
   cat(if(doExtras)"\n\n", nf, if(doExtras)":\n" else ": ... ",
       if(doExtras) paste0(paste(rep("=", nchar(nf)), collapse=""), "\n"),
       sep = "")
   for (cpp in c(FALSE, TRUE)) {
-    score <- new("GaussL0penIntScore", 
-                 targets = gauss.targets, 
-                 target.index = gauss.target.index, 
-                 data = gauss.data,
-                 use.cpp = cpp)
-    est.graph <- fcns[[nf]](p, gauss.targets, score, verbose = DBG)
-    for (i in 1:p) {
-      if(doExtras) cat("  use.cpp = ", cpp,"; i = ", i, "\n", sep="")
-      if (!isTRUE(all.equal(est.graph$essgraph$.in.edges[[i]],
-                            gauss.parents[[i]], tolerance = tol)))
-        stop("Parents are not estimated correctly.")
+    ## Randomly permute data
+    for (i in 1:nreps) {
+      perm <- 1:nrow(gauss.data)
+      if (i > 1) {
+        set.seed(i)
+        perm <- sample(perm)
+      }
+      score <- new("GaussL0penIntScore", 
+                   targets = gauss.targets, 
+                   target.index = gauss.target.index[perm], 
+                   data = gauss.data[perm, ],
+                   use.cpp = cpp)
+      est.graph <- fcns[[nf]](p, gauss.targets, score, verbose = DBG)
+      for (i in 1:p) {
+        if(doExtras) cat("  use.cpp = ", cpp,"; i = ", i, "\n", sep="")
+        if (!isTRUE(all.equal(est.graph$essgraph$.in.edges[[i]],
+                              gauss.parents[[i]], tolerance = tol)))
+          stop("Parents are not estimated correctly.")
+      }
+      print(proc.time())
     }
-    print(proc.time())
   }
   cat("[Ok]\n")
 }
+
 cat(if(doExtras) "\n", "Done.\n")
