@@ -14,4 +14,7 @@
 //#define ARMA_DONT_PRINT_RUNTIME_ERRORS
 #include <armadillo>
 
+// For compiler that do not know uint...
+typedef unsigned int uint;
+
 #endif /* ARMALAPACK_HPP_ */

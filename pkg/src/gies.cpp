@@ -13,10 +13,6 @@
 #include <boost/lambda/bind.hpp>
 #include <boost/graph/adjacency_list.hpp>
 
-
-// For Mac g++ compiler... that bastard doesn't know uint...
-typedef unsigned int uint;
-
 // Define BGL class for undirected graph
 typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> UndirectedGraph;
 
