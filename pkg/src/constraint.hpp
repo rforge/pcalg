@@ -6,7 +6,6 @@
  */
 
 #include "armaLapack.hpp"
-#include <Rcpp.h>
 #include <vector>
 #include <boost/graph/adjacency_list.hpp>
 

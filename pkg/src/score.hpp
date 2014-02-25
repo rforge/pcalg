@@ -15,7 +15,6 @@
 #include <map>
 #include <string>
 #include <boost/dynamic_bitset.hpp>
-#include <Rcpp.h>
 
 typedef unsigned int uint;
 
