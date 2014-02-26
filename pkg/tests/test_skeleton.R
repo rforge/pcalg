@@ -106,6 +106,7 @@ for(skel.meth in c("stable", "original", "stable.fast")) {
 	cat("Checking skeletons() ")
 	switch(skel.meth,
 	       "stable" = stopifnot(isEqPerms(res)),
+         "stable.fast" = stopifnot(isEqPerms(res)),
 	       "original" = {
 		   eq <- isEqPerms(res)
 		   if(!all(eq)) {
