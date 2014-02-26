@@ -30,9 +30,9 @@ if(doExtras) {
     for(i in nodes[1:3]) ## Nodes 1,2,3 are all "root" nodes:
 	stopifnot(vapply(LL[[i]], identical, NA, y=integer(0)))
 
-    ## str(LL[-(1:3)]) ## Martin: interesting.. Q: is "this" known? A: yes, basically
+    str(LL[-(1:3)]) ## Martin: interesting.. Q: is "this" known? A: yes, basically
 } else {
-    ## str(LL)
+    str(LL)
 }
 
 ###-------- CPDAG --------------------
@@ -49,7 +49,7 @@ L2 <- lapply(nodes, function(i)
 		    amat = CP.amat, x = i, type="cpdag"))
 ), "\n")
 
-## str(L2)
+str(L2)
 
 
 ###-------- PAG ----------------------
@@ -77,7 +77,7 @@ L3 <- lapply(nodes, function(i)
 		    amat = PAG.amat, x = i, type="pag"))
 ), "\n")
 
-## str(L3)
+str(L3)
 
 
 ###-------- MAG ----------------------
@@ -94,4 +94,4 @@ L4 <- lapply(nodes, function(i)
 ), "\n")
 ## actually this is the *fastest* of the cases
 
-## str(L4)
+str(L4)
