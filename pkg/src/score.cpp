@@ -13,9 +13,8 @@
 
 bool TargetFamily::protects(const uint a, const uint b) const
 {
-	int i;
 	bool aInI, bInI;
-	for (i = 0; i < size(); i++) {
+	for (std::size_t i = 0; i < size(); i++) {
 		aInI = (std::find((*this)[i].begin(), (*this)[i].end(), a) != (*this)[i].end());
 		bInI = (std::find((*this)[i].begin(), (*this)[i].end(), b) != (*this)[i].end());
 		if (aInI ^ bInI) return true;
@@ -144,17 +143,15 @@ std::vector<double> ScoreRFunction::localMLE(const uint vertex, const std::set<u
 std::vector< std::vector<double> > ScoreRFunction::globalMLE(const EssentialGraph& dag) const
 {
 	// Construct list of in-edges
-	uint v, i;
 	std::set<uint> parents;
-	std::set<uint>::iterator si;
 	Rcpp::IntegerVector shiftParents;
 	Rcpp::List inEdges(dag.getVertexCount());
-	for (v = 0; v < _vertexCount; ++v) {
+	for (uint v = 0; v < _vertexCount; ++v) {
 		// Get parents of vertex v and adapt their indices to the R convention
 		parents = dag.getParents(v);
-		shiftParents = Rcpp::IntegerVector(parents.size());
-		for (si = parents.begin(), i = 0; si != parents.end(); ++si, ++i)
-			shiftParents[i] = *si + 1;
+		shiftParents = Rcpp::IntegerVector(parents.begin(), parents.end());
+		for (R_len_t i = 0; i < shiftParents.size(); ++i)
+			shiftParents[i]++;
 
 		// Add parents to list of in-edges
 		inEdges[v] = shiftParents;
@@ -163,7 +160,7 @@ std::vector< std::vector<double> > ScoreRFunction::globalMLE(const EssentialGrap
 	// Calculate (and return) global MLE
 	Rcpp::List listMLE = _rfunction[R_FCN_INDEX_GLOBAL_MLE](inEdges);
 	std::vector< std::vector<double> > result(listMLE.size());
-	for (i = 0; i < listMLE.size(); ++i)
+	for (R_len_t i = 0; i < listMLE.size(); ++i)
 		result[i] = Rcpp::as<std::vector<double> >(listMLE[i]);
 	return result;
 }
@@ -171,7 +168,7 @@ std::vector< std::vector<double> > ScoreRFunction::globalMLE(const EssentialGrap
 void ScoreGaussL0PenScatter::setData(Rcpp::List& data)
 {
 	std::vector<int>::iterator vi;
-	int i;
+	//uint i;
 
 	// Cast preprocessed data from R list
 	dout.level(2) << "Casting preprocessed data...\n";
@@ -183,14 +180,14 @@ void ScoreGaussL0PenScatter::setData(Rcpp::List& data)
 	Rcpp::NumericMatrix scatterMat;
 	_disjointScatterMatrices.resize(scatter.size());
 	dout.level(3) << "# disjoint scatter matrices: " << scatter.size() << "\n";
-	for (i = 0; i < scatter.size(); ++i) {
-		scatterMat = Rcpp::as<Rcpp::NumericMatrix>(scatter[i]);
+	for (R_len_t i = 0; i < scatter.size(); ++i) {
+		scatterMat = Rcpp::NumericMatrix((SEXP)(scatter[i]));
 		_disjointScatterMatrices[i] = arma::mat(scatterMat.begin(), scatterMat.nrow(), scatterMat.ncol(), false);
 	}
 
 	// Cast index of scatter matrices, adjust R indexing convention to C++
 	std::vector<int> scatterIndex = Rcpp::as<std::vector<int> >(data["scatter.index"]);
-	for (i = 0; i < scatterIndex.size(); ++i)
+	for (std::size_t i = 0; i < scatterIndex.size(); ++i)
 		_scatterMatrices[i] = &(_disjointScatterMatrices[scatterIndex[i] - 1]);
 
 	// Cast lambda: penalty constant

@@ -184,15 +184,14 @@ std::vector<uint> EssentialGraph::greedyColoring(std::vector<uint> vertices)
 	std::vector<uint> coloring(vertices.size());
 	boost::dynamic_bitset<> available;
 	std::set<uint> adjacent;
-	int i, j;
 
-	for (i = 1; i < vertices.size(); ++i){
+	for (std::size_t i = 1; i < vertices.size(); ++i){
 		// Assign vertex i the smallest color that has not yet been
 		// used among its neighbors with smaller index
 		adjacent = getAdjacent(vertices[i]);
 		available.resize(adjacent.size());
 		available.set();
-		for (j = 0; j < i; ++j)
+		for (std::size_t j = 0; j < i; ++j)
 			if (isAdjacent(vertices[j], vertices[i]) && coloring[j] < adjacent.size())
 				available.reset(coloring[j]);
 		coloring[i] = (available.any() ? available.find_first() : adjacent.size());
@@ -441,7 +440,7 @@ std::vector<boost::dynamic_bitset<> > EssentialGraph::getAllRepresentatives() co
 	// Find all "representatives" on the chain components
 	EssentialGraph subgraph;
 	std::vector<std::vector<boost::dynamic_bitset<> > > orientations(chainComponents.size());
-	for (int i = 0; i < chainComponents.size(); ++i) {
+	for (std::size_t i = 0; i < chainComponents.size(); ++i) {
 		subgraph = inducedSubgraph(chainComponents[i].begin(), chainComponents[i].end());
 		// TODO go on!!!
 	}
@@ -500,7 +499,6 @@ ArrowChange EssentialGraph::getOptimalArrowInsertion(const uint v)
 	std::vector<std::set<uint> > maxCliques;
 	std::set<uint>::iterator si;
 	uint u;
-	int i;
 	double diffScore;
 	CliqueStack cliqueStack;
 	boost::dynamic_bitset<> posterior, forbidden;
@@ -546,7 +544,7 @@ ArrowChange EssentialGraph::getOptimalArrowInsertion(const uint v)
 			cliqueStack.push_back(N);
 			cliqueStack.stop_sets.insert(N);
 
-			for (i = 0; i < maxCliques.size(); ++i) {
+			for (std::size_t i = 0; i < maxCliques.size(); ++i) {
 				// Only consider maximal cliques that contain N
 				if (std::includes(maxCliques[i].begin(), maxCliques[i].end(), N.begin(), N.end())) {
 					// Check all subsets of the actual maximal clique
@@ -610,7 +608,6 @@ ArrowChange EssentialGraph::getOptimalArrowDeletion(const uint v)
 	std::vector<std::set<uint> > maxCliques;
 	std::set<uint> C, C_par, C_sub, N;
 	std::set<uint>::iterator iter, ui;
-	int i;
 	double diffScore;
 	CliqueStack cliqueStack;
 	boost::unordered_map<std::set<uint>, double > localScore;
@@ -635,7 +632,7 @@ ArrowChange EssentialGraph::getOptimalArrowDeletion(const uint v)
 		cliqueStack.clear_all();
 
 		// Calculate the score difference for all cliques in N
-		for (i = 0; i < maxCliques.size(); ++i) {
+		for (std::size_t i = 0; i < maxCliques.size(); ++i) {
 			// Check all subsets of the actual maximal clique
 			cliqueStack.append(maxCliques[i]);
 			while(!cliqueStack.empty()) {
@@ -687,7 +684,6 @@ ArrowChange EssentialGraph::getOptimalArrowTurning(const uint v)
 	std::set<uint> children, neighbors, neighbors2, parents, C, C_par, C_opt, C_sub, CminN, N;
 	std::vector<std::set<uint> > maxCliques;
 	std::set<uint>::iterator iter, ui;
-	int i;
 	double diffScore;
 	CliqueStack cliqueStack;
 
@@ -717,7 +713,7 @@ ArrowChange EssentialGraph::getOptimalArrowTurning(const uint v)
 			cliqueStack.clear_all();
 
 			// Calculate the score difference for all (admissible) cliques in the neighborhood of v
-			for (i = 0; i < maxCliques.size(); ++i) {
+			for (std::size_t i = 0; i < maxCliques.size(); ++i) {
 				// Check all subsets of the actual maximal clique
 				cliqueStack.append(maxCliques[i]);
 				while(!cliqueStack.empty()) {
@@ -775,7 +771,7 @@ ArrowChange EssentialGraph::getOptimalArrowTurning(const uint v)
 			cliqueStack.push_back(N);
 			cliqueStack.stop_sets.insert(N);
 
-			for (i = 0; i < maxCliques.size(); ++i) {
+			for (std::size_t i = 0; i < maxCliques.size(); ++i) {
 				// Only consider maximal cliques that contain N
 				if (std::includes(maxCliques[i].begin(), maxCliques[i].end(), N.begin(), N.end())) {
 					// Check all subsets of the actual maximal clique
@@ -831,7 +827,7 @@ std::set<uint> EssentialGraph::_bitsToParents(const int vertex, const uint32_t b
 {
 	std::set<uint> parents;
 	uint32_t pattern = 1;
-	for (int i = 0; i < getVertexCount(); i++) {
+	for (uint i = 0; i < getVertexCount(); i++) {
 		if (i != vertex) {
 			if (bits & pattern)
 				parents.insert(i);
@@ -1269,7 +1265,7 @@ bool EssentialGraph::greedyForward()
 
 bool EssentialGraph::greedyBackward()
 {
-	uint v, v_opt;
+	uint v_opt = 0;
 	ArrowChange deletion, optDeletion;
 
 	// For DEBUGGING purposes: print phase
@@ -1279,7 +1275,7 @@ bool EssentialGraph::greedyBackward()
 	optDeletion.score = _minScoreDiff;
 
 	// TODO Allow caching for backward phase. At the moment, assumes no caching.
-	for (v = 0; v < getVertexCount(); v++) {
+	for (uint v = 0; v < getVertexCount(); v++) {
 		// Calculate optimal arrow insertion for given target vertex v
 		deletion = getOptimalArrowDeletion(v);
 
@@ -1310,7 +1306,7 @@ bool EssentialGraph::greedyBackward()
 
 bool EssentialGraph::greedyTurn()
 {
-	uint v, v_opt;
+	uint v_opt = 0;
 	ArrowChange turning, optTurning;
 
 	// For DEBUGGING purposes: print phase
@@ -1320,7 +1316,7 @@ bool EssentialGraph::greedyTurn()
 	optTurning.score = _minScoreDiff;
 
 	// TODO Allow caching for turning phase. At the moment, assumes no caching.
-	for (v = 0; v < getVertexCount(); v++) {
+	for (uint v = 0; v < getVertexCount(); v++) {
 		// Calculate optimal arrow insertion for given target vertex v
 		turning = getOptimalArrowTurning(v);
 
@@ -1352,7 +1348,7 @@ bool EssentialGraph::greedyTurn()
 
 step_dir EssentialGraph::greedyStep()
 {
-	uint v, v_opt;
+	uint v_opt = 0;
 	step_dir optDir;
 	ArrowChange change, optChange;
 
@@ -1364,7 +1360,7 @@ step_dir EssentialGraph::greedyStep()
 	optDir = SD_NONE;
 
 	// Look for optimal arrow insertion
-	for (v = 0; v < getVertexCount(); v++) {
+	for (uint v = 0; v < getVertexCount(); v++) {
 		change = getOptimalArrowInsertion(v);
 
 		// Look for optimal score
@@ -1376,7 +1372,7 @@ step_dir EssentialGraph::greedyStep()
 	}
 
 	// Look for optimal arrow deletion
-	for (v = 0; v < getVertexCount(); v++) {
+	for (uint v = 0; v < getVertexCount(); v++) {
 		change = getOptimalArrowDeletion(v);
 
 		// Look for optimal score
@@ -1388,7 +1384,7 @@ step_dir EssentialGraph::greedyStep()
 	}
 
 	// Look for optimal arrow turning
-	for (v = 0; v < getVertexCount(); v++) {
+	for (uint v = 0; v < getVertexCount(); v++) {
 		change = getOptimalArrowTurning(v);
 
 		// Look for optimal score
@@ -1428,7 +1424,7 @@ step_dir EssentialGraph::greedyStep()
 
 bool EssentialGraph::greedyDAGForward()
 {
-	uint u, v, u_opt, v_opt, p;
+	uint u_opt = 0, v_opt = 0;
 	double diffScore, diffScore_opt;
 	std::set<uint> parents, C_new;
 
@@ -1436,12 +1432,12 @@ bool EssentialGraph::greedyDAGForward()
 
 	// Initialize help variables
 	diffScore_opt = _minScoreDiff;
-	p = getVertexCount();
+	uint p = getVertexCount();
 
 	// Find edge that maximally increases BIC score when added
-	for (v = 0; v < p; ++v) {
+	for (uint v = 0; v < p; ++v) {
 		parents = getParents(v);
-		for (u = 0; u < p; ++u)
+		for (uint u = 0; u < p; ++u)
 			if (u != v && !isAdjacent(u, v) && !gapFixed(u, v) && !existsPath(v, u)) {
 				// Calculate BIC score difference for adding edge (u, v)
 				C_new = parents;
@@ -1472,7 +1468,7 @@ bool EssentialGraph::greedyDAGForward()
 
 bool EssentialGraph::greedyDAGBackward()
 {
-	uint v, u_opt, v_opt, p;
+	uint u_opt = 0, v_opt = 0;
 	double diffScore, diffScore_opt;
 	std::set<uint> parents, C_new;
 	std::set<uint>::iterator ui;
@@ -1481,10 +1477,10 @@ bool EssentialGraph::greedyDAGBackward()
 
 	// Initialize help variables
 	diffScore_opt = _minScoreDiff;
-	p = getVertexCount();
+	uint p = getVertexCount();
 
 	// Find edge that maximally increases BIC score when removed
-	for (v = 0; v < p; ++v) {
+	for (uint v = 0; v < p; ++v) {
 		parents = getParents(v);
 		for (ui = parents.begin(); ui != parents.end(); ++ui) {
 			// Calculate BIC score difference when removing edge (u, v)
@@ -1516,7 +1512,7 @@ bool EssentialGraph::greedyDAGBackward()
 
 bool EssentialGraph::greedyDAGTurn()
 {
-	uint v, u_opt, v_opt, p;
+	uint u_opt = 0, v_opt = 0;
 	double diffScore, diffScore_opt;
 	std::set<uint> parents, C_new, D_new, emptyset;
 	std::set<uint>::iterator ui;
@@ -1525,11 +1521,11 @@ bool EssentialGraph::greedyDAGTurn()
 
 	// Initialize help variables
 	diffScore_opt = _minScoreDiff;
-	p = getVertexCount();
+	uint p = getVertexCount();
 
 	// Find edge that maximally increases BIC score when turned, i.e. when its
 	// orientation is changed
-	for (v = 0; v < p; ++v) {
+	for (uint v = 0; v < p; ++v) {
 		parents = getParents(v);
 		for (ui = parents.begin(); ui != parents.end(); ++ui) {
 			if (!existsPath(*ui, v)) {
@@ -1571,7 +1567,6 @@ void EssentialGraph::siMySearch()
 	if (getVertexCount() > 31)
 		throw std::length_error("Vertex count must not exceed 31.");
 
-	int i;
 	uint32_t subset, subsubset, pattern;
 	bool unset;
 
@@ -1587,7 +1582,7 @@ void EssentialGraph::siMySearch()
 	std::vector< double > totalScore(1 << getVertexCount(), 0.);
 
 	// Forward phase of DP: fill in tables of best parents and corresponding local scores
-	for (i = 0; i < getVertexCount(); i++) {
+	for (uint i = 0; i < getVertexCount(); i++) {
 		//std::cout << "\n" << i << ":\t";
 
 		for (subset = 0; subset < bestParents[i].size(); subset++) {
@@ -1612,7 +1607,7 @@ void EssentialGraph::siMySearch()
 	//std::cout << "\n\nBest sinks:\n";
 	for (subset = 1; subset < totalScore.size(); subset++) {
 		unset = true;
-		for (i = 0; i < getVertexCount(); i++) {
+		for (uint i = 0; i < getVertexCount(); i++) {
 			if ((1 << i) & subset) {
 				// Calculate subsubset w.r.t. candidate set for parents, not w.r.t. full set of variables
 				pattern = (1 << i) - 1;
@@ -1634,6 +1629,7 @@ void EssentialGraph::siMySearch()
 	std::set<uint> parents;
 	std::set<uint>::iterator pi;
 	subset = (1 << getVertexCount()) - 1;
+	uint i;
 	while (subset) {
 		i = bestSink[subset];
 

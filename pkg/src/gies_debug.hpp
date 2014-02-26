@@ -22,9 +22,8 @@ namespace std {
  * Sends a vector to an output stream (e.g., cout)
  */
 template <typename T> ostream& operator<<(ostream& out, const vector<T>& vec) {
-	int i;
 	out << "(";
-	for (i = 0; i + 1 < vec.size(); i++)
+	for (size_t i = 0; i + 1 < vec.size(); i++)
 		out << vec[i] << ", ";
 	if (!vec.empty())
 		out << vec.back();
