@@ -12,8 +12,8 @@ manualInst.vignette <- function(fstem, verbose=FALSE) {
     ## o.wd <- setwd(dirname(Rnw)); on.exit(setwd(o.wd))
     pkgSrcDir <-
         switch(Sys.getenv("USER"),
-               "maechler" = "~/R/Pkgs/pcalg-dev",
-               "kalischm" = ".....",    # PATH of pcalg-dev
+	       "maechler" = "~/R/Pkgs/pcalg",# ".../pcalg-dev"
+               "kalischm" = ".....",    # PATH of pcalg or pcalg-dev
                stop("Must add your username / pcalg-source-directory in doc/sweaveCommand.R "))
 
     o.wd <- setwd(file.path(pkgSrcDir, "vignettes")); on.exit(setwd(o.wd))
