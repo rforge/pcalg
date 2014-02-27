@@ -327,6 +327,7 @@ setRefClass("Score",
           pp.dat$data <<- data[perm, ]
           pp.dat$vertex.count <<- ncol(data)
           pp.dat$total.data.count <<- as.integer(nrow(data))
+          pp.dat$data.count <<- 
 
           ## Declare scores as not decomposable "by default"
           decomp <<- FALSE
@@ -449,6 +450,7 @@ setRefClass("GaussL0penIntScore",
 
           ## Store different settings
           pp.dat$lambda <<- lambda
+          pp.dat$intercept <<- intercept
 
           ## Store data format. Currently supporting scatter matrices
           ## and raw data only (recommended for high-dimensional data)
@@ -458,54 +460,62 @@ setRefClass("GaussL0penIntScore",
           if (length(format) > 1)
             .format <<- ifelse(p >= nrow(data) || p >= 500, "raw", "scatter")
           ## TODO change following line as soon as "raw" format is implemented and tested
-          .format <<- "scatter"
+          # .format <<- "scatter"
           
           ## Use C++ functions if requested
           if (use.cpp)
             c.fcn <<- ifelse(.format == "scatter", "gauss.l0pen.scatter", "gauss.l0pen.raw")
 
-          ## Add column of ones to data matrix to calculate scatter matrices;
-          ## this allows the computation of an intercept if requested
-          pp.dat$intercept <<- intercept
-          data <- cbind(pp.dat$data, 1)# take matrix that is already pre-processed,
-          # having reordered rows!
-
-          ## Create scatter matrices for different targets
-          ti.lb <- c(sapply(1:length(pp.dat$targets), function(i) match(i, pp.dat$target.index)),
-              length(pp.dat$target.index) + 1)
-          scatter.mat <- lapply(1:length(pp.dat$targets),
-              function(i) crossprod(data[ti.lb[i]:(ti.lb[i + 1] - 1), , drop = FALSE]))
-
-          ## Find all interventions in which the different variables
-          ## are _not_ intervened
-          non.ivent <- matrix(FALSE, ncol = p, nrow = length(pp.dat$targets))
-          pp.dat$scatter.index <<- integer(p)
-          pp.dat$data.count <<- integer(p)
-          max.si <- 0
-          for (i in 1:p) {
-            ## Generate indices of (distinct) scatter matrices
-            non.ivent[ , i] <- sapply(seq_along(pp.dat$targets),
-                                      function(j) i %nin% pp.dat$targets[[j]])
-            pp.dat$scatter.index[i] <<- max.si + 1
-            j <- 1
-            while (j < i) {
-              if (all(non.ivent[, i] == non.ivent[, j])) {
-                pp.dat$scatter.index[i] <<- pp.dat$scatter.index[j]
-                j <- i
+          ## Preprocess data according to storage format
+          if (.format == "scatter") {
+            ## Add column of ones to data matrix to calculate scatter matrices;
+            ## this allows the computation of an intercept if requested
+            data <- cbind(pp.dat$data, 1)# take matrix that is already pre-processed,
+            # having reordered rows!
+  
+            ## Create scatter matrices for different targets
+            ti.lb <- c(sapply(1:length(pp.dat$targets), function(i) match(i, pp.dat$target.index)),
+                length(pp.dat$target.index) + 1)
+            scatter.mat <- lapply(1:length(pp.dat$targets),
+                function(i) crossprod(data[ti.lb[i]:(ti.lb[i + 1] - 1), , drop = FALSE]))
+  
+            ## Find all interventions in which the different variables
+            ## are _not_ intervened
+            non.ivent <- matrix(FALSE, ncol = p, nrow = length(pp.dat$targets))
+            pp.dat$scatter.index <<- integer(p)
+            pp.dat$data.count <<- integer(p)
+            max.si <- 0
+            for (i in 1:p) {
+              ## Generate indices of (distinct) scatter matrices
+              non.ivent[ , i] <- sapply(seq_along(pp.dat$targets),
+                                        function(j) i %nin% pp.dat$targets[[j]])
+              pp.dat$scatter.index[i] <<- max.si + 1
+              j <- 1
+              while (j < i) {
+                if (all(non.ivent[, i] == non.ivent[, j])) {
+                  pp.dat$scatter.index[i] <<- pp.dat$scatter.index[j]
+                  j <- i
+                }
+                j <- j + 1
               }
-              j <- j + 1
+              if (pp.dat$scatter.index[i] == max.si + 1)
+                max.si <- max.si + 1
+  
+              ## Count data samples from "non-interventions" at i
+              pp.dat$data.count[i] <<- sum(ti.lb[which(non.ivent[, i]) + 1] - ti.lb[which(non.ivent[, i])])
             }
-            if (pp.dat$scatter.index[i] == max.si + 1)
-              max.si <- max.si + 1
-
-            ## Count data samples from "non-interventions" at i
-            pp.dat$data.count[i] <<- sum(ti.lb[which(non.ivent[, i]) + 1] - ti.lb[which(non.ivent[, i])])
-          }
-
-          ## Calculate the distinct scatter matrices for the
-          ## "non-interventions"
-          pp.dat$scatter <<- lapply(1:max.si,
-             function(i) Reduce("+", scatter.mat[non.ivent[, match(i, pp.dat$scatter.index)]]))
+  
+            ## Calculate the distinct scatter matrices for the
+            ## "non-interventions"
+            pp.dat$scatter <<- lapply(1:max.si,
+               function(i) Reduce("+", scatter.mat[non.ivent[, match(i, pp.dat$scatter.index)]]))
+          } else if (.format == "raw") {
+            ## Store list of index vectors of "non-interventions": for each vertex k,
+            ## store the indices of the data points for which k has NOT been intervened
+            A <<- !targets2mat(p, pp.dat$targets, pp.dat$target.index)
+            pp.dat$non.int <<- lapply(1:p, function(i) which(A[, i])) 
+            pp.dat$data.count <<- as.integer(colSums(pp.dat$non.int))
+          } # IF "raw"
         },
 
         #' Calculates the local score of a vertex and its parents

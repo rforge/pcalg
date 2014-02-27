@@ -5,7 +5,6 @@
  * $Id$
  */
 
-#include <Rcpp.h>
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -13,16 +12,12 @@
 #include <boost/lambda/bind.hpp>
 #include <boost/graph/adjacency_list.hpp>
 
-
-// For Mac g++ compiler... that bastard doesn't know uint...
-typedef unsigned int uint;
-
 // Define BGL class for undirected graph
 typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> UndirectedGraph;
 
+#include "constraint.hpp"
 #include "score.hpp"
 #include "greedy.hpp"
-#include "constraint.hpp"
 #define DEFINE_GLOBAL_DEBUG_STREAM
 #include "gies_debug.hpp"
 

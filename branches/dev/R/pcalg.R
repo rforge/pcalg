@@ -2620,6 +2620,11 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
   }
   seq_p <- seq_len(p)
   method <- match.arg(method)
+  ## C++ version still has problems under Windows; will have to check why
+  if (method == "stable.fast" && .Platform$OS.type == "windows") {
+    method <- "stable"
+    warning("Method 'stable.fast' is not available under Windows; using 'stable' instead.")
+  }
 
   ## G := !fixedGaps, i.e. G[i,j] is true  iff  i--j  will be investigated
   if (is.null(fixedGaps)) {

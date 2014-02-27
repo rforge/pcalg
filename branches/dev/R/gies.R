@@ -181,6 +181,22 @@ mat2targets <- function(A)
   list(targets = targets, target.index = match(targets.raw, targets))
 }
 
+#' Create a boolean "intervention matrix" out of a list of targets
+#' and a vector of target indices.  Can be seen as the "inverse function"
+#' of "mat2targets"
+#' 
+#' @param 	p							number of vertices
+#' @param 	targets				list of (unique) targets
+#' @param 	target.index	vector of target indices
+targets2mat <- function(p, targets, target.index)
+{
+  sapply(target.index, function(i) {
+        res <- logical(p)
+        res[targets[[i]]] <- TRUE
+        res
+      })
+}
+
 dag2essgraph <- function(dag, targets = list(integer(0))) {
   new("EssGraph", 
       nodes = dag$.nodes, 
