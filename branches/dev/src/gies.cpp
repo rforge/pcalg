@@ -32,13 +32,12 @@ EssentialGraph castGraph(SEXP argInEdges)
 {
 	int i;
 	Rcpp::List listInEdges(argInEdges);
-	std::vector<uint> vecParents;
-	std::vector<uint>::iterator vi;
 	EssentialGraph result(listInEdges.size());
+
 	for (i = 0; i < listInEdges.size(); ++i) {
-		vecParents = listInEdges[i];
+		Rcpp::IntegerVector vecParents((SEXP)(listInEdges[i]));
 		// Adapt indices to C++ convention
-		for (vi = vecParents.begin(); vi != vecParents.end(); ++vi)
+		for (Rcpp::IntegerVector::iterator vi = vecParents.begin(); vi != vecParents.end(); ++vi)
 			result.addEdge(*vi - 1, i);
 	}
 
@@ -54,9 +53,8 @@ Rcpp::List wrapGraph(EssentialGraph graph)
 	Rcpp::IntegerVector vecEdges;
 	std::set<uint> edges;
 	std::set<uint>::iterator si;
-	int i;
 
-	for (i = 0; i < graph.getVertexCount(); ++i) {
+	for (uint i = 0; i < graph.getVertexCount(); ++i) {
 		edges = graph.getInEdges(i);
 		vecEdges = Rcpp::IntegerVector();
 		for (si = edges.begin(); si != edges.end(); ++si)
@@ -297,7 +295,7 @@ RcppExport SEXP causalInference(
 	// Cast option for fixed gaps: logical matrix, assumed to be symmetric by now
 	if (!Rf_isNull(options["fixedGaps"])) {
 		Rcpp::LogicalMatrix gapsMatrix((SEXP)(options["fixedGaps"]));
-		uint n_gaps;
+		uint n_gaps = 0;
 		for (i = 0; i < p; ++i)
 			for (j = i + 1; j < p; ++j)
 				if (gapsMatrix(i, j))
@@ -489,13 +487,12 @@ RcppExport SEXP condIndTestGauss(
 	// Exception handling
 	BEGIN_RCPP
 
-	int i;
-
 	// Cast arguments; note index shift between R and C++!
 	uint u = Rcpp::as<uint>(argVertex1) - 1;
 	uint v = Rcpp::as<uint>(argVertex2) - 1;
 	std::vector<uint> S = Rcpp::as<std::vector<uint> >(argCondSet);
-	for (i = 0; i < S.size(); ++i) S[i]--;
+	for (std::vector<uint>::iterator si = S.begin(); si != S.end(); ++si)
+		(*si)--;
 	uint n = Rcpp::as<uint>(argSampleSize);
 	Rcpp::NumericMatrix cor(argCor);
 
@@ -567,7 +564,6 @@ RcppExport SEXP estimateSkeleton(
 	pMax.fill(-1.);
 	std::vector<uint> emptySet;
 	std::vector<int> edgeTests(1);
-	double pval;
 	for (i = 0; i < p; i++)
 		for (j = i + 1; j < p; j++) {
 			if (fixedMatrix(i, j))

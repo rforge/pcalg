@@ -25,6 +25,14 @@ class TargetFamily : public std::vector<std::set<uint> >
 {
 public:
 	/**
+	 * Constructors
+	 */
+	TargetFamily() :
+		std::vector<std::set<uint> >() {};
+	TargetFamily(std::vector<std::set<uint> >::size_type n) :
+		std::vector<std::set<uint> >(n) {};
+
+	/**
 	 * Checks whether the family of targets protects a (hypothetical) arrow
 	 * of a graph
 	 */
