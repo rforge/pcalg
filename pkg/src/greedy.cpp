@@ -823,7 +823,7 @@ ArrowChange EssentialGraph::getOptimalArrowTurning(const uint v)
 	return result;
 }
 
-std::set<uint> EssentialGraph::_bitsToParents(const int vertex, const uint32_t bits)
+std::set<uint> EssentialGraph::_bitsToParents(const uint vertex, const uint32_t bits)
 {
 	std::set<uint> parents;
 	uint32_t pattern = 1;
@@ -1208,7 +1208,7 @@ void EssentialGraph::turn(const uint u, const uint v, const std::set<uint> C)
 
 bool EssentialGraph::greedyForward()
 {
-	uint v, v_opt;
+	uint v_opt = 0;
 	std::vector<ArrowChange>::iterator si;
 	ArrowChangeCmp comp;
 	ArrowChange insertion, optInsertion;
@@ -1221,7 +1221,7 @@ bool EssentialGraph::greedyForward()
 
 	// If caching is disabled calculate the score differences for all possible edges
 	if (!_doCaching) {
-		for (v = 0; v < getVertexCount(); v++) {
+		for (uint v = 0; v < getVertexCount(); v++) {
 			// Calculate optimal arrow insertion for given target vertex v
 			insertion = getOptimalArrowInsertion(v);
 
@@ -1238,7 +1238,7 @@ bool EssentialGraph::greedyForward()
 	if (_doCaching) {
 		// If score has to be initialized (current phase is not forward), do it
 		if (_actualPhase != SD_FORWARD)
-			for (v = 0; v < getVertexCount(); v++)
+			for (uint v = 0; v < getVertexCount(); v++)
 				_scoreCache[v] = getOptimalArrowInsertion(v);
 
 		// Find optimal arrow insertion from cache
@@ -1416,6 +1416,8 @@ step_dir EssentialGraph::greedyStep()
 		dout.level(1) << "  turning edge (" << v_opt << ", " << optChange.source << ") with C = "
 				<< optChange.clique << ", S = " << optChange.score << "\n";
 		turn(optChange.source, v_opt, optChange.clique);
+		break;
+	case SD_NONE :
 		break;
 	}
 

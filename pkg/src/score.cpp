@@ -25,18 +25,16 @@ bool TargetFamily::protects(const uint a, const uint b) const
 
 TargetFamily castTargets(const SEXP argTargets)
 {
-	int i;
 	Rcpp::List listIventTargets(argTargets);
-	std::vector<uint> vecTarget;
-	std::vector<uint>::iterator vi;
-	TargetFamily result;
-	result.resize(listIventTargets.size());
-	for (i = 0; i < listIventTargets.size(); i++) {
-		vecTarget = listIventTargets[i];
+	TargetFamily result(listIventTargets.size());
+
+	for (R_len_t i = 0; i < listIventTargets.size(); i++) {
+		Rcpp::IntegerVector vecTarget((SEXP)(listIventTargets[i]));
 		// Adapt indices to C++ convention...
-		for (vi = vecTarget.begin(); vi != vecTarget.end(); ++vi)
+		for (Rcpp::IntegerVector::iterator vi = vecTarget.begin(); vi != vecTarget.end(); ++vi)
 			result[i].insert(*vi - 1);
 	}
+
 	return result;
 }
 

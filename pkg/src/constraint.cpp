@@ -64,7 +64,7 @@ double IndepTestGauss::test(uint u, uint v, std::vector<uint> S) const
 	// Absolute value of z statistic
 	// Note: log1p for more numerical stability, see "Aaux.R"; log1p is also available in
 	// header <cmath>, but probably only on quite up to date headers (C++11)?
-	absz = sqrt(_sampleSize - S.size() - 3) * 0.5 * boost::math::log1p(2*r/(1 - r));
+	absz = sqrt(_sampleSize - S.size() - 3.0) * 0.5 * boost::math::log1p(2*r/(1 - r));
 
 	// Calculate p-value to z statistic (based on standard normal distribution)
 	boost::math::normal distN;

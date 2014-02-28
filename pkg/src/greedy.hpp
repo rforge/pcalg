@@ -380,7 +380,7 @@ protected:
 	 *
 	 * Help function for maximization of BIC via DP.
 	 */
-	std::set<uint> _bitsToParents(const int vertex, const uint32_t bits);
+	std::set<uint> _bitsToParents(const uint vertex, const uint32_t bits);
 
 	/**
 	 * Yields the "optimal" intervention target (without restriction on
