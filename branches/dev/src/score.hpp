@@ -139,7 +139,7 @@ public:
  *  					library
  * @param	data		preprocessed data
  */
-Score* createScore(std::string name, TargetFamily* targets, Rcpp::List data);
+Score* createScore(std::string name, TargetFamily* targets, Rcpp::List& data);
 
 /**
  * Macros for ScoreRFunction: constants for finding the different R functions

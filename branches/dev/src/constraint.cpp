@@ -134,52 +134,43 @@ void Skeleton::fitCondInd(
 		maxCondSize = getVertexCount();
 
 	dout.level(2) << "Significance level " << alpha << std::endl;
-	uint condSize, u, v, a, m, u_min, u_max;
-	int i, j;
-	double pval;
 	bool found = true;
-	bool edgeDone;
-	UndirOutEdgeIter outIter, outLast;
-	std::set<uint>::iterator vi;
-	std::vector<std::vector<uint>::iterator> si;
-	std::vector<uint> condSet, neighbors, commNeighbors;
-	std::vector<uint>::iterator vnext;
-	arma::ivec condSetR;
 
 	UndirEdgeIter ei, eiLast;
-	std::set< std::pair<uint, uint> > deleteEdges;
-	std::set< std::pair<uint, uint> >::iterator di;
 
 	// edgeTests lists the number of edge tests that have already been done; its size
 	// corresponds to the size of conditioning sets that have already been checked
-	for (condSize = edgeTests.size(); found && condSize <= maxCondSize; ++condSize) {
+	for (uint condSize = edgeTests.size(); found && condSize <= maxCondSize; ++condSize) {
 		dout.level(1) << "Order = " << condSize << "; remaining edges: " << getEdgeCount() << std::endl;
-		// oldSkel._graph = _graph;
-		condSet.resize(condSize);
-		si.resize(condSize);
-		deleteEdges.clear();
+
+		std::set< std::pair<uint, uint> > deleteEdges;
 		found = false;
 		edgeTests.push_back(0);
 
 		// Iterate over all edges in the graph
 		for (boost::tie(ei, eiLast) = boost::edges(_graph); ei != eiLast && !check_interrupt(); ei++) {
 			// Get endpoints u, v of edge; make sure that deg(u) >= deg(v)
-			u = boost::source(*ei, _graph);
-			v = boost::target(*ei, _graph);
-			u_min = std::min(u, v);
-			u_max = std::max(u, v);
+			uint u = boost::source(*ei, _graph);
+			uint v = boost::target(*ei, _graph);
+			uint u_min = std::min(u, v);
+			uint u_max = std::max(u, v);
 			if (getDegree(u) < getDegree(v))
 				std::swap(u, v);
 
 			// There is a conditioning set of size "condSize" if deg(u) > condSize
 			if (getDegree(v) > condSize)
 				found = true;
-			edgeDone = false;
+			bool edgeDone = false;
+
+			int i;
+			UndirOutEdgeIter outIter, outLast;
+			std::vector<uint> condSet(condSize);
+			std::vector<std::vector<uint>::iterator> si(condSize);
 
 			// Check neighborhood of u, if edge is not fixed
 			if (!isFixed(u, v) && getDegree(u) > condSize) {
 				// Get neighbors of u (except v)
-				neighbors.clear();
+				std::vector<uint> neighbors(0);
 				neighbors.reserve(getDegree(u) - 1);
 				for (boost::tie(outIter, outLast) = boost::out_edges(u, _graph); outIter != outLast; outIter++)
 					if (boost::target(*outIter, _graph) != v)
@@ -195,7 +186,7 @@ void Skeleton::fitCondInd(
 						condSet[i] = *(si[i]);
 
 					// Test of u and v are conditionally independent given condSet
-					pval = _indepTest->test(u, v, condSet);
+					double pval = _indepTest->test(u, v, condSet);
 					edgeTests.back()++;
 					dout.level(1) << "  x = " << u << ", y = " << v << ", S = " <<
 							condSet << " : pval = " << pval << std::endl;
@@ -205,8 +196,8 @@ void Skeleton::fitCondInd(
 						pMax(u_min, u_max) = pval;
 					if (pval >= alpha) {
 						deleteEdges.insert(std::make_pair(u, v));
-						condSetR.set_size(condSet.size());
-						for (j = 0; j < condSet.size(); ++j)
+						arma::ivec condSetR(condSet.size());
+						for (std::size_t j = 0; j < condSet.size(); ++j)
 							condSetR[j] = condSet[j] + 1;
 						sepSet[u_max][u_min] = condSetR;
 						edgeDone = true;
@@ -228,10 +219,11 @@ void Skeleton::fitCondInd(
 			// Check neighborhood of v, if edge is not fixed
 			if (!edgeDone && !isFixed(u, v) && getDegree(v) > condSize) {
 				// Get neighbors of u (except v); common neighbors of u and v are listed in the end
-				neighbors.clear();
-				commNeighbors.clear();
+				std::vector<uint> neighbors(0);
+				std::vector<uint> commNeighbors(0);
 				neighbors.reserve(getDegree(v) - 1);
 				commNeighbors.reserve(getDegree(v) - 1);
+				uint a;
 				for (boost::tie(outIter, outLast) = boost::out_edges(v, _graph); outIter != outLast; outIter++) {
 					a = boost::target(*outIter, _graph);
 					if (a != u) {
@@ -243,7 +235,7 @@ void Skeleton::fitCondInd(
 				}
 
 				// m: number of neighbors of v that are not neighbors of u
-				m = neighbors.size();
+				uint m = neighbors.size();
 				neighbors.insert(neighbors.end(), commNeighbors.begin(), commNeighbors.end());
 				dout.level(2) << "  v: " << v << "; neighbors: " << neighbors << " (m = " << m << ")\n";
 
@@ -259,7 +251,7 @@ void Skeleton::fitCondInd(
 							condSet[i] = *(si[i]);
 
 						// Test of u and v are conditionally independent given condSet
-						pval = _indepTest->test(v, u, condSet);
+						double pval = _indepTest->test(v, u, condSet);
 						edgeTests.back()++;
 						dout.level(1) << "  x = " << v << ", y = " << u << ", S = " <<
 								condSet << " : pval = " << pval << std::endl;
@@ -269,8 +261,8 @@ void Skeleton::fitCondInd(
 							pMax(u_min, u_max) = pval;
 						if (pval >= alpha) {
 							deleteEdges.insert(std::make_pair(u, v));
-							condSetR.set_size(condSet.size());
-							for (j = 0; j < condSet.size(); ++j)
+							arma::ivec condSetR(condSet.size());
+							for (std::size_t j = 0; j < condSet.size(); ++j)
 								condSetR[j] = condSet[j] + 1;
 							sepSet[u_max][u_min] = condSetR;
 							edgeDone = true;
@@ -296,7 +288,8 @@ void Skeleton::fitCondInd(
 		}
 
 		// Delete edges marked for deletion
-		for (di = deleteEdges.begin(); di != deleteEdges.end(); ++di)
+		for (std::set< std::pair<uint, uint> >::iterator di = deleteEdges.begin();
+				di != deleteEdges.end(); ++di)
 			removeEdge(di->first, di->second);
 	} // FOR condSize
 

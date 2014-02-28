@@ -21,7 +21,7 @@ for (i in 1:nreps) {
       stop("Targets not correctly represented!")
   
   ## Test back-conversion
-  B <- targets2mat(p, targets, target.index)
+  B <- targets2mat(p, target.list$targets, target.list$target.index)
   if (!identical(A, B))
     stop("Intervention matrix not correctly represented!")
 }

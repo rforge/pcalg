@@ -165,37 +165,6 @@ gds <- function(p, targets, score, verbose = FALSE, ...)
 simy <- function(p, targets, score, verbose = FALSE, ...) 
   caus.inf("SiMy", p, targets, score, verbose = verbose, ...)
 
-#' Create a list of targets and a vector of target indices out of a
-#' matrix indicating interventions
-#' 
-#' @param 	A		a n x p boolean matrix; A[i, j] is TRUE iff vertex j is intervened
-#' 							in data point i
-#' @return 	list with two entries, "targets" and "target.index".
-#' 					targets is a list of unique intervention targets
-#' 					target.index is a vector of size n; the intervention target of data point
-#' 					i is given by targets[[target.index[i]]].
-mat2targets <- function(A)
-{
-  targets.raw <- as.list(apply(A, 1, which))
-  targets <- unique(targets.raw)
-  list(targets = targets, target.index = match(targets.raw, targets))
-}
-
-#' Create a boolean "intervention matrix" out of a list of targets
-#' and a vector of target indices.  Can be seen as the "inverse function"
-#' of "mat2targets"
-#' 
-#' @param 	p							number of vertices
-#' @param 	targets				list of (unique) targets
-#' @param 	target.index	vector of target indices
-targets2mat <- function(p, targets, target.index)
-{
-  sapply(target.index, function(i) {
-        res <- logical(p)
-        res[targets[[i]]] <- TRUE
-        res
-      })
-}
 
 dag2essgraph <- function(dag, targets = list(integer(0))) {
   new("EssGraph", 

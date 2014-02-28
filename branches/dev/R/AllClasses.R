@@ -187,6 +187,38 @@ setMethod("plot", signature(x = "fciAlgo"),
 ### Part 2 : Reference classes and Methods used by GIES
 #######################################################
 
+#' Create a list of targets and a vector of target indices out of a
+#' matrix indicating interventions
+#' 
+#' @param 	A		a n x p boolean matrix; A[i, j] is TRUE iff vertex j is intervened
+#' 							in data point i
+#' @return 	list with two entries, "targets" and "target.index".
+#' 					targets is a list of unique intervention targets
+#' 					target.index is a vector of size n; the intervention target of data point
+#' 					i is given by targets[[target.index[i]]].
+mat2targets <- function(A)
+{
+  targets.raw <- as.list(apply(A, 1, which))
+  targets <- unique(targets.raw)
+  list(targets = targets, target.index = match(targets.raw, targets))
+}
+
+#' Create a boolean "intervention matrix" out of a list of targets
+#' and a vector of target indices.  Can be seen as the "inverse function"
+#' of "mat2targets"
+#' 
+#' @param 	p							number of vertices
+#' @param 	targets				list of (unique) targets
+#' @param 	target.index	vector of target indices
+targets2mat <- function(p, targets, target.index)
+{
+  res <- matrix(FALSE, nrow = length(target.index), ncol = p)
+  for (i in seq_along(target.index))
+    res[i, targets[[target.index[i]]]] <- TRUE
+  res
+}
+
+
 ##' Virtual base class for all parametric causal models.
 ##' The meaning of the "params" depends on the model used.
 setRefClass("ParDAG",
@@ -512,9 +544,9 @@ setRefClass("GaussL0penIntScore",
           } else if (.format == "raw") {
             ## Store list of index vectors of "non-interventions": for each vertex k,
             ## store the indices of the data points for which k has NOT been intervened
-            A <<- !targets2mat(p, pp.dat$targets, pp.dat$target.index)
+            A <- !targets2mat(p, pp.dat$targets, pp.dat$target.index)
             pp.dat$non.int <<- lapply(1:p, function(i) which(A[, i])) 
-            pp.dat$data.count <<- as.integer(colSums(pp.dat$non.int))
+            pp.dat$data.count <<- as.integer(colSums(A))
           } # IF "raw"
         },
 
@@ -526,19 +558,40 @@ setRefClass("GaussL0penIntScore",
 
           ## Calculate score in R
           if (c.fcn == "none") {
-            ## If an intercept is allowed, add a fake parent node
-            parents <- sort(parents)
-            if (pp.dat$intercept)
-              parents <- c(pp.dat$vertex.count + 1, parents)
-
-            sigma2 <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, vertex]
-            if (length(parents) != 0) {
-              b <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents]
-              sigma2 <- sigma2 - as.numeric(b %*% solve(pp.dat$scatter[[pp.dat$scatter.index[vertex]]][parents, parents], b))
+            if (.format == "raw") {
+              ## calculate score from raw data matrix
+              ## Response vector for linear regression
+              Y <- pp.dat$data[pp.dat$non.int[[vertex]], vertex]
+              sigma2 <- sum(Y^2)
+              
+              if (length(parents) + pp.dat$intercept != 0) {
+                ## Get data matrix on which linear regression is based
+                Z <- pp.dat$data[pp.dat$non.int[[vertex]], parents, drop = FALSE]
+                if (pp.dat$intercept)
+                  Z <- cbind(1, Z)
+                
+                ## Calculate the scaled error covariance using QR decomposition
+                Q <- qr.Q(qr(Z))
+                sigma2 <- sigma2 - sum((Y %*% Q)^2)
+              }
             }
-
+            else if (.format == "scatter") {
+              ## Calculate the score based on pre-calculated scatter matrices
+              ## If an intercept is allowed, add a fake parent node
+              parents <- sort(parents)
+              if (pp.dat$intercept)
+                parents <- c(pp.dat$vertex.count + 1, parents)
+  
+              sigma2 <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, vertex]
+              if (length(parents) != 0) {
+                b <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents]
+                sigma2 <- sigma2 - as.numeric(b %*% solve(pp.dat$scatter[[pp.dat$scatter.index[vertex]]][parents, parents], b))
+              }
+            }
+            
+            ## Return local score
             return(-0.5*pp.dat$data.count[vertex]*(1 + log(sigma2/pp.dat$data.count[vertex])) - pp.dat$lambda*(1 + length(parents)))
-          }
+          } # IF c.fcn
           ## Calculate score with the C++ library
           else
             return(.Call("localScore", c.fcn, pp.dat, vertex, parents, c.fcn.options(...), PACKAGE = "pcalg"))
@@ -552,25 +605,50 @@ setRefClass("GaussL0penIntScore",
 
           ## Calculate score in R
           if (c.fcn == "none") {
-            ## If an intercept is allowed, add a fake parent node
-            parents <- sort(parents)
-            if (pp.dat$intercept)
-              parents <- c(pp.dat$vertex.count + 1, parents)
-
-            sigma2 <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, vertex]
-            if (length(parents) != 0) {
-              beta <- solve(pp.dat$scatter[[pp.dat$scatter.index[vertex]]][parents, parents],
-                  pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents])
-              sigma2 <- sigma2 - pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents] %*% beta
-            }
-            else
+            if (.format == "raw") {
+              ## Calculate MLE from raw data matrix
+              ## Response vector for linear regression
+              Y <- pp.dat$data[pp.dat$non.int[[vertex]], vertex]
               beta <- numeric(0)
-
+              sigma2 <- sum(Y^2)
+              
+              ## Calculate regression coefficients
+              if (length(parents) + pp.dat$intercept != 0) {
+                ## Get data matrix on which linear regression is based
+                Z <- pp.dat$data[pp.dat$non.int[[vertex]], parents, drop = FALSE]
+                if (pp.dat$intercept)
+                  Z <- cbind(1, Z)
+                
+                ## Calculate regression coefficients
+                qrZ <- qr(Z)
+                beta <- solve(qrZ, Y)
+                
+                ## Calculate the scaled error covariance using QR decomposition
+                sigma2 <- sigma2 - sum((Y %*% qr.Q(qrZ))^2)
+              }
+            } # IF "raw"
+            else if (.format == "scatter") {
+              ## Calculate MLE based on pre-calculated scatter matrices
+              ## If an intercept is allowed, add a fake parent node
+              parents <- sort(parents)
+              if (pp.dat$intercept)
+                parents <- c(pp.dat$vertex.count + 1, parents)
+  
+              sigma2 <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, vertex]
+              if (length(parents) != 0) {
+                beta <- solve(pp.dat$scatter[[pp.dat$scatter.index[vertex]]][parents, parents],
+                    pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents])
+                sigma2 <- sigma2 - pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents] %*% beta
+              }
+              else
+                beta <- numeric(0)
+            } # IF "scatter"
+  
             if (pp.dat$intercept)
               return(c(sigma2/pp.dat$data.count[vertex], beta))
             else
               return(c(sigma2/pp.dat$data.count[vertex], 0, beta))
-          }
+          } # IF c.fcn
           ## Calculate score with the C++ library
           else
             return(.Call("localMLE", c.fcn, pp.dat, vertex, parents, c.fcn.options(...), PACKAGE = "pcalg"))
@@ -587,6 +665,7 @@ setRefClass("GaussL0penObsScore",
         initialize = function(data = matrix(1, 1, 1),
             lambda = 0.5*log(nrow(data)),
             intercept = FALSE,
+            format = c("raw", "scatter"),
             use.cpp = TRUE,
             ...) {
           callSuper(data = data,
@@ -594,6 +673,7 @@ setRefClass("GaussL0penObsScore",
               target.index = rep(as.integer(1), nrow(data)),
               lambda = lambda,
               intercept = intercept,
+              format = format,
               use.cpp = use.cpp,
               ...)
           }
