@@ -5,8 +5,8 @@
 #ifndef CONSTRAINT_HPP_
 #define CONSTRAINT_HPP_
 
-#include "constraint.hpp"
-#include "gies_debug.hpp"
+#include "pcalg/constraint.hpp"
+#include "pcalg/gies_debug.hpp"
 
 #include <algorithm>
 #include <utility>
@@ -134,13 +134,14 @@ void Skeleton::fitCondInd(
 		maxCondSize = getVertexCount();
 
 	dout.level(2) << "Significance level " << alpha << std::endl;
+	dout.level(2) << "Maximum order: " << maxCondSize << std::endl;
 	bool found = true;
 
 	UndirEdgeIter ei, eiLast;
 
 	// edgeTests lists the number of edge tests that have already been done; its size
 	// corresponds to the size of conditioning sets that have already been checked
-	for (uint condSize = edgeTests.size(); found && condSize <= maxCondSize; ++condSize) {
+	for (uint condSize = edgeTests.size(); found && (int)condSize <= maxCondSize; ++condSize) {
 		dout.level(1) << "Order = " << condSize << "; remaining edges: " << getEdgeCount() << std::endl;
 
 		std::set< std::pair<uint, uint> > deleteEdges;
@@ -158,11 +159,13 @@ void Skeleton::fitCondInd(
 				std::swap(u, v);
 
 			// There is a conditioning set of size "condSize" if deg(u) > condSize
-			if (getDegree(v) > condSize)
+			if (getDegree(u) > condSize) {
+				dout.level(2) << "Found a conditioning set of size " << condSize << std::endl;
 				found = true;
+			}
 			bool edgeDone = false;
 
-			int i;
+			int k;
 			UndirOutEdgeIter outIter, outLast;
 			std::vector<uint> condSet(condSize);
 			std::vector<std::vector<uint>::iterator> si(condSize);
@@ -177,12 +180,12 @@ void Skeleton::fitCondInd(
 						neighbors.push_back(boost::target(*outIter, _graph));
 
 				// Initialize first conditioning set
-				for (i = 0; i < condSize; ++i)
+				for (std::size_t i = 0; i < condSize; ++i)
 					si[i] = neighbors.begin() + i;
 
 				// Iterate over conditioning sets
 				do {
-					for (i = 0; i < condSize; ++i)
+					for (std::size_t i = 0; i < condSize; ++i)
 						condSet[i] = *(si[i]);
 
 					// Test of u and v are conditionally independent given condSet
@@ -205,15 +208,15 @@ void Skeleton::fitCondInd(
 					}
 
 					// Proceed to next conditioning set
-					for (i = condSize - 1;
-							i >= 0 && si[i] == neighbors.begin() + (neighbors.size() - condSize + i);
-							--i);
-					if (i >= 0) {
-						si[i]++;
-						for (i++; i < condSize; ++i)
-							si[i] = si[i - 1] + 1;
+					for (k = condSize - 1;
+							k >= 0 && si[k] == neighbors.begin() + (neighbors.size() - condSize + k);
+							--k);
+					if (k >= 0) {
+						si[k]++;
+						for (k++; k < (int)condSize; ++k)
+							si[k] = si[k - 1] + 1;
 					}
-				} while(i >= 0);
+				} while(k >= 0);
 			}
 
 			// Check neighborhood of v, if edge is not fixed
@@ -242,12 +245,12 @@ void Skeleton::fitCondInd(
 				// If all neighbors of v are also adjacent to u: already checked all conditioning sets
 				if (m > 0) {
 					// Initialize first conditioning set
-					for (i = 0; i < condSize; ++i)
+					for (std::size_t i = 0; i < condSize; ++i)
 						si[i] = neighbors.begin() + i;
 
 					// Iterate over conditioning sets
 					do {
-						for (i = 0; i < condSize; ++i)
+						for (std::size_t i = 0; i < condSize; ++i)
 							condSet[i] = *(si[i]);
 
 						// Test of u and v are conditionally independent given condSet
@@ -270,19 +273,19 @@ void Skeleton::fitCondInd(
 						}
 
 						// Proceed to next conditioning set
-						for (i = condSize - 1;
-								i >= 0 && si[i] == neighbors.begin() + (neighbors.size() - condSize + i);
-								--i);
+						for (k = condSize - 1;
+								k >= 0 && si[k] == neighbors.begin() + (neighbors.size() - condSize + k);
+								--k);
 						// Make sure first element does not belong to neighborhood of u: otherwise
 						// we would redo a test already performed
-						if (i == 0 && si[0] == neighbors.begin() + (m - 1))
-							i = -1;
-						if (i >= 0) {
-							si[i]++;
-							for (i++; i < condSize; ++i)
-								si[i] = si[i - 1] + 1;
+						if (k == 0 && si[0] == neighbors.begin() + (m - 1))
+							k = -1;
+						if (k >= 0) {
+							si[k]++;
+							for (k++; k < (int)condSize; ++k)
+								si[k] = si[k - 1] + 1;
 						}
-					} while(i >= 0);
+					} while(k >= 0);
 				}
 			}
 		}

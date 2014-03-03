@@ -5,8 +5,8 @@
  * $Id$
  */
 
-#include "greedy.hpp"
-#include "gies_debug.hpp"
+#include "pcalg/greedy.hpp"
+#include "pcalg/gies_debug.hpp"
 
 #include <algorithm>
 #include <map>

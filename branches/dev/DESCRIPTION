@@ -12,12 +12,11 @@ Description: This package contains several functions for causal structure
   variables). For causal inference the IDA algorithm and the generalized
   backdoor criterion is implemented.
 Depends: R (>= 2.15.0)
-LinkingTo: Rcpp, RcppArmadillo
+LinkingTo: Rcpp, RcppArmadillo, BH
 Imports: graphics, utils, methods, abind, graph, RBGL, igraph, ggm, corpcor, robustbase, vcd, Rcpp
 Suggests: MASS, Matrix, Rgraphviz, mvtnorm, sfsmisc
 ByteCompile: yes
-SystemRequirements: Boost library from http://www.boost.org
-  or for Debian/ubuntu: libboost-dev
+NeedsCompilation: yes
 Encoding: UTF-8
 License: GPL (>= 2)
 URL: http://pcalg.r-forge.r-project.org/

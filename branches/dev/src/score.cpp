@@ -3,13 +3,13 @@
  * $Id$
  */
 
-#include "score.hpp"
-#include "greedy.hpp"
+#include "pcalg/score.hpp"
+#include "pcalg/greedy.hpp"
 
 #include <algorithm>
 #include <boost/tuple/tuple.hpp>
 #include <limits>
-#include "gies_debug.hpp"
+#include "pcalg/gies_debug.hpp"
 
 bool TargetFamily::protects(const uint a, const uint b) const
 {
