@@ -15,11 +15,11 @@
 // Define BGL class for undirected graph
 typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> UndirectedGraph;
 
-#include "constraint.hpp"
-#include "score.hpp"
-#include "greedy.hpp"
+#include "pcalg/constraint.hpp"
+#include "pcalg/score.hpp"
+#include "pcalg/greedy.hpp"
 #define DEFINE_GLOBAL_DEBUG_STREAM
-#include "gies_debug.hpp"
+#include "pcalg/gies_debug.hpp"
 
 using namespace boost::lambda;
 

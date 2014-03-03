@@ -5,8 +5,8 @@
 #ifndef CONSTRAINT_HPP_
 #define CONSTRAINT_HPP_
 
-#include "constraint.hpp"
-#include "gies_debug.hpp"
+#include "pcalg/constraint.hpp"
+#include "pcalg/gies_debug.hpp"
 
 #include <algorithm>
 #include <utility>
