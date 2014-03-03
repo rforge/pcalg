@@ -9,7 +9,6 @@
 #include <string>
 #include <algorithm>
 #include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
 #include <boost/graph/adjacency_list.hpp>
 
 // Define BGL class for undirected graph
@@ -290,7 +289,8 @@ RcppExport SEXP causalInference(
 	// Cast option for vertices which are not allowed to have parents
 	// TODO: activate function in R, and check for conversion from R to C indexing convention
 	std::vector<uint> childrenOnly = Rcpp::as< std::vector<uint> >(options["childrenOnly"]);
-	std::for_each(childrenOnly.begin(), childrenOnly.end(), bind(&EssentialGraph::setChildrenOnly, &graph, _1, true));
+	for (std::vector<uint>::iterator vi = childrenOnly.begin(); vi != childrenOnly.end(); ++vi)
+		graph.setChildrenOnly(*vi - 1, true);
 	int stepLimit;
 
 	// Cast option for fixed gaps: logical matrix, assumed to be symmetric by now
