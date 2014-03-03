@@ -269,7 +269,7 @@ RcppExport SEXP causalInference(
 
 	// Cast option for limits in vertex degree
 	dout.level(1) << "Casting maximum vertex degree...\n";
-	Rcpp::NumericVector maxDegree = options["maxDegree"];
+	Rcpp::NumericVector maxDegree((SEXP)(options["maxDegree"]));
 	if (maxDegree.size() > 0) {
 		if (maxDegree.size() == 1) {
 			if (maxDegree[0] >= 1.) {
@@ -288,6 +288,7 @@ RcppExport SEXP causalInference(
 	}
 	
 	// Cast option for vertices which are not allowed to have parents
+	// TODO: activate function in R, and check for conversion from R to C indexing convention
 	std::vector<uint> childrenOnly = Rcpp::as< std::vector<uint> >(options["childrenOnly"]);
 	std::for_each(childrenOnly.begin(), childrenOnly.end(), bind(&EssentialGraph::setChildrenOnly, &graph, _1, true));
 	int stepLimit;
@@ -316,13 +317,13 @@ RcppExport SEXP causalInference(
 		dout.level(1) << "Performing GIES...\n";
 
 		// Enable caching, if requested
-		if (options["caching"])
+		if (Rcpp::as<bool>(options["caching"]))
 			graph.enableCaching();
 
 		// Perform a greedy search, with or without turning phase
 		// TODO: evtl. zusätzlichen Parameter einfügen, der wiederholtes Suchen
 		// auch ohne Drehphase erlaubt...
-		if (options["turning"]) {
+		if (Rcpp::as<bool>(options["turning"])) {
 			bool cont;
 			do {
 				cont = false;
@@ -344,7 +345,7 @@ RcppExport SEXP causalInference(
 		dout.level(1) << "Performing " << algName << "...\n";
 
 		// Limit to single step if requested
-		stepLimit = options["maxsteps"];
+		stepLimit = Rcpp::as<int>(options["maxsteps"]);
 		if (stepLimit == 0)
 			stepLimit = graph.getVertexCount()*graph.getVertexCount();
 
@@ -366,7 +367,7 @@ RcppExport SEXP causalInference(
 		dout.level(1) << "Performing " << algName << "...\n";
 
 		// Limit to single step if requested
-		stepLimit = options["maxsteps"];
+		stepLimit = Rcpp::as<int>(options["maxsteps"]);
 		if (stepLimit == 0)
 			stepLimit = graph.getVertexCount()*graph.getVertexCount();
 
@@ -386,7 +387,7 @@ RcppExport SEXP causalInference(
 	else if (algName == "GDS") {
 		// TODO: evtl. caching für GDS implementieren...
 		// Perform a greedy search, with or without turning phase
-		if (options["turning"]) {
+		if (Rcpp::as<bool>(options["turning"])) {
 			bool cont;
 			do {
 				cont = false;
@@ -415,7 +416,8 @@ RcppExport SEXP causalInference(
 	delete score;
 	// TODO "interrupt" zurückgeben, falls Ausführung unterbrochen wurde. Problem:
 	// check_interrupt() scheint nur einmal true zurückzugeben...
-	return Rcpp::List::create(Rcpp::Named("in.edges") = wrapGraph(graph),
+	return Rcpp::List::create(
+			Rcpp::Named("in.edges") = wrapGraph(graph),
 			Rcpp::Named("steps") = steps);
 
 	END_RCPP
@@ -582,7 +584,12 @@ RcppExport SEXP estimateSkeleton(
 	// Estimate skeleton
 	graph.setIndepTest(indepTest);
 	dout.level(1) << "Fitting skeleton to data...\n";
-	graph.fitCondInd(alpha, pMax, sepSet, edgeTests, options["m.max"], options["NAdelete"]);
+	graph.fitCondInd(alpha,
+			pMax,
+			sepSet,
+			edgeTests,
+			Rcpp::as<int>(options["m.max"]),
+			Rcpp::as<bool>(options["NAdelete"]));
 
 	// Delete test object
 	delete indepTest;

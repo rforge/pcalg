@@ -134,6 +134,7 @@ void Skeleton::fitCondInd(
 		maxCondSize = getVertexCount();
 
 	dout.level(2) << "Significance level " << alpha << std::endl;
+	dout.level(2) << "Maximum order: " << maxCondSize << std::endl;
 	bool found = true;
 
 	UndirEdgeIter ei, eiLast;
@@ -158,8 +159,10 @@ void Skeleton::fitCondInd(
 				std::swap(u, v);
 
 			// There is a conditioning set of size "condSize" if deg(u) > condSize
-			if (getDegree(v) > condSize)
+			if (getDegree(u) > condSize) {
+				dout.level(2) << "Found a conditioning set of size " << condSize << std::endl;
 				found = true;
+			}
 			bool edgeDone = false;
 
 			int k;

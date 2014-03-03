@@ -16,8 +16,7 @@ LinkingTo: Rcpp, RcppArmadillo
 Imports: graphics, utils, methods, abind, graph, RBGL, igraph, ggm, corpcor, robustbase, vcd, Rcpp
 Suggests: MASS, Matrix, Rgraphviz, mvtnorm, sfsmisc
 ByteCompile: yes
-SystemRequirements: Boost library from http://www.boost.org
-  or for Debian/ubuntu: libboost-dev
+NeedsCompilation: yes
 Encoding: UTF-8
 License: GPL (>= 2)
 URL: http://pcalg.r-forge.r-project.org/
