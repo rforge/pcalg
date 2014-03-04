@@ -81,7 +81,7 @@ if(require(Rgraphviz)) {
 ## by using idaFast :
 (eff.estF <- idaFast(2, c(5,6,7), cov.d, pc.fit@graph))
 \dontshow{
-stopifnot(all.equal(eff.estF, tol = 1e-15,
+stopifnot(all.equal(eff.estF, tolerance = 1e-15,
                     rbind("5"= eff.est1, "6"= eff.est2, "7"= eff.est3)) ,
           all.equal(idaFast(2, c(7,5), covTrue, myCPDAG),
                     rbind("7"= ida(2, 7, covTrue, myCPDAG),
