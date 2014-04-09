@@ -547,11 +547,6 @@ public:
 	EssentialGraph getRepresentative() const;
 
 	/**
-	 * Yields all representatives of the equivalence class
-	 */
-	std::vector<boost::dynamic_bitset<> > getAllRepresentatives() const;
-
-	/**
 	 * Enable caching.
 	 *
 	 * Sets the corresponding flag and creates a list for cached entries
