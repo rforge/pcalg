@@ -12,7 +12,7 @@ Description: This package contains several functions for causal structure
   variables). For causal inference the IDA algorithm and the generalized
   backdoor criterion is implemented.
 Depends: R (>= 3.0.0)
-LinkingTo: Rcpp, RcppArmadillo, BH
+LinkingTo: Rcpp (>= 0.11.0), RcppArmadillo, BH
 Imports: graphics, utils, methods, abind, graph, RBGL, igraph, ggm, corpcor, robustbase, vcd, Rcpp
 Suggests: MASS, Matrix, Rgraphviz, mvtnorm, sfsmisc
 ByteCompile: yes
