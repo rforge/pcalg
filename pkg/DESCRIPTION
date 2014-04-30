@@ -13,7 +13,7 @@ Description: This package contains several functions for causal structure
   backdoor criterion is implemented.
 Depends: R (>= 3.0.2)
 LinkingTo: Rcpp (>= 0.11.0), RcppArmadillo, BH
-Imports: graphics, utils, methods, abind, graph (>= 1.37.7), RBGL, igraph, ggm, corpcor, robustbase, vcd, Rcpp
+Imports: graphics, utils, methods, abind, graph, RBGL, igraph, ggm, corpcor, robustbase, vcd, Rcpp
 Suggests: MASS, Matrix, Rgraphviz, mvtnorm, sfsmisc
 ByteCompile: yes
 NeedsCompilation: yes
