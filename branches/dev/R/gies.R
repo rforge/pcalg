@@ -137,6 +137,7 @@ is.whole <- function(a, tol = .Machine$double.eps^0.5) {
       (is.complex(a) && {ri <- c(Re(a),Im(a)); is.eq(ri, floor(ri))})
 }
 
+
 ##################################################
 ## Structure learning algorithms
 ##################################################

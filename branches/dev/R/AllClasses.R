@@ -349,17 +349,24 @@ setRefClass("Score",
             target.index = rep(as.integer(1), nrow(data)),
             ...) {
           ## Order by ascending target indices (necessary for certain scoring objects)
-          if (is.unsorted(target.index))
+          if (is.unsorted(target.index)) {
             perm <- order(target.index)
-          else
+          } else {
             perm <- 1:length(target.index)
+          }
 
+          ## Store pre-processed data
           pp.dat$targets <<- targets
           pp.dat$target.index <<- target.index[perm]
           pp.dat$data <<- data[perm, ]
           pp.dat$vertex.count <<- ncol(data)
+          
+          ## Store list of index vectors of "non-interventions": for each vertex k,
+          ## store the indices of the data points for which k has NOT been intervened
+          A <- !targets2mat(pp.dat$vertex.count, pp.dat$targets, pp.dat$target.index)
+          pp.dat$non.int <<- lapply(1:pp.dat$vertex.count, function(i) which(A[, i])) 
+          pp.dat$data.count <<- as.integer(colSums(A))
           pp.dat$total.data.count <<- as.integer(nrow(data))
-          pp.dat$data.count <<- 
 
           ## Declare scores as not decomposable "by default"
           decomp <<- FALSE
@@ -491,14 +498,13 @@ setRefClass("GaussL0penIntScore",
           ## TODO: check if this choice is reasonable...
           if (length(format) > 1)
             .format <<- ifelse(p >= nrow(data) || p >= 500, "raw", "scatter")
-          ## TODO change following line as soon as "raw" format is implemented and tested
-          # .format <<- "scatter"
           
           ## Use C++ functions if requested
           if (use.cpp)
             c.fcn <<- ifelse(.format == "scatter", "gauss.l0pen.scatter", "gauss.l0pen.raw")
 
-          ## Preprocess data according to storage format
+          ## Preprocess data if storage format is "scatter"; for "raw" format,
+          ## everything is already available in pp.dat
           if (.format == "scatter") {
             ## Add column of ones to data matrix to calculate scatter matrices;
             ## this allows the computation of an intercept if requested
@@ -515,7 +521,6 @@ setRefClass("GaussL0penIntScore",
             ## are _not_ intervened
             non.ivent <- matrix(FALSE, ncol = p, nrow = length(pp.dat$targets))
             pp.dat$scatter.index <<- integer(p)
-            pp.dat$data.count <<- integer(p)
             max.si <- 0
             for (i in 1:p) {
               ## Generate indices of (distinct) scatter matrices
@@ -532,22 +537,13 @@ setRefClass("GaussL0penIntScore",
               }
               if (pp.dat$scatter.index[i] == max.si + 1)
                 max.si <- max.si + 1
-  
-              ## Count data samples from "non-interventions" at i
-              pp.dat$data.count[i] <<- sum(ti.lb[which(non.ivent[, i]) + 1] - ti.lb[which(non.ivent[, i])])
             }
   
             ## Calculate the distinct scatter matrices for the
             ## "non-interventions"
             pp.dat$scatter <<- lapply(1:max.si,
                function(i) Reduce("+", scatter.mat[non.ivent[, match(i, pp.dat$scatter.index)]]))
-          } else if (.format == "raw") {
-            ## Store list of index vectors of "non-interventions": for each vertex k,
-            ## store the indices of the data points for which k has NOT been intervened
-            A <- !targets2mat(p, pp.dat$targets, pp.dat$target.index)
-            pp.dat$non.int <<- lapply(1:p, function(i) which(A[, i])) 
-            pp.dat$data.count <<- as.integer(colSums(A))
-          } # IF "raw"
+          } # IF "scatter"
         },
 
         #' Calculates the local score of a vertex and its parents
@@ -680,6 +676,73 @@ setRefClass("GaussL0penObsScore",
         )
     )
 
+#' Score for causal additive models; very experimental...
+setRefClass("CAMIntScore",
+    contains = "Score",
+        
+    methods = list(
+        #' Constructor
+        initialize = function(data = matrix(1, 1, 1),
+            targets = list(integer(0)),
+            target.index = rep(as.integer(1), nrow(data)),
+            ...) {
+          ## Store supplied data in sorted form
+          callSuper(data = data, targets = targets, target.index = target.index, ...)
+          
+          ## Number of variables
+          p <- ncol(data)
+          
+          ## l0-penalty is decomposable
+          decomp <<- TRUE
+          
+          ## Underlying causal model class: causal additive model with 
+          ## Gaussian noise
+          .pardag.class <<- "GaussParDAG"
+          ## TODO: implement that class...
+          
+          ## gam() from the package "mgcv" needs a data.frame as input, not a
+          ## matrix; hence we have to store the full data a second time... *sigh*
+          pp.dat$dataframe <<- as.data.frame(data)
+          colnames(pp.dat$dataframe) <<- sprintf("X%d", 1:p)
+          
+          ## TODO: further initialization steps
+        },
+        
+        #' Calculates the local score of a vertex and its parents
+        local.score = function(vertex, parents, ...) {
+          ## Check validity of arguments
+          validate.vertex(vertex)
+          validate.parents(parents)
+          
+          ## Fit a GAM for vertex, taking its parents as explanatory variables
+          if (length(parents) > 0) {
+            formula.string <- paste(sprintf("s(X%d)", parents), collapse = " + ")
+          } else {
+            formula.string <- "1"
+          }
+          formula.string <- paste(sprintf("X%d", vertex), formula.string, sep = " ~ ")
+          local.gam <- gam(as.formula(formula.string), family = gaussian(), 
+              data = pp.dat$dataframe, subset = pp.dat$non.int[[vertex]])
+          
+          ## Return local score
+          ## TODO: 
+          ## - change score; also include constants to really get BIC/AIC/whatever
+          ## - check why BIC penalty must be doubled in order to work wel...
+          s <- -0.5*pp.dat$data.count[vertex]*log(sum(resid(local.gam)^2)) - 
+              log(pp.dat$total.data.count)*sum(local.gam$edf)
+          # print(sprintf("RSS: %f, df: %f", sum(resid(local.gam)^2), sum(local.gam$edf)))
+          return(s)          
+        },
+        
+        
+        #' Calculates the local MLE for a vertex and its parents
+        #' TODO: implement that function after deciding for a format...
+        local.mle = function(vertex, parents, ...) {
+          numeric(length(parents) + 2)
+        }
+    )
+)
+    
 #' Interventional essential graph
 setRefClass("EssGraph",
     fields = list(
