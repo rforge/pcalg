@@ -22,7 +22,7 @@
 skeleton(suffStat, indepTest, alpha, labels, p,
          method = c("stable", "original", "stable.fast"), m.max = Inf,
          fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
-         verbose = FALSE)
+         numCores = 1, verbose = FALSE)
 }
 \arguments{
   \item{suffStat}{Sufficient statistics: List containing all necessary
@@ -61,6 +61,8 @@ skeleton(suffStat, indepTest, alpha, labels, p,
   \item{NAdelete}{logical needed for the case \code{indepTest(*)}
     returns \code{NA}.  If it is true, the corresponding edge is
     deleted, otherwise not.}
+  \item{numCores}{number of processor cores to use for parallel computation.
+    Only available for \code{method = "stable.fast"}.}
   \item{verbose}{if \code{TRUE}, detailed output is provided.}
 }
 \value{An object of \code{\link{class}} \code{"pcAlgo"} (see

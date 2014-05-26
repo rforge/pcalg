@@ -2576,7 +2576,7 @@ plotAG <- function(amat)
 skeleton <- function(suffStat, indepTest, alpha, labels, p,
 		     method = c("stable", "original", "stable.fast"), m.max = Inf,
 		     fixedGaps = NULL, fixedEdges = NULL,
-		     NAdelete = TRUE, verbose = FALSE)
+		     NAdelete = TRUE, numCores = 1, verbose = FALSE)
 {
   ## Purpose: Perform undirected part of PC-Algorithm, i.e.,
   ## estimate skeleton of DAG given data
@@ -2592,12 +2592,14 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
   ## - fixedEdges: Edges marked here are not changed (logical)
   ## - NAdelete: delete edge if pval=NA (for discrete data)
   ## - m.max: maximal size of conditioning set
+  ## - numCores: number of cores to be used for calculation if 
+  ##   method = "stable.fast"
   ## ----------------------------------------------------------------------
   ## Value:
   ## - G, sepset, pMax, ord, n.edgetests
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 09.12.2009
-  ## Modification: Diego Colombo; Martin Maechler
+  ## Modification: Diego Colombo; Martin Maechler; Alain Hauser
 
   ## x,y,S konstruieren
   ##-   tst <- try(indepTest(x,y,S, obj))
@@ -2620,11 +2622,6 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
   }
   seq_p <- seq_len(p)
   method <- match.arg(method)
-  ## C++ version still has problems under Windows; will have to check why
-#  if (method == "stable.fast" && .Platform$OS.type == "windows") {
-#    method <- "stable"
-#    warning("Method 'stable.fast' is not available under Windows; using 'stable' instead.")
-#  }
 
   ## G := !fixedGaps, i.e. G[i,j] is true  iff  i--j  will be investigated
   if (is.null(fixedGaps)) {
@@ -2646,6 +2643,10 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
   else if (fixedEdges != t(fixedEdges))
     stop("fixedEdges must be symmetric")
 
+  ## Check number of cores
+  stopifnot((is.integer(numCores) || is.numeric(numCores)) && numCores > 0)
+  if (numCores > 1 && method != "stable.fast")
+    warn("Argument numCores ignored: parallelization only available for method = 'stable.fast'")
   if (method == "stable.fast") {
     ## Do calculation in C++...
     if (identical(indepTest, gaussCItest))
@@ -2655,7 +2656,8 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
     options <- list(
         verbose = as.integer(verbose), 
         m.max = as.integer(ifelse(is.infinite(m.max), p, m.max)),
-        NAdelete = NAdelete)
+        NAdelete = NAdelete,
+        numCores = numCores)
     res <- .Call("estimateSkeleton", G, suffStat, indepTestName, indepTest, alpha, fixedEdges, options);
     G <- res$amat
     # sepset <- res$sepset

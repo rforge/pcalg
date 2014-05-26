@@ -459,53 +459,47 @@ ArrowChange EssentialGraph::getOptimalArrowInsertion(const uint v)
 	else
 		result.score = _minScoreDiff;
 
-	std::set<uint> C, C_par, C_sub, N;
-	std::set<uint> neighbors, parents, adjacent;
-	std::vector<std::set<uint> > maxCliques;
-	std::set<uint>::iterator si;
-	uint u;
 	double diffScore;
-	CliqueStack cliqueStack;
-	boost::dynamic_bitset<> posterior, forbidden;
 	boost::unordered_map<std::set<uint>, double > localScore;
 	boost::unordered_map<std::set<uint>, double >::iterator hmi;
 
 	// Find maximal cliques in the neighborhood of v
-	neighbors = getNeighbors(v);
-	maxCliques = getMaxCliques(neighbors.begin(), neighbors.end());
+	std::set<uint> neighbors = getNeighbors(v);
+	std::vector<std::set<uint> > maxCliques = getMaxCliques(neighbors.begin(), neighbors.end());
 
 	// Get parents of v (used for calculation of partial scores later on)
-	parents = getParents(v);
+	std::set<uint> parents = getParents(v);
 
 	// Exclude forbidden sources:
 	// - vertices reachable from children of v
-	forbidden = getPosteriorSet(getChildren(v));
+	boost::dynamic_bitset<> forbidden = getPosteriorSet(getChildren(v));
 	// - vertices adjacent to v
-	adjacent = getAdjacent(v);
-	for (si = adjacent.begin(); si != adjacent.end(); ++si)
+	std::set<uint> tempSet = getAdjacent(v);
+	for (std::set<uint>::iterator si = tempSet.begin(); si != tempSet.end(); ++si)
 		forbidden.set(*si);
 	// - v itself :-)
 	forbidden.set(v);
 	// - vertices which have reached the maximum degree, or which have a fixed
 	//   gap to v
-	for (u = 0; u < getVertexCount(); ++u)
+	for (uint u = 0; u < getVertexCount(); ++u)
 		if (getDegree(u) >= _maxVertexDegree[u] || gapFixed(u, v))
 			forbidden.set(u);
 
 	// Calculate vertices not reachable from v: for those, the "path condition"
 	// for the clique C does not have to be checked later
-	C.insert(v);
-	posterior = getPosteriorSet(C);
+	tempSet = std::set<uint>();
+	tempSet.insert(v);
+	boost::dynamic_bitset<> posterior = getPosteriorSet(tempSet);
 
-	for (u = 0; u < getVertexCount(); ++u)
+	for (uint u = 0; u < getVertexCount(); ++u)
 		if (!forbidden[u]) {
 			// Calculate ne(v) \cap ad(u)
-			N = set_intersection(neighbors, getAdjacent(u));
+			std::set<uint> N = set_intersection(neighbors, getAdjacent(u));
 
 			// Add N as a set to check, and at the same time as a stop set.
 			// Actually, N will be checked _only_ if it is a clique, i.e. subset
 			// of a maximal clique
-			cliqueStack.clear_all();
+			CliqueStack cliqueStack;
 			cliqueStack.push_back(N);
 			cliqueStack.stop_sets.insert(N);
 
@@ -515,7 +509,7 @@ ArrowChange EssentialGraph::getOptimalArrowInsertion(const uint v)
 					// Check all subsets of the actual maximal clique
 					cliqueStack.append(maxCliques[i]);
 					while(!cliqueStack.empty()) {
-						C = cliqueStack.back();
+						std::set<uint> C = cliqueStack.back();
 						cliqueStack.pop_back();
 
 						// Check whether there is a v-u-path that does not go through C
@@ -525,7 +519,7 @@ ArrowChange EssentialGraph::getOptimalArrowInsertion(const uint v)
 							// submatrices), local should return NaN; then the
 							// test below fails
 							// Use "localScore" as (additional) cache
-							C_par = set_union(C, parents);
+							std::set<uint> C_par = set_union(C, parents);
 							hmi = localScore.find(C_par);
 							if (hmi == localScore.end()) {
 								dout.level(3) << "calculating partial score for vertex " << v << ", parents " << C_par << "...\n";
@@ -549,8 +543,8 @@ ArrowChange EssentialGraph::getOptimalArrowInsertion(const uint v)
 						}
 
 						// Add all subsets of C that differ from C in only one vertex to the stack
-						for (si = C.begin(); si != C.end(); ++si) {
-							C_sub = C;
+						for (std::set<uint>::iterator si = C.begin(); si != C.end(); ++si) {
+							std::set<uint> C_sub = C;
 							C_sub.erase(*si);
 							cliqueStack.append(C_sub);
 						}

@@ -10,6 +10,10 @@
 #include <algorithm>
 #include <boost/lambda/lambda.hpp>
 #include <boost/graph/adjacency_list.hpp>
+// Experimental support for OpenMP; aim: parallelize more and more functions...
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 // Define BGL class for undirected graph
 typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> UndirectedGraph;
@@ -505,7 +509,6 @@ RcppExport SEXP condIndTestGauss(
 	END_RCPP
 }
 
-
 /**
  * Perform undirected version of PC algorithm, i.e., estimate skeleton of DAG
  * given data
@@ -527,8 +530,6 @@ RcppExport SEXP estimateSkeleton(
 	Rcpp::List options(argOptions);
 	dout.setLevel(Rcpp::as<int>(options["verbose"]));
 
-	int i, j;
-
 	dout.level(1) << "Casting arguments...\n";
 
 	// Cast sufficient statistic and significance level
@@ -549,14 +550,22 @@ RcppExport SEXP estimateSkeleton(
 	// Invalid independence test name: throw error
 	else throw std::runtime_error(indepTestName + ": Invalid independence test name");
 
+	// Initialize OpenMP
+	#ifdef _OPENMP
+		int threads = Rcpp::as<int>(options["numCores"]);
+		if (threads < 0)
+			threads = omp_get_num_procs();
+		omp_set_num_threads(threads);
+	#endif
+
 	// Create list of lists for separation sets
 	Rcpp::LogicalMatrix adjMatrix(argAdjMatrix);
 	int p = adjMatrix.nrow();
 	SepSets sepSet(p, std::vector<arma::ivec>(p, arma::ivec(1)));
-	for (i = 0; i < p; ++i)
-		for (j = 0; j < p; ++j)
+	for (int i = 0; i < p; ++i)
+		for (int j = 0; j < p; ++j)
 			sepSet[i][j].fill(-1);
-	// TODO to save space, only create a triangular list only
+	// TODO to save space, create a triangular list only
 
 	// Cast graph and fixed edges
 	dout.level(2) << "Casting graph and fixed edges...\n";
@@ -566,20 +575,29 @@ RcppExport SEXP estimateSkeleton(
 	pMax.fill(-1.);
 	std::vector<uint> emptySet;
 	std::vector<int> edgeTests(1);
-	for (i = 0; i < p; i++)
-		for (j = i + 1; j < p; j++) {
+	for (int i = 0; i < p; i++) {
+		#pragma omp parallel for
+		for (int j = i + 1; j < p; j++) {
+			if (adjMatrix(i, j) && !fixedMatrix(i, j)) {
+				pMax(i, j) = indepTest->test(i, j, emptySet);
+				if (pMax(i, j) >= alpha)
+					sepSet[j][i].set_size(0);
+				dout.level(1) << "  x = " << i << ", y = " << j << ", S = () : pval = "
+						<< pMax(i, j) << std::endl;
+			}
+		}
+	}
+	for (int i = 0; i < p; i++) {
+		for (int j = i + 1; j < p; j++) {
 			if (fixedMatrix(i, j))
 				graph.addFixedEdge(i, j);
 			else if (adjMatrix(i, j)) {
-				pMax(i, j) = indepTest->test(i, j, emptySet);
 				edgeTests[0]++;
-				dout.level(1) << "  x = " << i << ", y = " << j << ", S = () : pval = " << pMax(i, j) << std::endl;
 				if (pMax(i, j) < alpha)
 					graph.addEdge(i, j);
-				else
-					sepSet[j][i].set_size(0);
 			}
 		}
+	}
 
 	// Estimate skeleton
 	graph.setIndepTest(indepTest);
