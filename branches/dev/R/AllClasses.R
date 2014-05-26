@@ -836,10 +836,11 @@ setRefClass("EssGraph",
           return(new.graph$steps == 1)
         },
 
-        greedy.search = function(direction) {
+        greedy.search = function(direction = c("forward", "backward", "turning")) {
           score.fcn <- ifelse(score$decomp,
               function(vertex, parents) score$local.score(vertex, parents),
               function(edges) score$global.score.int(edges))
+          direction <- match.arg(direction)
           substr(direction, 1, 1) <- toupper(substr(direction, 1, 1))
 
           new.graph <- .Call(sprintf("greedy%s", direction), .in.edges, score.fcn)
