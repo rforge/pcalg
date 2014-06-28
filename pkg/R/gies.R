@@ -5,7 +5,7 @@
 ###############################################################################
 
 ##################################################
-## Help functions for simulations
+## Auxiliary functions for simulations
 ##################################################
 
 #' Randomly generates a Gaussian causal model
