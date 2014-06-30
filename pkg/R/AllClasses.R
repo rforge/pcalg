@@ -635,8 +635,6 @@ setRefClass("EssGraph",
       ## Check score
       if (!is.null(score <- object$getScore())) {
         targets <- object$getTargets()
-        print(targets)
-        print(score$getTargets())
         if (length(score$getTargets()) != length(targets) ||
             !all.equal(duplicated(c(targets, score$getTargets())),
                     rep(c(FALSE, TRUE), each = length(targets)))) {
@@ -660,7 +658,9 @@ setRefClass("EssGraph",
           .nodes <<- as.character(nodes)
           
           ## Store in-edges
-          .in.edges <<- replicate(length(nodes), integer(0))
+          # TODO: improve error checking; possibly put it into separate function
+          stopifnot(is.list(in.edges) && length(in.edges) == length(nodes))
+          .in.edges <<- in.edges
           names(.in.edges) <<- .nodes
 
           ## Store targets
@@ -719,7 +719,7 @@ setRefClass("EssGraph",
         },
 
         #' Performs one greedy step
-        greedy.step = function(direction = c("forward", "backward", "turning")) {
+        greedy.step = function(direction = c("forward", "backward", "turning"), verbose = FALSE) {
           stopifnot(!is.null(score <- getScore()))
           
           ## Cast direction
@@ -729,20 +729,18 @@ setRefClass("EssGraph",
               backward = "GIES-B",
               turning = "GIES-T")
 
-          substr(direction, 1, 1) <- toupper(substr(direction, 1, 1))
-
           new.graph <- .Call("causalInference",
               .in.edges,
               score$pp.dat,
               alg.name,
               score$c.fcn,
-              causal.inf.options(caching = FALSE, maxsteps = 1),
+              causal.inf.options(caching = FALSE, maxSteps = 1, verbose = verbose),
               PACKAGE = "pcalg")
           if (identical(new.graph, "interrupt"))
             return(FALSE)
           
           if (new.graph$steps > 0) {
-            .in.edges <<- new.graph$.in.edges
+            .in.edges <<- new.graph$in.edges
             names(.in.edges) <<- .nodes
           }
 
@@ -752,22 +750,37 @@ setRefClass("EssGraph",
         greedy.search = function(direction = c("forward", "backward", "turning")) {
           stopifnot(!is.null(score <- getScore()))
           
-          score.fcn <- ifelse(score$decomp,
-              function(vertex, parents) score$local.score(vertex, parents),
-              function(edges) score$global.score.int(edges))
+          ## Cast direction
           direction <- match.arg(direction)
-          substr(direction, 1, 1) <- toupper(substr(direction, 1, 1))
-
-          new.graph <- .Call(sprintf("greedy%s", direction), .in.edges, score.fcn)
-          if (new.graph$steps > 0)
+          alg.name <- switch(direction,
+              forward = "GIES-F",
+              backward = "GIES-B",
+              turning = "GIES-T")
+          
+          new.graph <- .Call("causalInference",
+              .in.edges,
+              score$pp.dat,
+              alg.name,
+              score$c.fcn,
+              causal.inf.options(caching = FALSE),
+              PACKAGE = "pcalg")
+          if (identical(new.graph, "interrupt"))
+            return(FALSE)
+          
+          if (new.graph$steps > 0) {
             .in.edges <<- new.graph$in.edges
-
+            names(.in.edges) <<- .nodes
+          }
+          
           return(new.graph$steps)
         },
 
         #' Performs a causal inference from an arbitrary start DAG
         #' with a specified algorithm
         caus.inf = function(algorithm, ...) {
+          stopifnot(!is.null(score <- getScore()))
+          stopifnot(algorithm %in% c("GIES", "GIES-F", "GIES-B", "GIES-T", "GIES-STEP", "GDS", "SiMy"))
+          
           new.graph <- .Call("causalInference",
               .in.edges,
               score$pp.dat,
