@@ -10,7 +10,8 @@ pc(suffStat, indepTest, alpha, labels, p,
    fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE, m.max = Inf,
    u2pd = c("relaxed", "rand", "retry"),
    skel.method = c("stable", "original", "stable.fast"),
-   conservative = FALSE, maj.rule = FALSE, solve.confl = FALSE, verbose = FALSE)
+   conservative = FALSE, maj.rule = FALSE, solve.confl = FALSE, 
+   numCores = 1, verbose = FALSE)
 }
 \arguments{
   \item{suffStat}{A \code{\link{list}} of sufficient statistics,
@@ -32,6 +33,8 @@ pc(suffStat, indepTest, alpha, labels, p,
   \item{p}{(optional) number of variables (or nodes).  May be specified
     if \code{labels} are not, in which case \code{labels} is set to
     \code{1:p}.}
+  \item{numCores}{Specifies the number of cores to be used for parallel
+    estimation of \code{\link{skeleton}}.}
   \item{verbose}{If \code{TRUE}, detailed output is provided.}
   \item{fixedGaps}{A logical matrix of dimension p*p. If entry
     \code{[i,j]} or \code{[j,i]} (or both) are TRUE, the edge i-j is

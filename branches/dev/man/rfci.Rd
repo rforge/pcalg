@@ -9,7 +9,8 @@ rfci(suffStat, indepTest, alpha, labels, p,
      skel.method = c("stable", "original", "stable.fast"),
      fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
      m.max = Inf, rules = rep(TRUE, 10),
-     conservative = FALSE, maj.rule = FALSE, verbose = FALSE)
+     conservative = FALSE, maj.rule = FALSE, 
+     numCores = 1, verbose = FALSE)
 }
 
 \arguments{
@@ -58,6 +59,8 @@ rfci(suffStat, indepTest, alpha, labels, p,
   \item{maj.rule}{Logical indicating if the unshielded triples should be
     checked for ambiguity after the skeleton has been found using a
     majority rule idea, which is less strict than the conservative.}
+  \item{numCores}{Specifies the number of cores to be used for parallel
+    estimation of \code{\link{skeleton}}.}
   \item{verbose}{If true, more detailed output is provided.}
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see

@@ -14,7 +14,7 @@ fci(suffStat, indepTest, alpha, labels, p,
     NAdelete = TRUE, m.max = Inf, pdsep.max = Inf,
     rules = rep(TRUE, 10), doPdsep = TRUE, biCC = FALSE,
     conservative = FALSE, maj.rule = FALSE,
-    verbose = FALSE)
+    numCores = 1, verbose = FALSE)
 }
 
 \arguments{
@@ -88,6 +88,8 @@ fci(suffStat, indepTest, alpha, labels, p,
     be checked for ambiguity the second time when v-structures are
     determined using a majority rule idea, which is less strict than the
     standard conservative.  For more information, see details.}
+  \item{numCores}{Specifies the number of cores to be used for parallel
+    estimation of \code{\link{skeleton}}.}
   \item{verbose}{If true, more detailed output is provided.}
 }
 \value{An object of \code{\link{class}} \code{fciAlgo} (see
