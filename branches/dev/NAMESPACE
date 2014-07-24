@@ -115,7 +115,8 @@ export(trueCov,
        simy,
        mat2targets,
        targets2mat,
-       dag2essgraph)
+       dag2essgraph,
+       fciPlus)
 
 ## These are "internal" i.e., in man/pcalg-internal.Rd
 ## _FIXME ?_                     ---------------------  

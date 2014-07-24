@@ -113,6 +113,7 @@ export(trueCov,
        gds,
        simy,
        mat2targets,
+       targets2mat,
        dag2essgraph,
        fciPlus)
 
