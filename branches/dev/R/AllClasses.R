@@ -992,7 +992,7 @@ setRefClass("EssGraph",
         },
 
         #' Performs one greedy step
-        greedy.step = function(direction = c("forward", "backward", "turning"), verbose = FALSE) {
+        greedy.step = function(direction = c("forward", "backward", "turning"), verbose = FALSE, ...) {
           stopifnot(!is.null(score <- getScore()))
           
           ## Cast direction
@@ -1007,7 +1007,7 @@ setRefClass("EssGraph",
               score$pp.dat,
               alg.name,
               score$c.fcn,
-              causal.inf.options(caching = FALSE, maxSteps = 1, verbose = verbose),
+              causal.inf.options(caching = FALSE, maxSteps = 1, verbose = verbose, ...),
               PACKAGE = "pcalg")
           if (identical(new.graph, "interrupt"))
             return(FALSE)
