@@ -126,55 +126,114 @@ rmvnorm.ivent <- function(n, object, target = integer(0), target.value = numeric
   t(solve(t(A), Y))
 }
 
-#' Checks whether an argument is a whole number (not necessarily represented
-#' as an integer in R...)
-is.whole <- function(a, tol = .Machine$double.eps^0.5) { 
-  is.eq <- function(x,y) { 
-    r <- all.equal(x,y, tol=tol)
-    is.logical(r) && r 
-  }
-  (is.numeric(a) && is.eq(a, floor(a))) ||
-      (is.complex(a) && {ri <- c(Re(a),Im(a)); is.eq(ri, floor(ri))})
-}
-
 
 ##################################################
 ## Structure learning algorithms
 ##################################################
-caus.inf <- function(algorithm, p, targets, score, ...)
+
+#' Wrapper function for all causal inference algorithms.  It's not recommended
+#' to use it directly; adapted wrapper functions for the single algorithms are
+#' provided
+#' 
+#' @param 	algorithm		name of the causal inference algorithm to be used
+#' @param 	score				scoring object to be used
+#' @param 	labels			node labels
+#' @param 	targets			unique list of targets. Normally determined from the 
+#' 											scoring object
+#' @param 	...					additional parameters passed to the algorithm chosen
+caus.inf <- function(algorithm = c("GIES", "GDS", "SiMy"), 
+    score, labels = score$getNodes(), targets = score$getTargets(), ...)
 {
-  essgraph <- new("EssGraph", nodes = as.character(1:p), targets = targets, score = score)
-  if (essgraph$caus.inf(algorithm, ...))
-    return(list(essgraph = essgraph, repr = essgraph$repr()))
+  algorithm <- match.arg(algorithm)
+  essgraph <- new("EssGraph", nodes = labels, targets = targets, score = score)
+  if (essgraph$caus.inf(algorithm, ...)) {
+    if (algorithm == "GIES") {
+      ## GIES yields an essential graph; calculate a representative thereof
+      list(essgraph = essgraph, repr = essgraph$repr())  
+    } else {
+      ## GDS and SiMy yield a DAG; calculate the corresponding essential graph,
+      ## although calculations may come from a model class where Markov equivalence
+      ## does not hold!
+      list(essgraph = dag2essgraph(essgraph$repr(), targets = targets), 
+          repr = essgraph$repr())
+    }
+  }
+    
 }
 
-gies <- function(p, targets, score, fixedGaps = NULL, 
-  turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
-  caus.inf("GIES", p, targets, score, fixedGaps = fixedGaps, 
-    turning = turning, maxDegree = maxDegree, verbose = verbose, ...)
+#' Greedy interventional equivalence search
+#' 
+#' @param 	score				scoring object to be used
+#' @param 	labels			node labels
+#' @param 	targets			unique list of targets. Normally determined from the 
+#' 											scoring object
+#' @param 	fixedGaps		logical matrix indicating forbidden edges
+#' @param		turning			indicates whether the turning step should be indicated.
+#' @param 	maxDegree		maximum vertex degree allowed
+#' @param 	verbose			indicates whether debug output should be printed
+#' @param 	...					additional parameters (currently none)
+gies <- function(score, labels = score$getNodes(), targets = score$getTargets(),
+    fixedGaps = NULL, turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
+{
+  caus.inf("GIES", score = score, labels = labels, targets = targets,
+      fixedGaps = fixedGaps, turning = turning, maxDegree = maxDegree, verbose = verbose, ...)
+}
 
-ges <- function(p, score, fixedGaps = NULL, 
-  turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...) 
-  caus.inf("GIES", p, list(integer(0)), score, fixedGaps = fixedGaps, 
-    turning = turning, maxDegree = maxDegree, verbose = verbose, ...)
+#' Greedy equivalence search
+#' 
+#' @param 	score				scoring object to be used
+#' @param 	labels			node labels
+#' @param 	targets			unique list of targets. Normally determined from the 
+#' 											scoring object
+#' @param 	fixedGaps		logical matrix indicating forbidden edges
+#' @param		turning			indicates whether the turning step should be indicated.
+#' 											Setting this parameter to FALSE gives Chickering's original
+#' 											version
+#' @param 	maxDegree		maximum vertex degree allowed
+#' @param 	verbose			indicates whether debug output should be printed
+#' @param 	...					additional parameters (currently none)
+ges <- function(score, labels = score$getNodes(),
+    fixedGaps = NULL, turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...) 
+{
+  caus.inf("GIES", score = score, labels = labels, targets = list(integer(0)), 
+      fixedGaps = fixedGaps, turning = turning, maxDegree = maxDegree, verbose = verbose, ...)
+}
+  
+#' Greedy DAG search: greedy search in the DAG space
+#' 
+#' @param 	score				scoring object to be used
+#' @param 	labels			node labels
+#' @param 	fixedGaps		logical matrix indicating forbidden edges
+#' @param		turning			indicates whether the turning step should be indicated.
+#' 											Setting this parameter to FALSE gives Chickering's original
+#' 											version
+#' @param 	maxDegree		maximum vertex degree allowed
+#' @param 	verbose			indicates whether debug output should be printed
+#' @param 	...					additional parameters (currently none)
+gds <- function(score, labels = score$getNodes(), targets = score$getTargets(),
+    fixedGaps = NULL, turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
+{
+  caus.inf("GDS", score = score, labels = labels, targets = targets,
+      fixedGaps = fixedGaps, turning = turning, maxDegree = maxDegree, verbose = verbose, ...)
+}
 
-## TODO: make sure that the "representative" in the result is actually the last
-## visited DAG instead of a random representative; adapt documentation accordingly
-gds <- function(p, targets, score, verbose = FALSE, ...) 
-  caus.inf("GDS", p, targets, score, verbose = verbose, ...)
-
-simy <- function(p, targets, score, verbose = FALSE, ...) 
-  caus.inf("SiMy", p, targets, score, verbose = verbose, ...)
-
-
+#' Dynamic programming approach of Silander and Myllimäki
+#' 
+#' @param 	score				scoring object to be used
+#' @param 	labels			node labels
+#' @param 	verbose			indicates whether debug output should be printed
+#' @param 	...					additional parameters (currently none)
+simy <- function(score, labels = score$getNodes(), targets = score$getTargets(),
+    verbose = FALSE, ...)
+{
+  caus.inf("SiMy", score = score, labels = labels, targets = targets, verbose = verbose, ...)
+}
+  
+#' Converts a DAG to an (observational or interventional) essential graph
 dag2essgraph <- function(dag, targets = list(integer(0))) {
   new("EssGraph", 
       nodes = dag$.nodes, 
       in.edges = .Call("dagToEssentialGraph", dag$.in.edges, targets),
       targets = targets)
 }
-
-#' Fast version of "gaussCItest", implemented in C++
-gaussCItest.fast <- function(x, y, S, suffStat)
-  .Call("condIndTestGauss", x, y, S, suffStat$n, suffStat$C)
 

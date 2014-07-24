@@ -27,7 +27,8 @@ for (m in 1:nrow(settings)) {
       target.index = gauss.target.index, 
       data = gauss.data,
       format = settings$format[m],
-      use.cpp = settings$cpp[m])
+      use.cpp = settings$cpp[m],
+      intercept = FALSE)
   
   # print(score$pp.dat)
 
@@ -45,16 +46,17 @@ for (m in 1:nrow(settings)) {
         stop("The scatter matrices are not calculated correctly.")
   } # IF "scatter"
   
-  for (i in 1:5)
+  for (i in 1:5) {
     if (!isTRUE(all.equal(gauss.loc.score[[i]], 
         score$local.score(i, gauss.parents[[i]]), 
         tolerance = tol)))
       stop("The local score is not calculated correctly.")
+  }
   
-  # print(lapply(1:5, function(i) score$local.mle(i, gauss.parents[[i]])))
+  # print(lapply(1:5, function(i) score$local.fit(i, gauss.parents[[i]])))
   
   for (i in 1:5) {
-    local.mle <- score$local.mle(i, gauss.parents[[i]])
+    local.mle <- score$local.fit(i, gauss.parents[[i]])
     if (length(local.mle) != length(gauss.mle[[i]]) ||
         !isTRUE(all.equal(gauss.mle[[i]], local.mle, 
         tolerance = tol)))

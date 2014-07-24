@@ -12,14 +12,34 @@
   \code{\link{gies}} or \code{\link{ges}} the preference over \code{gds}.
 }
 \usage{
-gds(p, targets, score, verbose = FALSE, ...)
+gds(score, labels = score$getNodes(), targets = score$getTargets(),
+    fixedGaps = NULL, turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
 }
 \arguments{
-  \item{p}{number of variables.}
-  \item{targets}{a \code{\link{list}} of intervention targets
+  \item{score}{An instance of a class derived from \code{\linkS4class{Score}}.}
+  \item{labels}{Node labels; by default, they are determined from the scoring
+    object.}  
+  \item{targets}{A \code{\link{list}} of intervention targets
     (cf. details).  A list of vectors, each vector listing the vertices
     of one intervention target.}
-  \item{score}{an instance of a class derived from \code{\linkS4class{Score}}.}
+  \item{fixedGaps}{Logical \emph{symmetric} matrix of dimension p*p.  If entry
+    \code{[i, j]} is \code{TRUE}, the result is guaranteed to have no edge
+    between nodes \eqn{i} and \eqn{j}.}
+  \item{turning}{Logical indicating whether the function should try to augment
+    the score by turning edges (cf. details).}
+  \item{maxDegree}{Parameter used to limit the vertex degree of the estimated
+    graph.  Valid arguments:
+    \enumerate{
+      \item Vector of length 0 (default): vertex degree is not limited.
+      \item Real number \eqn{r}, \eqn{0 < r < 1}: degree of vertex \eqn{v} is
+        limited to \eqn{r \cdot n_v}, where \eqn{n_v} denotes the number of
+        data points where \eqn{v} was not intervened.
+      \item Single integer: uniform bound of vertex degree for all vertices
+        of the graph.
+      \item Integer vector of length \code{p}: vector of individual bounds
+        for the vertex degrees.
+    }
+    }
   \item{verbose}{if \code{TRUE}, detailed output is provided.}
   \item{\dots}{additional arguments for debugging purposes and fine tuning.}
   %% those in    getClass("EssGraph")@refMethods$causal.inf.options
@@ -91,7 +111,7 @@ gds(p, targets, score, verbose = FALSE, ...)
   \emph{Journal of Machine Learning Research} \bold{13}, 2409--2464.
 }
 \author{
-  Alain Hauser (\email{alain.hauser@biology.unibe.ch})
+  Alain Hauser (\email{alain.hauser@bfh.ch})
 }
 \seealso{
   \code{\link{gies}}, \code{\link{ges}}, \code{\linkS4class{Score}}, 
@@ -105,7 +125,7 @@ data(gmInt)
 score <- new("GaussL0penIntScore", gmInt$x, gmInt$targets, gmInt$target.index) 
 
 ## Estimate the essential graph
-gds.fit <- gds(ncol(gmInt$x), gmInt$targets, score) 
+gds.fit <- gds(score) 
 
 ## Plot the estimated essential graph and the true DAG
 if (require(Rgraphviz)) {

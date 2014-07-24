@@ -8,7 +8,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include <boost/lambda/lambda.hpp>
+// #include <boost/lambda/lambda.hpp>
 #include <boost/graph/adjacency_list.hpp>
 // Experimental support for OpenMP; aim: parallelize more and more functions...
 #ifdef _OPENMP
@@ -24,8 +24,7 @@ typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> Undi
 #define DEFINE_GLOBAL_DEBUG_STREAM
 #include "pcalg/gies_debug.hpp"
 
-using namespace boost::lambda;
-
+// using namespace boost::lambda;
 
 /**
  * Reads in a graph from a list of in-edges passed as a SEXP to
@@ -387,7 +386,7 @@ RcppExport SEXP causalInference(
 		} while (steps[0] + steps[1] + steps[2] < stepLimit && dir != SD_NONE);
 	}
 
-	// GDS
+	// GDS; yields a DAG, not an equivalence class!
 	else if (algName == "GDS") {
 		// TODO: evtl. caching für GDS implementieren...
 		// Perform a greedy search, with or without turning phase
@@ -407,14 +406,13 @@ RcppExport SEXP causalInference(
 			for (steps.push_back(0); graph.greedyDAGBackward(); steps.back()++);
 		}
 
-		// Construct equivalence class
-		graph.replaceUnprotected();
+		// graph.replaceUnprotected();
 	}
 
-	// DP
+	// DP; yields a DAG, not an equivalence class!
 	else if (algName == "SiMy") {
 		graph.siMySearch();
-		graph.replaceUnprotected();
+		// graph.replaceUnprotected();
 	}
 
 	// Other algorithm: throw an error
@@ -464,6 +462,7 @@ RcppExport SEXP dagToEssentialGraph(SEXP argGraph, SEXP argTargets)
 	END_RCPP
 }
 
+
 RcppExport SEXP optimalTarget(SEXP argGraph, SEXP argMaxSize)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
@@ -478,7 +477,8 @@ RcppExport SEXP optimalTarget(SEXP argGraph, SEXP argMaxSize)
 
 	// Adapt numbering convention...
 	std::vector<uint> result(target.begin(), target.end());
-	std::for_each(result.begin(), result.end(), _1++);
+	for (std::vector<uint>::iterator vi = result.begin(); vi != result.end(); ++vi)
+		(*vi)--;
 	return Rcpp::wrap(result);
 
 	END_RCPP

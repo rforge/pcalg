@@ -189,7 +189,7 @@ skeleton(suffStat, indepTest, alpha, labels, p,
 }
 \author{
   Markus Kalisch (\email{kalisch@stat.math.ethz.ch}), Martin Maechler,
-  and Diego Colombo.
+  Alain Hauser, and Diego Colombo.
 }
 \examples{
 ##################################################

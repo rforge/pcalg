@@ -45,6 +45,7 @@ importFrom("ggm", isAcyclic, transClos, topOrder)
 importFrom("Rcpp", evalCpp) # Needed for any package relying on Rcpp headers...
   # Otherwise, there are runtime errors.
 
+importFrom("sfsmisc", is.whole, digitsBase)
 
 ###----- Exports ------------------------------------------------------
 

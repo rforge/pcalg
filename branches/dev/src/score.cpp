@@ -92,8 +92,8 @@ void ScoreRFunction::setData(Rcpp::List& data)
 	dout.level(2) << "Casting R functions to calculate the score...\n";
 	_rfunction.push_back(Rcpp::as<Rcpp::Function>(data["local.score"]));
 	_rfunction.push_back(Rcpp::as<Rcpp::Function>(data["global.score"]));
-	_rfunction.push_back(Rcpp::as<Rcpp::Function>(data["local.mle"]));
-	_rfunction.push_back(Rcpp::as<Rcpp::Function>(data["global.mle"]));
+	_rfunction.push_back(Rcpp::as<Rcpp::Function>(data["local.fit"]));
+	_rfunction.push_back(Rcpp::as<Rcpp::Function>(data["global.fit"]));
 }
 
 double ScoreRFunction::local(const uint vertex, const std::set<uint>& parents) const

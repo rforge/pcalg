@@ -11,13 +11,14 @@
   algorithm of Chickering (2002).
 }
 \usage{
-ges(p, score, fixedGaps = NULL, 
-  turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...) 
+ges(score, labels = score$getNodes(),
+  fixedGaps = NULL, turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
 }
 \arguments{
-  \item{p}{Number of variables.}
   \item{score}{An instance of a class derived from \code{\linkS4class{Score}}
     which only accounts for observational data.}
+  \item{labels}{Node labels; by default, they are determined from the scoring
+    object.}
   \item{fixedGaps}{logical \emph{symmetric} matrix of dimension p*p.  If entry
     \code{[i, j]} is \code{TRUE}, the result is guaranteed to have no edge
     between nodes \eqn{i} and \eqn{j}.}
@@ -36,7 +37,7 @@ ges(p, score, fixedGaps = NULL,
         for the vertex degrees.
     }
     }
-  \item{verbose}{if \code{TRUE}, detailed output is provided.}
+  \item{verbose}{If \code{TRUE}, detailed output is provided.}
   \item{\dots}{Additional arguments for debugging purposes and fine tuning.}
 }
 \details{
@@ -118,7 +119,7 @@ ges(p, score, fixedGaps = NULL,
   Prediction, and Search}, MIT Press, Cambridge (MA).
 }
 \author{
-  Alain Hauser (\email{alain.hauser@biology.unibe.ch})
+  Alain Hauser (\email{alain.hauser@bfh.ch})
 }
 \seealso{
   \code{\link{pc}}, \code{\linkS4class{Score}}, \code{\linkS4class{EssGraph}}
@@ -131,7 +132,7 @@ data(gmG)
 score <- new("GaussL0penObsScore", gmG8$x)
 
 ## Estimate the essential graph
-ges.fit <- ges(ncol(gmG8$x), score)
+ges.fit <- ges(score)
 
 ## Plot the estimated essential graph and the true DAG
 if (require(Rgraphviz)) {

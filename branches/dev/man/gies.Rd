@@ -10,15 +10,16 @@
   (GIES) algorithm of Hauser and Bühlmann (2012).
 }
 \usage{
-gies(p, targets, score, fixedGaps = NULL, 
-  turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
+gies(score, labels = score$getNodes(), targets = score$getTargets(),
+  fixedGaps = NULL, turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
 }
 \arguments{
-  \item{p}{Number of variables.}
+  \item{score}{An instance of a class derived from \code{\linkS4class{Score}}.}
+  \item{labels}{Node labels; by default, they are determined from the scoring
+    object.}
   \item{targets}{A list of intervention targets (cf. details).  A list of
     vectors, each vector listing the vertices of one intervention target.}
-  \item{score}{An instance of a class derived from \code{\linkS4class{Score}}.}
-  \item{fixedGaps}{logical \emph{symmetric} matrix of dimension p*p.  If entry
+  \item{fixedGaps}{Logical \emph{symmetric} matrix of dimension p*p.  If entry
     \code{[i, j]} is \code{TRUE}, the result is guaranteed to have no edge
     between nodes \eqn{i} and \eqn{j}.}
   \item{turning}{Logical indicating whether the function should try to augment
@@ -36,7 +37,7 @@ gies(p, targets, score, fixedGaps = NULL,
         for the vertex degrees.
     }
   }
-  \item{verbose}{if \code{TRUE}, detailed output is provided.}
+  \item{verbose}{If \code{TRUE}, detailed output is provided.}
   \item{\dots}{Additional arguments for debugging purposes and fine tuning.}
 }
 \details{
@@ -103,7 +104,7 @@ gies(p, targets, score, fixedGaps = NULL,
   \emph{Journal of Machine Learning Research} \bold{13}, 2409--2464.
 }
 \author{
-  Alain Hauser (\email{alain.hauser@biology.unibe.ch})
+  Alain Hauser (\email{alain.hauser@bfh.ch})
 }
 \seealso{
   \code{\link{ges}}, \code{\linkS4class{Score}}, \code{\linkS4class{EssGraph}}
@@ -116,7 +117,7 @@ data(gmInt)
 score <- new("GaussL0penIntScore", gmInt$x, gmInt$targets, gmInt$target.index) 
 
 ## Estimate the essential graph
-gies.fit <- gies(ncol(gmInt$x), gmInt$targets, score) 
+gies.fit <- gies(score) 
 
 ## Plot the estimated essential graph and the true DAG
 if (require(Rgraphviz)) {

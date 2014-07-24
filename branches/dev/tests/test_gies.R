@@ -45,7 +45,7 @@ for (m in seq_along(settings)) {
                  format = settings$format[m],
                  use.cpp = settings$cpp[m])
     f <- get(settings$fcn[m])
-    est.graph <- f(p, gauss.targets, score, verbose = DBG)
+    est.graph <- f(score, verbose = DBG)
     for (j in 1:p) {
       if (!isTRUE(all.equal(est.graph$essgraph$.in.edges[[j]],
                             gauss.parents[[j]], tolerance = tol)))
