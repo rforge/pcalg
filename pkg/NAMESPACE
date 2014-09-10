@@ -45,6 +45,7 @@ importFrom("ggm", isAcyclic, transClos, topOrder)
 importFrom("Rcpp", evalCpp) # Needed for any package relying on Rcpp headers...
   # Otherwise, there are runtime errors.
 
+importFrom("bdsmatrix", gchol) ## for jointIda ("MCD")
 
 ###----- Exports ------------------------------------------------------
 
@@ -105,6 +106,7 @@ export(trueCov,
        possibleDe,
        pag2magAM,
        backdoor,
+       jointIda,
        ## Alain's :
        r.gauss.pardag,
        rmvnorm.ivent,
