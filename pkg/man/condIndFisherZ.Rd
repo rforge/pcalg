@@ -95,7 +95,7 @@ y <- 2
 S <- c(3,4)
 n <- 20
 alpha <- 0.05
-cutoff <- 1-qnorm(alpha/2)
+cutoff <- qnorm(1-alpha/2)
 (b1 <- condIndFisherZ(x,y,S,corMatrix,n,cutoff))
    # -> 1 and 2 seem to be conditionally independent given 3,4
 
