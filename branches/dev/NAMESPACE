@@ -25,11 +25,15 @@ importFrom("robustbase",
 	   Qn, s_Qn, scaleTau2 #, Sn, s_Sn, s_mad, s_IQR
 	   )
 
+importFrom("graph",
+		reverseEdgeDirections,
+		edgeRenderInfo, "edgeRenderInfo<-")
 importClassesFrom("graph", graph, graphAM, graphNEL)
 importMethodsFrom("graph",
 		  ## addEdge,
 		  coerce,# as(., ...)
-		  edges, edgeData, edgeDataDefaults,
+		  edges, edgeData, 
+		  edgeDataDefaults, "edgeDataDefaults<-",
 		  isDirected,
 		  nodes, numNodes, numEdges,
 		  subGraph, ugraph)
@@ -45,7 +49,9 @@ importFrom("ggm", isAcyclic, transClos, topOrder)
 importFrom("Rcpp", evalCpp) # Needed for any package relying on Rcpp headers...
   # Otherwise, there are runtime errors.
 
-importFrom("sfsmisc", is.whole, digitsBase)
+importFrom("bdsmatrix", gchol) ## for jointIda ("MCD")
+
+importFrom("sfsmisc", digitsBase)
 
 ###----- Exports ------------------------------------------------------
 
@@ -106,6 +112,7 @@ export(trueCov,
        possibleDe,
        pag2magAM,
        backdoor,
+       jointIda,
        ## Alain's :
        r.gauss.pardag,
        rmvnorm.ivent,
