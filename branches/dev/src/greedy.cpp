@@ -28,26 +28,46 @@ double EssentialGraph::_minScoreDiff = sqrt(std::numeric_limits<double>::epsilon
 
 void EssentialGraph::clear()
 {
+	// Clear graph
 	boost::graph_traits<InternalEssentialGraph>::edge_iterator ei, ei_end, next;
 	boost::tie(ei, ei_end) = boost::edges(_graph);
 	for (next = ei; ei != ei_end; ei = next) {
 		++next;
 		boost::remove_edge(*ei, _graph);
 	}
+
+	// Clear logger
+	_edgeLogger.reset();
 }
 
 void EssentialGraph::addEdge(const uint a, const uint b, bool undirected)
 {
-	boost::add_edge(a, b, _graph);
-	if (undirected)
+	if (!hasEdge(a, b)) {
+		// Add edge and log it
+		boost::add_edge(a, b, _graph);
+		_edgeLogger.logEdgeAddition(Edge(a, b));
+	}
+
+	if (undirected && !hasEdge(b, a)) {
+		// Add edge and log it
 		boost::add_edge(b, a, _graph);
+		_edgeLogger.logEdgeAddition(Edge(b, a));
+	}
 }
 
 void EssentialGraph::removeEdge(const uint a, const uint b, bool bothDirections)
 {
-	boost::remove_edge(a, b, _graph);
-	if (bothDirections)
+	if (hasEdge(a, b)) {
+		// Remove edge and log it
+		boost::remove_edge(a, b, _graph);
+		_edgeLogger.logEdgeRemoval(Edge(a, b));
+	}
+
+	if (bothDirections && hasEdge(b, a)) {
+		// Remove edge and log it
 		boost::remove_edge(b, a, _graph);
+		_edgeLogger.logEdgeRemoval(Edge(b, a));
+	}
 }
 
 bool EssentialGraph::gapFixed(const uint a, const uint b) const
@@ -1053,6 +1073,8 @@ void EssentialGraph::insert(const uint u, const uint v, const std::set<uint> C)
 	// Successively replace unprotected arrows by lines
 	undirected = replaceUnprotected();
 
+	/* MOVED TO greedyForward()
+
 	// If caching is enabled, recalculate the optimal arrow insertions where
 	// necessary
 	if (_doCaching) {
@@ -1104,6 +1126,7 @@ void EssentialGraph::insert(const uint u, const uint v, const std::set<uint> C)
 		for (a = refreshCache.find_first(); a < getVertexCount(); a = refreshCache.find_next(a))
 			_scoreCache[a] = getOptimalArrowInsertion(a);
 	}
+	*/
 }
 
 void EssentialGraph::remove(const uint u, const uint v, const std::set<uint> C)
@@ -1168,7 +1191,6 @@ void EssentialGraph::turn(const uint u, const uint v, const std::set<uint> C)
 bool EssentialGraph::greedyForward()
 {
 	uint v_opt = 0;
-	std::vector<ArrowChange>::iterator si;
 	ArrowChangeCmp comp;
 	ArrowChange insertion, optInsertion;
 
@@ -1201,7 +1223,7 @@ bool EssentialGraph::greedyForward()
 				_scoreCache[v] = getOptimalArrowInsertion(v);
 
 		// Find optimal arrow insertion from cache
-		si = std::max_element(_scoreCache.begin(), _scoreCache.end(), comp);
+		std::vector<ArrowChange>::iterator si = std::max_element(_scoreCache.begin(), _scoreCache.end(), comp);
 		v_opt = std::distance(_scoreCache.begin(), si);
 		optInsertion = *si;
 		_actualPhase = SD_FORWARD;
@@ -1212,10 +1234,66 @@ bool EssentialGraph::greedyForward()
 		// For DEBUGGING purposes: print inserted arrow
 		dout.level(3) << "  inserting edge (" << optInsertion.source << ", " << v_opt << ") with C = "
 				<< optInsertion.clique << ", S = " << optInsertion.score << "\n";
-		insert(optInsertion.source, v_opt, optInsertion.clique);
-//		#if DEBUG_OUTPUT_LEVEL >= 2
-//			getAdjacencyMatrix().print("A = ");
-//		#endif
+
+		uint u_opt = optInsertion.source;
+		_edgeLogger.reset();
+		insert(u_opt, v_opt, optInsertion.clique);
+
+		// If caching is enabled, recalculate the optimal arrow insertions where
+		// necessary
+		if (_doCaching) {
+			std::set<uint> recalc, recalcAnt;
+
+			// Genereate set of vertices whose anterior set is the set of vertices
+			// whose cache has to be refreshed:
+			// u, if there was no path from u to v before
+			// TODO check conditions!!!
+			// if (!oldGraph.existsPath(u, v))
+			recalcAnt.insert(u_opt);
+			recalc.insert(u_opt);
+			// v, if the arrow was undirected and there was no path from v to u before
+			// TODO check conditions!!
+			// if (hasEdge(v, u) && !oldGraph.existsPath(v, u))
+			if (hasEdge(v_opt, u_opt))
+				recalcAnt.insert(v_opt);
+			recalc.insert(v_opt);
+			// the target of any newly directed edge
+			for (std::set<Edge, EdgeCmp>::iterator ei = _edgeLogger.removedEdges.begin();
+					ei != _edgeLogger.removedEdges.end(); ++ei) {
+				recalcAnt.insert(ei->source);
+				recalc.insert(ei->target);
+			}
+			// the source of any newly undirected edge
+			for (std::set<Edge, EdgeCmp>::iterator ei = _edgeLogger.addedEdges.begin();
+					ei != _edgeLogger.addedEdges.end(); ++ei) {
+				recalcAnt.insert(ei->target);
+				recalc.insert(ei->source);
+			}
+
+			// Calculate anterior set of that candidate set, and add vertices that
+			// have to be recalculated without the complete anterior set
+			boost::dynamic_bitset<> refreshCache(getVertexCount());
+			refreshCache = getAnteriorSet(recalcAnt);
+			for (std::set<uint>::iterator si = recalc.begin(); si != recalc.end(); ++si)
+				refreshCache.set(*si);
+
+			// If v or u have reached the maximum degree, recalculate the optimal
+			// arrow insertion for all vertices for which an insertion with new
+			// parent u or v is proposed by the cache
+			if (getDegree(u_opt) >= _maxVertexDegree[u_opt])
+				for (int a = 0; a < getVertexCount(); ++a)
+					if (_scoreCache[a].source == u_opt)
+						refreshCache.set(a);
+			if (getDegree(v_opt) >= _maxVertexDegree[v_opt])
+				for (int a = 0; a < getVertexCount(); ++a)
+					if (_scoreCache[a].source == v_opt)
+						refreshCache.set(a);
+
+			// Refresh cache: recalculate arrow insertions
+			for (int a = refreshCache.find_first(); a < getVertexCount(); a = refreshCache.find_next(a))
+				_scoreCache[a] = getOptimalArrowInsertion(a);
+		}
+
 		return true;
 	}
 	else
@@ -1625,3 +1703,38 @@ std::set<uint> EssentialGraph::getOptimalTarget(uint maxSize)
 	else
 		throw std::runtime_error("Optimal targets with size other than 1 or p are not supported.");
 }
+
+EssentialGraph castGraph(const SEXP argInEdges)
+{
+	Rcpp::List listInEdges(argInEdges);
+	EssentialGraph result(listInEdges.size());
+
+	for (R_len_t i = 0; i < listInEdges.size(); ++i) {
+		Rcpp::IntegerVector vecParents((SEXP)(listInEdges[i]));
+		// Adapt indices to C++ convention
+		for (Rcpp::IntegerVector::iterator vi = vecParents.begin(); vi != vecParents.end(); ++vi)
+			result.addEdge(*vi - 1, i);
+	}
+
+	return result;
+}
+
+Rcpp::List wrapGraph(const EssentialGraph& graph)
+{
+	Rcpp::List result;
+	Rcpp::IntegerVector vecEdges;
+	std::set<uint> edges;
+
+	for (uint i = 0; i < graph.getVertexCount(); ++i) {
+		edges = graph.getInEdges(i);
+		Rcpp::IntegerVector vecEdges(edges.begin(), edges.end());
+		// Adapt indices to R convention
+		for (R_len_t i = 0; i < vecEdges.size(); ++i)
+			vecEdges[i]++;
+		result.push_back(vecEdges);
+	}
+
+	return result;
+}
+
+

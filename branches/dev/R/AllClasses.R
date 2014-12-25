@@ -419,12 +419,12 @@ setRefClass("Score",
     methods = list(
         #' Constructor
         #'
-        #' @param 	data 					data set, jointly interventional and observational.
-        #' 												Can either be a matrix or a data frame (this might
-        #' 												be different for inherited classes!)
-        #' @param		targets 			unique list of targets represented in the data
-        #' @param		target.index	index vector for targets of data rows
-        #' @param		nodes					node labels
+        #' @param 	data 			data set, jointly interventional and observational.
+        #' 							Can either be a matrix or a data frame (this might
+        #' 							be different for inherited classes!)
+        #' @param	targets 		unique list of targets represented in the data
+        #' @param	target.index	index vector for targets of data rows
+        #' @param	nodes			node labels
         #' Note: all arguments must have a default value for inheritance,
         #' see ?setRefClass; apart from that, the default values are meaningless
         initialize = function(data = matrix(1, 1, 1),
@@ -520,13 +520,14 @@ setRefClass("Score",
         #' Calculates the global score of a DAG which is only specified
         #' by its list of in-edges
         global.score.int = function(edges, ...) {
-          ## Calculate score in R
-          if (c.fcn == "none")
+          if (c.fcn == "none") {
+            ## Calculate score in R
             sum(sapply(1:pp.dat$vertex.count,
                     function(i) local.score(i, edges[[i]], ...)))
-          ## Calculate score with the C++ library
-          else
+          } else {
+            ## Calculate score with the C++ library
             .Call("globalScore", c.fcn, pp.dat, edges, c.fcn.options(...), PACKAGE = "pcalg")
+          }
         },
 
         #' Calculates the global score of a DAG

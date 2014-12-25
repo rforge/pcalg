@@ -26,46 +26,6 @@ typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> Undi
 
 // using namespace boost::lambda;
 
-/**
- * Reads in a graph from a list of in-edges passed as a SEXP to
- * an EssentialGraph object
- */
-EssentialGraph castGraph(SEXP argInEdges)
-{
-	int i;
-	Rcpp::List listInEdges(argInEdges);
-	EssentialGraph result(listInEdges.size());
-
-	for (i = 0; i < listInEdges.size(); ++i) {
-		Rcpp::IntegerVector vecParents((SEXP)(listInEdges[i]));
-		// Adapt indices to C++ convention
-		for (Rcpp::IntegerVector::iterator vi = vecParents.begin(); vi != vecParents.end(); ++vi)
-			result.addEdge(*vi - 1, i);
-	}
-
-	return result;
-}
-
-/**
- * Wrap a graph structure to an R list of in-edges
- */
-Rcpp::List wrapGraph(EssentialGraph graph)
-{
-	Rcpp::List result;
-	Rcpp::IntegerVector vecEdges;
-	std::set<uint> edges;
-	std::set<uint>::iterator si;
-
-	for (uint i = 0; i < graph.getVertexCount(); ++i) {
-		edges = graph.getInEdges(i);
-		vecEdges = Rcpp::IntegerVector();
-		for (si = edges.begin(); si != edges.end(); ++si)
-			vecEdges.push_back(*si + 1);
-		result.push_back(vecEdges);
-	}
-
-	return result;
-}
 
 /**
  * Yields the local score of a vertex given its parents.
@@ -137,7 +97,8 @@ RcppExport SEXP globalScore(
 
 	// Calculate local score
 	double result = score->global(castGraph(argInEdges));
-	delete score;
+	// TODO: check why this leads to a segfault!!!!
+	//delete score;
 	return Rcpp::wrap(result);
 
 	END_RCPP

@@ -84,7 +84,7 @@ struct EdgeCmp : public std::binary_function<Edge, Edge, bool>
 };
 
 /**
- * Helper class used as a stack for candidate cliques C \subset N
+ * Auxiliary class used as a stack for candidate cliques C \subset N
  */
 class CliqueStack : public std::deque<std::set<uint> >
 {
@@ -110,7 +110,7 @@ public:
 };
 
 /**
- * Helper classes for storing cached values
+ * Auxiliary classes for storing cached values
  */
 struct ArrowChange
 {
@@ -128,6 +128,50 @@ struct ArrowChangeCmp : public std::binary_function<Edge, Edge, bool>
 };
 
 enum step_dir { SD_NONE, SD_FORWARD, SD_BACKWARD, SD_TURNING };
+
+/**
+ * Auxiliary class for logging edge operations
+ */
+class GraphOperationLogger
+{
+public:
+	/**
+	 * Sets of added and removed edges
+	 */
+	std::set<Edge, EdgeCmp> addedEdges;
+	std::set<Edge, EdgeCmp> removedEdges;
+
+	/**
+	 * Reset logger
+	 */
+	void reset()
+	{
+		addedEdges.clear();
+		removedEdges.clear();
+	}
+
+	/**
+	 * Log edge additions or removals
+	 */
+	void logEdgeAddition(Edge edge)
+	{
+		// If edge was already removed before, clear removal entry;
+		// otherwise add addition entry.
+		if (!removedEdges.erase(edge)) {
+			addedEdges.insert(edge);
+		}
+	}
+
+	void logEdgeRemoval(Edge edge)
+	{
+		// If edge was already added before, clear addition entry;
+		// otherwise add removal entry.
+		if (!addedEdges.erase(edge)) {
+			removedEdges.insert(edge);
+		}
+	}
+};
+
 
 // Forward declaration for testing
 class EssentialGraphTest;
@@ -207,6 +251,11 @@ protected:
 	 * in intervention targets. However, this is not checked in the algorithm...
 	 */
 	boost::dynamic_bitset<> _childrenOnly; 
+
+	/**
+	 * Logger for graph operations
+	 */
+	GraphOperationLogger _edgeLogger;
 
 	/**
 	 * Checks whether there is a fixed gap between two vertices.
@@ -632,5 +681,16 @@ public:
 	 */
 	std::set<uint> getOptimalTarget(uint maxSize);
 };
+
+/**
+ * Reads in a graph from a list of in-edges passed as a SEXP to
+ * an EssentialGraph object
+ */
+EssentialGraph castGraph(const SEXP argInEdges);
+
+/**
+ * Wrap a graph structure to an R list of in-edges
+ */
+Rcpp::List wrapGraph(const EssentialGraph& graph);
 
 #endif /* GREEDY_HPP_ */
