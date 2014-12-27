@@ -130,44 +130,101 @@ struct ArrowChangeCmp : public std::binary_function<Edge, Edge, bool>
 enum step_dir { SD_NONE, SD_FORWARD, SD_BACKWARD, SD_TURNING };
 
 /**
- * Auxiliary class for logging edge operations
+ * Graph operations that can be logged
+ */
+enum graph_op { GO_ADD_EDGE, GO_REMOVE_EDGE, GO_LOCAL_SCORE };
+
+/**
+ * Auxiliary class for logging graph operations.
+ *
+ * This is a virtual base class that does not actually log operations;
+ * derived classes have to do that.
  */
 class GraphOperationLogger
 {
 public:
 	/**
-	 * Sets of added and removed edges
+	 * Constructor. Does nothing for base class.
 	 */
-	std::set<Edge, EdgeCmp> addedEdges;
-	std::set<Edge, EdgeCmp> removedEdges;
+	GraphOperationLogger() {};
+
+	/**
+	 * Destructor. Needs to be virtual because of different storage
+	 * of data in derived classes.
+	 */
+	virtual ~GraphOperationLogger() {};
 
 	/**
 	 * Reset logger
 	 */
-	void reset()
+	virtual void reset() {};
+
+	/**
+	 * Log graph operation. If a single vertex is involved, it is specified
+	 * as "first vertex". If an edge is involved, source and target are specified
+	 * as first and second vertex, resp.
+	 */
+	virtual void log(graph_op operation, uint first, uint second = 0) {};
+};
+
+class EdgeOperationLogger : public GraphOperationLogger
+{
+protected:
+	/**
+	 * Sets of added and removed edges
+	 */
+	std::set<Edge, EdgeCmp> _addedEdges;
+	std::set<Edge, EdgeCmp> _removedEdges;
+
+public:
+	/**
+	 * Constructor
+	 */
+	EdgeOperationLogger() :
+		GraphOperationLogger(),
+		_addedEdges(),
+		_removedEdges() {};
+
+	/**
+	 * Reference to added or removed edges
+	 */
+	const std::set<Edge, EdgeCmp>& addedEdges() { return _addedEdges; }
+	const std::set<Edge, EdgeCmp>& removedEdges() { return _removedEdges; }
+
+	/**
+	 * Reset logger
+	 */
+	virtual void reset()
 	{
-		addedEdges.clear();
-		removedEdges.clear();
+		_addedEdges.clear();
+		_removedEdges.clear();
 	}
 
 	/**
 	 * Log edge additions or removals
 	 */
-	void logEdgeAddition(Edge edge)
+	virtual void log(graph_op operation, uint first, uint second = 0)
 	{
-		// If edge was already removed before, clear removal entry;
-		// otherwise add addition entry.
-		if (!removedEdges.erase(edge)) {
-			addedEdges.insert(edge);
-		}
-	}
+		Edge edge(first, second);
+		switch (operation) {
+			case GO_ADD_EDGE :
+				// If edge was already removed before, clear removal entry;
+				// otherwise add addition entry.
+				if (_removedEdges.erase(edge) == 0) {
+					_addedEdges.insert(edge);
+				}
+				break;
 
-	void logEdgeRemoval(Edge edge)
-	{
-		// If edge was already added before, clear addition entry;
-		// otherwise add removal entry.
-		if (!addedEdges.erase(edge)) {
-			removedEdges.insert(edge);
+			case GO_REMOVE_EDGE :
+				// If edge was already added before, clear addition entry;
+				// otherwise add removal entry.
+				if (_addedEdges.erase(edge) == 0) {
+					_removedEdges.insert(edge);
+				}
+				break;
+
+			default :
+				break;
 		}
 	}
 };
@@ -253,14 +310,19 @@ protected:
 	boost::dynamic_bitset<> _childrenOnly; 
 
 	/**
-	 * Logger for graph operations
+	 * Loggers for graph operations
 	 */
-	GraphOperationLogger _edgeLogger;
+	std::set<GraphOperationLogger*> _loggers;
 
 	/**
 	 * Checks whether there is a fixed gap between two vertices.
 	 */
 	bool gapFixed(const uint a, const uint b) const;
+
+	/**
+	 * Marks a gap as fixed or not fixed
+	 */
+	void setFixedGap(const uint a, const uint b, const bool fixed);
 
 	/**
 	 * Checks whether there is a path from a to b in the graph that does not
@@ -556,6 +618,12 @@ public:
 	std::set<uint> getChainComponent(const uint v) const;
 
 	/**
+	 * Adds and removes loggers. Functions return true on success.
+	 */
+	bool addLogger(GraphOperationLogger* logger);
+	bool removeLogger(GraphOperationLogger* logger);
+
+	/**
 	 * Sets and gets score object
 	 */
 	void setScore(Score* score) { _score = score; }
@@ -626,8 +694,11 @@ public:
 
 	/**
 	 * Does one forward step of the greedy interventional equivalence search.
+	 *
+	 * @param  adaptive: indicates whether set of allowed edges should be
+	 * adaptively enlarged according to AGES
 	 */
-	bool greedyForward();
+	bool greedyForward(bool adaptive = false);
 
 	/**
 	 * Does one backward step of the greedy interventional equivalence search

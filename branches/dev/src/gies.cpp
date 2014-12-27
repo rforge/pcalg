@@ -98,7 +98,7 @@ RcppExport SEXP globalScore(
 	// Calculate local score
 	double result = score->global(castGraph(argInEdges));
 	// TODO: check why this leads to a segfault!!!!
-	//delete score;
+	delete score;
 	return Rcpp::wrap(result);
 
 	END_RCPP
@@ -170,7 +170,7 @@ RcppExport SEXP globalMLE(
 	TargetFamily targets = castTargets(data["targets"]);
 	Score* score = createScore(Rcpp::as<std::string>(argScore), &targets, data);
 
-	// Calculate local score
+	// Calculate global score
 	std::vector<std::vector<double> > result = score->globalMLE(castGraph(argInEdges));
 	delete score;
 	return Rcpp::wrap(result);
@@ -275,6 +275,9 @@ RcppExport SEXP causalInference(
 		graph.setFixedGaps(fixedGaps, gapsInverted);
 	}
 
+	// Cast option for adaptive handling of fixed gaps (cf. "AGES")
+	bool adaptive = options["adaptive"];
+
 	// Perform inference algorithm:
 	// GIES
 	if (algName == "GIES") {
@@ -291,7 +294,7 @@ RcppExport SEXP causalInference(
 			bool cont;
 			do {
 				cont = false;
-				for (steps.push_back(0); graph.greedyForward(); steps.back()++);
+				for (steps.push_back(0); graph.greedyForward(adaptive); steps.back()++);
 				for (steps.push_back(0); graph.greedyBackward(); steps.back()++)
 					cont = true;
 				for (steps.push_back(0); graph.greedyTurn(); steps.back()++)
@@ -299,7 +302,7 @@ RcppExport SEXP causalInference(
 			} while (cont);
 		}
 		else {
-			for (steps.push_back(0); graph.greedyForward(); steps.back()++);
+			for (steps.push_back(0); graph.greedyForward(adaptive); steps.back()++);
 			for (steps.push_back(0); graph.greedyBackward(); steps.back()++);
 		}
 	}
@@ -319,7 +322,7 @@ RcppExport SEXP causalInference(
 
 		steps.push_back(0);
 		if (algName == "GIES-F")
-			for (; steps.back() < stepLimit && graph.greedyForward(); steps.back()++);
+			for (; steps.back() < stepLimit && graph.greedyForward(adaptive); steps.back()++);
 		else if (algName == "GIES-B")
 			for (; steps.back() < stepLimit && graph.greedyBackward(); steps.back()++);
 		else if (algName == "GIES-T")

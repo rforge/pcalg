@@ -982,6 +982,7 @@ setRefClass("EssGraph",
             maxSteps = 0,
             childrenOnly = integer(0),
             fixedGaps = NULL,
+			adaptive = FALSE,
             verbose = 0) {
           list(caching = caching,
               turning = turning,
@@ -989,6 +990,7 @@ setRefClass("EssGraph",
               maxSteps = maxSteps,
               childrenOnly = childrenOnly,
               fixedGaps = fixedGaps,
+			  adaptive = adaptive,
               DEBUG.LEVEL = as.integer(verbose))
         },
 

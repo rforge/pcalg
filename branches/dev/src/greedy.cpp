@@ -19,7 +19,8 @@ EssentialGraph::EssentialGraph(const uint vertexCount) :
 	_fixedGaps(vertexCount),
 	_gapsInverted(false),
 	_maxVertexDegree(vertexCount, vertexCount),
-	_childrenOnly(vertexCount)
+	_childrenOnly(vertexCount),
+	_loggers()
 {
 	disableCaching();
 }
@@ -35,9 +36,6 @@ void EssentialGraph::clear()
 		++next;
 		boost::remove_edge(*ei, _graph);
 	}
-
-	// Clear logger
-	_edgeLogger.reset();
 }
 
 void EssentialGraph::addEdge(const uint a, const uint b, bool undirected)
@@ -45,13 +43,19 @@ void EssentialGraph::addEdge(const uint a, const uint b, bool undirected)
 	if (!hasEdge(a, b)) {
 		// Add edge and log it
 		boost::add_edge(a, b, _graph);
-		_edgeLogger.logEdgeAddition(Edge(a, b));
+		for (std::set<GraphOperationLogger*>::iterator logger = _loggers.begin();
+				logger != _loggers.end(); ++logger) {
+			(*logger)->log(GO_ADD_EDGE, a, b);
+		}
 	}
 
 	if (undirected && !hasEdge(b, a)) {
 		// Add edge and log it
 		boost::add_edge(b, a, _graph);
-		_edgeLogger.logEdgeAddition(Edge(b, a));
+		for (std::set<GraphOperationLogger*>::iterator logger = _loggers.begin();
+				logger != _loggers.end(); ++logger) {
+			(*logger)->log(GO_ADD_EDGE, b, a);
+		}
 	}
 }
 
@@ -60,13 +64,19 @@ void EssentialGraph::removeEdge(const uint a, const uint b, bool bothDirections)
 	if (hasEdge(a, b)) {
 		// Remove edge and log it
 		boost::remove_edge(a, b, _graph);
-		_edgeLogger.logEdgeRemoval(Edge(a, b));
+		for (std::set<GraphOperationLogger*>::iterator logger = _loggers.begin();
+				logger != _loggers.end(); ++logger) {
+			(*logger)->log(GO_REMOVE_EDGE, a, b);
+		}
 	}
 
 	if (bothDirections && hasEdge(b, a)) {
 		// Remove edge and log it
 		boost::remove_edge(b, a, _graph);
-		_edgeLogger.logEdgeRemoval(Edge(b, a));
+		for (std::set<GraphOperationLogger*>::iterator logger = _loggers.begin();
+				logger != _loggers.end(); ++logger) {
+			(*logger)->log(GO_REMOVE_EDGE, b, a);
+		}
 	}
 }
 
@@ -75,6 +85,15 @@ bool EssentialGraph::gapFixed(const uint a, const uint b) const
 	bool result;
 	boost::tie(boost::tuples::ignore, result) = boost::edge(a, b, _fixedGaps);
 	return result ^ _gapsInverted;
+}
+
+void EssentialGraph::setFixedGap(const uint a, const uint b, const bool fixed)
+{
+	if (fixed ^ _gapsInverted) {
+		boost::add_edge(a, b, _fixedGaps);
+	} else {
+		boost::remove_edge(a, b, _fixedGaps);
+	}
 }
 
 bool EssentialGraph::existsPath(const uint a, const uint b, const std::set<uint>& C, const bool undirected)
@@ -308,6 +327,7 @@ void EssentialGraph::setFixedGaps(const EssentialGraph& fixedGaps, const bool in
 	_gapsInverted = inverted;
 }
 
+
 void EssentialGraph::limitVertexDegree(const std::vector<uint>& maxVertexDegree)
 {
 	if (maxVertexDegree.size() != getVertexCount())
@@ -462,6 +482,18 @@ std::set<uint> EssentialGraph::getChainComponent(const uint v) const
 				nbhd.push_back(*vi);
 	}
 	return chainComp;
+}
+
+bool EssentialGraph::addLogger(GraphOperationLogger* logger)
+{
+	bool result;
+	boost::tie(boost::tuples::ignore, result) = _loggers.insert(logger);
+	return result;
+}
+
+bool EssentialGraph::removeLogger(GraphOperationLogger* logger)
+{
+	return _loggers.erase(logger) == 0;
 }
 
 ArrowChange EssentialGraph::getOptimalArrowInsertion(const uint v)
@@ -1053,9 +1085,6 @@ void EssentialGraph::insert(const uint u, const uint v, const std::set<uint> C)
 	std::set<uint> recalc, recalcAnt;
 	std::set<uint>::iterator si;
 	boost::dynamic_bitset<> refreshCache(getVertexCount());
-	EssentialGraph oldGraph;
-	if (_doCaching)
-		oldGraph = *this;
 
 	// Get a LexBFS-ordering on the chain component of v, in which all edges of C
 	// point toward v, and all other edges point away from v, and orient the edges
@@ -1188,14 +1217,15 @@ void EssentialGraph::turn(const uint u, const uint v, const std::set<uint> C)
 	replaceUnprotected();
 }
 
-bool EssentialGraph::greedyForward()
+bool EssentialGraph::greedyForward(bool adaptive)
 {
 	uint v_opt = 0;
 	ArrowChangeCmp comp;
 	ArrowChange insertion, optInsertion;
 
 	// For DEBUGGING purposes: print phase
-	dout.level(3) << "== starting forward phase...\n";
+	dout.level(3) << "== starting forward phase ("
+			<< (adaptive ? "" : "not ") << "adaptive)...\n";
 
 	// Initialize optimal score gain
 	optInsertion.score = _minScoreDiff;
@@ -1236,8 +1266,21 @@ bool EssentialGraph::greedyForward()
 				<< optInsertion.clique << ", S = " << optInsertion.score << "\n";
 
 		uint u_opt = optInsertion.source;
-		_edgeLogger.reset();
+		EdgeOperationLogger edgeLogger;
+		if (_doCaching) {
+			addLogger(&edgeLogger);
+		}
 		insert(u_opt, v_opt, optInsertion.clique);
+
+		// Adapt fixed gaps if requested (cf. "AGES")
+		if (adaptive && !hasEdge(v_opt, u_opt)) {
+			std::set<uint> sources = set_difference(getParents(v_opt), getAdjacent(u_opt));
+			sources.erase(u_opt);
+			for (std::set<uint>::iterator si = sources.begin(); si != sources.end(); ++si) {
+				setFixedGap(*si, u_opt, false);
+				setFixedGap(u_opt, *si, false);
+			}
+		}
 
 		// If caching is enabled, recalculate the optimal arrow insertions where
 		// necessary
@@ -1258,14 +1301,14 @@ bool EssentialGraph::greedyForward()
 				recalcAnt.insert(v_opt);
 			recalc.insert(v_opt);
 			// the target of any newly directed edge
-			for (std::set<Edge, EdgeCmp>::iterator ei = _edgeLogger.removedEdges.begin();
-					ei != _edgeLogger.removedEdges.end(); ++ei) {
+			for (std::set<Edge, EdgeCmp>::iterator ei = edgeLogger.removedEdges().begin();
+					ei != edgeLogger.removedEdges().end(); ++ei) {
 				recalcAnt.insert(ei->source);
 				recalc.insert(ei->target);
 			}
 			// the source of any newly undirected edge
-			for (std::set<Edge, EdgeCmp>::iterator ei = _edgeLogger.addedEdges.begin();
-					ei != _edgeLogger.addedEdges.end(); ++ei) {
+			for (std::set<Edge, EdgeCmp>::iterator ei = edgeLogger.addedEdges().begin();
+					ei != edgeLogger.addedEdges().end(); ++ei) {
 				recalcAnt.insert(ei->target);
 				recalc.insert(ei->source);
 			}
@@ -1292,6 +1335,9 @@ bool EssentialGraph::greedyForward()
 			// Refresh cache: recalculate arrow insertions
 			for (int a = refreshCache.find_first(); a < getVertexCount(); a = refreshCache.find_next(a))
 				_scoreCache[a] = getOptimalArrowInsertion(a);
+
+			// Unregister logger
+			removeLogger(&edgeLogger);
 		}
 
 		return true;
