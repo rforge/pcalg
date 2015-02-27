@@ -621,13 +621,15 @@ setRefClass("GaussL0penIntScore",
           .format <<- match.arg(format)
           ## If format not specified by user, choose it based on dimensions
           ## TODO: check if this choice is reasonable...
-          if (length(format) > 1)
-            .format <<- ifelse(p >= nrow(data) || p >= 500, "raw", "scatter")
-          
+          if (length(format) > 1) {
+            .format <<- ifelse(p >= nrow(data), "raw", "scatter")
+		  }
+			
           ## Use C++ functions if requested
-          if (use.cpp)
+          if (use.cpp) {
             c.fcn <<- ifelse(.format == "scatter", "gauss.l0pen.scatter", "gauss.l0pen.raw")
-
+          }
+            
           ## Preprocess data if storage format is "scatter"; for "raw" format,
           ## everything is already available in pp.dat
           if (.format == "scatter") {

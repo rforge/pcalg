@@ -2650,8 +2650,9 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
 
   ## Check number of cores
   stopifnot((is.integer(numCores) || is.numeric(numCores)) && numCores > 0)
-  if (numCores > 1 && method != "stable.fast")
-    warn("Argument numCores ignored: parallelization only available for method = 'stable.fast'")
+  if (numCores > 1 && method != "stable.fast") {
+    warning("Argument numCores ignored: parallelization only available for method = 'stable.fast'")
+  }
   if (method == "stable.fast") {
     ## Do calculation in C++...
     if (identical(indepTest, gaussCItest))

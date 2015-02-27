@@ -1224,7 +1224,7 @@ bool EssentialGraph::greedyForward(bool adaptive)
 	ArrowChange insertion, optInsertion;
 
 	// For DEBUGGING purposes: print phase
-	dout.level(3) << "== starting forward phase ("
+	dout.level(1) << "== starting forward phase ("
 			<< (adaptive ? "" : "not ") << "adaptive)...\n";
 
 	// Initialize optimal score gain
@@ -1262,7 +1262,7 @@ bool EssentialGraph::greedyForward(bool adaptive)
 	// If the score can be augmented, do it
 	if (!check_interrupt() && optInsertion.score > _minScoreDiff) {
 		// For DEBUGGING purposes: print inserted arrow
-		dout.level(3) << "  inserting edge (" << optInsertion.source << ", " << v_opt << ") with C = "
+		dout.level(1) << "  inserting edge (" << optInsertion.source << ", " << v_opt << ") with C = "
 				<< optInsertion.clique << ", S = " << optInsertion.score << "\n";
 
 		uint u_opt = optInsertion.source;
@@ -1303,14 +1303,18 @@ bool EssentialGraph::greedyForward(bool adaptive)
 			// the target of any newly directed edge
 			for (std::set<Edge, EdgeCmp>::iterator ei = edgeLogger.removedEdges().begin();
 					ei != edgeLogger.removedEdges().end(); ++ei) {
+				dout.level(3) << "New directed edge: (" << ei-> source << ", " << ei->target << ")\n";
 				recalcAnt.insert(ei->source);
 				recalc.insert(ei->target);
 			}
 			// the source of any newly undirected edge
 			for (std::set<Edge, EdgeCmp>::iterator ei = edgeLogger.addedEdges().begin();
 					ei != edgeLogger.addedEdges().end(); ++ei) {
-				recalcAnt.insert(ei->target);
-				recalc.insert(ei->source);
+				if (ei->source != u_opt && ei->target != v_opt) {
+					dout.level(3) << "New undirected edge: (" << ei-> source << ", " << ei->target << ")\n";
+					recalcAnt.insert(ei->target);
+					recalc.insert(ei->source);
+				}
 			}
 
 			// Calculate anterior set of that candidate set, and add vertices that
@@ -1352,7 +1356,7 @@ bool EssentialGraph::greedyBackward()
 	ArrowChange deletion, optDeletion;
 
 	// For DEBUGGING purposes: print phase
-	dout.level(3) << "== starting backward phase...\n" ;
+	dout.level(1) << "== starting backward phase...\n" ;
 
 	// Initialize optimal score gain
 	optDeletion.score = _minScoreDiff;
@@ -1393,7 +1397,7 @@ bool EssentialGraph::greedyTurn()
 	ArrowChange turning, optTurning;
 
 	// For DEBUGGING purposes: print phase
-	dout.level(3) << "== starting turning phase...\n" ;
+	dout.level(1) << "== starting turning phase...\n" ;
 
 	// Initialize optimal score gain
 	optTurning.score = _minScoreDiff;
