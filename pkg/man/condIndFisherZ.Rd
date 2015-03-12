@@ -64,10 +64,9 @@ gaussCItest   (x, y, S, suffStat)
   equivalent to conditional independence.
 }
 \references{
-  Markus Kalisch and Peter B\"uhlmann (2005)
-  \emph{Estimating high-dimensional directed acyclic graphs with the
-    PC-algorithm}; Research Report Nr.~130, ETH Zurich;\cr
-  \url{http://stat.ethz.ch/research/research_reports/2005}
+  M. Kalisch and P. Buehlmann (2007).
+  Estimating high-dimensional directed acyclic graphs with the PC-algorithm.
+  \emph{JMLR} \bold{8} 613-636.
 }
 \seealso{\code{\link{pcorOrder}} for computing a partial correlation
   given the correlation matrix in a recursive way.
