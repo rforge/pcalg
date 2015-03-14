@@ -35,7 +35,8 @@ importMethodsFrom("graph",
 		  edges, edgeData, 
 		  edgeDataDefaults, "edgeDataDefaults<-",
 		  isDirected,
-		  nodes, numNodes, numEdges,
+		  nodes, "nodes<-",
+		  numNodes, numEdges,
 		  subGraph, ugraph)
 
 importFrom("igraph", graph.adjacency, igraph.from.graphNEL, is.chordal,

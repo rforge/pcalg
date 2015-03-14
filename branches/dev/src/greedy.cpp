@@ -1533,7 +1533,7 @@ bool EssentialGraph::greedyDAGForward()
 				diffScore = - _score->local(v, C_new);
 				C_new.insert(u);
 				diffScore += _score->local(v, C_new);
-				dout.level(2) << "  Score diff. for edge " << u << " --> " << v << " : " <<
+				dout.level(3) << "  Score diff. for edge " << u << " --> " << v << " : " <<
 						diffScore << std::endl;
 
 				// If new score is better than previous optimum
@@ -1577,7 +1577,7 @@ bool EssentialGraph::greedyDAGBackward()
 			diffScore = - _score->local(v, C_new);
 			C_new.erase(*ui);
 			diffScore += _score->local(v, C_new);
-			dout.level(2) << "  Score diff. for edge " << *ui << " --> " << v << " : " <<
+			dout.level(3) << "  Score diff. for edge " << *ui << " --> " << v << " : " <<
 					diffScore << std::endl;
 
 			// If new score is better than previous optimum, store (u, v, C) as new optimum
@@ -1624,7 +1624,7 @@ bool EssentialGraph::greedyDAGTurn()
 				C_new.erase(*ui);
 				D_new.insert(v);
 				diffScore += _score->local(v, C_new) + _score->local(*ui, D_new);
-				dout.level(2) << "  Score diff. for edge " << *ui << " --> " << v << " : " <<
+				dout.level(3) << "  Score diff. for edge " << *ui << " --> " << v << " : " <<
 						diffScore << std::endl;
 
 				// If new score is better than previous optimum, store (u, v, C) as new optimum

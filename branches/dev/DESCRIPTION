@@ -1,10 +1,10 @@
 Package: pcalg
 Version: 2.1-0
-Date: 2014-10-08
+Date: 2015-03-14
 Author: Diego Colombo, Alain Hauser, Markus Kalisch, Martin Maechler
 Maintainer: Markus Kalisch <kalisch@stat.math.ethz.ch>
-Title: Methods for graphical models and causal inference
-Description: This package contains several functions for causal structure
+Title: Methods for Graphical Models and Causal Inference
+Description: Functions for causal structure
   learning and causal inference using graphical models. The main algorithms
   for causal structure learning are PC (for observational data without hidden
   variables), FCI and RFCI (for observational data with hidden variables),
