@@ -223,7 +223,7 @@ result.
 <<Iplot, echo=FALSE, eval=FALSE>>=
 stopifnot(require(Rgraphviz))# needed for all our graph plots
 par(mfrow = c(1,2))
-plot(gmG$g, main = "") ; plot(pc.gmG, main = "")
+plot(gmG8$g, main = "") ; plot(pc.gmG, main = "")
 @% two plots side by sid
 
 <<exIntroPlot>>=
@@ -281,7 +281,7 @@ ida(1, 6, cov(gmG8$x), pc.gmG@graph)
 @
 
 Since we simulated the data, we know that the true value of the causal
-effect is \Sexpr{gGtrue <- gmG$g; round(causalEffect(gGtrue, 6, 1), 2)}. %$
+effect is \Sexpr{gGtrue <- gmG8$g; round(causalEffect(gGtrue, 6, 1), 2)}. %$
 Thus, one of the two
 estimates is indeed close to the true value. Since both values are larger
 than zero, we can conclude that variable $V_1$ has a positive causal effect
@@ -897,7 +897,7 @@ suffStat <- list(C = cor(gmG8$x), n = nrow(gmG8$x))
 skel.gmG <- skeleton(suffStat, indepTest = gaussCItest,
                    p = ncol(gmG8$x), alpha = 0.01)
 par(mfrow = c(1,2))
-plot(gmG$g, main = ""); plot(skel.gmG, main = "")
+plot(gmG8$g, main = ""); plot(skel.gmG, main = "")
 @
 \caption{True underlying DAG (left) and estimated skeleton (right) fitted
   on the simulated Gaussian data set \texttt{gmG}.}
@@ -1077,7 +1077,7 @@ Fig.~\ref{fig:pcFit1}.
 <<pcExpl-plot, fig=TRUE>>=
 suffStat <- list(C = cor(gmG8$x), n = nrow(gmG8$x))
 pc.fit <- pc(suffStat, indepTest=gaussCItest, p = ncol(gmG8$x), alpha = 0.01)
-par(mfrow= c(1,2));  plot(gmG$g, main = ""); plot(pc.fit, main = "")
+par(mfrow= c(1,2));  plot(gmG8$g, main = ""); plot(pc.fit, main = "")
 @
 \caption{True underlying DAG (left) and estimated CPDAG (right) fitted on the
   simulated Gaussian data set \code{gmG}.}
@@ -1142,7 +1142,7 @@ exactly the same in this case.
 <<pcExpl-plot, fig=TRUE>>=
 score <- new("GaussL0penObsScore", gmG8$x)
 ges.fit <- ges(score)
-par(mfrow=1:2); plot(gmG$g, main = ""); plot(ges.fit$essgraph, main = "")
+par(mfrow=1:2); plot(gmG8$g, main = ""); plot(ges.fit$essgraph, main = "")
 @
 \caption{True underlying DAG (left) and essential graph (right) estimated
   with the GES algorithm fitted on the simulated Gaussian data set \code{gmG}.}

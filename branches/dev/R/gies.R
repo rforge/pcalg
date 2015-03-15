@@ -231,9 +231,27 @@ simy <- function(score, labels = score$getNodes(), targets = score$getTargets(),
   
 #' Converts a DAG to an (observational or interventional) essential graph
 dag2essgraph <- function(dag, targets = list(integer(0))) {
-  new("EssGraph", 
-      nodes = dag$.nodes, 
-      in.edges = .Call("dagToEssentialGraph", dag$.in.edges, targets),
-      targets = targets)
+  edgeListDAG <- inEdgeList(dag)
+  edgeListEssGraph <- .Call("dagToEssentialGraph", edgeListDAG, targets)
+  if (is.matrix(dag)) {
+    p <- nrow(dag)
+    result <- sapply(1:p, function(i) 1:p %in% edgeListEssGraph[[i]])
+    rownames(result) <- rownames(dag)
+    colnames(result) <- colnames(dag)
+    result
+  } else if (class(dag) == "graphNEL") {
+    nodeNames <- nodes(dag)
+    names(edgeListEssGraph) <- nodeNames
+    result <- new("graphNEL",
+        nodes = nodeNames,
+        edgeL = lapply(edgeListEssGraph, function(v) nodeNames[v]),
+        edgemode = "directed")
+    reverseEdgeDirections(result)
+  } else {
+    new("EssGraph", 
+        nodes = dag$.nodes, 
+        in.edges = edgeListEssGraph,
+        targets = targets)
+  }
 }
 

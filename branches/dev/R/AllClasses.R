@@ -218,6 +218,29 @@ targets2mat <- function(p, targets, target.index)
   res
 }
 
+#' Auxiliary function reading an edge list (as used in the constructors
+#' of DAGs) out of an adjacency matrix or a graphNEL object
+#' @param from adjacency matrix, graphNEL object, or object inherited
+#'  from ParDAG
+#' @return list of in-edges; length of list = number of vertices,
+#' entries for i-th vertex = indices sources of in-edges
+inEdgeList <- function(from)
+{
+  if (is.matrix(from)) {
+    p <- nrow(from)
+    stopifnot(p == ncol(from))
+    lapply(1:p, function(i) which(from[, i] != 0))
+  } else if (class(from) == "graphNEL") {
+    nodeNames <- graph::nodes(from)
+    edgeList <- lapply(graph::inEdges(from), function(v) match(v, nodeNames))
+    names(edgeList) <- NULL
+    edgeList
+  } else if (length(grep(".*ParDAG", class(from)) == 1)) {
+    from$.in.edges
+  }else {
+    stop(sprintf("Input of class '%s' is not supported.", class(from)))
+  }
+}
 
 #' Virtual base class for all causal models
 setRefClass("CausMod",
@@ -230,9 +253,6 @@ setRefClass("CausMod",
       ## Check node names
       if (anyDuplicated(object$.nodes)) {
         return("The node names must be unique")
-      }
-      if (any(names(object$.in.edges) != object$.nodes)) {
-        return("The elements of 'in.edges' must be named after the nodes.")
       }
       
       ## Check in-edges
@@ -301,8 +321,8 @@ setRefClass("ParDAG",
     validity = function(object) {
       if (anyDuplicated(object$.nodes))
         return("The node names must be unique")
-      if (any(names(object$.in.edges) != object$.nodes))
-        return("The elements of 'in.edges' must be named after the nodes.")
+      # if (any(names(object$.in.edges) != object$.nodes))
+      #   return("The elements of 'in.edges' must be named after the nodes.")
       if (!all(sapply(object$.in.edges, is.numeric)))
         return("The vectors in 'in.edges' must contain numbers.")
 
@@ -319,11 +339,16 @@ setRefClass("ParDAG",
         initialize = function(nodes, in.edges = NULL, params = list()) {
           .nodes <<- nodes
 
-          if (is.null(in.edges))
+          if (is.null(in.edges)) {
             .in.edges <<- replicate(length(nodes), integer(0), simplify = FALSE)
-          else
+          } else {
             .in.edges <<- lapply(1:length(in.edges), function(i) as.integer(in.edges[[i]]))
-          names(.in.edges) <<- nodes
+          }
+          # names(.in.edges) <<- nodes
+          names(.in.edges) <<- NULL
+          for (i in 1:length(nodes)) {
+            names(.in.edges[[i]]) <<- NULL
+          }
 
           .params <<- params
         },
@@ -354,9 +379,11 @@ setRefClass("ParDAG",
 #' Coercion to a graphNEL instance
 setAs("ParDAG", "graphNEL",
     def = function(from) {
+      edgeList <- lapply(from$.in.edges, function(v) from$.nodes[v])
+      names(edgeList) <- from$.nodes
       result <- new("graphNEL",
           nodes = from$.nodes,
-          edgeL = from$.in.edges,
+          edgeL = edgeList,
           edgemode = "directed")
       return(reverseEdgeDirections(result))
     })
@@ -886,9 +913,9 @@ setRefClass("EssGraph",
 
     validity = function(object) {
       ## Check nodes
-      if (any(names(object$.in.edges) != object$.nodes)) {
-        return("The elements of 'in.edges' must be named after the nodes.")
-      }
+      # if (any(names(object$.in.edges) != object$.nodes)) {
+      #   return("The elements of 'in.edges' must be named after the nodes.")
+      # }
       
       ## Check in-edges
       if (!all(sapply(object$.in.edges, is.numeric))) {
@@ -937,7 +964,8 @@ setRefClass("EssGraph",
           # TODO: improve error checking; possibly put it into separate function
           stopifnot(is.list(in.edges) && length(in.edges) == length(nodes))
           .in.edges <<- in.edges
-          names(.in.edges) <<- .nodes
+          # names(.in.edges) <<- .nodes
+          names(.in.edges) <<- NULL
 
           ## Store targets
           setTargets(targets)
@@ -1118,9 +1146,11 @@ setRefClass("EssGraph",
 #' Coercion to a graphNEL instance
 setAs("EssGraph", "graphNEL",
     def = function(from) {
+      edgeList <- lapply(from$.in.edges, function(v) from$.nodes[v])
+      names(edgeList) <- from$.nodes
       result <- new("graphNEL",
           nodes = from$.nodes,
-          edgeL = lapply(from$.in.edges, function(v) from$.nodes[v]),
+          edgeL = edgeList,
           edgemode = "directed")
       return(reverseEdgeDirections(result))
     })
@@ -1264,13 +1294,25 @@ setRefClass("GaussParDAG",
 setAs("matrix", "GaussParDAG",
     def = function(from) {
       p <- nrow(from)
+      stopifnot(p == ncol(from))
+      
       if (!isAcyclic(from))
         stop("Input matrix does not correspond to an acyclic DAG.")
-      edgeL <- lapply(1:p, function(i) which(from[, i] != 0))
+	  
+      nodes <- rownames(from)
+      if (any(duplicated(nodes))) {
+        warning("Row names are not unique; will reset node names.")
+        nodes <- as.character(1:p)
+      }
+      if (is.null(nodes)) {
+        nodes <- as.character(1:p)
+      }
+      
+      edgeList <- inEdgeList(from)
       new("GaussParDAG",
-          nodes = as.character(1:p),
-          in.edges = edgeL,
-          param = lapply(1:p, function(i) c(0, 0, from[edgeL[[i]], i])))
+          nodes = nodes,
+          in.edges = edgeList,
+          param = lapply(1:p, function(i) c(0, 0, from[edgeList[[i]], i])))
     })
 
 #' Coercion from a "graphNEL" object

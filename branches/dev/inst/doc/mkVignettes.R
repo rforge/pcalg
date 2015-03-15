@@ -16,7 +16,7 @@ manualInst.vignette <- function(fstem, package="pcalg", verbose=FALSE) {
         switch(Sys.getenv("USER"),
 	       "maechler" = file.path("~/R/Pkgs", package),# or "~/R/Pkgs/pcalg-dev"
          "kalischm" = ".....",    # PATH of pcalg or pcalg-dev
-         "husi" = "~/Daten/UniBern/svn/pcalg/branches/dev",
+         "husi" = "~/versionControl/R/pcalg/branches/dev",
          stop("Must add your (username, pcalg-source) in file {inst/}doc/mkVignettes.R "))
 
     srcDES <- read.dcf(file.path(pkgSrcDir, "DESCRIPTION"))

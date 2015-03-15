@@ -556,12 +556,8 @@ dag2cpdag <- function(g)
   ## Arguments:
   ## - dag: input DAG (graph object)
   ## ----------------------------------------------------------------------
-  ## Author: Alain Hauser, Date: 13 Mar 2015
-  nn <- nodes(g) ## *: to keep node labels
-  dag <- as(g, "GaussParDAG")
-  res <- as(dag2essgraph(dag), "graphNEL")
-  nodes(res) <- nn ## *
-  res
+  ## Author: Alain Hauser, Date: 14 Mar 2015
+  dag2essgraph(g)
 }
 
 
