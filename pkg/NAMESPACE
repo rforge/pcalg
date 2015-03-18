@@ -40,7 +40,7 @@ importMethodsFrom("graph",
 		  subGraph, ugraph)
 
 importFrom("igraph", graph.adjacency, igraph.from.graphNEL, is.chordal,
-	   plot.igraph)
+	   plot.igraph, graph.dfs)
 
 importFrom("RBGL",
 	   biConnComp, johnson.all.pairs.sp, separates, bfs, connectedComp)

@@ -2050,7 +2050,7 @@ Please use ida or idaFast instead\n")
       for (i in 1:n.dags) {
         ## compute effect for every DAG
         gDag <- as(matrix(ad[i,],p,p),"graphNEL")
-        if (myplot) plot(gDag)
+        if (myplot) Rgraphviz::plot(gDag)
         ## path from y to x
         rev.pth <- RBGL::sp.between(gDag,as.character(y.pos),
                                     as.character(x.pos))[[1]]$path
@@ -6431,7 +6431,7 @@ iplotPC <- function(pc.fit, labels = NULL) {
   adjm <- wgtMatrix(getGraph(pc.fit), transpose=FALSE)
   if (!is.null(labels)) dimnames(adjm) <- list(labels, labels)
   g1 <- graph.adjacency( adjm )
-  plot(g1)
+  plot.igraph(g1)
 }
 
 showEdgeList <- function(object, labels = NULL)
@@ -7346,45 +7346,58 @@ fciPlus <- function(suffStat, indepTest, alpha, labels, p)
 }
 
 ## Code for jointIda (Preetam)
-## extract.parent.sets
-extract.parent.sets <- function(x.pos,amat.cpdag){
+## extract.parent.sets (version Nov 14)
+extract.parent.sets <- function(x.pos,amat.cpdag,isCPDAG=FALSE){
   amat.cpdag[which(amat.cpdag != 0)] <- 1
   amat.undir <- amat.cpdag*t(amat.cpdag) 
   amat.dir <- amat.cpdag - amat.undir 
   pasets.dir <- lapply(x.pos,function(x) which(amat.dir[,x]!=0))
-  g.undir <- as(amat.undir,"graphNEL")
-  conn.comp <- lapply(connectedComp(g.undir),as.integer)
-  conn.comp.imp <- conn.comp[sapply(conn.comp,function(comp) length(intersect(x.pos,comp))>0)]
   
-  chrordality.test.fun <- function(comp) is.chordal(graph.adjacency(amat.undir[comp,comp],mode="undirected"),fillin=F)$chordal
-  chordal <- sapply(conn.comp.imp, chrordality.test.fun)
-
-  all.locally.valid.parents.undir <- function(amat,x){ #x must be a scaler
-    pa.dir <- pasets.dir[[which(x.pos==as.integer(rownames(amat)[x]))]]
-    paset <- list(pa.dir)
-    pa <- which(amat[,x] != 0) #cannot be a null set
-    if (length(pa)==1){
-      paset <- c(paset,list(c(as.integer(rownames(amat)[pa]),pa.dir))) 
-    }else{
-      for (i in 1:length(pa)){
-        pa.tmp <- combn(pa, i, simplify = TRUE)
-        n.comb <- ncol(pa.tmp)
-        for (j in 1:n.comb) {
-          pa.t <- pa.tmp[, j]
-          new.coll <- FALSE
-          if (length(pa.t)>1){
-            tmp <- amat[pa.t,pa.t]
-            diag(tmp) <- 1
-            new.coll <- (min(tmp)==0)
+  #get all important connected components of the undirected subgraph
+  conn.comp.imp <- NULL
+  x.temp <- x.pos
+  while (length(x.temp)>0){
+    comp.temp <- graph.dfs(graph=graph.adjacency(amat.undir,mode='undirected'),x.temp[1],unreachable=F)$order
+    comp.temp <- comp.temp[!is.nan(comp.temp)]
+    x.temp <- setdiff(x.temp,comp.temp)
+    conn.comp.imp <- c(conn.comp.imp,list(comp.temp))
+  }
+  
+  #Chordality test, if required
+  if (!isCPDAG){
+    chrordality.test.fun <- function(comp) is.chordal(graph.adjacency(amat.undir[comp,comp],mode="undirected"),fillin=F)$chordal
+    chordal <- sapply(conn.comp.imp, chrordality.test.fun)
+  }else{
+    chordal <- rep(TRUE,length(conn.comp.imp))
+  }
+    
+  #Function for getting locally valid parent sets
+    all.locally.valid.parents.undir <- function(amat,x){ #x must be a scaler
+      pa.dir <- pasets.dir[[which(x.pos==as.integer(rownames(amat)[x]))]]
+      paset <- list(pa.dir)
+      pa <- which(amat[,x] != 0) #cannot be a null set
+      if (length(pa)==1){
+        paset <- c(paset,list(c(as.integer(rownames(amat)[pa]),pa.dir))) 
+      }else{
+        for (i in 1:length(pa)){
+          pa.tmp <- combn(pa, i, simplify = TRUE)
+          n.comb <- ncol(pa.tmp)
+          for (j in 1:n.comb) {
+            pa.t <- pa.tmp[, j]
+            new.coll <- FALSE
+            if (length(pa.t)>1){
+              tmp <- amat[pa.t,pa.t]
+              diag(tmp) <- 1
+              new.coll <- (min(tmp)==0)
+            }
+            if (!new.coll) paset <- c(paset,list(c(as.integer(rownames(amat)[pa.t]),pa.dir)))
           }
-          if (!new.coll) paset <- c(paset,list(c(as.integer(rownames(amat)[pa.t]),pa.dir)))
         }
       }
+      return(paset)
     }
-    
-    return(paset)
-  }
-
+  
+  
   extract.parent.sets.from.conn.comp <- function(i){
     all.nodes <- conn.comp.imp[[i]]
     nvar <- length(all.nodes)
@@ -7395,7 +7408,7 @@ extract.parent.sets <- function(x.pos,amat.cpdag){
       rownames(conn.comp.mat) <- all.nodes
       x.temp <- intersect(all.nodes,x.pos)
       x.temp2 <- match(x.temp,all.nodes)
-      if(chordal[i]){
+      if(chordal[i] & nvar<=12){
         rownames(conn.comp.mat) <- colnames(conn.comp.mat) <- 1:nvar
         all.extensions <- allDags(conn.comp.mat,conn.comp.mat,NULL)
         pa.fun <- function(amat,j) c(all.nodes[which(amat[,x.temp2[j]]!=0)],pasets.dir[[match(x.temp[j],x.pos)]])
@@ -7410,14 +7423,14 @@ extract.parent.sets <- function(x.pos,amat.cpdag){
     }
     return(pasets.comp)
   }
-
+  
   all.pasets <- lapply(1:length(conn.comp.imp),extract.parent.sets.from.conn.comp)
   idx <- expand.grid(lapply(1:length(all.pasets),function(i) 1:length(all.pasets[[i]])))
   x.conn.comp <- unlist(lapply(1:length(conn.comp.imp),function(i) intersect(conn.comp.imp[[i]],x.pos)))
   all.pasets <- lapply(1:nrow(idx),function(i) unlist(lapply(1:length(conn.comp.imp),
                                                              function(j) all.pasets[[j]][[idx[i,j]]]),recursive=F)[match(x.pos,x.conn.comp)])
-
-  return(list(pasets=all.pasets,n.nonchordal=sum(!chordal)))
+  
+  return(all.pasets)
 }
 
 ## jointIda
@@ -7427,27 +7440,24 @@ jointIda <- function(x.pos,y.pos,mcov,graphEst=NULL,all.pasets=NULL,technique=c(
     amat <- as(graphEst,"matrix")
     amat[which(amat != 0)] <- 1
     all.pasets <- extract.parent.sets(x.pos,amat)
-    all.pasets <- all.pasets$pasets
   }else{
     correct.format <- TRUE
     if (!is.list(all.pasets)) correct.format <- FALSE
     for (i in 1:length(all.pasets)){
       if (length(all.pasets[[i]]) != length(x.pos)) correct.format <- FALSE
     }
-    if (!correct.format) stop("all.pasets is not given in an appropriate format.")
+      if (!correct.format) stop("all.pasets is not given in an appropriate format.")
   }
   if (length(y.pos)>1){
     return(lapply(y.pos,function(y) jointIda(x.pos,y,mcov,all.pasets=all.pasets,technique=technique)))
   }else{
     technique <- match.arg(technique)
-    if (is.element(y.pos,x.pos)) {
-      return(matrix(0,nrow=length(x.pos),ncol=length(all.pasets)))
-    }
+    if (is.element(y.pos,x.pos)) return(matrix(0,nrow=length(x.pos),ncol=length(all.pasets)))
     joint.effects <- switch(technique,
                             RRC = matrix(unlist(lapply(all.pasets,function(pasets) RRC(mcov,x.pos,y.pos,pasets))),
-                              nrow=length(x.pos)),
+                                        nrow=length(x.pos)),
                             MCD = matrix(unlist(lapply(all.pasets,function(pasets) MCD(mcov,x.pos,y.pos,pasets))),
-                              nrow=length(x.pos)))
+                                         nrow=length(x.pos)))
     return(joint.effects)
   }
 }
