@@ -1,2 +1,12 @@
 R CMD build pcalg/pkg
-R=R-devel R-pkg-check pcalg_2.0-7.tar.gz
+R=R-devel R-pkg-check pcalg_2.0-10.tar.gz > stdout.txt 2> stderr.txt
+
+== 
+Output in 
+/tmp/pcalg.Rcheck
+
+==
+svn up
+svn st
+svn ci -m 'bla'
+svn log -l 4

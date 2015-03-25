@@ -1392,6 +1392,7 @@ pdag2dag <- function(g, keepVstruct=TRUE) {
     p <- dim(gm)[1]
 
     gm2 <- gm
+    cn2 <- colnames(gm2)
     a <- gm
     go.on <- TRUE
     go.on2 <- FALSE
@@ -1408,8 +1409,12 @@ pdag2dag <- function(g, keepVstruct=TRUE) {
             ## orient edges
             inc.to.x <- which(a[,x]==1 & a[x,]==1) ## undirected
             if (length(inc.to.x)>0) {
-              real.inc.to.x <- as.numeric(row.names(a)[inc.to.x])
-              real.x <- as.numeric(row.names(a)[x])
+              ## map var.names to col pos in orig adj matrix
+              ## bug: real.inc.to.x <- as.numeric(row.names(a)[inc.to.x])
+              v1 <- row.names(a)[inc.to.x]
+              real.inc.to.x <- which(cn2 %in% v1)
+              v2 <- row.names(a)[x]
+              real.x <- which(cn2 %in% v2)
               gm2[real.x,real.inc.to.x] <- rep(1,length(inc.to.x))
               gm2[real.inc.to.x,real.x] <- rep(0,length(inc.to.x))
             }
