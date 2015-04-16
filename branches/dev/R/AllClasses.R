@@ -912,11 +912,6 @@ setRefClass("EssGraph",
     ),
 
     validity = function(object) {
-      ## Check nodes
-      # if (any(names(object$.in.edges) != object$.nodes)) {
-      #   return("The elements of 'in.edges' must be named after the nodes.")
-      # }
-      
       ## Check in-edges
       if (!all(sapply(object$.in.edges, is.numeric))) {
         return("The vectors in 'in.edges' must contain numbers.")
@@ -961,10 +956,9 @@ setRefClass("EssGraph",
           .nodes <<- as.character(nodes)
           
           ## Store in-edges
-          # TODO: improve error checking; possibly put it into separate function
           stopifnot(is.list(in.edges) && length(in.edges) == length(nodes))
+          # More error checking is done in validity check
           .in.edges <<- in.edges
-          # names(.in.edges) <<- .nodes
           names(.in.edges) <<- NULL
 
           ## Store targets
@@ -1012,15 +1006,20 @@ setRefClass("EssGraph",
             maxSteps = 0,
             childrenOnly = integer(0),
             fixedGaps = NULL,
-			adaptive = FALSE,
+            adaptive = FALSE,
             verbose = 0) {
+          # Error checks for supplied arguments 
+          # TODO extend!
+          if (is.null(fixedGaps)) {
+            adaptive = FALSE
+          }
           list(caching = caching,
               turning = turning,
               maxDegree = maxDegree,
               maxSteps = maxSteps,
               childrenOnly = childrenOnly,
               fixedGaps = fixedGaps,
-			  adaptive = adaptive,
+              adaptive = adaptive,
               DEBUG.LEVEL = as.integer(verbose))
         },
 
@@ -1104,25 +1103,6 @@ setRefClass("EssGraph",
             return(TRUE)
           }
         },
-
-        #' Performs GIES from an arbitrary start DAG
-        #' TODO: delete!
-#        gies = function(...) caus.inf("GIES", ...),
-
-        #' Performs GDS from an arbitrary start DAG
-#        gds = function(...) caus.inf("GDS", ...),
-
-        #' DP search of Silander and Myllymäki (ignores the start DAG!)
-        #' TODO: delete!
-#        silander = function(...) caus.inf("DP", ...),
-
-        #' Calculates the parameters of a DAG via MLE (wrapper function only)
-        #' TODO: delete!
-#        fit = function(dag) {
-#          stopifnot(!is.null(score <- getScore()))
-#          dag$.params <- score$global.fit(dag)
-#          return(dag)
-#        },
 
         #' Yields a representative (estimating parameters via MLE)
         repr = function() {

@@ -51,6 +51,8 @@
    Better: verbose in { 0,1,2 (, 3) } and verbose=1 should give much less
    than TRUE now
 
+** TODO skeleton(): use convention that "sepset" is triangular; could save a lot of memory
+   for large graphs.
 
 * Parallelize option
 * Allow 'tiers' (as in Tetrad), and 'background knowledge' (about orientations etc).
@@ -134,3 +136,12 @@
 
 * Change convention: If something strange happens with a test, KEEP edge
 * Make up some clever way to deal with NAs in the continuous case (phps also in other cases) and prepare test functions for users
+
+
+* TODO EssGraph$opt.target(): write wrapper function for this, document it
+
+* TODO document predict.GaussParDAG
+
+* TODO document argument 'adaptive' (gies(), ges()) (see WARNING in package check)
+
+* TODO for gies(), ges(): point out the new arguments in documentation.

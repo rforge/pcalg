@@ -1,6 +1,6 @@
 ## GIES algorithm
 ## 
-## Author: Alain Hauser <alhauser@ethz.ch>
+## Author: Alain Hauser <alain.hauser@bfh.ch>
 ## $Id$
 ###############################################################################
 
@@ -173,10 +173,12 @@ caus.inf <- function(algorithm = c("GIES", "GDS", "SiMy"),
 #' @param 	verbose			indicates whether debug output should be printed
 #' @param 	...					additional parameters (currently none)
 gies <- function(score, labels = score$getNodes(), targets = score$getTargets(),
-    fixedGaps = NULL, turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
+    fixedGaps = NULL, adaptive = FALSE, turning = TRUE, maxDegree = integer(0), 
+    verbose = FALSE, ...)
 {
   caus.inf("GIES", score = score, labels = labels, targets = targets,
-      fixedGaps = fixedGaps, turning = turning, maxDegree = maxDegree, verbose = verbose, ...)
+      fixedGaps = fixedGaps, adaptive = adaptive, turning = turning, 
+      maxDegree = maxDegree, verbose = verbose, ...)
 }
 
 #' Greedy equivalence search
@@ -193,10 +195,12 @@ gies <- function(score, labels = score$getNodes(), targets = score$getTargets(),
 #' @param 	verbose			indicates whether debug output should be printed
 #' @param 	...					additional parameters (currently none)
 ges <- function(score, labels = score$getNodes(),
-    fixedGaps = NULL, turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...) 
+    fixedGaps = NULL, adaptive = FALSE, turning = TRUE, maxDegree = integer(0), 
+    verbose = FALSE, ...) 
 {
   caus.inf("GIES", score = score, labels = labels, targets = list(integer(0)), 
-      fixedGaps = fixedGaps, turning = turning, maxDegree = maxDegree, verbose = verbose, ...)
+      fixedGaps = fixedGaps, adaptive = adaptive, turning = turning, 
+      maxDegree = maxDegree, verbose = verbose, ...)
 }
   
 #' Greedy DAG search: greedy search in the DAG space
