@@ -1,5 +1,5 @@
 Package: pcalg
-Version: 2.1-0
+Version: 2.1-1
 Date: 2015-04-20
 Authors@R:c(person("Kalisch","Markus",email="kalisch@stat.math.ethz.ch",role=c("aut","cre")),
  person("Hauser","Alain", role="aut"),
