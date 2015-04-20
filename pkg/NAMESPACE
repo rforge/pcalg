@@ -54,6 +54,8 @@ importFrom("bdsmatrix", gchol) ## for jointIda ("MCD")
 
 importFrom("sfsmisc", digitsBase)
 
+importFrom("fastICA", fastICA)
+importFrom("clue", solve_LSAP)
 ###----- Exports ------------------------------------------------------
 
 export(getGraph)# our S4 generic including methods
@@ -124,7 +126,8 @@ export(trueCov,
        mat2targets,
        # targets2mat,
        dag2essgraph,
-       fciPlus)
+       fciPlus,
+       LINGAM)
 
 ## These are "internal" i.e., in man/pcalg-internal.Rd
 ## _FIXME ?_                     ---------------------  
