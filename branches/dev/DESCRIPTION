@@ -1,6 +1,6 @@
 Package: pcalg
-Version: 2.1-0
-Date: 2015-03-14
+Version: 2.3-0
+Date: 2015-04-21
 Author: Diego Colombo, Alain Hauser, Markus Kalisch, Martin Maechler
 Maintainer: Markus Kalisch <kalisch@stat.math.ethz.ch>
 Title: Methods for Graphical Models and Causal Inference
