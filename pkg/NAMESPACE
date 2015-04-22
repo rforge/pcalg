@@ -32,7 +32,7 @@ importClassesFrom("graph", graph, graphAM, graphNEL)
 importMethodsFrom("graph",
 		  ## addEdge,
 		  coerce,# as(., ...)
-		  edges, edgeData, 
+		  edges, edgeData,
 		  edgeDataDefaults, "edgeDataDefaults<-",
 		  isDirected,
 		  nodes, "nodes<-",
@@ -126,13 +126,13 @@ export(trueCov,
        mat2targets,
        # targets2mat,
        dag2essgraph,
+       ## --- end{Alain}
        fciPlus,
        LINGAM)
 
 ## These are "internal" i.e., in man/pcalg-internal.Rd
-## _FIXME ?_                     ---------------------  
+## _FIXME ?_                     ---------------------
 export(##ancTS,
-       ## caus.inf,
        ## has.new.coll,
        ## ci.test,
        ## dep.triple,
@@ -149,7 +149,7 @@ export(##ancTS,
        rfci.vStruc,
        allDags,
        amat2dag)
-       
+
 
 exportClasses("pcAlgo",
               "fciAlgo",
@@ -161,4 +161,4 @@ exportClasses("pcAlgo",
               "GaussL0penObsScore",
               "EssGraph")
 
-exportMethods("summary","show","plot")
+exportMethods("summary", "show", "plot")
