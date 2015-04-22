@@ -844,10 +844,13 @@ setAs("EssGraph", "graphNEL", .ess2graph)
 setAs("EssGraph", "graph", .ess2graph)
 
 #' Coercion to a (logical) matrix
+## NOTE: Coercion to SparseMatrix is more efficient via
+## ----  via "graphNEL" for larger p
 setAs("EssGraph", "matrix",
     def = function(from) {
-      p <- from$node.count()
-      sapply(1:p, function(i) 1:p %in% from$.in.edges[[i]])
+      ip <- seq_len(p <- from$node.count())
+      vapply(ip, function(i) ip %in% from$.in.edges[[i]],
+             logical(p))
     })
 
 #' Plot method (needs Rgraphviz to work!!)
