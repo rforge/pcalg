@@ -833,19 +833,19 @@ setRefClass("EssGraph",
         }
         ))
 
+##' Coercion to a graphNEL instance
 .ess2graph <- function(from)
     reverseEdgeDirections(new("graphNEL",
                               nodes = from$.nodes,
                               edgeL = from$.in.edges,
                               edgemode = "directed"))
 
-#' Coercion to a graphNEL instance
 setAs("EssGraph", "graphNEL", .ess2graph)
 setAs("EssGraph", "graph", .ess2graph)
 
-#' Coercion to a (logical) matrix
 ## NOTE: Coercion to SparseMatrix is more efficient via
-## ----  via "graphNEL" for larger p
+## ----  via "graphNEL" for larger p :
+##' Coercion to a (logical) matrix
 setAs("EssGraph", "matrix",
     def = function(from) {
       ip <- seq_len(p <- from$node.count())
