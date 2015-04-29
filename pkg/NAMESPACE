@@ -40,7 +40,9 @@ importMethodsFrom("graph",
 		  subGraph, ugraph)
 
 importFrom("igraph", graph.adjacency, igraph.from.graphNEL, is.chordal,
-	   plot.igraph, graph.dfs)
+	   plot.igraph, graph.dfs, k.regular.game, get.adjacency,
+           watts.strogatz.game, simplify, bipartite.random.game,
+           barabasi.game, interconnected.islands.game, degree.sequence.game)
 
 importFrom("RBGL",
 	   biConnComp, johnson.all.pairs.sp, separates, bfs, connectedComp)
@@ -56,6 +58,7 @@ importFrom("sfsmisc", digitsBase)
 
 importFrom("fastICA", fastICA)
 importFrom("clue", solve_LSAP)
+importFrom("gmp", as.bigz, chooseZ, as.bigq)
 ###----- Exports ------------------------------------------------------
 
 export(getGraph)# our S4 generic including methods
@@ -128,7 +131,10 @@ export(trueCov,
        dag2essgraph,
        ## --- end{Alain}
        fciPlus,
-       LINGAM)
+       LINGAM,
+       randDAG,
+       unifDAG,
+       unifDAG.approx)
 
 ## These are "internal" i.e., in man/pcalg-internal.Rd
 ## _FIXME ?_                     ---------------------
