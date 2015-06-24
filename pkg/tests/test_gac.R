@@ -1,5 +1,5 @@
 library(pcalg)
-source("/u/kalischm/research/packages/develop/gac/forPackage/gacFuns.R")
+
 xx <- TRUE
 ##################################################
 ## DAG / CPDAG
@@ -91,7 +91,7 @@ z<-c(1,4,2,3); xx <- xx & gac(m,x,y,z,type)$gac
 ##################################################
 ## Tests from Ema
 ##################################################
-load("/u/kalischm/research/packages/develop/gac/tests/gacData.rda")
+load("gacData.rda")
 type <- "pag"
 m1 <-matrices[[1]] 
 x <- 6; y <- 9
