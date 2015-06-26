@@ -29,7 +29,7 @@ m2g <- function(m) {
 
 ## construct DAG (matrix Q) recursively ###########################
 sampleQ <- function(n,K,p.w=1/2){
-  
+
   Q <- matrix(0,n,n)
   I <- length(K)
   j <- K[I]
@@ -52,23 +52,23 @@ sampleQ <- function(n,K,p.w=1/2){
     }
   }
   Q
-}  
+}
 
 ##################################################
 ## randDAG
 ##################################################
 randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,wFUN=list(runif,min=0.1,max=1)){
-  
+
   geo <- FALSE
   if(!is.list(wFUN)) {wFUN <- list(wFUN)}
-  
+
   switch(method,
   ###########################################################################
   er={
     s <- d/(n-1)
     Q <- erDAG(n,s)
   },
-  
+
   ###########################################################################
   regular={
     # s=number of neighbours in expectation
@@ -79,7 +79,7 @@ randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,w
     Q <- Q[perm,perm]
     Q <- Q*upper.tri(Q)
   },
-  
+
   ###########################################################################
   watts={
     # s=number of neighbours in expectation
@@ -87,7 +87,7 @@ randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,w
     if(is.numeric(par1)){beta <- par1}
     else{beta <- 1/2}
     s <- round(d/2)
-    
+
     g <- watts.strogatz.game(1,n,s,beta)
     g <- simplify(g)
     Q <- get.adjacency(g,sparse=FALSE)
@@ -95,7 +95,7 @@ randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,w
     Q <- Q[perm,perm]
     Q <- Q*upper.tri(Q)
   },
-  
+
   ###########################################################################
   bipartite={
     # p=probability of connecting between two parts
@@ -103,17 +103,17 @@ randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,w
     if(is.numeric(par1)){alpha <- par1}
     else{alpha <- 1/2}
     p <- d/(2*alpha*(1-alpha)*n)
-    
+
     n1 <- ceiling(n*alpha)
     n2 <- floor(n*(1-alpha))
-    
+
     g <- bipartite.random.game(n1=n1,n2=n2,type="gnp",p=p)
     Q <- get.adjacency(g,sparse=FALSE)
     perm <- sample.int(n)
     Q <- Q[perm,perm]
     Q <- Q*upper.tri(Q)
   },
-  
+
   ###########################################################################
   barabasi={
     # m= number of nodes adding in each step
@@ -124,38 +124,38 @@ randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,w
 
     mbar <- (2*m*n-m^2+m)/(2*(n-m))
     seq <- sample(c(m,m+1),n,replace=TRUE,prob=c(1-mbar+m,mbar-m))
-    
+
     g <- barabasi.game(n=n,power=power,out.seq=seq,out.pref=TRUE,directed=FALSE)
-    
+
     g <- simplify(g)
     Q <- get.adjacency(g,sparse=FALSE)
     perm <- sample.int(n)
     Q <- Q[perm,perm]
     Q <- Q*upper.tri(Q)
   },
-  
+
   ###########################################################################
-  geometric={ 
+  geometric={
     # r=euclidian radius
-    # par1: dim=dimension: 
+    # par1: dim=dimension:
     # par2: if "geo", then weights are reciprocal to distances
-    
+
     geo <- TRUE
     geo2 <- FALSE
     if(is.numeric(par1)){
       dim <- par1}
-    else{dim <- 2}  
-    
+    else{dim <- 2}
+
     if(is.character(par2) && (par2=="geo")  ){
       geo2 <- TRUE
     }
 
     r <- (  (d*gamma(dim/2+1))  /  ((n-1)*pi^(dim/2))     )^(1/dim)
-    
+
     g <- geoDAG(n,r,dim,geo2,DAG,weighted,wFUN)
-    
+
   },
-  
+
   ###########################################################################
   power={
     gamma <- findGamma(n,d)
@@ -165,24 +165,24 @@ randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,w
     Q <- Q[perm,perm]
     Q <- Q*upper.tri(Q)
   },
-  
-  
+
+
   ###########################################################################
   interEr={
     # p=probability of connecting edges intra
     # par1: s.island=number of islands, n/s.island should be a positive integer
     # par2: alpha=fraction of inter connectivity
-    
+
     if(is.numeric(par1)){
       s.island <- par1 } else {s.island <- 2}
-    
+
     stopifnot((n/s.island)%%1==0)
     if(is.numeric(par2)){
       alpha <- par2} else{alpha <- 1/4}
-    
+
     p <- 2*d*s.island/((n-s.island)*(2+alpha))
     stopifnot(p>0 && p<=1)
-    
+
     m <- round((alpha*p*(n-2*s.island)*(n-s.island))/(2*s.island^2*(s.island-1)))
     g <- interconnected.islands.game(s.island,n/s.island,p,m)
     Q <- get.adjacency(g,sparse=FALSE)
@@ -191,14 +191,14 @@ randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,w
     Q <- Q*upper.tri(Q)
   },
   )   #switch end
-  
-  
+
+
   if(!geo){
-        g <- undirunweight.to.dirweight(Q,n,DAG,weighted,wFUN)   
+        g <- undirunweight.to.dirweight(Q,n,DAG,weighted,wFUN)
   }
-  
+
   g
-  
+
 }
 
 # AUX-FUNCTIONS ####################################
@@ -209,9 +209,9 @@ undirunweight.to.dirweight <- function(Q,n,DAG,weighted,
     nrEdge <- sum(Q)
     Q[Q==1] <- do.call(wFUN[[1]],c(nrEdge,wFUN[-1]))
   }
-  
+
   if(!DAG) {Q <- Q+t(Q) }
-  
+
   perm <- sample.int(n)
   Q <- Q[perm,perm]
   colnames(Q) <- rownames(Q) <- 1:n
@@ -219,33 +219,42 @@ undirunweight.to.dirweight <- function(Q,n,DAG,weighted,
   m2g(Q)
 }
 
-powerLawDAG <- function(n,gamma){
-  ##generate power-law distribution
-  dist <- (1:(n-1))^(-gamma)
+powerLawDAG <- function(n, gamma, maxtry = 20L) {
+  ## generate power-law distribution
+  stopifnot((n <- as.integer(n)) >= 2,
+            (maxtry <- as.integer(maxtry)) >= 1)
+  in1 <- seq_len(n - 1L)
+  dist <- (in1)^(-gamma)
   dist <- dist/sum(dist)
-  
-  ##try: sometimes its not possible to construct graph for computed sequence
+
   g <- 1
-  done <- FALSE
-  while(!done){
-    ##sample degree for each node among distribution
-    degs <- sample(1:(n-1),size=n,replace=TRUE,prob=dist)
-    ##should be even
-    if(sum(degs)%%2==1){degs[which.max(degs)] <- degs[which.max(degs)]-1}
-    
-    g <- try(degree.sequence.game(degs,method="vl"),silent=TRUE)
-    if(length(g)==9){done <- TRUE}
+  for(i in seq_len(maxtry)) {
+    ## sample degree for each node among distribution
+    degs <- sample(in1, size=n, replace=TRUE, prob=dist)
+    ## should be even
+    if(sum(degs)%%2 == 1)
+      degs[which.max(degs)] <- degs[which.max(degs)] - 1
+
+    ## try: sometimes its not possible to construct graph for computed sequence
+    g <- tryCatch(degree.sequence.game(degs, method="vl"), error = function(e) e)
+    if(!inherits(g, "error"))
+        break
   }
-  
+  if(i == maxtry && inherits(g, "error"))
+      stop(gettextf("degree.sequence.game() did not succeed in maxtry=%d iterations",
+                    maxtry), domain=NA)
+  ## otherwise we are done
   simplify(g)
 }
 
 
-geoDAG <- function(n,r,dim,geo=TRUE,DAG,weighted,
-                   wFUN=list(runif,min=0.1,max=1)){
-  
-  points.dim <- matrix(runif(n*dim),dim,n)
-  
+geoDAG <- function(n, r,dim, geo=TRUE, DAG,w eighted,
+                   wFUN = list(runif, min=0.1, max=1))
+{
+  stopifnot((n <- as.integer(n)) >= 2)
+
+  points.dim <- matrix(runif(n*dim), dim, n)
+
   weights <- matrix(0,n,n)
   Q <- matrix(0,n,n)
   for(i in 1:(n-1)){
@@ -261,7 +270,7 @@ geoDAG <- function(n,r,dim,geo=TRUE,DAG,weighted,
       weights[i,j] <- (c*(1-0.1)+0.1)*Q[i,j]
     }
   }
-  
+
   if(weighted){
     if(geo){
       Q <- weights
@@ -270,9 +279,9 @@ geoDAG <- function(n,r,dim,geo=TRUE,DAG,weighted,
       Q[Q==1] <- do.call(wFUN[[1]],c(nrEdge,wFUN[-1]))
     }
   }
-  
+
   if(!DAG) {Q <- Q+t(Q) }
-  
+
   perm <- sample.int(n)
   Q <- Q[perm,perm]
   colnames(Q) <- rownames(Q) <- 1:n
@@ -288,7 +297,7 @@ erDAG <- function(n,p){
   Q <- upper.tri(Q)
   Q[Q==1] <- samp
   Q
-  
+
 }
 
 generalHarmonic <- function(n,r){
@@ -311,42 +320,42 @@ findGamma <- function(n,d){
 unifDAG <- function(n,weighted=FALSE,wFUN=list(runif,min=0.1,max=1)){
   stopifnot(n>1)
   if (n > 100) stop("Use unifDAG only for n <= 100; for larger n use unifDAG.approx")
-  
+
   # step 1
   # calculate numbers a_{n,k}, b_{n,k} and a_n up to N ##################
   # is done offline #####################################
-  
-  
+
+
   # step 2
   # sample an integer between 1 and a_n ##########################
   r <- sampleZ2(.unifDagPreComp$a[n])
-  
+
   # step 3
   # find vector K=c(k_1,...,k_I) ##############################
   K <- findK.exact(n,r)
-  
+
   # step 4
   # construct DAG (matrix Q) recursively ###########################
   Q <- sampleQ(n,K)
-  
+
   if(weighted){
     nrEdge <- sum(Q)
     if(!is.list(wFUN)) {wFUN <- list(wFUN)}
     Q[Q==1] <- do.call(wFUN[[1]],c(nrEdge,wFUN[-1]))
   }
-  
+
   # step 5
   # permute matrix Q and convert to DAG #############################
   perm <- sample.int(n)
   as(Q[perm,perm],"graphNEL")
-  
-} 
+
+}
 
 
 # find vector K=c(k_1,...,k_I) ##############################
 findK.exact <- function(n,r){
 
-  K <- rep(0,n) # vector of k_1,...,k_I 
+  K <- rep(0,n) # vector of k_1,...,k_I
   k <- 1
   while(r>.unifDagPreComp$A[n,k]){
     r <- r - .unifDagPreComp$A[n,k]
@@ -358,7 +367,7 @@ findK.exact <- function(n,r){
   m <- n-k
   while(m>0){
     s <- 1
-    t <- (2^k-1)^s * 2^as.bigz(k*(m-s)) * .unifDagPreComp$A[m,s]      
+    t <- (2^k-1)^s * 2^as.bigz(k*(m-s)) * .unifDagPreComp$A[m,s]
     while(r>t){
       r <- r-t
       s <- s+1
@@ -380,11 +389,11 @@ findK.exact <- function(n,r){
       m <- nn-k
       i <- i+1
       K[i] <- k
-      
+
     }
   }
   I <- i
-  
+
   K[K!=0]
 }
 
@@ -409,38 +418,38 @@ unifDAG.approx <- function(n,n.exact = 20,weighted=FALSE,
                            wFUN=list(runif,min=0.1,max=1)){
   stopifnot(n>1)
   if (n < n.exact) stop("unifDAG.approx: n needs to be at least as big as n.exact!")
-  
-  # step 1&2 
+
+  # step 1&2
   # calculate numbers a_{n,k}, b_{n,k} and a_n up to N ##################
   # calculate numbers A_k, B_{s|k} up to N.inf and accuracy #################
   # is done offline #####################################
-  
+
   # step 3
   # find approx-vector K=c(k_1,...,k_I) #########################
   K <- findK.approx(n,n.exact)
-  
+
   # step 4
   # construct DAG (matrix Q) recursively ###########################
   Q <- sampleQ(n,K)
-  
+
   if(weighted){
     nrEdge <- sum(Q)
     if(!is.list(wFUN)) {wFUN <- list(wFUN)}
     Q[Q==1] <- do.call(wFUN[[1]],c(nrEdge,wFUN[-1]))
   }
-  
-  # step 5 
+
+  # step 5
   # permute matrix Q and convert to DAG #############################
   perm <- sample.int(n)
   as(Q[perm,perm],"graphNEL")
-  
+
 }
 
 ## find vector K=c(k_1,...,k_I) ##############################
 findK.approx <- function(n,n.exact){
-  
+
   M <- n
-  
+
   K1 <- rep(0,n-n.exact)
   i <- 1
   K1[i]  <- sampleZ.cum.vec(.unifDagPreComp$Ak)
@@ -456,7 +465,7 @@ findK.approx <- function(n,n.exact){
     K1[i-1] <- 0
   }
   K1 <- K1[K1!=0]
-  
+
   if(n.exact>=1){
     #direct enumeration method with n.exact
     r <- sampleZ2(.unifDagPreComp$a[M])
@@ -465,10 +474,10 @@ findK.approx <- function(n,n.exact){
   else{
     K2 <- 0
   }
-  
+
   K <- c(K1,K2)
   K[K!=0]
-  
+
 }
 
 sampleZ.cum.vec <- function(c){
@@ -499,7 +508,7 @@ if (FALSE) {
     library(gmp)
     setwd("/u/kalischm/research/packages/pcalg/pkg/R")
     source("genRandDAG.R")
-    
+
     ## Exact
     load("/u/kalischm/research/packages/unifDAGs/tables100.RData")
     resExact <- generate.tables(100)
@@ -527,17 +536,17 @@ generate.tables <- function(N,dir=getwd(),verbose=TRUE){
   A <- as.bigz(matrix(0,N,N))  # a_{n,k}
   B <- as.bigz(matrix(0,N,N))  # b_{n,k}
   a <- as.bigz(rep(0,N))       # a_n
-  
+
   A[1,1] <- B[1,1] <- a[1] <- 1
   for(nn in 2:N){
     if(verbose) cat("\n N: ",nn," K: ")
     for(k in 1:(nn-1)){
       if(verbose) cat(" ",k)
-      sum <- as.bigz(0) 
+      sum <- as.bigz(0)
       for(s in 1:(nn-k)){
         sum <- sum + (2^k-1)^as.bigz(s) * 2^as.bigz(k*(nn-k-s)) * A[nn-k,s]
       }
-      B[nn,k] <-  sum 
+      B[nn,k] <-  sum
       A[nn,k] <- chooseZ(nn,k)*B[nn,k]
     }
     A[nn,nn] <- B[nn,nn] <- 1
@@ -551,7 +560,7 @@ generate.tables <- function(N,dir=getwd(),verbose=TRUE){
 ## construct A_k and B_{s|k} ###############################
 approx.Ak <- function(N.inf=100,accuracy=20){
   Ak <- as.bigz(rep(0,N.inf))  # A_k=lim_{n->oo}(A_{n,k}/a_n)
-  
+
   acc <- 10^as.bigz(accuracy)
   for(k in 1:N.inf){
     Ak[k] <- as.bigz(.unifDagPreComp$A[N.inf,k] * acc / .unifDagPreComp$a[N.inf])
@@ -562,7 +571,7 @@ approx.Ak <- function(N.inf=100,accuracy=20){
 
 approx.Bsk <- function(Ak){
   n.k <- length(Ak)
-  
+
   Bsk <- as.bigq(matrix(0,n.k,n.k))
   for(kk in 1:n.k){
     for(ss in 1:n.k){
@@ -577,7 +586,7 @@ approx.Bsk <- function(Ak){
 approxK <- function(N.inf=100,accuracy=20,dir=getwd()){
   Ak <- approx.Ak(N.inf,accuracy)
   Bsk <- approx.Bsk(Ak)
-  
+
   ## save(Ak,Bsk,file=paste0(dir,"/tables_approx",N.inf,"_",accuracy,".RData"))
   ## cat("\nApprox-Tables saved in: ",paste0(dir,"/tables_approx",N.inf,"_",accuracy,".RData"))
   list(Ak,Bsk)
@@ -593,22 +602,22 @@ approxK <- function(N.inf=100,accuracy=20,dir=getwd()){
 #   A[1:N0,1:N0] <- A0[1:N0,1:N0]
 #   B[1:N0,1:N0] <- B0[1:N0,1:N0]
 #   a[1:N0] <- a0[1:N0]
-#   
+#
 #   for(nn in ((N0+1):N)){
 #     if(verbose) cat("\n N: ",nn," K: ")
 #     for(k in 1:(nn-1)){
 #       if(verbose) cat(" ",k)
-#       sum <- as.bigz(0) 
+#       sum <- as.bigz(0)
 #       for(s in 1:(nn-k)){
 #         sum <- sum + (2^k-1)^as.bigz(s) * 2^as.bigz(k*(nn-k-s)) * A[nn-k,s]
 #       }
-#       B[nn,k] <-  sum 
+#       B[nn,k] <-  sum
 #       A[nn,k] <- chooseZ(nn,k)*B[nn,k]
 #     }
 #     A[nn,nn] <- B[nn,nn] <- 1
 #     a[nn] <- sum(A[nn,1:nn])
 #   }
-#   
+#
 #   save(A,B,a,file=paste0(dir,"/tables",N,".RData"))
 #   cat("\nAugmented Tables saved in: ",paste0(dir,"/tables",N,".RData"))
 #   list(A,B,a)
