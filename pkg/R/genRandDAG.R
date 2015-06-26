@@ -57,9 +57,9 @@ sampleQ <- function(n,K,p.w=1/2){
 ##################################################
 ## randDAG
 ##################################################
-randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,wFUN=list(runif,min=0.1,max=1)){
+randDAG <- function(n, d, method="er", par1=NULL,par2=NULL,
+                    DAG=TRUE,weighted=TRUE,wFUN=list(runif,min=0.1,max=1)) {
 
-  geo <- FALSE
   if(!is.list(wFUN)) {wFUN <- list(wFUN)}
 
   switch(method,
@@ -84,10 +84,8 @@ randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,w
   watts={
     # s=number of neighbours in expectation
     # par1: beta=fraction of interpolating between regular lattice (0) and ER (1)
-    if(is.numeric(par1)){beta <- par1}
-    else{beta <- 1/2}
+    beta <- if(is.numeric(par1)) par1 else 1/2
     s <- round(d/2)
-
     g <- watts.strogatz.game(1,n,s,beta)
     g <- simplify(g)
     Q <- get.adjacency(g,sparse=FALSE)
@@ -100,13 +98,10 @@ randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,w
   bipartite={
     # p=probability of connecting between two parts
     # par1: alpha=fraction of part one
-    if(is.numeric(par1)){alpha <- par1}
-    else{alpha <- 1/2}
+    alpha <- if(is.numeric(par1)) par1 else 1/2
     p <- d/(2*alpha*(1-alpha)*n)
-
     n1 <- ceiling(n*alpha)
     n2 <- floor(n*(1-alpha))
-
     g <- bipartite.random.game(n1=n1,n2=n2,type="gnp",p=p)
     Q <- get.adjacency(g,sparse=FALSE)
     perm <- sample.int(n)
@@ -118,15 +113,13 @@ randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,w
   barabasi={
     # m= number of nodes adding in each step
     # par1: power of preferential attachment
-    if(is.numeric(par1)){power <- par1}
-    else{power <- 1}
+    power <- if(is.numeric(par1)) par1 else 1
     m <- round(d/2)
 
     mbar <- (2*m*n-m^2+m)/(2*(n-m))
     seq <- sample(c(m,m+1),n,replace=TRUE,prob=c(1-mbar+m,mbar-m))
 
     g <- barabasi.game(n=n,power=power,out.seq=seq,out.pref=TRUE,directed=FALSE)
-
     g <- simplify(g)
     Q <- get.adjacency(g,sparse=FALSE)
     perm <- sample.int(n)
@@ -139,21 +132,10 @@ randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,w
     # r=euclidian radius
     # par1: dim=dimension:
     # par2: if "geo", then weights are reciprocal to distances
-
-    geo <- TRUE
-    geo2 <- FALSE
-    if(is.numeric(par1)){
-      dim <- par1}
-    else{dim <- 2}
-
-    if(is.character(par2) && (par2=="geo")  ){
-      geo2 <- TRUE
-    }
-
-    r <- (  (d*gamma(dim/2+1))  /  ((n-1)*pi^(dim/2))     )^(1/dim)
-
-    g <- geoDAG(n,r,dim,geo2,DAG,weighted,wFUN)
-
+    dim <- if(is.numeric(par1)) par1 else 2
+    geo2 <- (is.character(par2) &&  par2 == "geo") # T / F
+    r <- ( (d*gamma(dim/2+1)) / ((n-1)*pi^(dim/2)) )^(1/dim)
+    return( geoDAG(n, r, dim=dim, geo=geo2, DAG=DAG, weighted=weighted, wFUN=wFUN) )
   },
 
   ###########################################################################
@@ -166,17 +148,14 @@ randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,w
     Q <- Q*upper.tri(Q)
   },
 
-
   ###########################################################################
   interEr={
     # p=probability of connecting edges intra
     # par1: s.island=number of islands, n/s.island should be a positive integer
     # par2: alpha=fraction of inter connectivity
 
-    if(is.numeric(par1)){
-      s.island <- par1 } else {s.island <- 2}
-
-    stopifnot((n/s.island)%%1==0)
+    s.island <- if(is.numeric(par1)) par1 else 2
+    stopifnot((n/s.island)%%1 == 0)
     if(is.numeric(par2)){
       alpha <- par2} else{alpha <- 1/4}
 
@@ -190,19 +169,14 @@ randDAG <- function(n,d,method="er",par1=NULL,par2=NULL,DAG=TRUE,weighted=TRUE,w
     Q <- Q[perm,perm]
     Q <- Q*upper.tri(Q)
   },
-  )   #switch end
+  stop("unsupported 'method': ", method))## switch end
 
-
-  if(!geo){
-        g <- undirunweight.to.dirweight(Q,n,DAG,weighted,wFUN)
-  }
-
-  g
-
+  ## return
+  undirunweight.to.dirweight(Q, n, DAG, weighted=weighted, wFUN=wFUN)
 }
 
 # AUX-FUNCTIONS ####################################
-undirunweight.to.dirweight <- function(Q,n,DAG,weighted,
+undirunweight.to.dirweight <- function(Q, n, DAG, weighted,
                                        wFUN=list(runif, min=0.1, max = 1)){
 ## input Q: upper triangular matrix
   if(weighted){
@@ -210,7 +184,7 @@ undirunweight.to.dirweight <- function(Q,n,DAG,weighted,
     Q[Q==1] <- do.call(wFUN[[1]],c(nrEdge,wFUN[-1]))
   }
 
-  if(!DAG) {Q <- Q+t(Q) }
+  if(!DAG) Q <- Q+t(Q)
 
   perm <- sample.int(n)
   Q <- Q[perm,perm]
@@ -227,14 +201,12 @@ powerLawDAG <- function(n, gamma, maxtry = 20L) {
   dist <- (in1)^(-gamma)
   dist <- dist/sum(dist)
 
-  g <- 1
   for(i in seq_len(maxtry)) {
     ## sample degree for each node among distribution
     degs <- sample(in1, size=n, replace=TRUE, prob=dist)
-    ## should be even
-    if(sum(degs)%%2 == 1)
-      degs[which.max(degs)] <- degs[which.max(degs)] - 1
-
+    ## if sum is not even, make it, by subtracting one from the last:
+    if(sum(degs) %% 2 == 1)
+      degs[which.max(degs)] <- degs[which.max(degs)] - 1L
     ## try: sometimes its not possible to construct graph for computed sequence
     g <- tryCatch(degree.sequence.game(degs, method="vl"), error = function(e) e)
     if(!inherits(g, "error"))
@@ -248,16 +220,14 @@ powerLawDAG <- function(n, gamma, maxtry = 20L) {
 }
 
 
-geoDAG <- function(n, r,dim, geo=TRUE, DAG,w eighted,
+geoDAG <- function(n, r, dim, geo=TRUE, DAG, weighted,
                    wFUN = list(runif, min=0.1, max=1))
 {
   stopifnot((n <- as.integer(n)) >= 2)
-
   points.dim <- matrix(runif(n*dim), dim, n)
 
-  weights <- matrix(0,n,n)
-  Q <- matrix(0,n,n)
-  for(i in 1:(n-1)){
+  Q <- weights <- matrix(0,n,n)
+  for(i in 1:(n-1)) {
     for(j in (i+1):n){
       v <- points.dim[,i]-points.dim[,j]
       v <- v^2
@@ -280,7 +250,7 @@ geoDAG <- function(n, r,dim, geo=TRUE, DAG,w eighted,
     }
   }
 
-  if(!DAG) {Q <- Q+t(Q) }
+  if(!DAG) Q <- Q+t(Q)
 
   perm <- sample.int(n)
   Q <- Q[perm,perm]
@@ -306,10 +276,10 @@ generalHarmonic <- function(n,r){
   sum(res)
 }
 
-aux  <-  function(n,r,d){generalHarmonic(n,r)/generalHarmonic(n,r+1)-d}
+aux <- function(n,r,d){generalHarmonic(n,r)/generalHarmonic(n,r+1)-d}
 
 findGamma <- function(n,d){
-  uniroot(aux,c(-10,10),n=n-1,d=d)$root+1
+  uniroot(aux, c(-10,10), n=n-1, d=d)$root +1
 }
 
 ##################################################
