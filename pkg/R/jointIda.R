@@ -56,7 +56,6 @@ extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG=FALSE) {
     return(paset)
   }
 
-
   extract.parent.sets.from.conn.comp <- function(i){
     all.nodes <- conn.comp.imp[[i]]
     nvar <- length(all.nodes)
@@ -69,7 +68,7 @@ extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG=FALSE) {
       x.temp2 <- match(x.temp,all.nodes)
       if(chordal[i] & nvar<=12){
         rownames(conn.comp.mat) <- colnames(conn.comp.mat) <- 1:nvar
-        all.extensions <- allDags(conn.comp.mat,conn.comp.mat,NULL)
+        all.extensions <- allDags(conn.comp.mat, conn.comp.mat, NULL)
         pa.fun <- function(amat,j) c(all.nodes[which(amat[,x.temp2[j]]!=0)],
                                      pasets.dir[[match(x.temp[j],x.pos)]])
         parent.sets.fun <- function(r) lapply(1:length(x.temp), pa.fun,
@@ -86,40 +85,44 @@ extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG=FALSE) {
     return(pasets.comp)
   }
 
-  all.pasets <- lapply(1:length(conn.comp.imp),extract.parent.sets.from.conn.comp)
+  all.pasets <- lapply(1:length(conn.comp.imp), extract.parent.sets.from.conn.comp)
   idx <- expand.grid(lapply(1:length(all.pasets),function(i) 1:length(all.pasets[[i]])))
-  x.conn.comp <- unlist(lapply(1:length(conn.comp.imp),function(i) intersect(conn.comp.imp[[i]],x.pos)))
-  all.pasets <- lapply(1:nrow(idx),function(i) unlist(lapply(1:length(conn.comp.imp),
-                                                             function(j) all.pasets[[j]][[idx[i,j]]]),recursive=F)[match(x.pos,x.conn.comp)])
-
-  return(all.pasets)
+  x.conn.comp <- unlist(lapply(1:length(conn.comp.imp),
+                               function(i) intersect(conn.comp.imp[[i]], x.pos)))
+  i.match <- match(x.pos, x.conn.comp)
+  ## return all pasets :
+  lapply(1:nrow(idx), function(i)
+         unlist(lapply(1:length(conn.comp.imp),
+                       function(j) all.pasets[[j]][[idx[i,j]]]),recursive=FALSE)[i.match])
 }
 ## jointIda
-jointIda <- function(x.pos,y.pos,mcov,graphEst=NULL,all.pasets=NULL,technique=c("RRC","MCD")){
-
+jointIda <- function(x.pos, y.pos, mcov, graphEst=NULL,
+                     all.pasets=NULL, technique=c("RRC","MCD"))
+{
+  nx <- length(x.pos)
   if (is.null(all.pasets)){
     amat <- as(graphEst,"matrix")
     amat[which(amat != 0)] <- 1
     all.pasets <- extract.parent.sets(x.pos,amat)
-  }else{
-    correct.format <- TRUE
-    if (!is.list(all.pasets)) correct.format <- FALSE
-    for (i in 1:length(all.pasets)){
-      if (length(all.pasets[[i]]) != length(x.pos)) correct.format <- FALSE
-    }
-      if (!correct.format) stop("all.pasets is not given in an appropriate format.")
+  } else { ## check format of all.pasets :
+    if(!is.list(all.pasets) || vapply(paset, length, 1L) != nx)
+      stop("all.pasets is not given in an appropriate format.")
   }
-  if (length(y.pos)>1){
-    return(lapply(y.pos,function(y) jointIda(x.pos,y,mcov,all.pasets=all.pasets,technique=technique)))
-  }else{
-    technique <- match.arg(technique)
-    if (is.element(y.pos,x.pos)) return(matrix(0,nrow=length(x.pos),ncol=length(all.pasets)))
-    joint.effects <- switch(technique,
-                            RRC = matrix(unlist(lapply(all.pasets,function(pasets) RRC(mcov,x.pos,y.pos,pasets))),
-                                        nrow=length(x.pos)),
-                            MCD = matrix(unlist(lapply(all.pasets,function(pasets) MCD(mcov,x.pos,y.pos,pasets))),
-                                         nrow=length(x.pos)))
-    return(joint.effects)
+
+  if (length(y.pos) > 1) { ## call myself for each y in y.pos :
+    lapply(y.pos, function(y) jointIda(x.pos, y, mcov=mcov,
+                                       all.pasets=all.pasets, technique=technique))
+  } else {
+    if (is.element(y.pos, x.pos))
+      matrix(0, nrow=nx, ncol=length(all.pasets))
+    else { ## return joint.effects
+      technique <- match.arg(technique)
+      switch(technique,
+             RRC = matrix(unlist(lapply(all.pasets,function(pasets) RRC(mcov,x.pos,y.pos,pasets))),
+                          nrow=nx),
+             MCD = matrix(unlist(lapply(all.pasets,function(pasets) MCD(mcov,x.pos,y.pos,pasets))),
+                          nrow=nx))
+    }
   }
 }
 
@@ -127,7 +130,8 @@ jointIda <- function(x.pos,y.pos,mcov,graphEst=NULL,all.pasets=NULL,technique=c(
 MCD <- function(cov.mat,intervention.set,var.y,pasets,return.modified.cov.mat=FALSE) {
   if (is.element(var.y,intervention.set) & !return.modified.cov.mat)
     return(rep(0,length(intervention.set)))
-  if (length(intervention.set)==1 & is.element(var.y,unlist(pasets)) & !return.modified.cov.mat) return(0)
+  if (length(intervention.set)==1 & is.element(var.y,unlist(pasets)) & !return.modified.cov.mat)
+    return(0)
 
   if (!return.modified.cov.mat){
     imp.var <- unique(c(intervention.set,unlist(pasets),var.y))
@@ -135,11 +139,13 @@ MCD <- function(cov.mat,intervention.set,var.y,pasets,return.modified.cov.mat=FA
       cov.mat <- cov.mat[imp.var,imp.var]
       intervention.set <- match(intervention.set,imp.var)
       var.y <- match(var.y,imp.var)
-      pasets <- if(length(intervention.set)>1) lapply(pasets,function(x) match(unlist(x),imp.var)) else match(unlist(pasets),imp.var)
+      pasets <- if(length(intervention.set)>1)
+        lapply(pasets,function(x) match(unlist(x),imp.var))
+      else match(unlist(pasets),imp.var)
     }
   }
 
-  do.Cholesky.modification <- function(x){
+  do.Cholesky.modification <- function(x) {
     pa.x <-  if(length(intervention.set)>1) pasets[[match(x,intervention.set)]] else unlist(pasets)
     if (length(pa.x)==0) return(cov.mat)
     ind <- c(pa.x,x,(1:nrow(cov.mat))[-c(pa.x,x)])
@@ -158,17 +164,17 @@ MCD <- function(cov.mat,intervention.set,var.y,pasets,return.modified.cov.mat=FA
     cov.mat <- do.Cholesky.modification(intervention.set[i])
   }
 
-  if(return.modified.cov.mat) return(cov.mat)
-  MCD.estimate <- function(x) {
-    if (is.element(var.y,unlist(pasets[match(x,intervention.set)]))) {
-      return(0)
-    } else {
-      return(cov.mat[var.y,x]/cov.mat[x,x])
+  if(return.modified.cov.mat)
+    cov.mat
+  else {
+    MCD.estimate <- function(x) {
+      if (is.element(var.y, unlist(pasets[match(x,intervention.set)])))
+        0
+      else
+        cov.mat[var.y,x]/cov.mat[x,x]
     }
+    sapply(intervention.set, MCD.estimate)
   }
-
-  return(sapply(intervention.set,MCD.estimate))
-
 }
 
 ## RRC
@@ -186,18 +192,20 @@ RRC <- function(cov.mat,intervention.set,var.y,pasets) {
 
   ## Define the required matrix of single intervention effects
   if (length(intervention.set)>1){
-    intervention.set.on.intervention.set <- matrix(apply(expand.grid(intervention.set,intervention.set),
-                                                         1,function(x) adjusted.regression(x[1],x[2])),nrow=length(intervention.set))
+    intervention.set.on.intervention.set <-
+      matrix(apply(expand.grid(intervention.set, intervention.set),
+                   1L, function(x) adjusted.regression(x[1],x[2])),nrow=length(intervention.set))
   }else{
     return(intervention.set.on.var.y)
   }
 
   joint.effect.fun  <- function(x){
-    if(is.element(var.y,unlist(pasets[match(x,intervention.set)]))) return(0)
+    if(is.element(var.y,unlist(pasets[match(x,intervention.set)])))
+      return(0)
     x.temp  <- match(x,intervention.set)
     intervention.set.temp  <- intervention.set[-x.temp]
     ## Intitialize the RR estimate as the single intervention effect of intervention.set on var.y
-    RR.estimate <-  intervention.set.on.var.y[x.temp]
+    RR.estimate <- intervention.set.on.var.y[x.temp]
     ## Define the vector of causal effects of intervention.set on other intervention variables
     x.temp.on.intervention.set.temp <- intervention.set.on.intervention.set[x.temp,-x.temp]
     ## Define the vector of causal effects of "other" intervention variables on var.y
@@ -217,7 +225,7 @@ RRC <- function(cov.mat,intervention.set,var.y,pasets) {
     return(RR.estimate-x.temp.on.intervention.set.temp*intervention.set.on.var.y.temp)
   }
 
-  return(sapply(intervention.set,joint.effect.fun))
+  sapply(intervention.set, joint.effect.fun)
 }
 
 
