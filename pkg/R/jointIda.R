@@ -11,8 +11,9 @@ extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG=FALSE) {
   conn.comp.imp <- NULL
   x.temp <- x.pos
   while (length(x.temp)>0){
-    comp.temp <- dfs(graph = graph.adjacency(amat.undir,mode='undirected'),
-                     root = x.temp[1], unreachable=FALSE)$order
+    ## TODO: graph.dfs() -> dfs() {also in ../NAMESPACE !) once we rely on igraph >= 1.0.0
+    comp.temp <- graph.dfs(graph = graph.adjacency(amat.undir,mode='undirected'),
+                           root = x.temp[1], unreachable=FALSE)$order
     comp.temp <- comp.temp[!is.na(comp.temp)]
     x.temp <- setdiff(x.temp,comp.temp)
     conn.comp.imp <- c(conn.comp.imp,list(comp.temp))
