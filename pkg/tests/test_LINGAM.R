@@ -3,6 +3,13 @@ library(pcalg)
 ## library(clue)
 ## source("/u/kalischm/research/packages/LINGAM/R/lingamFuns.R")
 
+##--> showProc.time(), assertError(), relErrV(), ...
+R.home(); sessionInfo() # helping package maintainers to debug ...
+.libPaths()
+packageDescription("pcalg")
+packageDescription("Matrix")
+
+
 ##################################################
 ## Exp 1
 ##################################################
@@ -17,7 +24,7 @@ x1 <- 0.9*x2 + eps1
 X <- cbind(x1,x2)
 
 trueDAG <- cbind(c(0,1),c(0,0))
-## x1 <- x2 
+## x1 <- x2
 ## adjacency matrix:
 ## 0 0
 ## 1 0
@@ -35,7 +42,7 @@ stopifnot(all(as.numeric(estDAG$Adj) == trueDAG))
 ## using pcalg
 ## n <- nrow(X)
 ## V <- as.character(1:ncol(X)) # labels aka node names
-     
+
 ## ## estimate CPDAG
 ## pc.fit <- pc(suffStat = list(C = cor(X), n = n),
 ##              indepTest = gaussCItest, ## indep.test: partial correlations
@@ -82,7 +89,7 @@ stopifnot(all(as.numeric(estDAG$Adj) == trueDAG))
 ## using pcalg
 ## n <- nrow(X)
 ## V <- as.character(1:4) # labels aka node names
-     
+
 ## ## estimate CPDAG
 ## pc.fit <- pc(suffStat = list(C = cor(X), n = n),
 ##              indepTest = gaussCItest, ## indep.test: partial correlations
