@@ -125,10 +125,8 @@ setMethod("plot", signature(x = "pcAlgo"),
           if (zvalue.lwd && numEdges(x@graph)!=0) {
               lwd.Matrix <- x@zMin
               lwd.Matrix <- ceiling(lwd.max*lwd.Matrix/max(lwd.Matrix))
-              z <- agopen(x@graph,
-                          name="lwdGraph",
-                          nodeAttrs = nodeAttrs,
-                          attrs = attrs)
+	      z <- Rgraphviz::agopen(x@graph, name = "lwdGraph",
+				     nodeAttrs = nodeAttrs, attrs = attrs)
               eLength <- length(z@AgEdge)
               for (i in 1:eLength) {
                   x <- as.numeric(z@AgEdge[[i]]@head)
