@@ -10,13 +10,13 @@ extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG=FALSE) {
   ## get all important connected components of the undirected subgraph
   conn.comp.imp <- NULL
   x.temp <- x.pos
-  while (length(x.temp)>0){
+  while (length(x.temp) > 0) {
     ## TODO: graph.dfs() -> dfs() {also in ../NAMESPACE !) once we rely on igraph >= 1.0.0
     comp.temp <- graph.dfs(graph = graph.adjacency(amat.undir,mode='undirected'),
                            root = x.temp[1], unreachable=FALSE)$order
     comp.temp <- comp.temp[!is.na(comp.temp)]
     x.temp <- setdiff(x.temp,comp.temp)
-    conn.comp.imp <- c(conn.comp.imp,list(comp.temp))
+    conn.comp.imp <- c(conn.comp.imp, list(comp.temp))
   }
   ## new igraph 1.0.0 has more than just node numbers.  need only those
   ## "Hack":
@@ -26,26 +26,26 @@ extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG=FALSE) {
   chordal <- if (!isCPDAG) {
     chrordality.test.fun <- function(comp)
       is.chordal(graph.adjacency(amat.undir[comp,comp],mode="undirected"),fillin=F)$chordal
-    sapply(conn.comp.imp, chrordality.test.fun)
-  }else{
+    vapply(conn.comp.imp, chrordality.test.fun, NA)
+  } else {
     rep(TRUE,length(conn.comp.imp))
   }
 
   ## Function for getting locally valid parent sets
-  all.locally.valid.parents.undir <- function(amat,x){ # x must be a scaler
+  all.locally.valid.parents.undir <- function(amat,x) { # x must be a scaler
     pa.dir <- pasets.dir[[which(x.pos==as.integer(rownames(amat)[x]))]]
     paset <- list(pa.dir)
     pa <- which(amat[,x] != 0) # cannot be a null set
-    if (length(pa)==1){
+    if (length(pa)==1) {
       paset <- c(paset,list(c(as.integer(rownames(amat)[pa]),pa.dir)))
-    }else{
-      for (i in 1:length(pa)){
+    } else {
+      for (i in 1:length(pa)) {
         pa.tmp <- combn(pa, i, simplify = TRUE)
         n.comb <- ncol(pa.tmp)
         for (j in 1:n.comb) {
           pa.t <- pa.tmp[, j]
           new.coll <- FALSE
-          if (length(pa.t)>1){
+          if (length(pa.t) > 1) {
             tmp <- amat[pa.t,pa.t]
             diag(tmp) <- 1
             new.coll <- (min(tmp)==0)
@@ -57,17 +57,17 @@ extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG=FALSE) {
     return(paset)
   }
 
-  extract.parent.sets.from.conn.comp <- function(i){
+  extract.parent.sets.from.conn.comp <- function(i) {
     all.nodes <- conn.comp.imp[[i]]
     nvar <- length(all.nodes)
-    if (nvar==1){
+    if (nvar==1) {
       pasets.comp <- list(pasets.dir[match(all.nodes,x.pos)])
-    }else{
+    } else {
       conn.comp.mat <- amat.undir[all.nodes,all.nodes]
       rownames(conn.comp.mat) <- all.nodes
       x.temp <- intersect(all.nodes,x.pos)
       x.temp2 <- match(x.temp,all.nodes)
-      if(chordal[i] & nvar<=12){
+      if(chordal[i] & nvar <= 12) {
         rownames(conn.comp.mat) <- colnames(conn.comp.mat) <- 1:nvar
         all.extensions <- allDags(conn.comp.mat, conn.comp.mat, NULL)
         pa.fun <- function(amat,j) c(all.nodes[which(amat[,x.temp2[j]]!=0)],
@@ -75,9 +75,10 @@ extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG=FALSE) {
         parent.sets.fun <- function(r) lapply(1:length(x.temp), pa.fun,
                                               amat=matrix(all.extensions[r,],nrow=nvar))
         pasets.comp <- lapply(1:nrow(all.extensions),parent.sets.fun)
-      }else{
-        pasets.comp <- lapply(x.temp2,all.locally.valid.parents.undir,amat=conn.comp.mat)
-        idx <- expand.grid(lapply(1:length(x.temp),function(j) 1:length(pasets.comp[[j]])))
+      } else {
+        pasets.comp <- lapply(x.temp2, all.locally.valid.parents.undir, amat=conn.comp.mat)
+        idx <- expand.grid(lapply(1:length(x.temp),
+                                  function(j) 1:length(pasets.comp[[j]])))
         pasets.comp <- lapply(1:nrow(idx),function(r)
           lapply(1:length(x.temp), function(j) pasets.comp[[j]][[idx[r,j]]]))
       }
@@ -87,26 +88,30 @@ extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG=FALSE) {
   }
 
   all.pasets <- lapply(1:length(conn.comp.imp), extract.parent.sets.from.conn.comp)
-  idx <- expand.grid(lapply(1:length(all.pasets),function(i) 1:length(all.pasets[[i]])))
+  idx <- expand.grid(lapply(1:length(all.pasets),
+                            function(i) 1:length(all.pasets[[i]])))
   x.conn.comp <- unlist(lapply(1:length(conn.comp.imp),
                                function(i) intersect(conn.comp.imp[[i]], x.pos)))
   i.match <- match(x.pos, x.conn.comp)
   ## return all pasets :
   lapply(1:nrow(idx), function(i)
-         unlist(lapply(1:length(conn.comp.imp),
-                       function(j) all.pasets[[j]][[idx[i,j]]]),recursive=FALSE)[i.match])
-}
-## jointIda
+	 unlist(lapply(1:length(conn.comp.imp),
+		       function(j) all.pasets[[j]][[idx[i,j]]]),
+		recursive = FALSE)[i.match])
+}## {extract.parent.sets}
+
+## Main Function ----------------------------------------------------------
+##
 jointIda <- function(x.pos, y.pos, mcov, graphEst=NULL,
                      all.pasets=NULL, technique=c("RRC","MCD"))
 {
   nx <- length(x.pos)
-  if (is.null(all.pasets)){
+  if (is.null(all.pasets)) {
     amat <- as(graphEst,"matrix")
     amat[which(amat != 0)] <- 1
     all.pasets <- extract.parent.sets(x.pos,amat)
   } else { ## check format of all.pasets :
-    if(!is.list(all.pasets) || vapply(paset, length, 1L) != nx)
+    if(!is.list(all.pasets) || vapply(all.pasets, length, 1L) != nx)
       stop("all.pasets is not given in an appropriate format.")
   }
 
@@ -127,27 +132,27 @@ jointIda <- function(x.pos, y.pos, mcov, graphEst=NULL,
   }
 }
 
-## MCD
-MCD <- function(cov.mat,intervention.set,var.y,pasets,return.modified.cov.mat=FALSE) {
+##' MCD :=  Modifying the Cholesky Decomposition
+MCD <- function(cov.mat, intervention.set, var.y, pasets, return.modified.cov.mat=FALSE) {
   if (is.element(var.y,intervention.set) & !return.modified.cov.mat)
     return(rep(0,length(intervention.set)))
   if (length(intervention.set)==1 & is.element(var.y,unlist(pasets)) & !return.modified.cov.mat)
     return(0)
 
-  if (!return.modified.cov.mat){
+  if (!return.modified.cov.mat) {
     imp.var <- unique(c(intervention.set,unlist(pasets),var.y))
-    if (length(imp.var) < nrow(cov.mat)){
+    if (length(imp.var) < nrow(cov.mat)) {
       cov.mat <- cov.mat[imp.var,imp.var]
       intervention.set <- match(intervention.set,imp.var)
       var.y <- match(var.y,imp.var)
-      pasets <- if(length(intervention.set)>1)
-        lapply(pasets,function(x) match(unlist(x),imp.var))
-      else match(unlist(pasets),imp.var)
+      pasets <- if(length(intervention.set) > 1)
+        lapply(pasets, function(x) match(unlist(x), imp.var))
+      else match(unlist(pasets), imp.var)
     }
   }
 
   do.Cholesky.modification <- function(x) {
-    pa.x <-  if(length(intervention.set)>1) pasets[[match(x,intervention.set)]] else unlist(pasets)
+    pa.x <- if(length(intervention.set) > 1) pasets[[match(x,intervention.set)]] else unlist(pasets)
     if (length(pa.x)==0) return(cov.mat)
     ind <- c(pa.x,x,(1:nrow(cov.mat))[-c(pa.x,x)])
     cov.mat <- cov.mat[ind,ind]
@@ -158,9 +163,12 @@ MCD <- function(cov.mat,intervention.set,var.y,pasets,return.modified.cov.mat=FA
     tmp1 <- bdsmatrix::diag(temp)
     Diag.mat <- base::diag(tmp1)
     Lower.tri.mat[x,pa.x] <- 0
-    cov.mat <- solve(Lower.tri.mat)%*%Diag.mat%*%t(solve(Lower.tri.mat))
-    return(cov.mat[order(ind),order(ind)])
+    ## MM{FIXME !} :
+    cov.mat <- solve(Lower.tri.mat) %*% Diag.mat %*% t(solve(Lower.tri.mat))
+    ## return
+    cov.mat[order(ind),order(ind)]
   }
+
   for (i in 1:length(intervention.set)) {
     cov.mat <- do.Cholesky.modification(intervention.set[i])
   }
@@ -174,60 +182,67 @@ MCD <- function(cov.mat,intervention.set,var.y,pasets,return.modified.cov.mat=FA
       else
         cov.mat[var.y,x]/cov.mat[x,x]
     }
-    sapply(intervention.set, MCD.estimate)
+    vapply(intervention.set, MCD.estimate, double(1))
   }
-}
+} ## {MCD}
 
-## RRC
-RRC <- function(cov.mat,intervention.set,var.y,pasets) {
 
-  adjusted.regression <- function(x,y){
+##' RRC := Recursive Regressions for Causal effects
+RRC <- function(cov.mat, intervention.set, var.y, pasets) {
+
+  adjusted.regression <- function(x,y) {
     if (x == y) return(0)
-    pa.x <-  if(length(intervention.set)>1) pasets[[match(x,intervention.set)]] else unlist(pasets)
-    if(is.element(y,pa.x)) return(0)
-    return(solve(cov.mat[c(x,pa.x),c(x,pa.x)],cov.mat[c(x,pa.x),y])[1])
+    pa.x <- if(length(intervention.set) > 1) pasets[[match(x,intervention.set)]] else unlist(pasets)
+    if(is.element(y,pa.x)) 0 else
+    solve(cov.mat[c(x,pa.x), c(x,pa.x)],
+          cov.mat[c(x,pa.x), y])[1]
   }
 
   ## Define the vector of causal effects of intervention variables on var.y
-  intervention.set.on.var.y <- sapply(intervention.set,adjusted.regression,y=var.y)
+  ## ISo   := intervention.set.on
+  ## ISoIS := ISo.intervention.set := intervention.set.on.intervention.set
+  ISo.var.y <- sapply(intervention.set, adjusted.regression, y=var.y)
 
   ## Define the required matrix of single intervention effects
-  if (length(intervention.set)>1){
-    intervention.set.on.intervention.set <-
+  if (length(intervention.set) > 1) {
+    ISoIS <-
       matrix(apply(expand.grid(intervention.set, intervention.set),
                    1L, function(x) adjusted.regression(x[1],x[2])),nrow=length(intervention.set))
-  }else{
-    return(intervention.set.on.var.y)
+  } else {
+    return(ISo.var.y)
   }
 
-  joint.effect.fun  <- function(x){
-    if(is.element(var.y,unlist(pasets[match(x,intervention.set)])))
+  joint.effect.fun  <- function(x) {
+    if(is.element(var.y, unlist(pasets[match(x, intervention.set)])))
       return(0)
-    x.temp  <- match(x,intervention.set)
-    intervention.set.temp  <- intervention.set[-x.temp]
+    x.temp <- match(x, intervention.set)
+    ## Intervention Set without x --> I.S. w/o x  --> IS.wo.x
+    IS.wo.x <- intervention.set[-x.temp]
     ## Intitialize the RR estimate as the single intervention effect of intervention.set on var.y
-    RR.estimate <- intervention.set.on.var.y[x.temp]
+    RR.estimate <- ISo.var.y[x.temp]
     ## Define the vector of causal effects of intervention.set on other intervention variables
-    x.temp.on.intervention.set.temp <- intervention.set.on.intervention.set[x.temp,-x.temp]
+    x.t.oIS <- ISoIS[x.temp,-x.temp]
     ## Define the vector of causal effects of "other" intervention variables on var.y
-    intervention.set.on.var.y.temp <- intervention.set.on.var.y[-x.temp]
+    ISo.var.y.temp <- ISo.var.y[-x.temp]
     ## Define the required matrix of single intervention effects
-    intervention.set.on.intervention.set.temp <- intervention.set.on.intervention.set[-x.temp,-x.temp]
+    ISoIS.temp <- ISoIS[-x.temp,-x.temp]
 
-    while (length(intervention.set.temp)>1){
+    while(length(IS.wo.x) > 1) {
       ## update RR.estimate and the other things accounting for the elimination of the first entry of the current intervention set
-      RR.estimate <- RR.estimate - x.temp.on.intervention.set.temp[1]*intervention.set.on.var.y.temp[1]
-      intervention.set.on.var.y.temp <- intervention.set.on.var.y.temp[-1] - intervention.set.on.intervention.set.temp[-1,1] * intervention.set.on.var.y.temp[1]
-      x.temp.on.intervention.set.temp <- x.temp.on.intervention.set.temp[-1] - x.temp.on.intervention.set.temp[1]*intervention.set.on.intervention.set.temp[1,-1]
-      if (length(intervention.set.temp)>2)
-        intervention.set.on.intervention.set.temp <- intervention.set.on.intervention.set.temp[-1,-1] - matrix(intervention.set.on.intervention.set.temp[-1,1],ncol=1)%*%matrix(intervention.set.on.intervention.set.temp[1,-1],nrow=1)
-      intervention.set.temp <- intervention.set.temp[-1]
+      RR.estimate <- RR.estimate - x.t.oIS[1]*ISo.var.y.temp[1]
+      ISo.var.y.temp <- ISo.var.y.temp[-1] - ISoIS.temp[-1,1] * ISo.var.y.temp[1]
+      x.t.oIS <- x.t.oIS[-1] - x.t.oIS[1]*ISoIS.temp[1,-1]
+      if (length(IS.wo.x) > 2) ## FIXME: matrix() just use  drop=FALSE
+        ISoIS.temp <- ISoIS.temp[-1,-1] - matrix(ISoIS.temp[-1,1],ncol=1) %*% matrix(ISoIS.temp[1,-1],nrow=1)
+      IS.wo.x <- IS.wo.x[-1]
     }
-    return(RR.estimate-x.temp.on.intervention.set.temp*intervention.set.on.var.y.temp)
+    ## return
+    RR.estimate - x.t.oIS * ISo.var.y.temp
   }
 
   sapply(intervention.set, joint.effect.fun)
-}
+}## {RRC}
+
 
 
 ###  MM: (ess-set-style 'DEFAULT) : we have much nesting ==> only indent by 2
