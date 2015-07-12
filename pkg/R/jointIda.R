@@ -1,19 +1,19 @@
 #### Code for jointIda (Preetam)
 #### extract.parent.sets (version Nov 14)
 
-extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG=FALSE) {
+extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG = FALSE) {
   amat.cpdag[which(amat.cpdag != 0)] <- 1
   amat.undir <- amat.cpdag*t(amat.cpdag)
   amat.dir <- amat.cpdag - amat.undir
-  pasets.dir <- lapply(x.pos,function(x) which(amat.dir[,x]!=0))
+  pasets.dir <- lapply(x.pos,function(x) which(amat.dir[,x] != 0))
 
   ## get all important connected components of the undirected subgraph
   conn.comp.imp <- NULL
   x.temp <- x.pos
   while (length(x.temp) > 0) {
     ## TODO: graph.dfs() -> dfs() {also in ../NAMESPACE !) once we rely on igraph >= 1.0.0
-    comp.temp <- graph.dfs(graph = graph.adjacency(amat.undir,mode='undirected'),
-                           root = x.temp[1], unreachable=FALSE)$order
+    comp.temp <- graph.dfs(graph = graph.adjacency(amat.undir, mode = 'undirected'),
+                           root = x.temp[1], unreachable = FALSE)$order
     comp.temp <- comp.temp[!is.na(comp.temp)]
     x.temp <- setdiff(x.temp,comp.temp)
     conn.comp.imp <- c(conn.comp.imp, list(comp.temp))
@@ -24,33 +24,36 @@ extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG=FALSE) {
 
   ## Chordality test, if required
   chordal <- if (!isCPDAG) {
-    chrordality.test.fun <- function(comp)
-      is.chordal(graph.adjacency(amat.undir[comp,comp],mode="undirected"),fillin=F)$chordal
-    vapply(conn.comp.imp, chrordality.test.fun, NA)
+    vapply(conn.comp.imp, function(i)
+	   is.chordal(graph.adjacency(amat.undir[i,i], mode = "undirected"),
+		      fillin = FALSE)$chordal,
+	   NA)
   } else {
-    rep(TRUE,length(conn.comp.imp))
+    rep(TRUE, length(conn.comp.imp))
   }
 
   ## Function for getting locally valid parent sets
   all.locally.valid.parents.undir <- function(amat,x) { # x must be a scaler
-    pa.dir <- pasets.dir[[which(x.pos==as.integer(rownames(amat)[x]))]]
+    amat.V <- as.integer(rownames(amat))
+    pa.dir <- pasets.dir[[x.pos == amat.V[x]]]
     paset <- list(pa.dir)
     pa <- which(amat[,x] != 0) # cannot be a null set
-    if (length(pa)==1) {
-      paset <- c(paset,list(c(as.integer(rownames(amat)[pa]),pa.dir)))
+    if (length(pa) == 1) {
+      paset <- c(paset, list(c(amat.V[pa], pa.dir)))
     } else {
       for (i in 1:length(pa)) {
         pa.tmp <- combn(pa, i, simplify = TRUE)
         n.comb <- ncol(pa.tmp)
         for (j in 1:n.comb) {
           pa.t <- pa.tmp[, j]
-          new.coll <- FALSE
-          if (length(pa.t) > 1) {
-            tmp <- amat[pa.t,pa.t]
-            diag(tmp) <- 1
-            new.coll <- (min(tmp)==0)
-          }
-          if (!new.coll) paset <- c(paset,list(c(as.integer(rownames(amat)[pa.t]),pa.dir)))
+          new.coll <-
+            if (length(pa.t) > 1) {
+              tmp <- amat[pa.t,pa.t]
+              diag(tmp) <- 1
+              (min(tmp) == 0)
+            } else FALSE
+          if (!new.coll)
+            paset <- c(paset, list(c(amat.V[pa.t], pa.dir)))
         }
       }
     }
@@ -60,27 +63,29 @@ extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG=FALSE) {
   extract.parent.sets.from.conn.comp <- function(i) {
     all.nodes <- conn.comp.imp[[i]]
     nvar <- length(all.nodes)
-    if (nvar==1) {
+    if (nvar == 1) {
       pasets.comp <- list(pasets.dir[match(all.nodes,x.pos)])
     } else {
       conn.comp.mat <- amat.undir[all.nodes,all.nodes]
       rownames(conn.comp.mat) <- all.nodes
-      x.temp <- intersect(all.nodes,x.pos)
-      x.temp2 <- match(x.temp,all.nodes)
+      x.. <- intersect(all.nodes, x.pos)
+      m.x. <- match(x.., all.nodes)
+      ii.x <- seq_along(x..) # = " 1:length(x..) "
       if(chordal[i] & nvar <= 12) {
         rownames(conn.comp.mat) <- colnames(conn.comp.mat) <- 1:nvar
         all.extensions <- allDags(conn.comp.mat, conn.comp.mat, NULL)
-        pa.fun <- function(amat,j) c(all.nodes[which(amat[,x.temp2[j]]!=0)],
-                                     pasets.dir[[match(x.temp[j],x.pos)]])
-        parent.sets.fun <- function(r) lapply(1:length(x.temp), pa.fun,
-                                              amat=matrix(all.extensions[r,],nrow=nvar))
-        pasets.comp <- lapply(1:nrow(all.extensions),parent.sets.fun)
+        pa.fun <- function(amat,j) c(all.nodes[which(amat[,m.x.[j]] != 0)],
+                                     pasets.dir[[match(x..[j],x.pos)]])
+        parent.sets.fun <- function(r) lapply(ii.x, pa.fun,
+                                              amat = matrix(all.extensions[r,],nrow = nvar))
+        pasets.comp <- lapply(1:nrow(all.extensions), parent.sets.fun)
       } else {
-        pasets.comp <- lapply(x.temp2, all.locally.valid.parents.undir, amat=conn.comp.mat)
-        idx <- expand.grid(lapply(1:length(x.temp),
-                                  function(j) 1:length(pasets.comp[[j]])))
-        pasets.comp <- lapply(1:nrow(idx),function(r)
-          lapply(1:length(x.temp), function(j) pasets.comp[[j]][[idx[r,j]]]))
+        pasets.comp <- lapply(m.x., all.locally.valid.parents.undir,
+                              amat = conn.comp.mat)
+        idx <- expand.grid(lapply(ii.x, function(j) seq_along(pasets.comp[[j]])))
+        ## FIXME? Speed: interchange j and r
+        pasets.comp <- lapply(1:nrow(idx), function(r)
+                              lapply(ii.x, function(j) pasets.comp[[j]][[idx[r,j]]]))
       }
 
     }
@@ -102,8 +107,8 @@ extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG=FALSE) {
 
 ## Main Function ----------------------------------------------------------
 ##
-jointIda <- function(x.pos, y.pos, mcov, graphEst=NULL,
-                     all.pasets=NULL, technique=c("RRC","MCD"))
+jointIda <- function(x.pos, y.pos, mcov, graphEst = NULL,
+                     all.pasets = NULL, technique = c("RRC","MCD"))
 {
   nx <- length(x.pos)
   if (is.null(all.pasets)) {
@@ -120,23 +125,23 @@ jointIda <- function(x.pos, y.pos, mcov, graphEst=NULL,
                                        all.pasets=all.pasets, technique=technique))
   } else {
     if (is.element(y.pos, x.pos))
-      matrix(0, nrow=nx, ncol=length(all.pasets))
+      matrix(0, nrow = nx, ncol = length(all.pasets))
     else { ## return joint.effects
       technique <- match.arg(technique)
       switch(technique,
              RRC = matrix(unlist(lapply(all.pasets,function(pasets) RRC(mcov,x.pos,y.pos,pasets))),
-                          nrow=nx),
+                          nrow = nx),
              MCD = matrix(unlist(lapply(all.pasets,function(pasets) MCD(mcov,x.pos,y.pos,pasets))),
-                          nrow=nx))
+                          nrow = nx))
     }
   }
 }
 
 ##' MCD :=  Modifying the Cholesky Decomposition
-MCD <- function(cov.mat, intervention.set, var.y, pasets, return.modified.cov.mat=FALSE) {
+MCD <- function(cov.mat, intervention.set, var.y, pasets, return.modified.cov.mat = FALSE) {
   if (is.element(var.y,intervention.set) & !return.modified.cov.mat)
     return(rep(0,length(intervention.set)))
-  if (length(intervention.set)==1 & is.element(var.y,unlist(pasets)) & !return.modified.cov.mat)
+  if (length(intervention.set) == 1 & is.element(var.y,unlist(pasets)) & !return.modified.cov.mat)
     return(0)
 
   if (!return.modified.cov.mat) {
@@ -153,7 +158,7 @@ MCD <- function(cov.mat, intervention.set, var.y, pasets, return.modified.cov.ma
 
   do.Cholesky.modification <- function(x) {
     pa.x <- if(length(intervention.set) > 1) pasets[[match(x,intervention.set)]] else unlist(pasets)
-    if (length(pa.x)==0) return(cov.mat)
+    if (length(pa.x) == 0) return(cov.mat)
     ind <- c(pa.x,x,(1:nrow(cov.mat))[-c(pa.x,x)])
     cov.mat <- cov.mat[ind,ind]
     x <- match(x,ind)
@@ -201,13 +206,14 @@ RRC <- function(cov.mat, intervention.set, var.y, pasets) {
   ## Define the vector of causal effects of intervention variables on var.y
   ## ISo   := intervention.set.on
   ## ISoIS := ISo.intervention.set := intervention.set.on.intervention.set
-  ISo.var.y <- sapply(intervention.set, adjusted.regression, y=var.y)
+  ISo.var.y <- sapply(intervention.set, adjusted.regression, y = var.y)
 
   ## Define the required matrix of single intervention effects
   if (length(intervention.set) > 1) {
     ISoIS <-
       matrix(apply(expand.grid(intervention.set, intervention.set),
-                   1L, function(x) adjusted.regression(x[1],x[2])),nrow=length(intervention.set))
+                   1L, function(x) adjusted.regression(x[1],x[2])),
+             nrow = length(intervention.set))
   } else {
     return(ISo.var.y)
   }
@@ -228,12 +234,14 @@ RRC <- function(cov.mat, intervention.set, var.y, pasets) {
     ISoIS.temp <- ISoIS[-x.temp,-x.temp]
 
     while(length(IS.wo.x) > 1) {
-      ## update RR.estimate and the other things accounting for the elimination of the first entry of the current intervention set
+      ## update RR.estimate and the other things accounting for
+      ## the elimination of the first entry of the current intervention set
       RR.estimate <- RR.estimate - x.t.oIS[1]*ISo.var.y.temp[1]
       ISo.var.y.temp <- ISo.var.y.temp[-1] - ISoIS.temp[-1,1] * ISo.var.y.temp[1]
       x.t.oIS <- x.t.oIS[-1] - x.t.oIS[1]*ISoIS.temp[1,-1]
-      if (length(IS.wo.x) > 2) ## FIXME: matrix() just use  drop=FALSE
-        ISoIS.temp <- ISoIS.temp[-1,-1] - matrix(ISoIS.temp[-1,1],ncol=1) %*% matrix(ISoIS.temp[1,-1],nrow=1)
+      if (length(IS.wo.x) > 2)
+        ISoIS.temp <- ISoIS.temp[-1,-1] - tcrossprod(ISoIS.temp[-1,1],
+                                                     ISoIS.temp[1,-1])
       IS.wo.x <- IS.wo.x[-1]
     }
     ## return
