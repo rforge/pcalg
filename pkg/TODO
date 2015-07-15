@@ -12,11 +12,11 @@
    The others (few?) would be kept, but then also "well" documented, i.e.,
    on a different *.Rd file.
 *** Goal: Get rid of ./man/pcalg-internal.Rd   entirely.
-     
+
 * TODO Remarks on specific functions and issues:
 ** TODO skeleton(): keep back compatibility  update= c("stable","original")  <<---MM
 *** DONE in code
-*** TODO but MM's tests show NOT QUITE back compatibility 
+*** TODO but MM's tests show NOT QUITE back compatibility
 ** TODO pag2mag() return adj.matrix instead of *object* -> named pag2magAM()
    whereas dag2pag() does return more than just an adj.matrix. Change BEFORE release
 ** TODO pc(), probably fci() etc: loses variable labels and works with "1", "2",...???
@@ -36,14 +36,14 @@
 ** DONE myCItest() in Vignette vignettes/pcalgDoc.Rnw
    instead of lm() twice, use lm.fit *once* (*multivariate* regression).
    This will probably be much faster.
-** ida():  argument  'all.dags' is never used, i.e., never tested.
+** TODO ida():  argument  'all.dags' is never used, i.e., never tested.
 ** DONE dsepTest(): gibt 0 / 1  zurück; wieso nicht  FALSE/TRUE wie dsep()?  A:"P-value"
-** TODO I've introduced 'max.chordal = 10' to 'backdoor()' 
+** TODO I've introduced 'max.chordal = 10' to 'backdoor()'
   which was hidden in the code previously. Have you ever tried larger/smaller?
 ** DONE gSquareBin(), gSquareDis():
   - returns a P-value but not the test statistic.  Should *really* return
     an object of (standard S3 class) "htest" (which contains P-value, test
-    statistic, ...).  
+    statistic, ...).
     But they have been documented to do what they do, and so we keep them.
 
 ** TODO pc(*, verbose=TRUE) for a "large" example with 18 vars: *much* output;
@@ -52,18 +52,18 @@
    than TRUE now
 
 
+* TODO Package 'ggm' has topOrder() for topological ordering. Should allow to use it,
+   e.g., optionally in unifDAG(.), or also rmvDAG() to fixup a non-top.ordered input.
+** TODO MM: ggm::topOrder() can be made faster
 * Parallelize option
 * Allow 'tiers' (as in Tetrad), and 'background knowledge' (about orientations etc).
 
-* ?? Where is all the robustness gone that pcAlgo() had?
- Maybe  pcAlgo() should not be deprecated because it allows robust
- correlation methods?  ---> indepTest argument: Qn ? --> Martin
+* TODO Robustness examples that pcAlgo() had explicitly:  add _examples_ using robust cov()
+*  / correlation methods?  ---> indepTest argument: Qn ? --> Martin
 --------------------------------------------------------------------------
-* Style:  am[which(am != 0)]  is faster than am[am != 0]  
+* Style:  am[which(am != 0)]  is faster than am[am != 0]
   for a sparse am of dim 50 x 50  ==> Using the more ugly notation is ok!
-
-* find.unsh.triple: remove arg 'p'
-
+* DONE find.unsh.triple(): remove arg 'p'
 * allDags() bekommt noch keine Hilfeseite -> moechte bald eine grosse Aenderung der Funktion machen (inkl. Parameter)
 
 * Letztest Bsp in fci(): p-1 statt p im Argument, weil eine (latente) Var gelöscht wurde
