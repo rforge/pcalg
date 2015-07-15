@@ -31,8 +31,8 @@ importFrom("robustbase",
 	   )
 
 importFrom("graph",
-		reverseEdgeDirections,
-		edgeRenderInfo, "edgeRenderInfo<-")
+           reverseEdgeDirections,
+           edgeRenderInfo, "edgeRenderInfo<-")
 importClassesFrom("graph", graph, graphAM, graphNEL)
 importMethodsFrom("graph",
 		  ## addEdge,
@@ -174,3 +174,6 @@ exportClasses("pcAlgo",
               "EssGraph")
 
 exportMethods("summary", "show", "plot")
+
+S3method(print, fciAlgo)
+

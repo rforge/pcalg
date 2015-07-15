@@ -88,7 +88,6 @@ setMethod("show", "pcAlgo",
             amat2 <- amat + 2*t(amat)
             ude <- sum(amat2 == 3)/2
             de <- sum(amat2 == 1)
-            nEdges <- ude + de
             cat("Number of undirected edges: ", ude, "\n")
             cat("Number of directed edges:   ", de, "\n")
             cat("Total number of edges:      ", de + ude, "\n")
@@ -96,15 +95,16 @@ setMethod("show", "pcAlgo",
 	  })
 
 
-setMethod("show", "fciAlgo",
-	  function(object) {
-	    cat("Object of class 'fciAlgo', from Call:", deparse(object@call),
-                "\nAdjacency Matrix G:",
-                "G[i,j] = 1/2/3 if edge mark of edge i-j at j is circle/head/tail.",
-                "", sep="\n")
-	    print(object@amat)
-	    invisible(object)
-	  })
+print.fciAlgo <- function(x, zero.print = ".", ...) {
+    cat("Object of class 'fciAlgo', from Call:", deparse(x@call),
+        "\nAdjacency Matrix G:",
+        "G[i,j] = 1/2/3 if edge mark of edge i-j at j is circle/head/tail.",
+        "", sep="\n")
+    print.table(x@amat, zero.print=zero.print, ...)
+    invisible(x)
+}
+
+setMethod("show", "fciAlgo", function(object) print.fciAlgo(object))
 
 setMethod("plot", signature(x = "pcAlgo"),
           function(x, y, main = NULL, zvalue.lwd = FALSE,
