@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# During / at the end of a  'R-pkg-check pcalg'  which uses 'doExtras',
+# I can check these *in addition* :
+#
+for fnam in test_backdoor test_gies do
+    echo "R CMD Rdiff tests/$fnam.Rout.doExtras /tmp/pcalg.Rcheck/....Rout :"
+    R CMD Rdiff tests/$fnam.Rout.doExtras /tmp/pcalg.Rcheck/tests/$fnam.Rout
+    echo '-- done --'
+done
