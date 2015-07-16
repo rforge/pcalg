@@ -2932,32 +2932,36 @@ gSquareBin <- function(x, y, S, dm, adaptDF = FALSE, n.min = 10*df,
     return( 1 )
   }
   ## else --  enough data to perform the test
-  if(lenS < 6) {
-    if (lenS == 0) {
-      nijk <- array(0,c(2,2)) # really 'nij', but 'nijk' is "global" name
-      for (i in 1:2) {
-	for (j in 1:2)
-	  nijk[i,j] <- sum(dm[,x] == i-1 &
-			   dm[,y] == j-1)
+  d.x1 <- dm[,x] + 1L
+  d.y1 <- dm[,y] + 1L
+  if(lenS <= 5) { # bei gSquareDis lenS <= 4
+    n12 <- 1:2
+    switch(lenS+1L, {
+      ## lenS == 0 ----------------------------------
+      nijk <- array(0L, c(2,2)) # really 'nij', but 'nijk' is "global" name
+      for (i in n12) {
+        d.x.i <- d.x1 == i
+	for (j in n12)
+	  nijk[i,j] <- sum(d.x.i & d.y1 == j)
       }
       ## marginal counts
-      t.X <- cbind( rowSums(nijk) )
-      t.Y <- rbind( colSums(nijk) )
       ## compute G^2
-      dij <- t.X %*% t.Y                # s_ia * s_jb
-      t.log <- nijk*n/dij
-    }                                   # end {lenS = 0}
+      t.log <- n*(nijk / tcrossprod(rowSums(nijk), colSums(nijk)))
+    } ,
 
-    else if (lenS == 1) {
+    { ## lenS == 1 ----------------------------------
+
       ## a.pos <- sort(c(x,y,S))
-
-      nijk <- array(0,c(2,2,2))
-      for(i in 1:2) for(j in 1:2) for(k in 1:2) {
-        nijk[i,j,k] <- sum((dm[,x] == i-1)&
-                           (dm[,y] == j-1)&
-                           (dm[,S] == k-1))
+      dmS.1 <- dm[,S] + 1L
+      nijk <- array(0L, c(2,2,2))
+      for(i in n12) {
+        d.x.i <- d.x1 == i
+        for(j in n12) {
+          d.x.i.y.j <- d.x.i & d.y1 == j
+          for(k in n12)
+            nijk[i,j,k] <- sum(d.x.i.y.j & dmS.1 == k)
+        }
       }
-
       alt <- c(x,y,S)
       c <- which(alt == S)
       nik <- apply(nijk,c,rowSums)
@@ -2967,42 +2971,39 @@ gSquareBin <- function(x, y, S, dm, adaptDF = FALSE, n.min = 10*df,
       ## compute G^2
       t.log <- array(0,c(2,2,2))
       if(c == 3) {
-        for (k in 1:2) {
-          t.X <- array(nik[,k],dim = c(dim(nik)[1],1))
-          t.Y <- array(njk[,k],dim = c(1,dim(njk)[1]))
-          t.dijk <- t.X %*% t.Y
-          t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-        }
+        for (k in n12)
+          t.log[,,k] <- nijk[,,k]*(nk[k] / tcrossprod(nik[,k], njk[,k]))
       } else if(c == 1) {
-        for (k in 1:2) {
-          t.X <- array(nik[,k],dim = c(dim(nik)[1],1))
-          t.Y <- array(njk[,k],dim = c(1,dim(njk)[1]))
-          t.dijk <- t.X %*% t.Y
-          t.log[k,,] <- nijk[k,,]*nk[k]/t.dijk
-        }
+        for (k in n12)
+          t.log[k,,] <- nijk[k,,]*(nk[k] / tcrossprod(nik[,k], njk[,k]))
       } else { ## c == 2 (?)
-        for (k in 1:2) {
-          t.X <- array(nik[,k],dim = c(dim(nik)[1],1))
-          t.Y <- array(njk[,k],dim = c(1,dim(njk)[1]))
-          t.dijk <- t.X %*% t.Y
-          t.log[,k,] <- nijk[,k,]*nk[k]/t.dijk
+        for (k in n12)
+          t.log[,k,] <- nijk[,k,]*(nk[k] / tcrossprod(nik[,k], njk[,k]))
+      }
+    } ,
+
+    { ## lenS == 2 ----------------------------------
+
+      ## a.pos <- sort(c(x,y,S))
+      dmS1.1 <- dm[,S[1]] + 1L
+      dmS2.1 <- dm[,S[2]] + 1L
+      nijk2 <- array(0L, c(2,2,2,2))
+      for(i in n12) {
+        d.x.i <- d.x1 == i
+	for(j in n12) {
+          d.x.i.y.j <- d.x.i & d.y1 == j
+          for(k in n12) {
+            d.x.y.S1 <- d.x.i.y.j & dmS1.1 == k
+            for(l in n12)
+              nijk2[i,j,k,l] <- sum(d.x.y.S1 & dmS2.1 == l)
+          }
         }
       }
-    }                                   # end {lenS = 1}
 
-    else if(lenS == 2) {
-      ## a.pos <- sort(c(x,y,S))
-
-      nijk2 <- array(NA,c(2,2,2,2))
-      for(i in 1:2) for(j in 1:2) for(k in 1:2) for(l in 1:2) {
-        nijk2[i,j,k,l] <- sum((dm[,x] == i-1)&(dm[,y] == j-1)&(dm[,S[1]] == k-1)&(dm[,S[2]] == l-1))
-      }
-
-      ## alt <- c(x,y,S)
-
-      nijk <- array(NA,c(2,2,4))
-      for(i in 1:2) for(j in 1:2) {
-        nijk[,,2*(i-1)+j] <- nijk2[,,i,j]
+      nijk <- array(0L, c(2,2,4))
+      for(i in n12) {
+	for(j in n12)
+          nijk[,,2*(i-1)+j] <- nijk2[,,i,j]
       }
 
       nik <- apply(nijk,3,rowSums)
@@ -3011,45 +3012,64 @@ gSquareBin <- function(x, y, S, dm, adaptDF = FALSE, n.min = 10*df,
 
       ## compute G^2
       t.log <- array(0,c(2,2,4))
-      for (k in 1:4) {
-        t.X <- array(nik[,k],dim = c(dim(nik)[1],1))
-        t.Y <- array(njk[,k],dim = c(1,dim(njk)[1]))
-        t.dijk <- t.X %*% t.Y
-        t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-      }
-    }                                   # end {lenS = 2}
+      for (k in 1:4)
+        t.log[,,k] <- nijk[,,k]*(nk[k] / tcrossprod(nik[,k], njk[,k]))
+    } ,
 
-    else if(lenS == 3) {
-      nijk <- array(NA,c(2,2,8))
-      for(i1 in 1:2) for(i2 in 1:2) for(i3 in 1:2) for(i4 in 1:2) for(i5 in 1:2) {
-        nijk[i1,i2,4*(i3-1)+2*(i4-1)+i5] <-
-          sum((dm[,x] == i1-1)&(dm[,y] == i2-1)&(dm[,S[1]] == i3-1)&(dm[,S[2]] == i4-1)&(dm[,S[3]] == i5-1))
+    { ## lenS == 3 ----------------------------------
+      dmS1.1 <- dm[,S[1]] + 1L
+      dmS2.1 <- dm[,S[2]] + 1L
+      dmS3.1 <- dm[,S[3]] + 1L
+      nijk <- array(0L, c(2,2,8))
+      for(i1 in n12) {
+        d.x.i <- d.x1 == i1
+	for(i2 in n12) {
+          d.x.y.i12 <- d.x.i & d.y1 == i2
+          for(i3 in n12) {
+            d.x.y.S1 <- d.x.y.i12 & dmS1.1 == i3
+            for(i4 in n12) {
+              d.xy.S1S2 <- d.x.y.S1 & dmS2.1 == i4
+              for(i5 in n12)
+                nijk[i1,i2,4*(i3-1)+2*(i4-1)+i5] <-
+			sum(d.xy.S1S2 & dmS3.1 == i5)
+            }
+          }
+        }
       }
 
-      nik <- apply(nijk,3,rowSums)
-      njk <- apply(nijk,3,colSums)
+      nik <- apply(nijk, 3, rowSums)
+      njk <- apply(nijk, 3, colSums)
       nk <- colSums(njk)
 
       ## compute G^2
       t.log <- array(0,c(2,2,8))
-      for (k in 1:8) {
-        t.X <- array(nik[,k],dim = c(dim(nik)[1],1))
-        t.Y <- array(njk[,k],dim = c(1,dim(njk)[1]))
-        t.dijk <- t.X %*% t.Y
-        t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-      }
-    }                                   # end {lenS = 3}
+      for (k in 1:8)
+        t.log[,,k] <- nijk[,,k]*(nk[k] / tcrossprod(nik[,k], njk[,k]))
+    } ,
 
-    else if(lenS == 4) {
-      nijk <- array(NA,c(2,2,16))
-      for(i1 in 1:2) for(i2 in 1:2) for(i3 in 1:2) for(i4 in 1:2) for(i5 in 1:2) for(i6 in 1:2) {
-        nijk[i1,i2,8*(i3-1)+4*(i4-1)+2*(i5-1)+i6] <-
-          sum((dm[,x] == i1-1) &
-              (dm[,y] == i2-1) &
-              (dm[,S[1]] == i3-1) &
-              (dm[,S[2]] == i4-1) &
-              (dm[,S[3]] == i5-1) &
-              (dm[,S[4]] == i6-1))
+    { ## lenS == 4 ----------------------------------
+      dmS1.1 <- dm[,S[1]] + 1L
+      dmS2.1 <- dm[,S[2]] + 1L
+      dmS3.1 <- dm[,S[3]] + 1L
+      dmS4.1 <- dm[,S[4]] + 1L
+      nijk <- array(0L, c(2,2,16))
+      for(i1 in n12) {
+        d.x.i <- d.x1 == i1
+	for(i2 in n12) {
+          d.x.y.i12 <- d.x.i & d.y1 == i2
+          for(i3 in n12) {
+            d.x.y.S1 <- d.x.y.i12 & dmS1.1 == i3
+            for(i4 in n12) {
+              d.xy.S1S2 <- d.x.y.S1 & dmS2.1 == i4
+              for(i5 in n12) {
+                d.xy.S1S2S3 <- d.xy.S1S2 & dmS3.1 == i5
+                for(i6 in n12)
+                  nijk[i1,i2,8*(i3-1)+4*(i4-1)+2*(i5-1)+i6] <-
+			sum(d.xy.S1S2S3 & dmS4.1 == i6)
+              }
+            }
+          }
+        }
       }
 
       nik <- apply(nijk,3,rowSums)
@@ -3057,27 +3077,39 @@ gSquareBin <- function(x, y, S, dm, adaptDF = FALSE, n.min = 10*df,
       nk <- colSums(njk)
 
       ## compute G^2
-      t.log <- array(0,c(2,2,16))
-      for (k in 1:16) {
-        t.X <- array(nik[,k],dim = c(dim(nik)[1],1))
-        t.Y <- array(njk[,k],dim = c(1,dim(njk)[1]))
-        t.dijk <- t.X %*% t.Y
-        t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-      }
+      t.log <- array(0, c(2,2,16))
+      for (k in 1:16)
+        t.log[,,k] <- nijk[,,k]*(nk[k] / tcrossprod(nik[,k], njk[,k]))
 
-    } # end {lens = 4}
+    } ,
 
-    else if(lenS == 5) {
-      nijk <- array(NA,c(2,2,32))
-      for(i1 in 1:2) for(i2 in 1:2) for(i3 in 1:2) for(i4 in 1:2) for(i5 in 1:2) for(i6 in 1:2) for(i7 in 1:2) {
-        nijk[i1,i2,16*(i3-1)+8*(i4-1)+4*(i5-1)+2*(i6-1)+i7] <-
-          sum((dm[,x] == i1-1)&
-              (dm[,y] == i2-1)&
-              (dm[,S[1]] == i3-1)&
-              (dm[,S[2]] == i4-1)&
-              (dm[,S[3]] == i5-1)&
-              (dm[,S[4]] == i6-1)&
-              (dm[,S[5]] == i7-1))
+    { ## lenS == 5 ----------------------------------
+      dmS1.1 <- dm[,S[1]] + 1L
+      dmS2.1 <- dm[,S[2]] + 1L
+      dmS3.1 <- dm[,S[3]] + 1L
+      dmS4.1 <- dm[,S[4]] + 1L
+      dmS5.1 <- dm[,S[5]] + 1L
+      nijk <- array(0L, c(2,2,32))
+      for(i1 in n12) {
+        d.x.i <- d.x1 == i1
+	for(i2 in n12) {
+          d.x.y.i12 <- d.x.i & d.y1 == i2
+          for(i3 in n12) {
+            d.x.y.S1 <- d.x.y.i12 & dmS1.1 == i3
+            for(i4 in n12) {
+              d.xy.S1S2 <- d.x.y.S1 & dmS2.1 == i4
+              for(i5 in n12) {
+                d.xy.S1S2S3 <- d.xy.S1S2 & dmS3.1 == i5
+                for(i6 in n12) {
+                  d.xy.S1S2S3S4 <- d.xy.S1S2S3 & dmS4.1 == i6
+                  for(i7 in n12)
+                    nijk[i1,i2,16*(i3-1)+8*(i4-1)+4*(i5-1)+2*(i6-1)+i7] <-
+ 			sum(d.xy.S1S2S3S4 & dmS5.1 == i7)
+                }
+              }
+            }
+          }
+        }
       }
 
       nik <- apply(nijk,3,rowSums)
@@ -3086,29 +3118,25 @@ gSquareBin <- function(x, y, S, dm, adaptDF = FALSE, n.min = 10*df,
 
       ## compute G^2
       t.log <- array(0,c(2,2,32))
-      for (k in 1:32) {
-        t.X <- array(nik[,k],dim = c(dim(nik)[1],1))
-        t.Y <- array(njk[,k],dim = c(1,dim(njk)[1]))
-        t.dijk <- t.X %*% t.Y
-        t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-      }
+      for (k in 1:32)
+        t.log[,,k] <- nijk[,,k]*(nk[k] / tcrossprod(nik[,k], njk[,k]))
 
-    }# end {lenS = 5}
-
-  } else { # --- |S| >= 6 -------------------------------------------------
-    nijk <- array(0,c(2,2,1))
+    })# end {lenS = 5}, end{switch}
+  }
+  else { # --- |S| >= 6 -------------------------------------------------
+    nijk <- array(0L, c(2,2,1))
     ## first sample 'by hand' to avoid if/else in the for-loop
-    i <- dm[1,x]+1
-    j <- dm[1,y]+1
+    i <- d.x1[1]
+    j <- d.y1[1]
     ## create directly a list of all k's  -- MM{FIXME}: there must be a better way
     k <- NULL
     lapply(as.list(S), function(x) { k <<- cbind(k,dm[,x]+1); NULL })
     ## first set of subset values
-    parents.count <- 1 ## counter variable corresponding to the number
+    parents.count <- 1L ## counter variable corresponding to the number
     ## of value combinations for the subset varibales
     ## observed in the data
     parents.val <- t(k[1,])
-    nijk[i,j,parents.count] <- 1        # cell counts
+    nijk[i,j,parents.count] <- 1L        # cell counts
 
     ## Do the same for all other samples. If there is already a table
     ## for the subset values of the sample, increase the corresponding
@@ -3116,8 +3144,8 @@ gSquareBin <- function(x, y, S, dm, adaptDF = FALSE, n.min = 10*df,
     ## cell count to 1.
     for (it.sample in 2:n) {
       new.p <- TRUE
-      i <- dm[it.sample,x]+1
-      j <- dm[it.sample,y]+1
+      i <- d.x1[it.sample]
+      j <- d.y1[it.sample]
       ## comparing the current values of the subset variables to all
       ## already existing combinations of subset variables values
       t.comp <- t(parents.val[1:parents.count,]) == k[it.sample,]
@@ -3128,7 +3156,7 @@ gSquareBin <- function(x, y, S, dm, adaptDF = FALSE, n.min = 10*df,
         ## check if the present combination of value alreay exists
         if(all(t.comp[,it.parents])) {
           ## if yes, increase the corresponding cell count
-          nijk[i,j,it.parents] <- nijk[i,j,it.parents] + 1
+          nijk[i,j,it.parents] <- nijk[i,j,it.parents] + 1L
           new.p <- FALSE
           break
         }
@@ -3136,7 +3164,7 @@ gSquareBin <- function(x, y, S, dm, adaptDF = FALSE, n.min = 10*df,
       ## if the combination of subset values is new...
       if (new.p) {
         ## ...increase the number of subset 'types'
-        parents.count <- parents.count + 1
+        parents.count <- parents.count + 1L
         if (verbose >= 2)
           cat(sprintf(' adding new parents (count = %d) at sample %d\n',
                       parents.count, it.sample))
@@ -3144,7 +3172,7 @@ gSquareBin <- function(x, y, S, dm, adaptDF = FALSE, n.min = 10*df,
         parents.val <- rbind(parents.val, k[it.sample,])
         ## ...update the cell counts (add new array)
         nijk <- abind(nijk, array(0,c(2,2,1)))
-        nijk[i,j,parents.count] <- 1
+        nijk[i,j,parents.count] <- 1L
       }## if(new.p)
     }## end for(it.sample ..)
 
@@ -3152,13 +3180,10 @@ gSquareBin <- function(x, y, S, dm, adaptDF = FALSE, n.min = 10*df,
     njk <- apply(nijk,3,colSums)
     nk <- colSums(njk)
     ## compute G^2
-    t.log <- array(0,c(2,2,parents.count))
-    for (k in 1:parents.count) {
-      t.X <- array(nik[,k],dim = c(dim(nik)[1],1))
-      t.Y <- array(njk[,k],dim = c(1,dim(njk)[1]))
-      t.dijk <- t.X %*% t.Y
-      t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-    }
+    t.log <- array(0, c(2,2,parents.count))
+    for (k in 1:parents.count)
+      t.log[,,k] <- nijk[,,k] * (nk[k] / tcrossprod(nik[,k],njk[,k]))
+
   } ## |S| >= 6
 
   G2 <- sum(2 * nijk * log(t.log), na.rm = TRUE)
@@ -3167,7 +3192,7 @@ gSquareBin <- function(x, y, S, dm, adaptDF = FALSE, n.min = 10*df,
     ## lower the degrees of freedom according to the amount of zero
     ## counts; add zero counts corresponding to the number of parents
     ## combinations that are missing
-    zero.counts <- sum(nijk == 0) + 4*(2^lenS-dim(nijk)[3])
+    zero.counts <- sum(nijk == 0L) + 4*(2^lenS-dim(nijk)[3])
     ndf <- max(1, df-zero.counts)
     if(verbose) cat("adaptDF: (df=",df,", zero.counts=",zero.counts,
                     ") ==> new df = ", ndf, "\n", sep = "")
@@ -3214,8 +3239,11 @@ gSquareDis <- function(x, y, S, dm, nlev, adaptDF = FALSE, n.min = 10*df,
     stopifnot(is.numeric(nlev), length(nlev) == p, !is.na(nlev))
   if(!all(nlev >= 2))
     stop("Each variable, i.e., column of 'dm', must have at least two different values")
+  nl.x <- nlev[x]
+  nl.y <- nlev[y]
+  nl.S <- nlev[S]
   ## degrees of freedom assuming no structural zeros
-  df <- (nlev[x]-1)*(nlev[y]-1)*prod(nlev[S])
+  df <- (nl.x-1)*(nl.y-1)*prod(nl.S)
   if (n < n.min) { ## not enough samples to perform the test:
     warning(gettextf(
       "n=%d is too small (n < n.min = %d ) for G^2 test (=> treated as independence)",
@@ -3223,55 +3251,68 @@ gSquareDis <- function(x, y, S, dm, nlev, adaptDF = FALSE, n.min = 10*df,
     return( 1 )   ## gerster prob=0
   }
   ## else --  enough data to perform the test
-
-  if(lenS < 5) { # bei gSquareBin lenS < 6
-
-    if (lenS == 0) {
-      nij <- array(0,c(nlev[x],nlev[y]))
-      for (i in 1:nlev[x]) {
-        for (j in 1:nlev[y]) {
-          nij[i,j] <- sum((dm[,x] == i-1)&(dm[,y] == j-1))
-        }
+  i.ny <- seq_len(nl.y) # = 1:nl.y
+  lenS <- length(S)
+  d.x1 <- dm[,x] + 1L
+  d.y1 <- dm[,y] + 1L
+  if(lenS <= 4) { # bei gSquareBin lenS <= 5
+    switch(lenS+1L, { ## lenS == 0 -------------------
+      nij <- array(0L, c(nl.x,nl.y))
+      for (i in 1:nl.x) {
+        d.x.i <- d.x1 == i
+        for (j in i.ny)
+          nij[i,j] <- sum(d.x.i & d.y1 == j)
       }
       ## marginal counts
       t.X <- rowSums(nij)
-      dim(t.X) <- c(length(t.X),1)
       t.Y <- colSums(nij)
-      dim(t.Y) <- c(1,length(t.Y))
-
       ## compute G^2
-      dij <- t.X %*% t.Y ## s_ia * s_jb
-      t.log <- n*(nij/dij)
-      t.G2 <- 2*nij*log(t.log)
+      t.log <- n*(nij/ tcrossprod(t.X, t.Y))
+      t.G2 <- 2*nij * log(t.log)
       t.G2[is.nan(t.G2)] <- 0
       G2 <- sum(t.G2)
-    }                                   # end lenS=0
-    else if(lenS == 1) {
-      nijk <- array(0,c(nlev[x],nlev[y],nlev[S]))
-      for(i in 1:nlev[x]) for(j in 1:nlev[y]) for(k in 1:nlev[S]) {
-        nijk[i,j,k] <- sum((dm[,x] == i-1)&(dm[,y] == j-1)&(dm[,S] == k-1))
+    } ,
+    { ## lenS == 1 ----------------------------------
+      in.S <- seq_len(nl.S)
+      dmS.1 <- dm[,S] + 1L
+      nijk <- array(0L, c(nl.x,nl.y,nl.S))
+      for(i in 1:nl.x) {
+        d.x.i <- d.x1 == i
+        for(j in i.ny) {
+          d.x.i.y.j <- d.x.i & d.y1 == j
+          for(k in in.S)
+            nijk[i,j,k] <- sum(d.x.i.y.j & dmS.1 == k)
+        }
       }
       nik <- apply(nijk, 3, rowSums)
       njk <- apply(nijk, 3, colSums)
       nk <- colSums(njk)
 
       ## compute G^2
-      t.log <- array(0,c(nlev[x],nlev[y],prod(nlev[S])))
-      for (k in 1:prod(nlev[S])) {
-        t.X <- array(nik[,k],dim = c(dim(nik)[1],1))
-        t.Y <- array(njk[,k],dim = c(1,dim(njk)[1]))
-        t.dijk <- t.X %*% t.Y
-        t.log[,,k] <- nijk[,,k]*(nk[k]/t.dijk)
-      }
+      t.log <- array(0, c(nl.x,nl.y,prod(nl.S)))
+      for (k in 1:prod(nl.S))
+        t.log[,,k] <- nijk[,,k]*(nk[k] / tcrossprod(nik[,k],njk[,k]))
 
       t.G2 <- 2 * nijk * log(t.log)
       t.G2[is.nan(t.G2)] <- 0
       G2 <- sum(t.G2)
-    }                                   # end lenS=1
-    else if(lenS == 2) {
-      nijk <- array(NA,c(nlev[x],nlev[y],nlev[S[1]]*nlev[S[2]]))
-      for(i in 1:nlev[x]) for(j in 1:nlev[y]) for(k in 1:nlev[S[1]]) for(l in 1:nlev[S[2]]) {
-        nijk[i,j,nlev[S[2]]*(k-1)+l] <- sum((dm[,x] == i-1)&(dm[,y] == j-1)&(dm[,S[1]] == k-1)&(dm[,S[2]] == l-1))
+    } ,
+    { ## lenS == 2 ----------------------------------
+      in.S1 <- seq_len(nl.S1 <- nl.S[1])
+      in.S2 <- seq_len(nl.S2 <- nl.S[2])
+      dmS1.1 <- dm[,S[1]] + 1L
+      dmS2.1 <- dm[,S[2]] + 1L
+      nijk <- array(0L, c(nl.x,nl.y,nl.S1*nl.S2))
+      for(i in 1:nl.x) {
+        d.x.i <- d.x1 == i
+        for(j in i.ny) {
+          d.x.i.y.j <- d.x.i & d.y1 == j
+          for(k in in.S1) {
+            d.x.y.S1 <- d.x.i.y.j & dmS1.1 == k
+            for(l in in.S2)
+              nijk[i,j,nl.S2*(k-1)+l] <- sum(d.x.y.S1 & dmS2.1 == l)
+          }
+        }
       }
 
       nik <- apply(nijk, 3, rowSums)
@@ -3279,78 +3320,107 @@ gSquareDis <- function(x, y, S, dm, nlev, adaptDF = FALSE, n.min = 10*df,
       nk <- colSums(njk)
 
       ## compute G^2
-      t.log <- array(0,c(nlev[x],nlev[y],prod(nlev[S])))
-      for (k in 1:prod(nlev[S])) {
-        t.X <- array(nik[,k],dim = c(dim(nik)[1],1))
-        t.Y <- array(njk[,k],dim = c(1,dim(njk)[1]))
-        t.dijk <- t.X %*% t.Y
-        t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-      }
+      t.log <- array(0, c(nl.x,nl.y,prod(nl.S)))
+      for (k in 1:prod(nl.S))
+        t.log[,,k] <- nijk[,,k]*(nk[k] / tcrossprod(nik[,k],njk[,k]))
 
       t.G2 <- 2 * nijk * log(t.log)
       t.G2[is.nan(t.G2)] <- 0
       G2 <- sum(t.G2)
-    }                                   # end lenS=2
-    else if(lenS == 3) {
-      nijk <- array(NA,c(nlev[x],nlev[y],prod(nlev[S])))
-      for(i1 in 1:nlev[x]) for(i2 in 1:nlev[y]) for(i3 in 1:nlev[S[1]]) for(i4 in 1:nlev[S[2]]) for(i5 in 1:nlev[S[3]]) {
-        nijk[i1,i2,nlev[S[3]]*nlev[S[2]]*(i3-1)+nlev[S[3]]*(i4-1)+i5] <- sum((dm[,x] == i1-1)&(dm[,y] == i2-1)&(dm[,S[1]] == i3-1)&(dm[,S[2]] == i4-1)&(dm[,S[3]] == i5-1))
+    } ,
+    { ## lenS == 3 ----------------------------------
+      in.S1 <- seq_len(nl.S1 <- nl.S[1])
+      in.S2 <- seq_len(nl.S2 <- nl.S[2])
+      in.S3 <- seq_len(nl.S3 <- nl.S[3])
+      dmS1.1 <- dm[,S[1]] + 1L
+      dmS2.1 <- dm[,S[2]] + 1L
+      dmS3.1 <- dm[,S[3]] + 1L
+      nijk <- array(0L, c(nl.x,nl.y,prod(nl.S)))
+      for(i1 in 1:nl.x) {
+        d.x.i1 <- d.x1 == i1
+        for(i2 in i.ny) {
+          d.x.i1.y.i2 <- d.x.i1 & d.y1 == i2
+          for(i3 in in.S1) {
+            d.x.y.S1 <- d.x.i1.y.i2 & dmS1.1 == i3
+            for(i4 in in.S2) {
+              d.x.y.S1.2 <- d.x.y.S1 & dmS2.1 == i4
+              for(i5 in in.S3)
+                nijk[i1,i2, nl.S3*nl.S2*(i3-1)+nl.S3*(i4-1)+i5] <-
+                   sum(d.x.y.S1.2 & dmS3.1 == i5)
+            }
+          }
+        }
       }
 
-      nik <- apply(nijk,3,rowSums)
-      njk <- apply(nijk,3,colSums)
+      nik <- apply(nijk, 3, rowSums)
+      njk <- apply(nijk, 3, colSums)
       nk <- colSums(njk)
 
       ## compute G^2
-      t.log <- array(0,c(nlev[x],nlev[y],prod(nlev[S])))
-      for (k in 1:prod(nlev[S])) {
-        t.X <- array(nik[,k],dim = c(dim(nik)[1],1))
-        t.Y <- array(njk[,k],dim = c(1,dim(njk)[1]))
-        t.dijk <- t.X %*% t.Y
-        t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-      }
+      t.log <- array(0, c(nl.x,nl.y,prod(nl.S)))
+      for (k in 1:prod(nl.S))
+        t.log[,,k] <- nijk[,,k]*(nk[k] / tcrossprod(nik[,k],njk[,k]))
 
       t.G2 <- 2 * nijk * log(t.log)
       t.G2[which(is.nan(t.G2),arr.ind = TRUE)] <- 0
       G2 <- sum(t.G2)
-    } # end lenS=3
-    else if(lenS == 4) {
-      nijk <- array(NA,c(nlev[x],nlev[y],prod(nlev[S])))
-      for(i1 in 1:nlev[x]) for(i2 in 1:nlev[y]) for(i3 in 1:nlev[S[1]]) for(i4 in 1:nlev[S[2]]) for(i5 in 1:nlev[S[3]]) for(i6 in 1:nlev[S[4]]) {
-        nijk[i1,i2,nlev[S[4]]*nlev[S[3]]*nlev[S[2]]*(i3-1)+nlev[S[4]]*nlev[S[3]]*(i4-1)+nlev[S[4]]*(i5-1)+i6] <- sum((dm[,x] == i1-1)&(dm[,y] == i2-1)&(dm[,S[1]] == i3-1)&(dm[,S[2]] == i4-1)&(dm[,S[3]] == i5-1)&(dm[,S[4]] == i6-1))
+    } ,
+    { ## lenS == 4 ----------------------------------
+      in.S1 <- seq_len(nl.S1 <- nl.S[1])
+      in.S2 <- seq_len(nl.S2 <- nl.S[2])
+      in.S3 <- seq_len(nl.S3 <- nl.S[3])
+      in.S4 <- seq_len(nl.S4 <- nl.S[4])
+      dmS1.1 <- dm[,S[1]] + 1L
+      dmS2.1 <- dm[,S[2]] + 1L
+      dmS3.1 <- dm[,S[3]] + 1L
+      dmS4.1 <- dm[,S[4]] + 1L
+      nijk <- array(0L, c(nl.x, nl.y, prod(nl.S)))
+      for(i1 in 1:nl.x) {
+        d.x.i1 <- d.x1 == i1
+        for(i2 in i.ny) {
+          d.x.i1.y.i2 <- d.x.i1 & d.y1 == i2
+          for(i3 in in.S1) {
+            d.x.y.S1 <- d.x.i1.y.i2 & dmS1.1 == i3
+            for(i4 in in.S2) {
+              d.x.y.S1.2 <- d.x.y.S1 & dmS2.1 == i4
+              for(i5 in in.S3) {
+                d.x.y.S1.2.3 <- d.x.y.S1.2 & dmS3.1 == i5
+                for(i6 in in.S4)
+                  nijk[i1,i2, nl.S4*nl.S3*nl.S2*(i3-1) +
+                              nl.S4*nl.S3*(i4-1)+
+                              nl.S4*(i5-1)+i6] <- sum(d.x.y.S1.2.3 & dmS4.1 == i6)
+              }
+            }
+          }
+        }
       }
       nik <- apply(nijk, 3, rowSums)
       njk <- apply(nijk, 3, colSums)
       nk <- colSums(njk)
 
       ## compute G^2
-      t.log <- array(0,c(nlev[x],nlev[y],prod(nlev[S])))
-      for (k in 1:prod(nlev[S])) {
-        t.X <- array(nik[,k],dim = c(dim(nik)[1],1))
-        t.Y <- array(njk[,k],dim = c(1,dim(njk)[1]))
-        t.dijk <- t.X %*% t.Y
-        t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-      }
-
+      t.log <- array(0, c(nl.x,nl.y,prod(nl.S)))
+      for (k in 1:prod(nl.S))
+        t.log[,,k] <- nijk[,,k]*(nk[k] / tcrossprod(nik[,k],njk[,k]))
       t.G2 <- 2 * nijk * log(t.log)
       t.G2[is.nan(t.G2)] <- 0
       G2 <- sum(t.G2)
-    } # end lens=4
+    }) # end lens == 4, end{switch}
   }
   else { #  |S| = lenS >= 5  (gSquareBin: lenS >= 6)
-    nijk <- array(0,c(nlev[x],nlev[y],1))
+    nijk <- array(0L, c(nl.x, nl.y, 1L))
     ## first sample 'by hand' to avoid if/else in the for-loop
-    i <- dm[1,x]+1
-    j <- dm[1,y]+1
+    i <- d.x1[1]
+    j <- d.y1[1]
     ## create directly a list of all k's  -- MM{FIXME}: there must be a better way
     k <- NULL
-    lapply(as.list(S), function(x) { k <<- cbind(k,dm[,x]+1); NULL })
+    lapply(as.list(S), function(x) { k <<- cbind(k,d.x1); NULL })
     ## first set of subset values
     parents.count <- 1L ## counter variable corresponding to the number
     ## of value combinations for the subset varibales
     ## observed in the data
     parents.val <- t(k[1,])
-    nijk[i,j,parents.count] <- 1 # cell counts
+    nijk[i,j,parents.count] <- 1L # cell counts
 
     ## Do the same for all other samples. If there is already a table
     ## for the subset values of the sample, increase the corresponding
@@ -3358,8 +3428,8 @@ gSquareDis <- function(x, y, S, dm, nlev, adaptDF = FALSE, n.min = 10*df,
     ## cell count to 1.
     for (it.sample in 2:n) {
       flag <- 0
-      i <- dm[it.sample,x]+1
-      j <- dm[it.sample,y]+1
+      i <- d.x1[it.sample]
+      j <- d.y1[it.sample]
       ## comparing the current values of the subset variables to all
       ## already existing combinations of subset variables values
       t.comp <- t(parents.val[1:parents.count,]) == k[it.sample,]
@@ -3370,7 +3440,7 @@ gSquareDis <- function(x, y, S, dm, nlev, adaptDF = FALSE, n.min = 10*df,
         ## check if the present combination of value alreay exists
         if(all(t.comp[,it.parents])) {
           ## if yes, increase the corresponding cell count
-          nijk[i,j,it.parents] <- nijk[i,j,it.parents] + 1
+          nijk[i,j,it.parents] <- nijk[i,j,it.parents] + 1L
           flag <- 1
           break
         }
@@ -3385,8 +3455,8 @@ gSquareDis <- function(x, y, S, dm, nlev, adaptDF = FALSE, n.min = 10*df,
         ## ...add the new subset to the others
         parents.val <- rbind(parents.val,k[it.sample,])
         ## ...update the cell counts (add new array)
-        nijk <- abind(nijk,array(0,c(nlev[x],nlev[y],1)))
-        nijk[i,j,parents.count] <- 1
+        nijk <- abind(nijk, array(0L, c(nl.x,nl.y,1)))
+        nijk[i,j,parents.count] <- 1L
       } # end if(flag==0)
     } ## for(it in 2:n)
     if (verbose && verbose < 2)
@@ -3396,13 +3466,9 @@ gSquareDis <- function(x, y, S, dm, nlev, adaptDF = FALSE, n.min = 10*df,
     njk <- apply(nijk,3,colSums)
     nk <- colSums(njk)
     ## compute G^2
-    t.log <- array(0,c(nlev[x],nlev[y],parents.count))
-    for (k in 1:parents.count) {
-      t.X <- array(nik[,k],dim = c(dim(nik)[1],1))
-      t.Y <- array(njk[,k],dim = c(1,dim(njk)[1]))
-      t.dijk <- t.X %*% t.Y
-      t.log[,,k] <- nijk[,,k]*nk[k]/t.dijk
-    }
+    t.log <- array(0,c(nl.x,nl.y,parents.count))
+    for (k in 1:parents.count)
+      t.log[,,k] <- nijk[,,k]*(nk[k] / tcrossprod(nik[,k],njk[,k]))
     t.G2 <- 2 * nijk * log(t.log)
     t.G2[which(is.nan(t.G2),arr.ind = TRUE)] <- 0
     G2 <- sum(t.G2)
