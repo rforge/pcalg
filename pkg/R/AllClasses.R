@@ -949,31 +949,36 @@ setRefClass("GaussParDAG",
         #'          with rows corresponding to different samples if n > 1
         simulate = function(n, target = integer(0), int.level = numeric(0)) {
           ## Error terms, intercepts, and intervention levels
-          if (n == 1)
+          if (n == 1) {
             Y <- rnorm(node.count(), mean = intercept(), sd = sqrt(err.var()))
-          else
+          } else {
             Y <- matrix(rnorm(n*node.count(), mean = intercept(), sd = sqrt(err.var())), ncol = n)
+          }
           if (length(target) > 0) {
-            if (length(int.level) %nin% c(length(target), n*length(target)))
+            if (length(int.level) %nin% c(length(target), n*length(target))) {
               stop("int.level must either be a vector of the same length as target, or a matrix of dimension n x length(target)")
-            if (is.matrix(int.level))
+            }
+            if (is.matrix(int.level)) {
               int.level <- t(int.level)
-            if (n == 1)
+            }
+            if (n == 1) {
               Y[target] <- int.level
-            else
+            } else {
               Y[target, ] <- int.level
+            }
           }
 
           ## Modified weight matrix (w.r.t. intervention target)
-          D <- - weight.mat(target)
+          D <- - t(weight.mat(target))
           diag(D) <- 1.
 
           ## Calculate results: simulation samples
           result <- solve(D, Y)
-          if (n == 1)
+          if (n == 1) {
             result
-          else
+          } else {
             t(result)
+          }
         }
         )
     )

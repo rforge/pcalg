@@ -118,12 +118,11 @@ rmvnorm.ivent <- function(n, object, target = integer(0), target.value = numeric
   Y[target, ] <- target.value
 
   ## Calculate matrix of structural equation system
-  A <- -object$weight.mat()
-  A[, target] <- 0
-  diag(A) <- 1
+  A <- - t(object$weight.mat(target))
+  diag(A) <- 1.
 
   ## Solve linear structural equations
-  t(solve(t(A), Y))
+  t(solve(A, Y))
 }
 
 #' Checks whether an argument is a whole number (not necessarily represented
