@@ -79,7 +79,7 @@ dat <- cbind(x,y,z)
 ## Analyze data
 gSquareDis(1,3, S=2, dat, nlev = c(3,4,2)) # but nlev is optional:
 gSquareDis(1,3, S=2, dat, verbose=TRUE, adaptDF=TRUE)
-## with too little data, gives a warning (and p value 1):
+## with too little data, gives a warning (and p-value 1):
 gSquareDis(1,3, S=2, dat[1:60,], nlev = c(3,4,2))
 
 suffStat <- list(dm = dat, nlev = c(3,4,2), adaptDF = FALSE)

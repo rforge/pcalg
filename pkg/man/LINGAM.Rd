@@ -12,7 +12,8 @@ LINGAM(X, verbose = FALSE)
 }
 \arguments{
   \item{X}{n x p data matrix (n: sample size, p: number of variables).}
-  \item{verbose}{logical indicating whether diagnostic output should be shown.}
+  \item{verbose}{logical or integer indicating that increased diagnostic output is to
+    be provided.}
 }
 %% \details{
 %% }
@@ -34,6 +35,9 @@ LINGAM(X, verbose = FALSE)
   <entnerd@hotmail.com>, Antti Hyttinen <antti.hyttinen@cs.helsinki.fi>
   and Jonas Peters <jonas.peters@tuebingen.mpg.de>
 }
+\seealso{
+  \code{\link{fastICA}} from package \pkg{fastICA} is used.
+}
 \examples{
 ##################################################
 ## Exp 1
@@ -54,7 +58,7 @@ trueDAG <- cbind(c(0,1),c(0,0))
 ## 0 0
 ## 1 0
 
-estDAG <- LINGAM(X, verbose = TRUE)
+estDAG <- LINGAM(X)
 
 cat("true DAG:\n")
 show(trueDAG)
@@ -91,13 +95,15 @@ trueDAG <- cbind(x1 = c(0,1,0,0),
 ## 0 0 0 1
 ## 0 0 0 0
 
-estDAG <- LINGAM(X, verbose = TRUE)
-
+estDAG1 <- LINGAM(X, verbose = TRUE)# details on LINGAM
+estDAG2 <- LINGAM(X, verbose = 2)   # details on LINGAM and fastICA
+## results are the same, of course:
+stopifnot(identical(estDAG1, estDAG2))
 cat("true DAG:\n")
 show(trueDAG)
 
 cat("estimated DAG:\n")
-show(estDAG$Adj)
+show(estDAG1$Adj)
 }
 \keyword{multivariate}
 \keyword{models}
