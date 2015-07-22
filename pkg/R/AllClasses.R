@@ -120,7 +120,7 @@ setMethod("plot", signature(x = "pcAlgo"),
 
           if (zvalue.lwd && numEdges(G) != 0) {
 	      lwd.mat <-
-		  if(is.matrix(Z <- x@zMin) && all(dim(m) == p)) Z
+		  if(is.matrix(Z <- x@zMin) && all(dim(Z) == p)) Z
 		  else ## from newer pc(): 'zMin' is deprecated there, but pMax corresponds:
 		      qnorm(x@pMax/2, lower.tail=FALSE)
 	      lwd.mat <- lwd.max * lwd.mat/max(lwd.mat)
