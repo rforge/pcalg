@@ -1,7 +1,23 @@
+% Check from R:
+% news(db= tools:::.build_news_db_from_package_NEWS_Rd("~/R/Pkgs/pcalg/inst/NEWS.Rd"))
 \name{NEWS}
 \title{pcalg News}
 \encoding{UTF-8}
-\section{CHANGES IN VERSION 2.2-2}{
+\section{CHANGES IN VERSION 2.2-4 (2015-07-22)}{
+  \itemize{
+    \item Bug fix in \code{simulate(<gies>)}.
+    \item Bug fix in \code{LINGAM(., verbose=FALSE)} (the default, now tested).
+    \item Even more test coverage.
+    \item \code{r.gauss.pardag()} gets an optional argument \code{labels}.
+  }
+}
+\section{CHANGES IN VERSION 2.2-3 (2015-07-12)}{
+  \itemize{
+    \item Adapt to API change in \pkg{igraph} package.
+    \item More test coverage and first speed tweaks.
+  }
+}
+\section{CHANGES IN VERSION 2.2-2 (2015-06-24)}{
   \itemize{
     \item Function \code{gac} for testing if a set of nodes satisfies
     the Generalized Adjustment Criterion (GAC). GAC is a sufficient and
@@ -43,16 +59,16 @@
     \item Functions \code{gds}, \code{gies}, \code{ges} for score based learning
     \item Function \code{backdoor} for generalized backdoor criterion
     \item Bugfix in function \code{wgtMatrix}; this affects functions
-    \code{trueCov} and 
+    \code{trueCov} and
     \code{rmvDAG}; to reproduce old version, use option 'back.compatible =
     TRUE'
     \item \code{skeleton}, \code{pc}, \code{fci} and \code{rfci}  now
-    have 'alpha' as third argument, 
+    have 'alpha' as third argument,
     then 'labels, p' where 'p' is optional; namely, derived from 'labels'
     when these are specified.
     \item The default for extending the skeleton to a CPDAG is now
     \code{udag2pdagRelaxed}, which is completely deterministic (was
-    \code{udag2pdag} 
+    \code{udag2pdag}
     before, which can use random orientations if sampling errors occur).
   }
 }
