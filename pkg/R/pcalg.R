@@ -189,7 +189,8 @@ rmvDAG <-
 }
 
 
-pcSelect <- function(y,dm, alpha, corMethod = "standard", verbose = FALSE, directed = FALSE)
+pcSelect <- function(y, dm, alpha, corMethod = "standard",
+                     verbose = FALSE, directed = FALSE)
 {
   ## Purpose: Find columns in dm, that have nonzero parcor with y given
   ## any other set of columns in dm
@@ -227,11 +228,11 @@ pcSelect <- function(y,dm, alpha, corMethod = "standard", verbose = FALSE, direc
     n.edgetests[ord+1] <- 0
     done <- TRUE
     ind <- which(G)
-    remainingEdgeTests <- length(ind)
+    remEdges <- length(ind)
     if(verbose >= 1)
-      cat("Order=",ord,"; remaining edges:",remainingEdgeTests,"\n", sep = '')
-    for (i in 1:remainingEdgeTests) {
-      if(verbose && i%%100 == 0) cat("|i=",i,"|iMax=",nrow(ind),"\n")
+      cat("Order=",ord,"; remaining edges:",remEdges,"\n", sep = '')
+    for (i in 1:remEdges) {
+      if(verbose && (verbose >= 2 || i%%100 == 0)) cat("|i=",i,"|iMax=",remEdges,"\n")
       y <- 1
       x <- ind[i]
 
@@ -270,9 +271,10 @@ pcSelect <- function(y,dm, alpha, corMethod = "standard", verbose = FALSE, direc
     } ## end for(i ..)
     ord <- ord+1
   } ## end while
-  Gres <- G[-1]
-  names(Gres) <- vNms
-  list(G = Gres, zMin = zMin[-1])
+
+  ## return
+  list(G = setNames(G[-1L], vNms),
+       zMin = zMin[-1])
 }## pcSelect
 
 zStat <- function(x,y, S, C, n)
@@ -421,8 +423,8 @@ getNextSet <- function(n,k,set) {
   list(nextSet = set, wasLast = wasLast)
 }
 
-mcor <- function(dm, method =
-                 c("standard", "Qn", "QnStable", "ogkScaleTau2", "ogkQn","shrink"))
+mcor <- function(dm, method = c("standard", "Qn", "QnStable",
+				"ogkScaleTau2", "ogkQn", "shrink"))
 {
   ## Purpose: Compute correlation matrix (perhaps elementwise)
   ## ----------------------------------------------------------------------
@@ -431,43 +433,40 @@ mcor <- function(dm, method =
   ## - method: "Qn" or "standard" (default) envokes robust (based on Qn
   ##           scale estimator) or standard correlation estimator, respectively.
   ## ----------------------------------------------------------------------
-  ## Author: Markus Kalisch, Date: 27 Jan 2006, 10:07
+  ## Author: Markus Kalisch, Date: 27 Jan 2006
 
   p <- ncol(dm)
   method <- match.arg(method)
   switch(method,
 	 "Qn" = {
-	   res <- matrix(0, p,p)
-	   qnVec <- apply(dm, 2, Qn)
-
-	   for (i in 1:(p-1)) {
+	   res <- diag(nrow = p)
+	   Qn. <- apply(dm, 2L, Qn)
+	   for (i in seq_len(p-1)) {
 	     for (j in i:p) {
-	       qnSum <- Qn(dm[,i] + dm[,j])
+	       qnSum  <- Qn(dm[,i] + dm[,j])
 	       qnDiff <- Qn(dm[,i] - dm[,j])
-	       res[i,j] <- max(-1,
-                               min(1,
-                                   (qnSum^2 - qnDiff^2) / (4*qnVec[i]*qnVec[j])))
+               res[j,i] <- res[i,j] <-
+                    max(-1,
+                        min(1, (qnSum^2 - qnDiff^2) / (4*Qn.[i]*Qn.[j])))
 	     }
 	   }
-	   res <- res + t(res)
-	   diag(res) <- rep(1,p)
 	   res
 	 },
          "QnStable" = {
-	   res <- matrix(0, p,p)
-	   qnVec <- apply(dm, 2, Qn)
-
-	   for (i in 1:(p-1)) {
+	   res <- diag(nrow = p)
+	   Qn. <- apply(dm, 2L, Qn) # Qn(.) for all columns
+           ## xQn := each column divided by its Qn(.)
+           xQn <- dm / rep(Qn., each=nrow(dm))
+	   for (i in seq_len(p-1)) {
+             xQn.i <- xQn[,i]
 	     for (j in i:p) {
-	       qnSum <- Qn(dm[,i]/Qn(dm[,i]) + dm[,j]/Qn(dm[,j]))
-	       qnDiff <- Qn(dm[,i]/Qn(dm[,i]) - dm[,j]/Qn(dm[,j]))
-	       res[i,j] <- max(-1,
-                               min(1,
-                                   (qnSum^2 - qnDiff^2) / (qnSum^2 + qnDiff^2)))
+	       qnSum  <- Qn(xQn.i + xQn[,j])
+	       qnDiff <- Qn(xQn.i - xQn[,j])
+               res[j,i] <- res[i,j] <-
+                    max(-1,
+                        min(1, (qnSum^2 - qnDiff^2) / (qnSum^2 + qnDiff^2)))
 	     }
 	   }
-	   res <- res + t(res)
-	   diag(res) <- rep(1,p)
 	   res
 	 },
 	 "ogkScaleTau2" = {
@@ -480,33 +479,24 @@ mcor <- function(dm, method =
 	 },
 	 "standard" = cor(dm),
          "shrink" = {
-           X <- dm
-           CM <- cor(X)
-           n <- nrow(X)
-           p <- ncol(X)
-           g <- 0
-           S1 <- 0
-           S2 <- 0
+           CM <- cor(dm)
+           n <- nrow(dm)
+           p <- ncol(dm)
+           S1 <- sum(CM[1,-1]^2)
+           S2 <- sum((1-CM[1,-1]^2)^2)
+
+           g <- S1 / (S1 + S2/n) # is in [0,1]
            scor3 <- CM
-
-           for(k in 2:p) {
-             S1 <- S1+(CM[1,k])^2
-             S2 <- S2+(1-(CM[1,k])^2)^2
-           }
-
-           g <- 2*S1/(2*S1+(2/n)*S2)
-
            for(i in 2:p) {
              scor3[1,i] <- g*CM[1,i]
              scor3[i,1] <- g*CM[i,1]
            }
-
            scor3
          }
-         )
+         )# {switch}
 }
 
-pcSelect.presel <- function(y,dm, alpha, alphapre, corMethod = "standard",
+pcSelect.presel <- function(y, dm, alpha, alphapre, corMethod = "standard",
                             verbose = 0, directed = FALSE)
 {
   ## Purpose: Find columns in dm, that have nonzero parcor with y given
@@ -515,22 +505,22 @@ pcSelect.presel <- function(y,dm, alpha, alphapre, corMethod = "standard",
   ## Arguments:
   ## - y: Response Vector (length(y)=nrow(dm))
   ## - dm: Data matrix (rows: samples, cols: nodes)
-  ## - alpha: Significance level of individual partial correlation tests
+  ## - alpha   : Significance level of individual partial correlation tests
+  ## - alphapre: Significance level in preselective use of pcSelect
   ## - corMethod: "standard" or "Qn" for standard or robust correlation
   ##              estimation
-  ## - alphapre: Significance level in preselective use of pcSelect
   ## ----------------------------------------------------------------------
   ## Author: Philipp Ruetimann, Date: 5 Mar 2008
 
-  tmp <- pcSelect(y,dm,alphapre,corMethod,verbose,directed)
-  n <- nrow(dm)
+  tmp <- pcSelect(y, dm, alpha=alphapre,
+                  corMethod=corMethod, verbose=verbose, directed=directed)
   pcs <- tmp$G
   zmi <- tmp$zMin
-  ppcs <- which(pcs == 1)
-  Xnew <- dm[,ppcs]
-  if(length(ppcs) == 1) { Xnew <- matrix(Xnew,n,1) }
+  ppcs <- which(pcs == 1L)
+  Xnew <- dm[, ppcs, drop=FALSE]
   lang <- length(pcs)
-  tmp2 <- pcSelect(y,Xnew,alpha,corMethod,verbose,directed)
+  tmp2 <- pcSelect(y, dm=Xnew, alpha=alpha,
+                   corMethod=corMethod, verbose=verbose, directed=directed)
   pcSnew <- tmp2$G
   zminew <- tmp2$zMin
   zmi[ppcs] <- zminew
@@ -542,8 +532,7 @@ pcSelect.presel <- function(y,dm, alpha, alphapre, corMethod = "standard",
       k <- k+1
     }
   }
-
-  list(pcs = pcs,Xnew = Xnew,zMin = zmi)
+  list(pcs = pcs, Xnew = Xnew, zMin = zmi)
 }
 
 
@@ -941,7 +930,7 @@ amat2dag <- function(amat) {
   skel[which(skel > 1)] <- 1
 
   ## permute skel
-  ord <- sample(1:p)
+  ord <- sample.int(p)
   skel <- skel[ord,ord]
 
   ## skel to dag
@@ -1212,7 +1201,7 @@ pcAlgo <- function(dm = NA, C = NA, n = NA, alpha, corMethod = "standard",
   ord <- 0
 
   if (datatype == 'continuous') {
-    diag(zMin) <- rep(0,p)
+    diag(zMin) <- 0
     if (any(is.na(C))) C <- mcor(dm, method = corMethod)
     cutoff <- qnorm(1 - alpha/2)
     while (!done && any(G) && ord <= m.max) {
@@ -1221,11 +1210,11 @@ pcAlgo <- function(dm = NA, C = NA, n = NA, alpha, corMethod = "standard",
       ind <- which(G, arr.ind = TRUE)
       ## For comparison with C++ sort according to first row
       ind <- ind[order(ind[,1]), ]
-      remainingEdgeTests <- nrow(ind)
+      remEdges <- nrow(ind)
       if(verbose)
-        cat("Order=",ord,"; remaining edges:",remainingEdgeTests,"\n", sep = '')
-      for (i in 1:remainingEdgeTests) {
-        if(verbose && i%%100 == 0) cat("|i=",i,"|iMax=",nrow(ind),"\n")
+        cat("Order=",ord,"; remaining edges:",remEdges,"\n", sep = '')
+      for (i in 1:remEdges) {
+        if(verbose && i%%100 == 0) cat("|i=",i,"|iMax=",remEdges,"\n")
         x <- ind[i,1]
         y <- ind[i,2]
         if (G[y,x]) {
@@ -1257,7 +1246,7 @@ pcAlgo <- function(dm = NA, C = NA, n = NA, alpha, corMethod = "standard",
 
       } ## end for(i ..)
       ord <- ord+1
-      ##    n.edgetests[ord] <- remainingEdgeTests
+      ##    n.edgetests[ord] <- remEdges
     } ## while
 
     for (i in 1:(p-1)) {
@@ -1279,11 +1268,11 @@ pcAlgo <- function(dm = NA, C = NA, n = NA, alpha, corMethod = "standard",
         ind <- which(G, arr.ind = TRUE)
         ## For comparison with C++ sort according to first row
         ind <- ind[order(ind[,1]), ]
-        remainingEdgeTests <- nrow(ind)
+        remEdges <- nrow(ind)
         if(verbose)
-          cat("Order=",ord,"; remaining edges:",remainingEdgeTests,"\n", sep = '')
-        for (i in 1:remainingEdgeTests) {
-          if(verbose) { if(i%%100 == 0) cat("|i=",i,"|iMax=",nrow(ind),"\n") }
+          cat("Order=",ord,"; remaining edges:",remEdges,"\n", sep = '')
+        for (i in 1:remEdges) {
+          if(verbose) { if(i%%100 == 0) cat("|i=",i,"|iMax=",remEdges,"\n") }
           x <- ind[i,1]
           y <- ind[i,2]
           if (G[y,x]) {
@@ -1315,7 +1304,7 @@ pcAlgo <- function(dm = NA, C = NA, n = NA, alpha, corMethod = "standard",
 
         } ## end for(i ..)
         ord <- ord+1
-        ##    n.edgetests[ord] <- remainingEdgeTests
+        ##    n.edgetests[ord] <- remEdges
       } ## while
     } else
       stop("Datatype must be 'continuous' or 'discrete'.")
@@ -1419,36 +1408,35 @@ pdag2dag <- function(g, keepVstruct = TRUE) {
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: Sep 2006; tweaks: Martin M
 
+  not.yet <- FALSE
   if (numEdges(g) == 0) {
-    success <- TRUE
     graph <- g
   } else {
     gm <- wgtMatrix(g) ## gm_i_j is edge from j to i
-    gm[which(gm > 0 & gm != 1)] <- 1
+    storage.mode(gm) <- "integer"
+    gm[which(gm > 0 & gm != 1)] <- 1L
 
-    gm2 <- gm
+    a <- gm2 <- gm
     cn2 <- colnames(gm2)
-    a <- gm
     go.on <- TRUE
-    go.on2 <- FALSE
     while(go.on && length(a) > 1 && sum(a) > 0) {
-      go.on2 <- TRUE
+      not.yet <- TRUE
       sinks <- find.sink(a)
       if (length(sinks) > 0) {
         counter <- 1L
-        while(go.on2 && counter <= length(sinks)) {
+        while(not.yet && counter <= length(sinks)) {
           x <- sinks[counter]
           if (!keepVstruct || adj.check(a,x)) {
-            go.on2 <- FALSE
+            not.yet <- FALSE
             ## orient edges
-            inc.to.x <- which(a[,x] == 1 & a[x,] == 1) ## undirected
+            inc.to.x <- which(a[,x] == 1L & a[x,] == 1L) ## undirected
             if (length(inc.to.x) > 0) {
               ## map var.names to col pos in orig adj matrix
-              ## bug: real.inc.to.x <- as.numeric(row.names(a)[inc.to.x])
-              real.inc.to.x <- which(cn2 %in% row.names(a)[inc.to.x])
-              real.x        <- which(cn2 %in% row.names(a)[x])
-              gm2[real.x,real.inc.to.x] <- 1
-              gm2[real.inc.to.x,real.x] <- 0
+              ## bug: real.inc.to.x <- as.numeric(rownames(a)[inc.to.x])
+              real.inc.to.x <- which(cn2 %in% rownames(a)[inc.to.x])
+              real.x        <- which(cn2 %in% rownames(a)[x])
+              gm2[real.x, real.inc.to.x] <- 1L
+              gm2[real.inc.to.x, real.x] <- 0L
             }
             ## remove x and all edges connected to it
             a <- a[-x,-x]
@@ -1456,19 +1444,16 @@ pdag2dag <- function(g, keepVstruct = TRUE) {
           counter <- counter + 1L
         }
       }
-      go.on <- !go.on2
+      go.on <- !not.yet
     }## { while }
 
-    if (go.on2) {
-      graph <- as(amat2dag(gm),"graphNEL")
-      ## warning("PDAG not extendible: Random DAG on skeleton drawn")
-      success <- FALSE
-    } else {
-      graph <- as(t(gm2), "graphNEL")
-      success <- TRUE
-    }
+    graph <- if (not.yet) {
+               ## warning("PDAG not extendible: Random DAG on skeleton drawn")
+               as(amat2dag(gm), "graphNEL")
+             } else ## success :
+               as(t(gm2), "graphNEL")
   }
-  list(graph = graph, success = success)
+  list(graph = graph, success = !not.yet)
 }
 
 udag2pdagSpecial <- function(gInput, verbose = FALSE, n.max = 100) {
@@ -2005,10 +1990,9 @@ Please use ida or idaFast instead\n")
 
       ## estimate beta
       if (length(pa2) == 0) {
-        beta.hat <- lm.cov(mcov,y.pos,c(x.pos,pa1))
-        if (verbose == 2) { cat("Fit - y:",y.pos,"x:",c(x.pos,pa1),
-              "|b.hat=",beta.hat)
-}
+        beta.hat <- lm.cov(mcov, y.pos, c(x.pos,pa1))
+        if (verbose == 2)
+          cat("Fit - y:",y.pos, "x:",c(x.pos,pa1), "|b.hat=", beta.hat)
       } else {
         beta.hat <- NA
         ii <- 1
@@ -2018,9 +2002,8 @@ Please use ida or idaFast instead\n")
         ## check for new collider
         if (!collTest || !has.new.coll(amat,amatSkel,x.pos,pa1,pa2.t,pa2.f)) {
           beta.hat[ii] <- lm.cov(mcov,y.pos,c(x.pos,pa1))
-          if (verbose == 2) { cat("\ny:",y.pos,"x:",c(x.pos,pa1),"|b.hat=",
-                beta.hat[ii])
-}
+          if (verbose == 2)
+            cat("\ny:",y.pos,"x:",c(x.pos,pa1),"|b.hat=", beta.hat[ii])
         }## else {
         ##   cat("\nx:",x.pos," pa1:",pa1," pa2.t:",pa2.t," pa2.f:",pa2.f)
         ## }
@@ -2334,14 +2317,14 @@ allDags <- function(gm,a,tmp, verbose = FALSE)
       if (adj.check(a,x)) {
         inc.to.x <- a[, x] == 1 & a[x, ] == 1
         if (any(inc.to.x)) {
-          real.inc.to.x <- as.numeric(row.names(a)[inc.to.x])
-          real.x <- as.numeric(row.names(a)[x])
+          real.inc.to.x <- as.numeric(rownames(a)[inc.to.x])
+          real.x <- as.numeric(rownames(a)[x])
           gm2[real.x, real.inc.to.x] <- 1
           gm2[real.inc.to.x, real.x] <- 0
         }
         a2 <- a[-x,-x]
         if (verbose) {
-          cat("Removed sink",as.numeric(row.names(a)[x]),
+          cat("Removed sink",as.numeric(rownames(a)[x]),
               "in g (", x,"in a).\n")
           cat("New graphs: \n")
           print(gm2)
@@ -2388,18 +2371,18 @@ pcAlgo.Perfect <- function(C, cutoff = 1e-8, corMethod = "standard", verbose = 0
   diag(G) <- FALSE
 
   done <- FALSE
-  ord <- 0
+  ord <- 0L
   while (!done && any(G)) {
     n.edgetests[ord+1] <- 0
     done <- TRUE
     ind <- which(G, arr.ind = TRUE)
     ## For comparison with C++ sort according to first row
     ind <- ind[order(ind[,1]), ]
-    remainingEdgeTests <- nrow(ind)
+    remEdges <- nrow(ind)
     if(verbose >= 1)
-      cat("Order=",ord,"; remaining edges:",remainingEdgeTests,"\n", sep = '')
-    for (i in 1:remainingEdgeTests) {
-      if(verbose >= 1) { if(i%%100 == 0) cat("|i=",i,"|iMax=",nrow(ind),"\n") }
+      cat("Order=",ord,"; remaining edges:",remEdges,"\n", sep = '')
+    for (i in 1:remEdges) {
+      if(verbose && (verbose >= 2 || i%%100 == 0)) cat("|i=",i,"|iMax=",remEdges,"\n")
       x <- ind[i,1]
       y <- ind[i,2]
       ##      done <- !G[y,x] # i.e. (x,y) was not already deleted in its (y,x) "version"
@@ -2421,13 +2404,13 @@ pcAlgo.Perfect <- function(C, cutoff = 1e-8, corMethod = "standard", verbose = 0
           repeat { ## condition w.r.to all  nbrs[S] of size 'ord' :
             ##  if (condIndFisherZ(x,y, nbrs[S], C,n, cutoff,verbose)) {
             ## MM: want to use this: --- but it changes the result in some cases!!
-            ##            cat("X=",x,"|Y=",y,"|ord=",ord,"|nbrs=",nbrs[S],"|iMax=",nrow(ind),"\n")
+            ##            cat("X=",x,"|Y=",y,"|ord=",ord,"|nbrs=",nbrs[S],"|iMax=",remEdges,"\n")
             n.edgetests[ord+1] <- n.edgetests[ord+1]+1
             pc.val <- pcorOrder(x,y,nbrs[S],C)
             if (abs(pc.val) < pcMin[x,y]) pcMin[x,y] <- abs(pc.val)
-            if (verbose == 2) cat(paste("x:",x,"y:",y,"S:"),nbrs[S],paste("pc:",pc.val,"\n"))
+            if (verbose >= 2) cat(paste("x:",x,"y:",y,"S:"),nbrs[S],paste("pc:",pc.val,"\n"))
             if (abs(pc.val) <= cutoff) {
-              ##              ##  pnorm(abs(z), lower.tail = FALSE) is the P-value
+              ##              ##  pnorm(abs(z), lower.tail = FALSE) is the p-value
               G[x,y] <- G[y,x] <- FALSE
               sepset[[x]][[y]] <- nbrs[S]
               break
@@ -2443,8 +2426,8 @@ pcAlgo.Perfect <- function(C, cutoff = 1e-8, corMethod = "standard", verbose = 0
         } } ## end if(!done)
 
     } ## end for(i ..)
-    ord <- ord+1
-    ##    n.edgetests[ord] <- remainingEdgeTests
+    ord <- ord+1L
+    ##    n.edgetests[ord] <- remEdges
   }
 
   if (psepset) {
@@ -2725,7 +2708,7 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
       vector("list", p - length(res$sepset[[i]])))) # TODO change convention: make sepset triangular
     pMax <- res$pMax
     n.edgetests <- res$n.edgetests
-    ord <- length(n.edgetests) - 1
+    ord <- length(n.edgetests) - 1L
   }
   else {
     ## Original R version
@@ -2736,7 +2719,7 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
     pMax <- matrix(-Inf, nrow = p, ncol = p)
     diag(pMax) <- 1
     done <- FALSE
-    ord <- 0
+    ord <- 0L
     n.edgetests <- numeric(1)# final length = max { ord}
     while (!done && any(G) && ord <= m.max) {
       n.edgetests[ord1 <- ord+1L] <- 0
@@ -2744,16 +2727,16 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
       ind <- which(G, arr.ind = TRUE)
       ## For comparison with C++ sort according to first row
       ind <- ind[order(ind[, 1]), ]
-      remainingEdgeTests <- nrow(ind)
+      remEdges <- nrow(ind)
       if (verbose)
-        cat("Order=", ord, "; remaining edges:", remainingEdgeTests,"\n",sep = "")
+        cat("Order=", ord, "; remaining edges:", remEdges,"\n",sep = "")
       if(method == "stable") {
         ## Order-independent version: Compute the adjacency sets for any vertex
         ## Then don't update when edges are deleted
         G.l <- split(G, gl(p,p))
       }
-      for (i in 1:remainingEdgeTests) {
-        if (verbose && i%%100 == 0) cat("|i=", i, "|iMax=", nrow(ind), "\n")
+      for (i in 1:remEdges) {
+        if(verbose && (verbose >= 2 || i%%100 == 0)) cat("|i=", i, "|iMax=", remEdges, "\n")
         x <- ind[i, 1]
         y <- ind[i, 2]
         if (G[y, x] && !fixedEdges[y, x]) {
@@ -2789,7 +2772,7 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
           }
         }
       }# for( i )
-      ord <- ord + 1
+      ord <- ord + 1L
     } ## while()
     for (i in 1:(p - 1)) {
       for (j in 2:p)
@@ -3545,8 +3528,8 @@ dsep <- function(a,b, S = NULL, g, john.pairs = NULL)
   for (i in seq_len(nrow(ind))) {
     ## input is guaranteed to be directed
     x <- ind[i,1]
-    y <- ind[i,2] ## x->y
-    allZ <- setdiff(which(amat[y,] == 0 & amat[,y] == 1), x) ## x->y<-z
+    y <- ind[i,2] ## x -> y
+    allZ <- setdiff(which(amat[y,] == 0 & amat[,y] == 1), x) ## x -> y <- z
     for (z in allZ)
       if (amat[x,z] == 0 && amat[z,x] == 0)
         amatM[x,z] <- 1 ## moralize
@@ -3568,7 +3551,7 @@ dsep <- function(a,b, S = NULL, g, john.pairs = NULL)
 dsepTest <- function(x,y, S = NULL, suffStat) {
   ## suffStat$ g: True graph (graphNEL suffStatect)
   ## suffStat$jp: johnson all pairs
-  ## Returns "P-value" P =
+  ## Returns "p-value" P =
   ##	0: keep edge / d-connected
   ##    1: drop edge / d-separated
 
@@ -3588,7 +3571,7 @@ disCItest <- function(x,y,S,suffStat) {
   else stopifnot(is.matrix(dm))
   nlev <- suffStat$nlev
   adaptDF <- suffStat$adaptDF
-  ## P-value:
+  ## p-value:
   gSquareDis(x = x, y = y, S = S, dm = dm, nlev = nlev, adaptDF = adaptDF,
              verbose = FALSE)
 }
@@ -3597,7 +3580,7 @@ binCItest <- function(x,y,S,suffStat) {
   if(is.data.frame(dm <- suffStat$dm)) dm <- data.matrix(dm)
   else stopifnot(is.matrix(dm))
   adaptDF <- suffStat$adaptDF
-  ## P-value:
+  ## p-value:
   gSquareBin(x = x, y = y, S = S, dm = dm, adaptDF = adaptDF, verbose = FALSE)
 }
 
@@ -4731,7 +4714,7 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = In
 
   G <- (as(skel, "matrix") != 0)
   n.edgetests <- rep(0, 1000)
-  ord <- 0
+  ord <- 0L
   allPdsep.tmp <- vector("list", p)
   if(biCC)
     conn.comp <- lapply(biConnComp(skel), as.numeric)
@@ -4800,9 +4783,9 @@ pdsep <- function (skel, suffStat, indepTest, p, sepset, alpha, pMax, m.max = In
                   ". Break the search for the edge between", x,"and",y,"\n")
           } else if (length(diff.set) > 0) {
             done <- FALSE
-            ord <- 0
+            ord <- 0L
             while (!done && ord < min(length(tf), m.max)) {
-              ord <- ord + 1
+              ord <- ord + 1L
               if(verbose) cat("ord = ", ord, "\n")
               if (ord == 1) {
                 for (S in diff.set) {
@@ -5661,9 +5644,9 @@ dep.triple <- function(suffStat, indepTest, alpha, sepset, apag,
           del1 <- TRUE
           ## x and y are independent, then find the minimal sepset
           done <- FALSE
-          ord <- 0
+          ord <- 0L
           while (!done && ord < nSep) {
-            ord <- ord + 1
+            ord <- ord + 1L
             ## all combinations of SepSet of size ord
             S.j <- if (ord == 1 && nSep == 1) matrix(SepSet,1,1) else combn(SepSet, ord)
             for (i in seq_len(ncol(S.j))) {
@@ -5724,9 +5707,9 @@ dep.triple <- function(suffStat, indepTest, alpha, sepset, apag,
           del2 <- TRUE ## will have to set this triple as FALSE in trueVstruct
           ## z and y are independent, then find the minimal sepset
           Done <- FALSE
-          Ord <- 0
+          Ord <- 0L
           while (!Done && Ord < nSep) {
-            Ord <- Ord + 1
+            Ord <- Ord + 1L
             ## all combinations of SepSet of size Ord
             S.j <- if (Ord == 1 && nSep == 1) matrix(SepSet,1,1) else combn(SepSet, Ord)
             for (i in seq_len(ncol(S.j))) {
@@ -6783,7 +6766,7 @@ pag2magAM <- function(amat.pag, x, max.chordal = 10, verbose = FALSE)
   for (i in seq_len(nrow(indA))) {
       a <- indA[i, 1]
       b <- indA[i, 2]
-      amat.pag[b,a] <- 3
+      amat.pag[b,a] <- 3L
   }
   ## because we don't allow selection variables in the generalized backdoor
   ## criterion these kind of edges should not be present BUT YOU NEVER KNOW...
@@ -6792,7 +6775,7 @@ pag2magAM <- function(amat.pag, x, max.chordal = 10, verbose = FALSE)
   for (i in seq_len(nrow(indB))) {
       a <- indB[i, 1]
       b <- indB[i, 2]
-      amat.pag[b,a] <- 2
+      amat.pag[b,a] <- 2L
   }
   ## 2.step: find all the chordal components in the updated graph
   ## find the adjacency matrix that contains
@@ -6800,15 +6783,15 @@ pag2magAM <- function(amat.pag, x, max.chordal = 10, verbose = FALSE)
   amat.t <- amat.pag + t(amat.pag)
   ## we are interested only in the o-o edges
   ## delete all the other edges
-  amat.undir[amat.t != 2] <- 0
-  amat.dir  [amat.t == 2] <- 0
+  amat.undir[amat.t != 2] <- 0L
+  amat.dir  [amat.t == 2] <- 0L
   g.undir <- as(amat.undir,"graphNEL")
 
   ## Get all connected components [maybe should rather keep labels ??]
   conn.comp <- lapply(connectedComp(g.undir), as.numeric)
 
   if(verbose) {
-      lc <- vapply(conn.comp, length, 1)
+      lc <- vapply(conn.comp, length, 1L)
       t2 <- if(any(lc == 1)) gettextf(" and %d singletons", sum(lc == 1)) else ""
       cat(gettextf("The undirected graph has %d connected components%s",
                    sum(lc > 1), t2),"\n")
@@ -6816,8 +6799,7 @@ pag2magAM <- function(amat.pag, x, max.chordal = 10, verbose = FALSE)
   valid.DAG.mat <- amat.undir
 
   ## get all semilocal extensions of the undirected cpdag
-  for (i in seq_along(conn.comp)) {
-    if (length(cci <- conn.comp[[i]]) > 1) {
+  for (cci in conn.comp) if (length(cci) > 1) {
       if(length(cci) > max.chordal) return(NULL)
       ## check whether the component is chordal
       am.u.ii <- amat.undir[cci,cci]
@@ -6825,19 +6807,18 @@ pag2magAM <- function(amat.pag, x, max.chordal = 10, verbose = FALSE)
 		     fillin = TRUE)$chordal)
         return(NULL)
       ## else: not extendable or too large to handle
-      output <- my.SpecialDag(amat.undir, am.u.ii, NULL, x, verbose = verbose)
-      valid.DAG.mat <- valid.DAG.mat*output
-    }
-  } # end for
+      am. <- my.SpecialDag(amat.undir, a=am.u.ii, X=x, verbose=verbose)
+      valid.DAG.mat <- valid.DAG.mat * am.
+    } # if() ..end for
 
   ## add directed edges and return "valid.DAG.mat":
   valid.DAG.mat + amat.dir
 
 } ## {pag2magAM}
 
-my.SpecialDag <- function (gm, a, tmp, X, verbose = FALSE)
+##' Auxiliary for  pag2magAM()
+my.SpecialDag <- function (gm, a, X, verbose = FALSE)
 {
-    gm2 <- gm
     while (sum(a) != 0 ) {
         sinks <- find.sink(a)
         if (verbose) {
@@ -6849,19 +6830,19 @@ my.SpecialDag <- function (gm, a, tmp, X, verbose = FALSE)
         for (x in sinks) {
             if (verbose)
                 cat("Try removing", x, " in a.\n")
-            if (adj.check(a, x) & as.numeric(row.names(a)[x]) != X) {
+            if (adj.check(a, x) & as.numeric(rownames(a)[x]) != X) {
                 inc.to.x <- a[, x] == 1 & a[x, ] == 1
                 if (any(inc.to.x)) {
-                    real.inc.to.x <- as.numeric(row.names(a)[inc.to.x])
-                    real.x <- as.numeric(row.names(a)[x])
-                    gm2[real.x, real.inc.to.x] <- 3
-                    gm2[real.inc.to.x, real.x] <- 2
+                    real.inc.to.x <- as.numeric(rownames(a)[inc.to.x])
+                    real.x        <- as.numeric(rownames(a)[x])
+                    gm[real.x, real.inc.to.x] <- 3
+                    gm[real.inc.to.x, real.x] <- 2
                 }
                 if (verbose) {
-                    cat("Removed sink", as.numeric(row.names(a)[x]),
+                    cat("Removed sink", as.numeric(rownames(a)[x]),
                         "in g (", x, "in a).\n")
                     cat("New graphs: \n")
-                    print(gm2)
+                    print(gm)
                     print(a)
                 }
                 a <- a[-x, -x]
@@ -6869,7 +6850,7 @@ my.SpecialDag <- function (gm, a, tmp, X, verbose = FALSE)
             }
         }
     }
-    gm2
+    gm
 } ## {my.SpecialDag}
 
 
@@ -7008,54 +6989,58 @@ trafoCPDmat <- function(M)
 ## vector[i] = position of the node i in the subgraph (if the node is not in
 ## the subgraph vector[i]=0)
 ## m is the adjacency matrix of the full graph
-ancestors <- function(x,m,vector)
+###___ CURRENTLY UNUSED ___,  instead  NAA_ancestors() below
+NAAancestors.1 <- function(x, m, vector)
 {
   ## q denotes unvisited nodes/ nodes in queue
   ## v denotes visited nodes
-  q <- v <- rep(0,length(m[,1]))
-  i <- k <-  1
-  q[i] <- x
-  tmp <- m
-
-  while(q[k] != 0 & k <= i)
+  p <- nrow(m)
+  q <- v <- integer(p) # all 0
+  q[1L] <- x
+  i <- k <- 1L
+  while(k <= i && q[k] != 0)
   {
     t <- q[k]
     ## mark t as visited
     v[k] <- t
-    k <- k+1
+    k <- k+1L
     ## in this for cycle adds all nodes that have an undirected
     ## edge with node t and all parents of node t to queue
-    for(j in 1:length(tmp[1,]))
-      if ((tmp[j,t] == 2 & tmp[t,j] == 3 ) )
+    for(j in 1:p)
+      if (m[j,t] == 2 && m[t,j] == 3)
         ## only add nodes that haven't been added
-        if (!(j %in% q) & vector[j] != 0)
+        if (vector[j] != 0 && j %nin% q)
         {
-          i <- i+1
+          i <- i+1L
           q[i] <- j
         }
   }
-  Anc <- setdiff(v,c(0,x))   # Not Against Arrow Ancestors
+  ## Not Against Arrow Ancestors
 
   ## If node a is in NAAA that means that there is a not against arrowhead path
-  ## from a to x and therefore the function returns TRUE, otherwise it returns FALSE
-  return(Anc)
-
+  ## from a to x
+  setdiff(v, c(0L,x))
 }
 
-## small function that finds the "not against arrowhead ancestors" of the node x
-## using the adjacency matrix m, and the breadth first search
-##"not against arrowhead ancestors" are all the nodes u in G+ that
-## have a path u.. -> x in G+ that doesn't go against arrowhead
-not_against_arrowhead <- function(x, m)
+##' Finds the "not against arrowhead ancestors" of the node x in G+
+##' using the adjacency matrix m of G+, and breadth first search.
+##' "Not Against Arrowhead Ancestors" (NAAA) are all the nodes u in G+ that
+##' have a path u.. -> x in G+  which doesn't go against arrowhead
+##'
+##' Currently only used as auxiliary for  PosDsepLinks()
+##'
+##' @title Find "Not Against Arrowhead" Ancestors (NAAA)
+##' @param x scalar integer in 1..p, denoting a node in graph G+
+##' @param m p x p adjacency matrix of graph G+
+##' @return a (possibly empty) vector of integers, the NAAA nodes of x in G+
+NAA_ancestors <- function(x, m)
 {
   ## q denotes unvisited nodes/ nodes in queue
   ## v denotes visited nodes
-  n <- nrow(m)
   p <- ncol(m); i.p <- 1:p
-  q <- v <- integer(n)
+  q <- v <- integer(p) # all 0
+  q[1L] <- x
   i <- k <- 1L
-  q[i] <- x
-
   while(k <= i && q[k] != 0) {
     t <- q[k]
     ## mark t as visited
@@ -7067,14 +7052,13 @@ not_against_arrowhead <- function(x, m)
       if ((t == x && m[j,t] == 2 && m[t,j] == 1) ||
           (t != x && m[t,j] != 2 && m[t,j] != 0))
         ## only add nodes that haven't been added
-        if (!(j %in% q)) {
+        if (j %nin% q) {
           i <- i+1L
           q[i] <- j
         }
   }
-  ## return Not Against Arrow Ancestors (NAAA)
-  ## If node a is in NAAA that means that there is a not against arrowhead path from a to x
-  ##
+  ## return  Not Against Arrow Ancestors (NAAA):
+  ## A node a is in NAAA iff there is a "not against arrowhead" path from a to x
   setdiff(v, c(0L,x))
 }
 
@@ -7097,7 +7081,7 @@ PosDsepLinks <- function(m, verbose=TRUE)
   ## for all pairs  1 <= j < i <= p
   for(i in i.p[-1L]) {
     ## nodes that have a  "not against arrowhead" path to i :
-    NAAA[[i]] <- NAAA_i <- not_against_arrowhead(i, m)
+    NAAA[[i]] <- NAAA_i <- NAA_ancestors(i, m)
     for (j in 1:i)
       ## first find a bidirected i <-> j edge in G+
       if (m[i,j] == 2 && m[j,i] == 2) {
@@ -7129,7 +7113,7 @@ PosDsepLinks <- function(m, verbose=TRUE)
             break
         }
 
-        ## found.i.j is only true if we found a pair of nodes that fulfills all 3 conditions.
+        ## found.i.j is true iff we found a pair of nodes fulfilling all 3 conditions.
         ## In that case, the node pair (i,j)  is added to the  PosDsepLinks set:
         if (found.i.j) {
           if(verbose) cat(sprintf("Added PosDsepLink  %2d *-* %2d\n", i,j))
