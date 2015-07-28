@@ -19,10 +19,7 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset,
           rules = rep(TRUE, 10), unfVect = NULL, verbose = FALSE)
 }
 \arguments{
-  \item{apag}{Adjacency matrix of the pcAlgo-object of size p*p where
-    the v-structures have already been oriented (coding 0,1,2,3 for no
-  edge, circle, arrowhead, tail; e.g., \code{amat[a,b] = 2} and
-  \code{amat[b,a] = 3} implies a -> b).}
+  \item{apag}{Adjacency matrix of type \link{amat.pag}}
   \item{suffStat}{Sufficient statistics: A \code{\link{list}} containing
     all necessary elements for the conditional independence decisions in the
     function \code{indepTest}.}
@@ -41,7 +38,9 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset,
   \item{sepset}{List of length p; each element of the list
     contains another list of length p.  The element
     \code{sepset[[x]][[y]]} contains the separation set that made the edge
-    between \code{x} and \code{y} drop out.  This object is thought to be
+    between \code{x} and \code{y} drop out. Each separation set is a
+    vector with (integer) positions of variables in the adjacency
+    matrix.  This object is thought to be
     obtained from a \code{pcAlgo}-object.}
   \item{rules}{Logical vector of length 10 with \code{TRUE} or \code{FALSE} for
     each rule, where \code{TRUE} in position i means that rule i (Ri) will be
@@ -85,10 +84,7 @@ udag2apag(apag, suffStat, indepTest, alpha, sepset,
   the application of the orientation rules, see Colombo and Maathuis (2013).
 }
 \value{
-  \item{apag}{Final adjacency matrix (coding 0,1,2,3 for no edge,
-  circle, arrowhead, tail; e.g., \code{amat[a,b] = 2} and
-  \code{amat[b,a] = 3} implies a -> b)}
-
+  \item{apag}{Final adjacency matrix of type \link{amat.pag}}
   \item{sepset}{Updated list of separating sets}
 }
 \references{

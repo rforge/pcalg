@@ -34,6 +34,9 @@ extract.parent.sets <- function(x.pos, amat.cpdag, isCPDAG = FALSE) {
 
   ## Function for getting locally valid parent sets
   all.locally.valid.parents.undir <- function(amat,x) { # x must be a scaler
+    ## by the call amat is guaranteed to have integer rownames
+    ## that are meaningful
+    ## See row: rownames(conn.comp.mat) <- all.nodes
     amat.V <- as.integer(rownames(amat))
     pa.dir <- pasets.dir[[x.pos == amat.V[x]]]
     paset <- list(pa.dir)

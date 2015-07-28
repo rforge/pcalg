@@ -20,10 +20,7 @@
     node in the adjacency matrix.} 
   \item{y}{Second argument of D-SEP, given as the column number of the
     node in the adjacency matrix (\code{y} must be different from \code{x}).} 
-  \item{amat}{Adjacency matrix (coding 0,1,2,3 for no edge, circle,
-  arrowhead, tail; e.g., \code{amat[a,b] = 2} and \code{amat[b,a] = 3}
-  implies a -> b) 
-  }
+  \item{amat}{Adjacency matrix of type \link{amat.pag}.}
   \item{verbose}{Logical specifying details should be on output}
 }
 \value{

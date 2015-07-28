@@ -21,7 +21,7 @@ pc(suffStat, indepTest, alpha, labels, p,
     \code{indepTest(x,y,S,suffStat)}, and tests conditional independence
     of \code{x} and \code{y} given \code{S}.  Here, \code{x} and
     \code{y} are variables, and \code{S} is a (possibly empty) vector of
-    variables (all variables are denoted by their column numbers
+    variables (all variables are denoted by their (integer) column positions
     in the adjacency matrix).  \code{suffStat} is a list, see the
     argument above.  The return value of \code{indepTest} is the p-value
     of the test for conditional independence.}

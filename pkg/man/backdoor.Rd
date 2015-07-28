@@ -13,13 +13,15 @@
 backdoor(amat, x, y, type = "pag", max.chordal = 10, verbose=FALSE)
 }
 \arguments{
-  \item{amat}{adjacency matrix (see Details for coding) of the given
-    graph specified in \code{type}.}
-  \item{x,y}{(integer) position of variable \code{x} or \code{y} in the
-    adjacency matrix.}
+  \item{amat}{adjacency matrix of type \link{amat.cpdag} or \link{amat.pag}}
+  \item{x,y}{(integer) position of variable \eqn{X} and \eqn{Y},
+    respectively, in the adjacency matrix.}
   \item{type}{string specifying the type of graph of the adjacency matrix
-    \code{amat}.  It can be a DAG (type="dag"), a CPDAG (type="cpdag"), a
-    MAG (type="mag"), or a PAG (type="pag").}
+    \code{amat}.  It can be a DAG (type="dag"), a CPDAG (type="cpdag");
+    then the type of the adjacency matrix is assumed to be
+    \link{amat.cpdag}. It can also be a MAG (type="mag"), or a PAG
+    (type="pag"); then the type of the adjacency matrix is assumed to be
+  \link{amat.pag}.}
   \item{max.chordal}{only if \code{type = "mag"}, is used in
     \code{\link{pag2magAM}} to determine paths too large to be checked
     for chordality.}
@@ -71,12 +73,7 @@ backdoor(amat, x, y, type = "pag", max.chordal = 10, verbose=FALSE)
   backdoor criterion, but the total causal effect might be identifiable
   via some other technique.
 
-  Coding of adjacency matrix:
-  If \code{type = dag} or \code{type = cpdag}: coding 0/1 for no edge
-  or tail / arrowhead; e.g. \code{amat[a,b] = 0} and \code{amat[b,a] =
-    1} implies a -> b.
-  Else: coding 0,1,2,3 for no edge, circle, arrowhead, tail; e.g.,
-  \code{amat[a,b] = 2} and \code{amat[b,a] = 3} implies a -> b.
+  For the coding of the adjacency matrix see \link{amatType}.
 }
 \value{
   Either NA if the total causal effect is not identifiable via the

@@ -2,6 +2,8 @@
 \alias{showAmat}
 \title{Show Adjacency Matrix of pcAlgo object}
 \description{
+  !!! This function is deprecated - Use \code{\link{displayAmat}}
+  instead !!!
   Show the  adjacency matrix of a \code{"pcAlgo"} object; this is
   intended to be an alternative if the \pkg{Rgraphviz} package does not work.
 }

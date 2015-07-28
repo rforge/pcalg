@@ -140,7 +140,8 @@ export(trueCov,
        randDAG,
        unifDAG,
        unifDAG.approx,
-       gac)
+       gac,
+       displayAmat)
 
 ## These are "internal" i.e., in man/pcalg-internal.Rd
 ## _FIXME ?_                     ---------------------

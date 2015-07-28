@@ -918,6 +918,7 @@ adj.check <- function(gm,x) {
 amat2dag <- function(amat) {
   ## Purpose: Transform the adjacency matrix of an PDAG to the adjacency
   ## matrix of a SOME DAG in the equiv. class
+  ## Used in pdag2dag if extension is not possible
   ## ----------------------------------------------------------------------
   ## Arguments:
   ## - amat: adjacency matrix; x -> y if amat[x,y]=1,amat[y,x]=0
@@ -1149,6 +1150,7 @@ pcAlgo <- function(dm = NA, C = NA, n = NA, alpha, corMethod = "standard",
                    verbose = FALSE, directed = FALSE,
                    G = NULL, datatype = 'continuous', NAdelete = TRUE,
                    m.max = Inf, u2pd = "rand", psepset = FALSE) {
+  ## !!! DEPRECATED !!!
   ## Purpose: Perform PC-Algorithm, i.e., estimate skeleton of DAG given data
   ## Output is an unoriented graph object
   ## ----------------------------------------------------------------------
@@ -3498,7 +3500,7 @@ dsep <- function(a,b, S = NULL, g, john.pairs = NULL)
   ## Author: Markus Kalisch
 
   ## Check that g is a DAG
-  amatTmp <- wgtMatrix(g)
+  amatTmp <- wgtMatrix(g) ## i->j if amatTmp[j,i]!=0
   amatTmp[amatTmp != 0] <- 1
   if (max(amatTmp+t(amatTmp)) > 1) stop("dsep: Undirected edge in input graph!")
   p <- numNodes(g)
@@ -3516,6 +3518,9 @@ dsep <- function(a,b, S = NULL, g, john.pairs = NULL)
   gS <- subGraph(anc.set,g)
 
   ## Moralize in amatM
+  ## !!! in the following line:
+  ## i->j if amat[i,j], i.e. different than default coding !!!
+  ## (*)
   amat <- wgtMatrix(gS, transpose = FALSE)
   if(all(a0 <- amat == 0))
     ## if no edge in graph, nodes are d-separated
@@ -3529,6 +3534,7 @@ dsep <- function(a,b, S = NULL, g, john.pairs = NULL)
     ## input is guaranteed to be directed
     x <- ind[i,1]
     y <- ind[i,2] ## x -> y
+    ## using different coding, see (*) -> OK
     allZ <- setdiff(which(amat[y,] == 0 & amat[,y] == 1), x) ## x -> y <- z
     for (z in allZ)
       if (amat[x,z] == 0 && amat[z,x] == 0)
@@ -6554,6 +6560,7 @@ showEdgeList <- function(object, labels = NULL)
 }
 
 showAmat <- function(object) {
+    .Deprecated(msg = "showAmat() is deprecated and only kept for backward compatibility. Please use displayAmat() instead\n")
   g <- getGraph(object)
   cat("\nAdjacency Matrix G:",
       "G[i,j] = 1/2 if edge mark of edge i-j at j is head/tail.",
@@ -6610,7 +6617,7 @@ possibleDe <- function(amat,x)
     ##          possible descendants of x on definite status paths
     ## ----------------------------------------------------------------------
     ## Arguments:
-    ## - amat: matrix corresponding to the DAG, CPDAG, MAG, or PAG
+    ## - amat: adjacency matrix of type amat.pag
     ## - x: node of interest
     ## ----------------------------------------------------------------------
     ## Value:
@@ -7402,6 +7409,24 @@ fciPlus <- function(suffStat, indepTest, alpha, labels, p, verbose=TRUE)
       sepset = list(), pMax = matrix(0,1,1), allPdsep = list())
 }
 
+displayAmat <- function(obj) {
+    ## Convert object of class 'fciAlgo' or 'pcAlgo' to
+    ## corresponding adjacency matrix of type 'amat.pag'
+    ## or 'amat.cpdag'
+    co <- class(obj)
+    if (co == "fciAlgo") {
+        amat <- obj@amat
+        type <- "amat.pag"
+    } else {
+        if (co == "pcAlgo") {
+            type <- "amat.cpdag"
+            amat <- wgtMatrix(obj@graph)
+        } else {
+            stop("showAmat: Class of input is not supported.")
+        }
+    }
+    list(amat = amat, type = type)
+}
 ###  MM: (ess-set-style 'DEFAULT) : we have much nesting ==> only indent by 2
 ## Local Variables:
 ## eval: (ess-set-style 'DEFAULT 'quiet)

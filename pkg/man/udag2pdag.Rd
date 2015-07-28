@@ -153,12 +153,10 @@ udag2pdagSpecial(gInput, verbose, n.max=100)
 	\item{xtbl}{Logical indicating whether the final graph with
 	  v-structures is extendable}
 	\item{amat0}{Adjacency matrix of original graph with
-	  v-structures (coding 0/1 for no edge or tail / arrowhead;
-	  e.g. \code{amat[a,b] = 0} and \code{amat[b,a] = 1} implies a -> b) .}
+	  v-structures (type \link{amat.cpdag}) .}
 	\item{amat1}{Adjacency matrix of final graph with v-structures
 	  after changing the ordering in which the v-structures are
-	  considered (coding 0/1 for no edge or tail / arrowhead;
-	  e.g. \code{amat[a,b] = 0} and \code{amat[b,a] = 1} implies a -> b) .}
+	  considered (type \link{amat.cpdag}) .}
 	\item{status}{Integer code with values \describe{
 	    \item{0:}{Original try is extendable;}
 	    \item{1:}{Reorienting double edge visits helps;}

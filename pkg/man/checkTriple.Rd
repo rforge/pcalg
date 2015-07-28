@@ -15,7 +15,8 @@ checkTriple(a, b, c, nbrsA, nbrsC,
 \arguments{
   \item{a, b, c}{(integer) positions in adjacency matrix for nodes
     \eqn{a}, \eqn{b}, and \eqn{c}, respectively.}
-  \item{nbrsA, nbrsC}{neighbors of \eqn{a} and \eqn{c}, respectively.}
+  \item{nbrsA, nbrsC}{(integer) position in adjacency matrix for
+    neighbors of \eqn{a} and \eqn{c}, respectively.} 
   \item{sepsetA}{vector containing \eqn{Sepset(a,c)}.}
   \item{sepsetC}{vector containing \eqn{Sepset(c,a)}.}
   \item{suffStat}{a \code{\link{list}} of sufficient statistics for

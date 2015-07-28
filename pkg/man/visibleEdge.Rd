@@ -10,14 +10,9 @@ Check if the directed edge from x to z in a MAG or in a PAG is visible or not.
 visibleEdge(amat, x, z)
 }
 \arguments{
-  \item{amat}{Adjacency matrix (coding 0,1,2,3 for no edge, circle,
-    arrowhead, tail; e.g., \code{amat[a,b] = 2} and \code{amat[b,a] = 3}
-    implies a -> b).
-}
-  \item{x}{Node x.
-}
-  \item{z}{Node z.
-}
+  \item{amat}{Adjacency matrix of type \link{amat.pag}}
+  \item{x,z}{(integer) position of variable \eqn{x} and \eqn{z},
+    respectively, in the adjacency matrix.}
 }
 \details{
 All directed edges in DAGs and CPDAGs are said to be visible. Given a
