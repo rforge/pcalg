@@ -12,7 +12,7 @@
   \code{\link{fci}}.
 }
 \usage{
-gSquareBin(x, y, S, dm, adaptDF = FALSE, verbose = FALSE)
+gSquareBin(x, y, S, dm, adaptDF = FALSE, n.min = 10*df, verbose = FALSE)
 binCItest (x, y, S, suffStat)
 }
 \arguments{
@@ -24,10 +24,17 @@ binCItest (x, y, S, suffStat)
   \item{adaptDF}{logical specifying if the degrees of freedom should be
     lowered by one for each zero count.  The value for the degrees of
     freedom cannot go below 1.}
+  \item{n.min}{the smallest \eqn{n} (number of observations,
+    \code{nrow(dm)}) for which the G^2 test is computed; for smaller
+    \eqn{n}, independence is assumed (\eqn{G^2 := 1}) with a warning.  The
+    default is \eqn{10 m}, where \eqn{m} is the degrees of freedom
+    assuming no structural zeros, \eqn{2^{|S|}}{2^|S|}.}
+  \item{verbose}{logical or integer indicating that increased diagnostic output is to
+    be provided.}
+
   \item{suffStat}{a \code{\link{list}} with two elements,
     \code{"dm"}, and \code{"adaptDF"} corresponding to the above two
     arguments of \code{gSquareBin()}.}
-  \item{verbose}{logical indicating if detailed output is to be provided.}
 }
 \value{
   The p-value of the test.
@@ -89,7 +96,7 @@ dat <- cbind(x1,x2,x3)
 gSquareBin(3,1,NULL,dat, verbose=TRUE)
 gSquareBin(3,1, 2,  dat)
 gSquareBin(1,3, 2,  dat) # the same
-gSquareBin(1,3, 2,  dat, adaptDF=TRUE)
+gSquareBin(1,3, 2,  dat, adaptDF=TRUE, verbose = 2)
 \dontshow{%% NB: more in --->>  ../tests/test_gSquareBin.R
 stopifnot(all.equal(gSquareBin(3,1, 2, dat),
                     gSquareBin(1,3, 2, dat)),

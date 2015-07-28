@@ -2,9 +2,14 @@ useDynLib(pcalg)
 
 ###----- Imports ------------------------------------------------------
 
-importFrom("utils", str)# for all the help examples
+importFrom("stats", cor, cor.test, cov, cov2cor,
+           fisher.test, pchisq, pnorm, qnorm,
+           rbinom, rcauchy, rnorm, rt, runif,
+           sd, setNames, symnum, uniroot)
 
-importFrom("graphics", plot.default, plot)
+importFrom("utils", combn, str)
+
+importFrom("graphics", par, plot.default, plot, title)
 
 ## try to import all we need, but not more
 importFrom("methods",
@@ -26,8 +31,8 @@ importFrom("robustbase",
 	   )
 
 importFrom("graph",
-		reverseEdgeDirections,
-		edgeRenderInfo, "edgeRenderInfo<-")
+           reverseEdgeDirections,
+           edgeRenderInfo, "edgeRenderInfo<-")
 importClassesFrom("graph", graph, graphAM, graphNEL)
 importMethodsFrom("graph",
 		  ## addEdge,
@@ -40,7 +45,9 @@ importMethodsFrom("graph",
 		  subGraph, ugraph)
 
 importFrom("igraph", graph.adjacency, igraph.from.graphNEL, is.chordal,
-	   plot.igraph, graph.dfs)
+	   plot.igraph, graph.dfs, k.regular.game, get.adjacency,
+           watts.strogatz.game, simplify, bipartite.random.game,
+           barabasi.game, interconnected.islands.game, degree.sequence.game)
 
 importFrom("RBGL",
 	   biConnComp, johnson.all.pairs.sp, separates, bfs, connectedComp)
@@ -52,8 +59,11 @@ importFrom("Rcpp", evalCpp) # Needed for any package relying on Rcpp headers...
 
 importFrom("bdsmatrix", gchol) ## for jointIda ("MCD")
 
-importFrom("sfsmisc", digitsBase)
+importFrom("sfsmisc", digitsBase, is.whole)
 
+importFrom("fastICA", fastICA)
+importFrom("clue", solve_LSAP)
+importFrom("gmp", as.bigz, chooseZ, as.bigq)
 ###----- Exports ------------------------------------------------------
 
 export(getGraph)# our S4 generic including methods
@@ -125,7 +135,12 @@ export(trueCov,
        targets2mat,
        dag2essgraph,
        ## --- end{Alain}
-       fciPlus)
+       fciPlus,
+       LINGAM,
+       randDAG,
+       unifDAG,
+       unifDAG.approx,
+       gac)
 
 ## These are "internal" i.e., in man/pcalg-internal.Rd
 ## _FIXME ?_                     ---------------------
@@ -158,4 +173,7 @@ exportClasses("pcAlgo",
               "GaussL0penObsScore",
               "EssGraph")
 
-exportMethods("summary","show","plot")
+exportMethods("summary", "show", "plot")
+
+S3method(print, fciAlgo)
+
