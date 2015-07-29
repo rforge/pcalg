@@ -1,8 +1,8 @@
 \name{amatType}
+\title{Types of Adjacency Matrices in Package 'pcalg'}
 \alias{amatType}
 \alias{amat.cpdag}
 \alias{amat.pag}
-\title{Types of Adjacency Matrices}
 \description{
   Two types of adjacency matrices are used in package \pkg{pcalg}: Type
   \code{amat.cpdag} for DAGs and CPDAGs and type \code{amat.pag} for
@@ -13,23 +13,25 @@
   separate argument (see e.g. \code{\link{gac}} and the examples below).
 }
 \details{
-  Adjacency matrices are square integer matrices with zeros on the
+  Adjacency matrices are integer valued square matrices with zeros on the
   diagonal. They can have row- and columnnames; however, most functions
   will work on the (integer) column positions in the adjacency matrix.
-  \cr
-  Coding for type \code{amat.cpdag}:
-  Coding 0: No edge or tail
-  Coding 1: Arrowhead
+
+  \bold{Coding for type \code{amat.cpdag}:}
+  \describe{
+    \item{\code{0}:}{No edge or tail}
+    \item{\code{1}:}{Arrowhead}
+  }
   Note that the edgemark-code refers to the \emph{row}index (as opposed adjacency
-  matrices of type mag or pag).  
-  E.g.:
+  matrices of type mag or pag).
+  E.g.:\preformatted{%
   \code{amat[a,b] = 0} and \code{amat[b,a] = 1} implies a --> b.
   \code{amat[a,b] = 1} and \code{amat[b,a] = 0} implies a <-- b.
   \code{amat[a,b] = 0} and \code{amat[b,a] = 0} implies a     b.
   \code{amat[a,b] = 1} and \code{amat[b,a] = 1} implies a --- b.
-  
-  \cr
-  Coding for type \code{amat.pag}:
+}
+
+  \bold{Coding for type \code{amat.pag}:}\cr
   Coding 0: No edge
   Coding 1: Circle
   Coding 2: Arrowhead
@@ -46,7 +48,7 @@
 
 \seealso{E.g. \code{\link{gac}} for a function which takes an
   adjacency matrix as input; \code{\link{displayAmat}} for a function which
-  returns an 
+  returns an
   adjacency matrix as output; \code{\linkS4class{fciAlgo}} for a class
   which has an  adjacency matrix in one slot.}
 \examples{
@@ -92,9 +94,8 @@ V <- colnames(gmG8$x)
 suffStat <- list(C = cor(gmG8$x), n = n)
 ## estimate CPDAG
 skel.fit <- skeleton(suffStat, indepTest = gaussCItest,
-             alpha = 0.01, labels = V)
+                     alpha = 0.01, labels = V)
 resSkel <- displayAmat(skel.fit)
-
 ##################################################
 ## Function fci() returns an adjacency matrix
 ## of type amat.pag as one slot.
