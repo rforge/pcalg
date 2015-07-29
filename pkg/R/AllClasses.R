@@ -34,71 +34,110 @@ if(FALSE) {## if we would importFrom("Matrix", ....) in NAMESPACE
 setMethod("getGraph", "pcAlgo", function(x) x@graph)
 setMethod("getGraph", "fciAlgo", function(x) as(x@amat, "graphAM"))
 
+##' as(*, "matrix")   methods --- give the adjacency matrices with a  "type"  attribute:
+setAs("pcAlgo", "matrix",
+      function(from) structure(wgtMatrix(from@graph), type = "amat.cpdag"))
+
+setAs("fciAlgo", "matrix",
+      function(from) structure(from@amat, type = "amat.pag"))
+
+
+##' auxiliary, hidden
+show.pc.amat <- function(amat, zero.print, ...) {
+    cat("\nAdjacency Matrix G:\n")
+    print.table(amat, zero.print=zero.print, ...)
+}
+
+##' auxiliary, hidden
+show.fci.amat <- function(amat, zero.print, ...) {
+    cat("\nAdjacency Matrix G:",
+        "G[i,j] = 1/2/3 if edge mark of edge i-j at j is circle/head/tail.",
+        "", sep="\n")
+    print.table(amat, zero.print=zero.print, ...)
+}
+
 setMethod("summary", "pcAlgo",
-          function(object) {
- 	    cat("\nObject of class 'pcAlgo', from Call: \n",
-                deparse(object@call),
- 		"\n\nNmb. edgetests during skeleton estimation:\n")
+          function(object, amat = TRUE, zero.print = ".", ...) {
+ 	    cat("Object of class 'pcAlgo', from Call:\n",
+                paste(deparse(object@call), sep = "\n", collapse = "\n"),
+ 		"\n\nNmb. edgetests during skeleton estimation:\n", sep = "")
             cat("===========================================\n")
-            cat("Max. order of algorithm: ",object@max.ord,
-                "\nNumber of edgetests from m = 0 up to m =",object@max.ord,
-                ": ",object@n.edgetests)
-            nbrs <- vapply(object@graph@edgeL, function(x) length(x$edges), 1L)
+            cat("Max. order of algorithm: ", object@max.ord,
+                "\nNumber of edgetests from m = 0 up to m =", object@max.ord,
+                ": ", object@n.edgetests)
+            g <- object@graph
+            nbrs <- vapply(g@edgeL, function(x) length(x$edges), 1L)
             cat("\n\nGraphical properties of skeleton:\n")
             cat("=================================\n")
             cat("Max. number of neighbours: ", max(nbrs),
                 "at node(s)", which(nbrs==max(nbrs)),
-                "\nAvg. number of neighbours: ",mean(nbrs),"\n")
+                "\nAvg. number of neighbours: ", mean(nbrs),"\n")
+            if(amat)
+                show.pc.amat(as(g, "matrix"), zero.print=zero.print)
           })
 
 setMethod("summary", "fciAlgo",
-          function(object) {
- 	    cat("Object of class 'fciAlgo'\n\n")
-            cat("Call: \n=====\n", deparse(object@call))
-            cat("\n\nNmb. edgetests during skeleton estimation:\n==========================================")
-            cat("\nMax. order of algorithm: ",object@max.ord,
-                "\nNumber of edgetests from m = 0 up to m =",object@max.ord,
-                ": ",object@n.edgetests)
-            cat("\n\nAdd. nmb. edgetests when using PDSEP:\n=====================================")
-            cat("\nMax. order of algorithm: ",object@max.ordPDSEP,
-                "\nNumber of edgetests from m = 0 up to m =",object@max.ordPDSEP,
-                ": ",object@n.edgetestsPDSEP)
-
-            myLength <- function(x) if(is.null(x)) NA_integer_ else length(x)
-            cat("\n\nSize distribution of SEPSET:")
-            myTab <- table(sapply(object@sepset,
-                                  function(x) vapply(x, myLength, 1L)),
-                           useNA = "always")
-            print(myTab)
-
-            cat("\nSize distribution of PDSEP:")
-            print(table(vapply(object@allPdsep, length, 1L)))
-          })
-
-
-setMethod("show", "pcAlgo",
-	  function(object) {
-	    cat("Object of class 'pcAlgo', from Call: \n", deparse(object@call),"\n")
-            amat <- as(object@graph, "matrix")
-            amat2 <- amat + 2*t(amat)
-            ude <- sum(amat2 == 3)/2
-            de <- sum(amat2 == 1)
-            cat("Number of undirected edges: ", ude, "\n")
-            cat("Number of directed edges:   ", de, "\n")
-            cat("Total number of edges:      ", de + ude, "\n")
-	    invisible(object)
+	  function(object, amat = TRUE, zero.print = ".", ...) {
+	    cat("Object of class 'fciAlgo', from Call:\n",
+		paste(deparse(object@call), sep = "\n", collapse = "\n"), sep="")
+            ## NB: fciPlus() result has *none* of these {apart from adj.mat}:
+	    if(length(o.max <- object@max.ord)) {
+		cat("\n\nNmb. edgetests during skeleton estimation:\n",
+		    "===========================================\n", sep="")
+		cat("Max. order of algorithm: ", o.max,
+		    "\nNumber of edgetests from m = 0 up to m =", o.max,
+		    ": ", object@n.edgetests)
+	    }
+	    if(length(o.maxP <- object@max.ordPDSEP)) {
+		cat("\n\nAdd. nmb. edgetests when using PDSEP:\n=====================================")
+		cat("\nMax. order of algorithm: ", o.maxP,
+		    "\nNumber of edgetests from m = 0 up to m =", o.maxP,
+		    ": ", object@n.edgetestsPDSEP)
+	    }
+	    if(length(object@sepset)) {
+		myLength <- function(x) if(is.null(x)) NA_integer_ else length(x)
+		cat("\n\nSize distribution of SEPSET:")
+		myTab <- table(sapply(object@sepset,
+				      function(x) vapply(x, myLength, 1L)),
+			       useNA = "always")
+		print(myTab)
+	    }
+	    if(length(object@allPdsep)) {
+		cat("\nSize distribution of PDSEP:")
+		print(table(vapply(object@allPdsep, length, 1L)))
+	    }
+	    ##
+	    if(amat)
+		show.fci.amat(object@amat, zero.print=zero.print)
 	  })
 
 
-print.fciAlgo <- function(x, zero.print = ".", ...) {
-    cat("Object of class 'fciAlgo', from Call:", deparse(x@call),
-        "\nAdjacency Matrix G:",
-        "G[i,j] = 1/2/3 if edge mark of edge i-j at j is circle/head/tail.",
-        "", sep="\n")
-    print.table(x@amat, zero.print=zero.print, ...)
+print.pcAlgo <- function(x, amat = FALSE, zero.print = ".", ...) {
+    cat("Object of class 'pcAlgo', from Call:\n",
+        paste(deparse(x@call), sep = "\n", collapse = "\n"),
+        "\n", sep="")
+    A <- as(x@graph, "matrix")
+    if(amat)
+        show.pc.amat(A, zero.print=zero.print, ...)
+    amat2 <- A + 2*t(A)
+    ude <- sum(amat2 == 3)/2
+    de <- sum(amat2 == 1)
+    cat("Number of undirected edges: ", ude, "\n")
+    cat("Number of directed edges:   ", de, "\n")
+    cat("Total number of edges:      ", de + ude, "\n")
     invisible(x)
 }
+setMethod("show", "pcAlgo", function(object) print.pcAlgo(object))
 
+
+print.fciAlgo <- function(x, amat = FALSE, zero.print = ".", ...) {
+    cat("Object of class 'fciAlgo', from Call:\n",
+        paste(deparse(x@call), sep = "\n", collapse = "\n"),
+        "\n", sep="")
+    if(amat)
+	show.fci.amat(x@amat, zero.print=zero.print, ...)
+    invisible(x)
+}
 setMethod("show", "fciAlgo", function(object) print.fciAlgo(object))
 
 ## -> ../man/pcAlgo-class.Rd
@@ -150,28 +189,29 @@ setMethod("plot", signature(x = "fciAlgo"),
           g <- as(amat,"graphNEL")
           nn <- nodes(g)
           p <- numNodes(g)
-          n.edges <- numEdges(g)
-          ah.list <- at.list <- rep("none",n.edges)
-          counter <- 0
-          list.names <- NULL
-          amat[amat==1] <- "odot"
-          amat[amat==2] <- "normal"
-          amat[amat==3] <- "none"
+          ## n.edges <- numEdges(g) -- is too large:
+          ## rather count edges such that  "<-->" counts as 1 :
+          n.edges <- numGedges(amat)
+          ahs <- ats <- rep("none", n.edges)
+          nms <- character(n.edges)
+          cmat <- array(c("0" = "none",   "1" = "odot",
+                          "2" = "normal", "3" = "none")[as.character(amat)],
+                        dim = dim(amat), dimnames = dimnames(amat))
+          iE <- 0L
           for (i in seq_len(p-1)) {
+              x <- nn[i]
               for (j in (i+1):p) {
-                  x <- nn[i]
                   y <- nn[j]
-                  if (amat[x,y]!=0) {
-                      counter <- counter + 1
-                      ah.list[[counter]] <- amat[x,y]
-                      at.list[[counter]] <- amat[y,x]
-                      list.names <- c(list.names,paste(x,"~",y,sep=""))
+                  if (amat[x,y] != 0) {
+                      iE <- iE + 1L
+                      ahs[[iE]] <- cmat[x,y]
+                      ats[[iE]] <- cmat[y,x]
+                      nms[[iE]] <- paste0(x,"~",y)
                   }
               }
           }
-          names(ah.list) <- names(at.list) <- list.names
-	  edgeRenderInfo(g) <- list(arrowhead= ah.list,
-				    arrowtail= at.list)
+          names(ahs) <- names(ats) <- nms
+	  edgeRenderInfo(g) <- list(arrowhead = ahs, arrowtail = ats)
           ## XXX Sep/Oct 2010  --- still current -- FIXME ??
           ## XXX undid change by MM, since edge marks didn't work anymore
           ## XXX "known bug in Rgraphviz, but not something they may fix soon"

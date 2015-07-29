@@ -140,11 +140,11 @@
    --- But this will most probably change in R >=  3.3.0
 ** Adjacency Matrices:
 *** We should use *integer* {internal} ==>  A[..,] <- 1 is *wrong*, should be A[..] <- 1L, etc
+*** Our code should make sure that ad-matrices are *integer* and hence use 1L, 0L, etc !
+
 *** Document the different kinds of 'amat' (adjacency matrices) that we use.
    symmetric ? / lower- or upper-triangular ?
    E.g. [[man/backdoor.Rd]] has  "Coding of adjacency matrix" (0,1,2,3)
-*** Our code should make sure that ad-matrices are *integer* and hence use 1L, 0L, etc !
-
 ** Graph Node Labels  <==>  rownames(A):  Still a mess, sometimes using as.numeric(rownames(.)),
    e.g. in my.SpecialDag() in [[R/pcalg.R]]
 *** In these cases graph labels are lost and replaced by "1", "2", .. this is typically entirely wrong.

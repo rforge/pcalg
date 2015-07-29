@@ -254,7 +254,7 @@ pcSelect <- function(y, dm, alpha, corMethod = "standard",
             if(abs(z) < zMin[x]) zMin[x] <- abs(z)
             if (verbose >= 2)
               cat(paste("x:",vNms[x-1],"y:",(ytmp <- round((p+1)/2)),"S:"),
-                  c(ytmp,vNms)[nbrs[S]],paste("z:",z,"\n"))
+                  c(ytmp,vNms)[nbrs[S]], paste("z:",z,"\n"))
             if (abs(z) <= cutoff) {
               G[x] <- FALSE
               break
@@ -2577,6 +2577,7 @@ reach <- function(a,b,c,adjacency)
 }
 
 
+## ___DEPRECATED__  rather plot(<fciAlgo>) --> setMethod("plot", "fciAlgo") in ./AllClasses.R
 plotAG <- function(amat)
 {
   ## Purpose: Plot ancestral graph
@@ -2593,25 +2594,25 @@ plotAG <- function(amat)
   nn <- nodes(g)
   p <- numNodes(g)
   n.edges <- numEdges(g)
-  ah.list <- at.list <- rep("none",n.edges)
-  counter <- 0
-  list.names <- NULL
+  ah.list <- at.list <- vector("list", n.edges)
+  l.names <- character(n.edges)
   amat[amat == 1] <- "odot"
   amat[amat == 2] <- "normal"
   amat[amat == 3] <- "none"
+  iE <- 0
   for (i in 1:(p-1)) {
+    x <- nn[i]
     for (j in (i+1):p) {
-      x <- nn[i]
       y <- nn[j]
       if (amat[x,y] != 0) {
-        counter <- counter + 1
-        ah.list[[counter]] <- amat[x,y]
-        at.list[[counter]] <- amat[y,x]
-        list.names <- c(list.names,paste(x,"~",y,sep = ""))
+        iE <- iE + 1
+        ah.list[[iE]] <- amat[x,y]
+        at.list[[iE]] <- amat[y,x]
+        l.names[[iE]] <- paste0(x,"~",y)
       }
     }
   }
-  names(ah.list) <- names(at.list) <- list.names
+  names(ah.list) <- names(at.list) <- l.names
 
   edgeRenderInfo(g) <- list(arrowhead = ah.list, arrowtail = at.list)
   Rgraphviz::renderGraph(Rgraphviz::layoutGraph(g))
@@ -7407,8 +7408,11 @@ fciPlus <- function(suffStat, indepTest, alpha, labels, p, verbose=TRUE)
       max.ordPDSEP = integer(0),
       n.edgetests = integer(0), n.edgetestsPDSEP = integer(0),
       sepset = list(), pMax = matrix(0,1,1), allPdsep = list())
-}
+} ## {fciPlus}
 
+## MM:  Das braucht's ja wirklich nicht;  wir haben extra gute  summary(.) Methoden,
+##      wobei ich ja vor allem jene for "fciAlgo" in der (vor)letzten Version schön verbessert habe.
+##      Ich wollte sowieso vorschlagen, dass pcAlgo für die  adj.Matrix "dasselbe" macht wie fciAlgo !
 displayAmat <- function(obj) {
     ## Convert object of class 'fciAlgo' or 'pcAlgo' to
     ## corresponding adjacency matrix of type 'amat.pag'

@@ -177,4 +177,5 @@ exportClasses("pcAlgo",
 exportMethods("summary", "show", "plot")
 
 S3method(print, fciAlgo)
+S3method(print, pcAlgo)
 
