@@ -9,6 +9,10 @@ mFig1 <- matrix(c(0,1,1,0,0,0, 1,0,1,1,1,0, 0,0,0,0,0,1,
                   0,1,1,0,1,1, 0,1,0,1,0,1, 0,0,0,0,0,0), 6,6)
 type <- "cpdag"
 x <- 3; y <- 6
+## FIXME: test more than just $gac
+## Ver.1: Let gac() return an S3 class, say "GACfit" or "gacFit", with a print() method
+##        and (auto)print(.) everywhere below, save *.Rout.save -> output compared: Is ok, as all "discrete"
+
 xx <- xx &  gac(mFig1,x,y, z=c(2,4), type)$gac
 xx <- xx &  gac(mFig1,x,y, z=c(4,5), type)$gac
 xx <- xx &  gac(mFig1,x,y, z=c(4,2,1), type)$gac
