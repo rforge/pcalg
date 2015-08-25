@@ -141,7 +141,8 @@ export(trueCov,
        unifDAG,
        unifDAG.approx,
        gac,
-       displayAmat)
+       displayAmat,
+       pdag2allDags)
 
 ## These are "internal" i.e., in man/pcalg-internal.Rd
 ## _FIXME ?_                     ---------------------
