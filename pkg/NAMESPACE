@@ -136,7 +136,7 @@ export(trueCov,
        dag2essgraph,
        ## --- end{Alain}
        fciPlus,
-       LINGAM,
+       lingam, LINGAM,
        randDAG,
        unifDAG,
        unifDAG.approx,

@@ -1,13 +1,17 @@
 \name{LINGAM}
-\title{Linear non-Gaussian Additive Models (LiNGAM)}
+\title{Linear non-Gaussian Acyclic Models (LiNGAM)}
+\alias{lingam}
 \alias{LINGAM}
 \description{
-  Fits a Linear non-Gaussian Additive Model (LiNGAM) to the data and
+  Fits a Linear non-Gaussian Acyclic Model (LiNGAM) to the data and
   returns the corresponding DAG.
 
   For details, see the reference below.
 }
 \usage{
+lingam(X, verbose = FALSE)
+
+## For back-compatibility; this is *deprecated*
 LINGAM(X, verbose = FALSE)
 }
 \arguments{
@@ -18,12 +22,25 @@ LINGAM(X, verbose = FALSE)
 %% \details{
 %% }
 \value{
-  list with components
+  \code{lingam()} returns an \R object of (S3) class \code{"LINGAM"}
+  which is \code{\link{list}} with components
+  \item{Bpruned}{a \eqn{p \times p}{p x p} matrix \eqn{B} of linear
+    coefficients, where \eqn{B_{i,j}} corresponds to a directed edge
+    from \eqn{j} to \eqn{i}.
+    %% Note it corresponds to the \emph{transpose} of
+    %% \code{Adj}, i.e., \code{identical( Adj, t(B) != 0 )} is true.}
+  }
+  \item{stde}{... }%% FIXME
+  \item{ci}{ ... } %% FIXME
+
+
+  \code{LINGAM()} returns a \code{\link{list}} with components
   \item{Adj}{a \eqn{p \times p}{p x p} 0/1 adjacency matrix \eqn{A}.
     \code{A[i,j] == 1} corresponds to a directed edge from i to j.}
   \item{B}{\eqn{p \times p}{p x p} matrix of corresponding linear
     coefficients.  Note it corresponds to the \emph{transpose} of
     \code{Adj}, i.e., \code{identical( Adj, t(B) != 0 )} is true.}
+
 }
 \references{
   S. Shimizu, P.O. Hoyer, A. Hyv\"arinen, A. Kerminen (2006)
@@ -31,9 +48,11 @@ LINGAM(X, verbose = FALSE)
   \emph{Journal of Machine Learning Research} \bold{7}, 2003--2030.
 }
 \author{
+  Of \code{LINGAM()} and the underlying functionality,
+%% MM: use \email{}  or drop the e-mail addresses: They are harvested by spammers
   Patrik Hoyer <patrik.hoyer@helsinki.fi>, Doris Entner
   <entnerd@hotmail.com>, Antti Hyttinen <antti.hyttinen@cs.helsinki.fi>
-  and Jonas Peters <jonas.peters@tuebingen.mpg.de>
+  and Jonas Peters <jonas.peters@tuebingen.mpg.de>.
 }
 \seealso{
   \code{\link{fastICA}} from package \pkg{fastICA} is used.

@@ -1,12 +1,22 @@
- ##################################################
+### Copyright (c) 2013 - 2015  Jonas Peters  [peters@stat.math.ethz.ch]
+### All rights reserved.  See the file COPYING for license terms.
+##  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ???????
+
+##################################################
 ## exported
 ##################################################
+lingam <- function(X, verbose = FALSE)
+{
+    structure(uselingam(X, verbose = verbose), class = "LINGAM")
+}
+## DEPRECATED:
 LINGAM <- function(X, verbose = FALSE)
 ## Copyright (c) 2013 - 2015  Jonas Peters  [peters@stat.math.ethz.ch]
 ## All rights reserved.  See the file COPYING for license terms.
 {
-    res <- uselingam(X, verbose = verbose)
-    list(B = res$B, Adj = t(res$B != 0))
+  .Deprecated("lingam")
+  res <- uselingam(X, verbose = verbose)
+  list(B = res$Bpruned, Adj = t(res$Bpruned != 0))
 }
 
 ##################################################
@@ -135,6 +145,7 @@ estLiNGAM <- function(X, only.perm = FALSE, fastICA.tol = 1e-14,
 ##' @param p
 ##' @author Martin Maechler
 iperm <- function(p) sort.list(p, method="radix")
+
 ## Version till July 2015: is ***MUCH** slower
 ## iperm <- function( p ) {
 ##   q <- array(0,c(1,length(p)))
@@ -305,15 +316,8 @@ prune <- function(X, k, method = 'resampling', # the pruning method {no other fo
               }
           }
 
-          diststdfinal <- rowMeans(diststdpieces)
-          cfinal <- rowMeans(cpieces)
-
-          ## Finally, rename all the variables to the way we defined them
-          ## in the function definition
-
-          Bpruned <- Bfinal
-          stde <- diststdfinal
-          ci <- cfinal
+        stde   <- rowMeans(diststdpieces)
+        cfinal <- rowMeans(cpieces)
       },
       'olsboot' = {
 	  stop(gettextf("Method '%s' not implemented yet!", method), domain=NA)
@@ -335,9 +339,7 @@ prune <- function(X, k, method = 'resampling', # the pruning method {no other fo
     if(verbose) cat('Done!\n')
 
     ## Return the result
-    list(Bpruned = Bpruned,
-         stde = stde,
-         ci = ci)
+    list(Bpruned = Bfinal, stde = stde, ci = cfinal)
 }
 
 ## SLT = Strict Lower Triangularity
