@@ -51,14 +51,15 @@ udag2pag(pag, sepset, rules = rep(TRUE, 10), unfVect = NULL,
   matrix and not with the names of the variables.
 
   Note that this function does not resolve possible order-dependence in
-  the application of the orientation rules, see Colombo and Maathuis (2013).
+  the application of the orientation rules, see Colombo and Maathuis (2014).
 }
 \value{
   Adjacency matrix of type \link{amat.pag}.
 }
 \references{
-  D. Colombo and M.H. Maathuis (2013). Order-independent constraint-based
-  causal structure learning. arXiv:1211.3295v2
+  D. Colombo and M.H. Maathuis (2014).Order-independent constraint-based
+  causal structure learning. \emph{Journal of Machine Learning Research}
+  \bold{15} 3741-3782. 
 
   D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
   (2012). Learning high-dimensional directed acyclic graphs with latent

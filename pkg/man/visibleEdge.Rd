@@ -20,14 +20,14 @@ MAG M / PAG P, a directed edge A -> B in M / P is visible if there is a
 vertex C not adjacent to B, such that there is an edge between C and A
 that is into A, or there is a collider path between C and A that is into
 A and every non-endpoint vertex on the path is a parent of B. Otherwise
-A -> B is said to be invisible. (see Maathuis and Colombo (2013), Def. 3.1)
+A -> B is said to be invisible. (see Maathuis and Colombo (2015), Def. 3.1)
 }
 \value{
 \code{TRUE} if edge is visible, otherwise \code{FALSE}.
 }
 \references{
-  M.H. Maathuis and D. Colombo (2013). A generalized backdoor
-  criterion. arXiv preprint arXiv:1307.5636.
+  M.H. Maathuis and D. Colombo (2015). A generalized backdoor
+  criterion. Annals of Statistics 43 1060-1088.
 }
 \author{
   Diego Colombo

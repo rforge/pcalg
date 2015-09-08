@@ -5,8 +5,29 @@ R=R-devel R-pkg-check pcalg_2.0-10.tar.gz > stdout.txt 2> stderr.txt
 Output in 
 /tmp/pcalg.Rcheck
 
-==
+
+############
+# svn README
+############
 svn up
 svn st
 svn ci -m 'bla'
 svn log -l 4
+
+Delete, Copy, Move ALWAYS WITH SVN COMMANDS
+
+Explanation of directories
+==========================
+- pkg: Contains current "official" version
+- branches: Contains developing version (only one version for simplicity)
+- tags: Contains copies of pkg at important points in time
+
+Useful commands:
+================
+- Before work: svn up
+- After work: svn commit -m "This was done"
+- Make new tag (safer to copy on server; then update locally): 
+svn copy svn+ssh://mkalisch@svn.r-forge.r-project.org/svnroot/pcalg/pkg/ svn+ssh://mkalisch@svn.r-forge.r-project.org/svnroot/pcalg/tags/jssVersionApr12/ -m "generated tag"
+- pkg to branches:
+(make differences 61:HEAD that were made in pkg also in current dir) 
+svn merge -r 61:HEAD svn+ssh://mkalisch@svn.r-forge.r-project.org/svnroot/pcalg/pkg

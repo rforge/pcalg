@@ -25,12 +25,8 @@
 
   In addition, \code{"fciAlgo"} has slots
   \describe{
-    \item{\code{amat}:}{a \code{\link{matrix}}: The
-      the estimated graph, represented by its adjacency matrix.
-      The edge marks are encoded
-      by numbers: 0 = no edge, 1 = circle, 2 = arrowhead, 3 =
-      tail.  E.g., if \code{amat[i,j] = 1} and \code{amat[j,i] = 2},
-      this represents the edge \code{i <-o j}.}
+    \item{\code{amat}:}{adjacency matrix; for the coding of the
+  adjacency matrix see \link{amatType}}
     \item{\code{allPdsep}}{a \code{\link{list}}: the ith entry of
       this list contains Possible D-SEP of node number \code{i}.}
     \item{\code{n.edgetestsPDSEP}}{the number of new conditional

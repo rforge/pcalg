@@ -30,7 +30,7 @@ pag2magAM(amat.pag, x, max.chordal = 10, verbose = FALSE)
 
   This function is used in the Generalized Backdoor Criterion
   \code{\link{backdoor}} with \code{type="pag"}, see Maathuis and Colombo
-  (2013) for details.
+  (2015) for details.
 }
 \value{
   The output is an adjacency matrix of type \link{amat.pag} representing
@@ -38,8 +38,8 @@ pag2magAM(amat.pag, x, max.chordal = 10, verbose = FALSE)
   represented by the given PAG.
 }
 \references{
-  M.H. Maathuis and D. Colombo (2013). A generalized backdoor
-  criterion. arXiv preprint arXiv:1307.5636.
+  M.H. Maathuis and D. Colombo (2015). A generalized back-door
+  criterion. \emph{Annals of Statistics} \bold{43} 1060-1088.
 
   Zhang, J. (2006). Causal Inference and Reasoning in Causally
   Insufficient Systems. Ph. D. thesis, Carnegie Mellon University.

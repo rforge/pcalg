@@ -64,9 +64,9 @@ checkTriple(a, b, c, nbrsA, nbrsC,
   \item{sepsetC}{Updated version of \code{sepsetC}}
 }
 \references{
-  D. Colombo and M.H. Maathuis (2013).
-  Order-independent constraint-based causal structure learning,
-  (arXiv:1211.3295v2).
+  D. Colombo and M.H. Maathuis (2014).Order-independent constraint-based
+  causal structure learning. \emph{Journal of Machine Learning Research}
+  \bold{15} 3741-3782. 
 }
 \author{
   Markus Kalisch (\email{kalisch@stat.math.ethz.ch}) and Diego Colombo.

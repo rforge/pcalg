@@ -78,7 +78,9 @@ gac(amat, x, y, z, type = "pag")
 }
 \references{
   E. Perkovic, J. Textor, M. Kalisch and M.H. Maathuis (2015). A
-  Complete Generalized Adjustment Criterion. In \emph{Proceedings of UAI 2015.}
+  Complete Generalized Adjustment Criterion. In \emph{Proceedings of UAI
+    2015.}
+  \url{http://arxiv.org/abs/1507.01524}.
 
   I. Shpitser, T. VanderWeele and J.M. Robins (2012). On the validity of
   covariate adjustment for estimating causal effects. In

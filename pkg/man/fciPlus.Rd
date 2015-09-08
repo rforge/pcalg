@@ -64,7 +64,7 @@ set.seed(42)
 p <- 7
 myDAG <- randomDAG(p, prob = 0.4)
 
-## find skeleton and PAG using the FCI+ algorithm on "Oracle"
+## find PAG using the FCI+ algorithm on "Oracle"
 suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
 m.fci <- fciPlus(suffStat, indepTest=gaussCItest,
                  alpha = 0.9999, p=p)
