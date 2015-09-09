@@ -13,13 +13,14 @@
 backdoor(amat, x, y, type = "pag", max.chordal = 10, verbose=FALSE)
 }
 \arguments{
-  \item{amat}{adjacency matrix of type \link{amat.cpdag} or \link{amat.pag}}
+  \item{amat}{adjacency matrix of type \code{\link{amat.cpdag}} or
+    \code{\link{amat.pag}}.}
   \item{x,y}{(integer) position of variable \eqn{X} and \eqn{Y},
     respectively, in the adjacency matrix.}
   \item{type}{string specifying the type of graph of the adjacency matrix
     \code{amat}.  It can be a DAG (type="dag"), a CPDAG (type="cpdag");
     then the type of the adjacency matrix is assumed to be
-    \link{amat.cpdag}. It can also be a MAG (type="mag"), or a PAG
+    \link{amat.cpdag}.  It can also be a MAG (type="mag"), or a PAG
     (type="pag"); then the type of the adjacency matrix is assumed to be
   \link{amat.pag}.}
   \item{max.chordal}{only if \code{type = "mag"}, is used in
@@ -37,11 +38,11 @@ backdoor(amat, x, y, type = "pag", max.chordal = 10, verbose=FALSE)
   selection variables. For more details see Maathuis and Colombo (2015).
 
   The motivation to find a set W that satisfies the GBC with respect to
-  \code{x} and \code{y} 
+  \code{x} and \code{y}
   in the given graph relies on the result of the generalized backdoor adjustment:
 
   \emph{If a set of variables W satisfies the GBC relative to \code{x}
-    and \code{y} in the given graph, then 
+    and \code{y} in the given graph, then
     the causal effect of \code{x} on \code{y} is identifiable and is given
     by} \deqn{%
     P(Y|do(X = x)) = \sum_W P(Y|X,W) \cdot P(W).}{%
@@ -89,7 +90,7 @@ backdoor(amat, x, y, type = "pag", max.chordal = 10, verbose=FALSE)
 \author{Diego Colombo and Markus Kalisch (\email{kalisch@stat.math.ethz.ch})}
 \seealso{\code{\link{gac}} for the Generalized Adjustment Criterion
   (GAC), which is a generalization of GBC; \code{\link{pc}} for
-  estimating a CPDAG, \code{\link{dag2pag}} 
+  estimating a CPDAG, \code{\link{dag2pag}}
   and \code{\link{fci}} for estimating a PAG, and
   \code{\link{pag2magAM}} for estimating a MAG.
 }
@@ -165,7 +166,7 @@ g <- new("graphNEL", nodes=V, edgeL=edL, edgemode="directed")
 ## estimate the true CPDAG
 myCPDAG <- dag2cpdag(g)
 ## Extract the adjacency matrix of the true CPDAG
-true.amat <- as(myCPDAG, "matrix") != 0 
+true.amat <- as(myCPDAG, "matrix") != 0
 
 ## The effect is identifiable and the set satisfying GBC is:
 backdoor(true.amat, 6, 3, type="cpdag")

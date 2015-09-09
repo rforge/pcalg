@@ -19,6 +19,13 @@ lingam <- function(X, verbose = FALSE)
 {
     structure(uselingam(X, verbose = verbose), class = "LINGAM")
 }
+setOldClass("LINGAM")
+
+setAs("LINGAM", "amat", function(from) {
+  structure(t(from$Bpruned != 0), class = "amat", type = "pag")
+})
+
+
 ## DEPRECATED:
 LINGAM <- function(X, verbose = FALSE)
 ## Copyright (c) 2013 - 2015  Jonas Peters  [peters@stat.math.ethz.ch]

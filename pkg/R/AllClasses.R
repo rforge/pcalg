@@ -34,12 +34,19 @@ if(FALSE) {## if we would importFrom("Matrix", ....) in NAMESPACE
 setMethod("getGraph", "pcAlgo", function(x) x@graph)
 setMethod("getGraph", "fciAlgo", function(x) as(x@amat, "graphAM"))
 
-##' as(*, "matrix")   methods --- give the adjacency matrices with a  "type"  attribute:
+setOldClass("amat")# our Adjacency Matrics -- are S3 classes (but want some S4 methods)
+
+##' as(*, "matrix") methods --- give the adjacency matrices   with a  "type"  attribute
+##' as(*, "amat")   methods --- adjacency matrix class "amat" with a  "type"  attribute
 setAs("pcAlgo", "matrix",
       function(from) structure(wgtMatrix(from@graph), type = "amat.cpdag"))
+setAs("pcAlgo", "amat",
+      function(from) structure(wgtMatrix(from@graph), class = "amat", type = "cpdag"))
 
 setAs("fciAlgo", "matrix",
       function(from) structure(from@amat, type = "amat.pag"))
+setAs("fciAlgo", "amat",
+      function(from) structure(from@amat, class = "amat", type = "pag"))
 
 
 ##' auxiliary, hidden
@@ -54,6 +61,16 @@ show.fci.amat <- function(amat, zero.print, ...) {
         "G[i,j] = 1/2/3 if edge mark of edge i-j at j is circle/head/tail.",
         "", sep="\n")
     print.table(amat, zero.print=zero.print, ...)
+}
+
+print.amat <- function(x, zero.print = ".", ...) {
+    stopifnot(is.character(typ <- attr(x, "type")), length(typ) == 1,
+	      is.matrix(x), (d <- dim(x))[1] == d[2])
+    cat(sprintf("Adjacency Matrix 'amat' (%d x %d) of type %s:\n",
+		d[1], d[2], sQuote(typ)))
+    ## TODO: if dimension is too large, e.g. use  Matrix::printSpMatrix2(x)
+    print.table(x, zero.print=zero.print, ...)
+    invisible(x)
 }
 
 setMethod("summary", "pcAlgo",

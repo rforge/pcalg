@@ -3,6 +3,15 @@
 \alias{amatType}
 \alias{amat.cpdag}
 \alias{amat.pag}
+\alias{coerce,LINGAM,amat-method}%  as(<LINGAM>,  "amat")
+\alias{coerce,pcAlgo,amat-method}%  as(<pcAlgo>,  "amat")
+\alias{coerce,fciAlgo,amat-method}% as(<fciAlgo>, "amat")
+%% the as(*, "matrix") methods where introduced even earlier.
+\alias{coerce,pcAlgo,matrix-method}
+\alias{coerce,fciAlgo,matrix-method}
+%% hidden, but for us:
+\alias{show.pc.amat}
+\alias{show.fci.amat}
 \description{
   Two types of adjacency matrices are used in package \pkg{pcalg}: Type
   \code{amat.cpdag} for DAGs and CPDAGs and type \code{amat.pag} for
@@ -56,28 +65,24 @@
 ## precise type of graph (DAG/CPDAG/MAG/PAG) needs
 ## to be passed as a different argument
 ##################################################
-## Adjacency matrix of type \code{amat.cpdag}
+## Adjacency matrix of type 'amat.cpdag'
 m1 <- matrix(c(0,1,0,1,0,0, 0,0,1,0,1,0, 0,0,0,0,0,1,
-                  0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0),6,6)
+               0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0), 6,6)
 ## more detailed information on the graph type needed by gac()
-type <- "dag"
-gac(m1, x=1,y=3, z=NULL, type = type)
+gac(m1, x=1,y=3, z=NULL, type = "dag")
 
-## Adjacency matrix of type \code{amat.cpdag}
+## Adjacency matrix of type 'amat.cpdag'
 m2 <- matrix(c(0,1,1,0,0,0, 1,0,1,1,1,0, 0,0,0,0,0,1,
-                  0,1,1,0,1,1, 0,1,0,1,0,1, 0,0,0,0,0,0), 6,6)
+               0,1,1,0,1,1, 0,1,0,1,0,1, 0,0,0,0,0,0), 6,6)
 ## more detailed information on the graph type needed by gac()
-type <- "cpdag"
-gac(m2, x=3, y=6, z=c(2,4), type = type)
+gac(m2, x=3, y=6, z=c(2,4), type = "cpdag")
 
-## Adjacency matrix of type \code{amat.pag}
+## Adjacency matrix of type 'amat.pag'
 m3 <- matrix(c(0,2,0,0, 3,0,3,3, 0,2,0,3, 0,2,2,0), 4,4)
 ## more detailed information on the graph type needed by gac()
-type <- "mag"
-gac(m3, x=2, y=4, z=NULL,   type = type)
-## more detailed information on the graph type needed by gac()
-type <- "pag"
-gac(m3, x=2, y=4, z=NULL,   type = type)
+mg3 <- gac(m3, x=2, y=4, z=NULL, type = "mag")
+pg3 <- gac(m3, x=2, y=4, z=NULL, type = "pag")
+%% FIXME:  mg3 is identical to pg3! -- need an example where 'type' matters!
 
 ##################################################
 ## Function displayAmat() returns an adjacency matrix
@@ -93,7 +98,10 @@ suffStat <- list(C = cor(gmG8$x), n = n)
 ## estimate CPDAG
 skel.fit <- skeleton(suffStat, indepTest = gaussCItest,
                      alpha = 0.01, labels = V)
-resSkel <- displayAmat(skel.fit)
+(resSkel <- displayAmat(skel.fit))
+## or .. better .. "more modern" % FIXME make sure it looks better!
+as(skel.fit, "amat")
+
 ##################################################
 ## Function fci() returns an adjacency matrix
 ## of type amat.pag as one slot.
@@ -108,5 +116,7 @@ suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
 res <- fci(suffStat, indepTest=gaussCItest,
            alpha = 0.9999, p=p, doPdsep = FALSE)
 str(res)
+## get the a(djacency) mat(rix) :
+as(res, "amat")
 }
-\keyword{ graphs }
+\keyword{graphs}

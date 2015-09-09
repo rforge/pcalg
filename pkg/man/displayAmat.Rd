@@ -2,7 +2,7 @@
 \alias{displayAmat}
 \title{Show Adjacency Matrix of pcAlgo or fciAlgo object}
 \description{
-  Show the  adjacency matrix of a \code{"pcAlgo"} object; this is
+  Show the adjacency matrix of a \code{"pcAlgo"} object; this is
   intended to be an alternative if the \pkg{Rgraphviz} package does not work.
 }
 \usage{
@@ -11,15 +11,14 @@ displayAmat(obj)
 \arguments{
   \item{obj}{an \R object of class \code{\linkS4class{pcAlgo}}, as returned
     from \code{\link{skeleton}()} or \code{\link{pc}()} or an object of
-    class \code{\linkS4class{pcAlgo}}, as returned 
-    from \code{\link{fci}()}}
+    class \code{\linkS4class{fciAlgo}}, as from \code{\link{fci}()}.}
 }
 \value{
   A \code{\link{list}} with two components:
   \item{amat}{adjacency matrix of type \code{amat.cpdag} if the input
     was an object of class \code{\linkS4class{pcAlgo}}; adjacency matrix
     of type \code{amat.cpdag} if the input was an object of class
-    \code{\linkS4class{fciAlgo}}} 
+    \code{\linkS4class{fciAlgo}}}
   \item{type}{type of adjacency matrix as described in \link{amatType}.}
 }
 \author{
@@ -27,9 +26,10 @@ Markus Kalisch (\email{kalisch@stat.math.ethz.ch})
 }
 \seealso{
   \code{\link{showEdgeList}} for showing the edge list of a
-  \code{\linkS4class{pcAlgo}} object. 
-  \code{\link{iplotPC}} for plotting a \code{"pcAlgo"} object using the package
-  \pkg{igraph}.}
+  \code{\linkS4class{pcAlgo}} object.
+  \code{\link{iplotPC}} for plotting a \code{"pcAlgo"} object using
+  package \pkg{igraph}.
+}
 \examples{
 ##################################################
 ## pcAlgo object
@@ -43,7 +43,7 @@ V <- colnames(gmG8$x)
 suffStat <- list(C = cor(gmG8$x), n = n)
 ## estimate CPDAG
 skel.fit <- skeleton(suffStat, indepTest = gaussCItest,
-             alpha = 0.01, labels = V)
+                     alpha = 0.01, labels = V)
 displayAmat(skel.fit)
 
 pc.fit <- pc(suffStat, indepTest = gaussCItest,
@@ -63,8 +63,8 @@ myC <- cov2cor(trueCov(myDAG))
 suffStat <- list(C = myC, n = 10^9)
 V <- LETTERS[1:p] ## labels of nodes
 
-tmpFCI <- fci(suffStat, indepTest=gaussCItest, labels = V, 
-           alpha = 0.9999, doPdsep = FALSE)
+tmpFCI <- fci(suffStat, indepTest=gaussCItest, labels = V,
+              alpha = 0.9999, doPdsep = FALSE)
 displayAmat(tmpFCI)
 }
 \keyword{hplot}

@@ -62,6 +62,8 @@ lower-order bullet points.
 * TODO (1, MM) Package 'ggm' has topOrder() for topological ordering. Should allow to use it,
    e.g., optionally ('topOrder=FALSE') in unifDAG(.) and randDAG() to fixup a non-top.ordered input.
 ** TODO (3) MM: ggm::topOrder() can be made faster
+* TODO (1, MM): as(<fitted-object>, "amat") gives a "amat"-object with 'type' and print() method.
+    see also 'Adjacency Matrices' in the "Internal Programming" part below.
 * TODO (3) Parallelize option
 * TODO (3) Allow 'tiers' (as in Tetrad), and 'background knowledge' (about orientations etc).
 * TODO (2,MM) Robustness examples that pcAlgo() had explicitly:  add _examples_ using robust mcor()
@@ -133,17 +135,16 @@ lower-order bullet points.
 
 * TODO (3) MK[2014-07-08]: Change convention: If something strange happens with a test, KEEP edge
 * TODO (3) MK[2014-07-08]: Make up some clever way to deal with NAs in the continuous case (phps also in other cases) and prepare test functions for users
-* TODO (2) Internal Programming - documentation & style guide(s)  -- (Martin):
+* TODO (2,MM) Write a "doc" on Internal Programming - conventions and style guide
 ** (2) am[which(am != 0)]  is faster than am[am != 0]
    for a *sparse* am of dim 50 x 50  ==> Using the more ugly notation is ok!
    --- But this will most probably change in R >=  3.3.0
 ** (3) Adjacency Matrices:
 *** TODO (3) We should use *integer* {internal} ==>  A[..,] <- 1 is *wrong*, should be A[..] <- 1L, etc
 *** TODO (3) Our code should make sure that ad-matrices are *integer* and hence use 1L, 0L, etc !
-*** DONE Document the different kinds of 'amat' (adjacency matrices) that we use.
-   symmetric ? / lower- or upper-triangular ?
-   E.f. man/backdoor.Rd has  "Coding of adjacency matrix" (0,1,2,3)
-   Fixed; see man/amatType.Rd
+*** DONE Document the different kinds of 'amat' (adjacency matrices) that we use:
+    file:man/amatType.Rd  (symmetric ? / lower- or upper-triangular ?)
+   E.f. file:man/backdoor.Rd has  "Coding of adjacency matrix" (0,1,2,3)
 ** TODO (2,MK) Graph Node Labels  <==>  rownames(A):  Still a mess, sometimes using as.numeric(rownames(.)),
    e.g. in my.SpecialDag() in [[R/pcalg.R]]
 *** In these cases graph labels are lost and replaced by "1", "2", .. this is typically entirely wrong.
