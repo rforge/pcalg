@@ -70,7 +70,7 @@ lower-order bullet points.
         2 of  pc(), fci(), rfci(), fciPlus()
 --------------------------------------------------------------------------
 * DONE find.unsh.triple(): remove arg 'p'
-* DONE DO: MK[2013-12-17]: added and documented function pdag2allDags; deprecated function allDags
+* DONE MK[2013-12-17]: added and documented function pdag2allDags; deprecated function allDags
 * TODO (2) MK[2013-12-17]: Letztest Bsp in fci(): p-1 statt p im Argument, weil eine (latente) Var gelöscht wurde
 * DONE Boost C++ library needed for Alain's GIES
 ** DONE does *need* a correct ./configure, somewhat analogous to Martin's Rmpfr.
@@ -154,3 +154,4 @@ lower-order bullet points.
     as in all practically all "base R" help pages.
 
 
+* TODO (2,MK) Add test for lingam() (exits only for LINGAM() )
