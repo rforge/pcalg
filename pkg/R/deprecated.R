@@ -658,7 +658,8 @@ plotAG <- function(amat)
 }
 
 showAmat <- function(object) {
-    .Deprecated(msg = "showAmat() is deprecated and only kept for backward compatibility. Please use displayAmat() instead\n")
+    .Deprecated(msg = "showAmat() is deprecated and only kept for backward compatibility.
+ Please use as(*, \"amat\") instead\n")
   g <- getGraph(object)
   cat("\nAdjacency Matrix G:",
       "G[i,j] = 1/2 if edge mark of edge i-j at j is head/tail.",

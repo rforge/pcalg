@@ -6777,17 +6777,12 @@ displayAmat <- function(obj) {
     }
     list(amat = amat, type = type)
 }
-###  MM: (ess-set-style 'DEFAULT) : we have much nesting ==> only indent by 2
-## Local Variables:
-## eval: (ess-set-style 'DEFAULT 'quiet)
-## delete-old-versions: never
-## End:
 
 pdag2allDags <- function(gm, verbose = FALSE) {
     nodeNms <- colnames(gm)
     p <- ncol(gm)
     rownames(gm) <- colnames(gm) <- as.character(1:p)
-                   
+
     res <- allDags.internal(gm = gm, a = gm, tmp = NULL, verbose = verbose)
     list(dags = res, nodeNms = nodeNms)
 }
@@ -6850,4 +6845,17 @@ allDags.internal <- function(gm,a,tmp, verbose = FALSE)
   }
   tmp
 }
+
+
+
+
+
+
+###-- This *MUST* remain at bottom of file !
+###-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+###  MM: (ess-set-style 'DEFAULT) : we have much nesting ==> only indent by 2
+## Local Variables:
+## eval: (ess-set-style 'DEFAULT 'quiet)
+## delete-old-versions: never
+## End:
 

@@ -1,5 +1,5 @@
 \name{amatType}
-\title{Types of Adjacency Matrices in Package 'pcalg'}
+\title{Types and Display of Adjacency Matrices in Package 'pcalg'}
 \alias{amatType}
 \alias{amat.cpdag}
 \alias{amat.pag}
@@ -20,6 +20,23 @@
   functions more detailed information on the graph type is needed
   (i.e. DAG or CPDAG; MAG or PAG) this information will be passed in a
   separate argument (see e.g. \code{\link{gac}} and the examples below).
+
+  Note that you get (\sQuote{extract}) such adjacency matrices as (S3)
+  objects of \code{\link{class}} \code{"amat"} via the usual
+  \code{\link{as}(., "<class>")} coercion, \preformatted{  as(from, "amat")
+}%pre
+}
+\arguments{
+  \item{from}{an \R object of
+
+    class \code{\linkS4class{pcAlgo}}, as returned from
+    \code{\link{skeleton}()} or \code{\link{pc}()} or an object of
+
+    class \code{\linkS4class{fciAlgo}}, as from \code{\link{fci}()}
+    (or \code{\link{rfci}}, \code{\link{fciPlus}}, and
+    \code{\link{dag2pag}}), or an object of
+
+    class \code{"LINGAM"} as returned from \code{\link{lingam}()}.}
 }
 \details{
   Adjacency matrices are integer valued square matrices with zeros on the
@@ -54,9 +71,8 @@
   amat[a,b] = 0  and  amat[b,a] = 0   implies   a     b.}
 }
 \seealso{E.g. \code{\link{gac}} for a function which takes an
-  adjacency matrix as input; \code{\link{displayAmat}} for a function which
-  returns an adjacency matrix as output; \code{\linkS4class{fciAlgo}} for a class
-  which has an  adjacency matrix in one slot.
+  adjacency matrix as input; \code{\linkS4class{fciAlgo}} for a class
+  which has an adjacency matrix in one slot.
 }
 \examples{
 ##################################################
@@ -84,10 +100,9 @@ mg3 <- gac(m3, x=2, y=4, z=NULL, type = "mag")
 pg3 <- gac(m3, x=2, y=4, z=NULL, type = "pag")
 %% FIXME:  mg3 is identical to pg3! -- need an example where 'type' matters!
 
-##################################################
-## Function displayAmat() returns an adjacency matrix
-## and the type of the adjacency matrix.
-##################################################
+############################################################
+## as(*, "amat") returns an adjacency matrix incl. its type
+############################################################
 ## Load predefined data
 data(gmG)
 n <- nrow    (gmG8$x)
@@ -98,8 +113,7 @@ suffStat <- list(C = cor(gmG8$x), n = n)
 ## estimate CPDAG
 skel.fit <- skeleton(suffStat, indepTest = gaussCItest,
                      alpha = 0.01, labels = V)
-(resSkel <- displayAmat(skel.fit))
-## or .. better .. "more modern" % FIXME make sure it looks better!
+## Extract the "amat" [and show nicely via  'print()' method]:
 as(skel.fit, "amat")
 
 ##################################################
@@ -116,7 +130,29 @@ suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
 res <- fci(suffStat, indepTest=gaussCItest,
            alpha = 0.9999, p=p, doPdsep = FALSE)
 str(res)
-## get the a(djacency) mat(rix) :
+## get the a(djacency) mat(rix)  and nicely print() it:
 as(res, "amat")
+
+##################################################
+## pcAlgo object
+##################################################
+## Load predefined data
+data(gmG)
+n <- nrow    (gmG8$x)
+V <- colnames(gmG8$x)
+
+## define sufficient statistics
+suffStat <- list(C = cor(gmG8$x), n = n)
+## estimate CPDAG
+skel.fit <- skeleton(suffStat, indepTest = gaussCItest,
+                     alpha = 0.01, labels = V)
+## Extract Adjacency Matrix - and print (via method 'print.amat'):
+as(skel.fit, "amat")
+
+pc.fit <- pc(suffStat, indepTest = gaussCItest,
+             alpha = 0.01, labels = V)
+pc.fit # (using its own print() method 'print.pcAlgo')
+
+as(pc.fit, "amat")
 }
 \keyword{graphs}
