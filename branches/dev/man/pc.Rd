@@ -22,7 +22,7 @@ pc(suffStat, indepTest, alpha, labels, p,
     \code{indepTest(x,y,S,suffStat)}, and tests conditional independence
     of \code{x} and \code{y} given \code{S}.  Here, \code{x} and
     \code{y} are variables, and \code{S} is a (possibly empty) vector of
-    variables (all variables are denoted by their column numbers
+    variables (all variables are denoted by their (integer) column positions
     in the adjacency matrix).  \code{suffStat} is a list, see the
     argument above.  The return value of \code{indepTest} is the p-value
     of the test for conditional independence.}
@@ -105,10 +105,10 @@ pc(suffStat, indepTest, alpha, labels, p,
   The CPDAG is estimated using the PC algorithm (named after its inventors
   \bold{P}eter Spirtes and \bold{C}lark Glymour). The skeleton is
   estimated by the function \code{\link{skeleton}} which uses a modified
-  version of the original PC algorithm (see Colombo and Maathuis (2013) for
+  version of the original PC algorithm (see Colombo and Maathuis (2014) for
   details). The original PC algorithm is known to be
   order-dependent, in the sense that the output depends on the order in
-  which the variables are given. Therefore, Colombo and Maathuis (2013)
+  which the variables are given. Therefore, Colombo and Maathuis (2014)
   proposed a simple modification, called PC-stable, that yields
   order-independent adjacencies in the skeleton (see the help file
   of this function for details). Subsequently, as many edges as possible
@@ -149,14 +149,14 @@ pc(suffStat, indepTest, alpha, labels, p,
   v-structure. Furthermore, no further orientation rule that needs to
   know whether a-b-c is a v-structure or not is applied. Instead of
   using the conservative version, which is quite strict towards the
-  v-structures, Colombo and Maathuis (2013) introduced a less strict
+  v-structures, Colombo and Maathuis (2014) introduced a less strict
   version for the v-structures called majority rule. This adaptation can
   be called using \code{maj.rule = TRUE}. In this case, the triple a-b-c
   is marked as 'ambiguous' if and only if b is in exactly 50 percent of
   such separating sets or no separating set was found. If b is in less
   than 50 percent of the separating sets it is set as a v-structure, and
   if in more than 50 percent it is set as a non v-structure (for more
-  details see Colombo and Maathuis, 2013). The useage of both the
+  details see Colombo and Maathuis, 2014). The useage of both the
   conservative and the majority rule versions resolve the
   order-dependence issues of the determination of the v-structures.
 
@@ -185,12 +185,12 @@ pc(suffStat, indepTest, alpha, labels, p,
   they should not to be interpreted causally. The useage of these lists
   for the candidate edges and allowing bi-directed edges resolves the
   order-dependence issues on the orientation of the v-structures and on
-  the orientation rules, see Colombo and Maathuis (2013) for
+  the orientation rules, see Colombo and Maathuis (2014) for
   more details.
 
   Note that calling (\code{conservative = TRUE}), or \code{maj.rule =
   TRUE}, together with \code{solve.confl = TRUE} produces a fully
-  order-independent output, see Colombo and Maathuis (2013).
+  order-independent output, see Colombo and Maathuis (2014).
 
   Sampling errors, non faithfulness, or hidden variables can also lead
   to non-extendable CPDAGs, meaning that there does not exist a DAG that
@@ -218,9 +218,9 @@ pc(suffStat, indepTest, alpha, labels, p,
   edges are equivalent.}
 
 \references{
-  D. Colombo and M.H. Maathuis (2013).
-  Order-independent constraint-based causal structure learning,
-  (arXiv:1211.3295v2).
+  D. Colombo and M.H. Maathuis (2014).Order-independent constraint-based
+  causal structure learning. \emph{Journal of Machine Learning Research}
+  \bold{15} 3741-3782. 
 
   M. Kalisch, M. Maechler, D. Colombo, M.H. Maathuis and P. Buehlmann
   (2012). Causal Inference Using Graphical Models with the R Package

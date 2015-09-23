@@ -12,14 +12,16 @@
 gac(amat, x, y, z, type = "pag")
 }
 \arguments{
-  \item{amat}{adjacency matrix (see Details for coding) of the given
-    graph specified in \code{type}.}
+  \item{amat}{adjacency matrix of type \link{amat.cpdag} or \link{amat.pag}}
   \item{x,y,z}{(integer) positions of variables in \code{x},
     \code{y} or \code{z} in the adjacency matrix. \code{x}, \code{y} and
   \code{z} can be vectors representing several nodes.}
   \item{type}{string specifying the type of graph of the adjacency matrix
-    \code{amat}.  It can be a DAG (type="dag"), a CPDAG (type="cpdag"), a
-    MAG (type="mag"), or a PAG (type="pag").}
+    \code{amat}.  It can be a DAG (type="dag"), a CPDAG (type="cpdag");
+    then the type of the adjacency matrix is assumed to be
+    \link{amat.cpdag}. It can also be a MAG (type="mag"), or a PAG
+    (type="pag"); then the type of the adjacency matrix is assumed to be
+  \link{amat.pag}.}
 }
 \details{
   This work is a generalization of the work of Shpitser et al. (2012)
@@ -63,13 +65,7 @@ gac(amat, x, y, z, type = "pag")
   total causal effect might be identifiable via some technique other
   than covariate adjustment.
 
-  \bold{Coding of adjacency matrix:}\cr
-  If \code{type = "dag"} or \code{type = "cpdag"}: coding 0/1 for no edge
-  or tail / arrowhead; e.g. \code{amat[a,b] = 0} and \code{amat[b,a] = 1}
-  implies a -> b.
-  \cr
-  Else: coding 0,1,2,3 for no edge, circle, arrowhead, tail; e.g.,
-  \code{amat[a,b] = 2} and \code{amat[b,a] = 3} implies a -> b.
+  For the coding of the adjacency matrix see \link{amatType}.
 }
 \value{
   A \code{\link{list}} with three components:
@@ -82,7 +78,9 @@ gac(amat, x, y, z, type = "pag")
 }
 \references{
   E. Perkovic, J. Textor, M. Kalisch and M.H. Maathuis (2015). A
-  Complete Generalized Adjustment Criterion. In \emph{Proceedings of UAI 2015.}
+  Complete Generalized Adjustment Criterion. In \emph{Proceedings of UAI
+    2015.}
+  \url{http://arxiv.org/abs/1507.01524}.
 
   I. Shpitser, T. VanderWeele and J.M. Robins (2012). On the validity of
   covariate adjustment for estimating causal effects. In

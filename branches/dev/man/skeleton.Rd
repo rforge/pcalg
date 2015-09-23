@@ -105,12 +105,12 @@ skeleton(suffStat, indepTest, alpha, labels, p,
   The PC algorithm (Spirtes, Glymour and Scheines, 2000)
   (\code{method = "original"}) is known to be order-dependent, in the
   sense that the output may depend on the order in which the variables
-  are given.  Therefore, Colombo and Maathuis (2013) proposed a simple
+  are given.  Therefore, Colombo and Maathuis (2014) proposed a simple
   modification, called \dQuote{PC-stable}, which yields
   order-independent adjacencies in the skeleton, provided by \code{pc()}
   with the new default \code{method = "stable"}.  This stable variant
   of the algorithm is also available with the \code{method = "stable.fast"}:
-  it runs the algorithm of Colombo and Maathuis (2013) faster than
+  it runs the algorithm of Colombo and Maathuis (2014) faster than
   \code{method = "stable"} in general, but should be regarded as an
   experimental option at the moment.
 
@@ -142,10 +142,10 @@ skeleton(suffStat, indepTest, alpha, labels, p,
   et al., 2012) algorithms are built up from the PC algorithm, they are also
   order-dependent in the skeleton.  To resolve their order-dependence
   issues in the skeleton is more involved, see Colombo and Maathuis
-  (2013).  However now, with \code{method = "stable"}, this function
+  (2014).  However now, with \code{method = "stable"}, this function
   estimates an initial order-independent skeleton in these algorithms
   (for additional details on how to make the final skeleton of FCI fully
-  order-independent see \code{\link{fci}} and Colombo and Maathuis (2013)).
+  order-independent see \code{\link{fci}} and Colombo and Maathuis (2014)).
 
   The information in \code{fixedGaps} and \code{fixedEdges} is used as follows.
   The gaps given in \code{fixedGaps} are introduced in the very beginning of
@@ -160,9 +160,9 @@ skeleton(suffStat, indepTest, alpha, labels, p,
   the variables.
 }
 \references{
-  D. Colombo and M.H. Maathuis (2013).
-  \emph{Order-independent constraint-based causal structure learning},
-  (arXiv:1211.3295v2)
+  D. Colombo and M.H. Maathuis (2014).Order-independent constraint-based
+  causal structure learning. \emph{Journal of Machine Learning Research}
+  \bold{15} 3741-3782. 
 
   D. Colombo, M. H. Maathuis, M. Kalisch, T. S. Richardson
   (2012). Learning high-dimensional directed acyclic graphs with latent

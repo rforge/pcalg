@@ -14,7 +14,7 @@
 idaFast(x.pos, y.pos.set, mcov, graphEst)
 }
 \arguments{
-\item{x.pos}{integer position of variable \code{x} in the covariance matrix.}
+\item{x.pos}{(integer) position of variable \code{x} in the covariance matrix.}
 \item{y.pos.set}{integer vector of positions of the target variables
   \code{y} in the covariance matrix.}
 \item{mcov}{covariance matrix that was used to estimate \code{graphEst}}
