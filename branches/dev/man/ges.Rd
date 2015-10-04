@@ -12,7 +12,8 @@
 }
 \usage{
 ges(score, labels = score$getNodes(),
-  fixedGaps = NULL, turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
+  fixedGaps = NULL, adaptive = FALSE, turning = TRUE, maxDegree = integer(0),
+  verbose = FALSE, ...)
 }
 \arguments{
   \item{score}{An instance of a class derived from \code{\linkS4class{Score}}
@@ -22,6 +23,8 @@ ges(score, labels = score$getNodes(),
   \item{fixedGaps}{logical \emph{symmetric} matrix of dimension p*p.  If entry
     \code{[i, j]} is \code{TRUE}, the result is guaranteed to have no edge
     between nodes \eqn{i} and \eqn{j}.}
+  \item{adaptive}{Logical indicating whether constraints should be adapted to
+    newly detected v-structures (cf. details).}
   \item{turning}{Logical indicating whether the function should try to augment
     the score by turning edges (cf. details).}
   \item{maxDegree}{Parameter used to limit the vertex degree of the estimated
@@ -99,6 +102,25 @@ ges(score, labels = score$getNodes(),
   choice of a score function) and does not depend on conditional independence
   tests.  Since GES always operates in the space of essential graphs, it
   returns a valid essential graph (or CPDAG) in any case.
+  
+  Using the argument \code{fixedGaps}, one can make sure that certain edges
+  will \emph{not} be present in the resulting essential graph: if the entry
+  \code{[i, j]} of the matrix passed to \code{fixedGaps} is \code{TRUE}, there
+  will be no edge between nodes \eqn{i} and \eqn{j}.  Using this argument 
+  can speed up the execution of GIES and allows the user to account for
+  previous knowledge or other constraints.  Setting the argument 
+  \code{adaptive = TRUE} relaxes the constraints encoded by \code{fixedGaps}.
+  When \code{adaptive = TRUE} and the algorithm introduces a new v-structure
+  \eqn{a \longrightarrow b \longleftarrow c}{a → b ← c} in the forward phase,
+  then the edge \eqn{a - c} is removed from the list of fixed gaps, meaning
+  that the insertion of an edge between \eqn{a} and \eqn{c} becomes possible
+  even if it was forbidden by the initial matrix passed to \code{fixedGaps}.
+  This modification of GES is called ARGES (adaptively restricted greedy 
+  equivalence search) and has been presented in Nandy, Hauser and Maathuis
+  (2015). With this adaptive modification, the successive application of a 
+  skeleton estimation method and GES restricted to an estimated skeleton still
+  gives a \emph{consistent} estimator of the DAG, which is not the case without
+  the adaptive modification.
 }
 \value{
   \code{ges} returns a list with the following two components:
@@ -115,6 +137,9 @@ ges(score, labels = score$getNodes(),
   interventional Markov equivalence classes of directed acyclic graphs.
   \emph{Journal of Machine Learning Research} \bold{13}, 2409--2464.
 
+  P. Nandy, A. Hauser and M. Maathuis (2015).  Understanding consistency in 
+  hybrid causal structure learning.  \emph{arXiv preprint} 1507.02608
+  
   P. Spirtes, C.N. Glymour, and R. Scheines (2000).  \emph{Causation,
   Prediction, and Search}, MIT Press, Cambridge (MA).
 }

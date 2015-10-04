@@ -11,7 +11,8 @@
 }
 \usage{
 gies(score, labels = score$getNodes(), targets = score$getTargets(),
-     fixedGaps = NULL, turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
+     fixedGaps = NULL, adaptive = FALSE, turning = TRUE, maxDegree = integer(0), 
+     verbose = FALSE, ...)
 }
 \arguments{
   \item{score}{An \R object inheriting from \code{\linkS4class{Score}}.}
@@ -22,6 +23,8 @@ gies(score, labels = score$getNodes(), targets = score$getTargets(),
   \item{fixedGaps}{Logical \emph{symmetric} matrix of dimension p*p.  If entry
     \code{[i, j]} is \code{TRUE}, the result is guaranteed to have no edge
     between nodes \eqn{i} and \eqn{j}.}
+  \item{adaptive}{Logical indicating whether constraints should be adapted to
+    newly detected v-structures (cf. details).}
   \item{turning}{Logical indicating whether the function should try to augment
     the score by turning edges (cf. details).}
   \item{maxDegree}{Parameter used to limit the vertex degree of the estimated
@@ -87,6 +90,24 @@ gies(score, labels = score$getNodes(), targets = score$getTargets(),
   equivalence search) algorithm of Chickering (2002) which is limited to
   observational data and hence operates on the space of observational instead
   of interventional Markov equivalence classes.
+  
+  Using the argument \code{fixedGaps}, one can make sure that certain edges
+  will \emph{not} be present in the resulting essential graph: if the entry
+  \code{[i, j]} of the matrix passed to \code{fixedGaps} is \code{TRUE}, there
+  will be no edge between nodes \eqn{i} and \eqn{j}.  Using this argument 
+  can speed up the execution of GIES and allows the user to account for
+  previous knowledge or other constraints.  Setting the argument 
+  \code{adaptive = TRUE} relaxes the constraints encoded by \code{fixedGaps}.
+  When \code{adaptive = TRUE} and the algorithm introduces a new v-structure
+  \eqn{a \longrightarrow b \longleftarrow c}{a → b ← c} in the forward phase,
+  then the edge \eqn{a - c} is removed from the list of fixed gaps, meaning
+  that the insertion of an edge between \eqn{a} and \eqn{c} becomes possible
+  even if it was forbidden by the initial matrix passed to \code{fixedGaps}.
+  This modification of the forward phase of GIES is inspired by the 
+  analog modification in the forward phase of GES, which makes the successive
+  application of a skeleton estimation method and GES restricted to an 
+  estimated skeleton a \emph{consistent} estimator of the DAG (cf. Nandy,
+  Hauser and Maathuis, 2015). 
 }
 \value{
   \code{gies} returns a list with the following two components:
@@ -102,6 +123,9 @@ gies(score, labels = score$getNodes(), targets = score$getTargets(),
   A. Hauser and P. Bühlmann (2012).  Characterization and greedy learning of
   interventional Markov equivalence classes of directed acyclic graphs.
   \emph{Journal of Machine Learning Research} \bold{13}, 2409--2464.
+  
+  P. Nandy, A. Hauser and M. Maathuis (2015).  Understanding consistency in 
+  hybrid causal structure learning.  \emph{arXiv preprint} 1507.02608
 }
 \author{
   Alain Hauser (\email{alain.hauser@bfh.ch})
