@@ -62,7 +62,7 @@ lower-order bullet points.
 * TODO (1, MM) Package 'ggm' has topOrder() for topological ordering. Should allow to use it,
    e.g., optionally ('topOrder=FALSE') in unifDAG(.) and randDAG() to fixup a non-top.ordered input.
 ** TODO (3) MM: ggm::topOrder() can be made faster
-* TODO (1, MM): as(<fitted-object>, "amat") gives a "amat"-object with 'type' and print() method.
+* DONE (1, MM): as(<fitted-object>, "amat") gives a "amat"-object with 'type' and print() method.
     see also 'Adjacency Matrices' in the "Internal Programming" part below.
 * TODO (3) Parallelize option
 * TODO (3) Allow 'tiers' (as in Tetrad), and 'background knowledge' (about orientations etc).

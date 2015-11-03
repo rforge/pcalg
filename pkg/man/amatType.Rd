@@ -73,6 +73,10 @@
 \seealso{E.g. \code{\link{gac}} for a function which takes an
   adjacency matrix as input; \code{\linkS4class{fciAlgo}} for a class
   which has an adjacency matrix in one slot.
+
+  \code{\link{getGraph}(x)} extracts the \code{\linkS4class{graph}}
+  object from \code{x}, whereas \code{as(*, "amat")} gets the
+  corresponding adjacency matrix.
 }
 \examples{
 ##################################################
