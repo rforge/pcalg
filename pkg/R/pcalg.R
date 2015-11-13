@@ -582,12 +582,8 @@ dag2cpdag <- function(g)
   ## Arguments:
   ## - dag: input DAG (graph object)
   ## ----------------------------------------------------------------------
-  ## Author: Alain Hauser, Date: 13 Mar 2015
-  nn <- nodes(g) ## *: to keep node labels
-  dag <- as(g, "GaussParDAG")
-  res <- as(dag2essgraph(dag), "graphNEL")
-  nodes(res) <- nn ## *
-  res
+  ## Author: Alain Hauser, Date: 14 Mar 2015
+  dag2essgraph(g)
 }
 
 
@@ -1973,7 +1969,7 @@ reach <- function(a,b,c,adjacency)
 skeleton <- function(suffStat, indepTest, alpha, labels, p,
 		     method = c("stable", "original", "stable.fast"), m.max = Inf,
 		     fixedGaps = NULL, fixedEdges = NULL,
-		     NAdelete = TRUE, verbose = FALSE)
+		     NAdelete = TRUE, numCores = 1, verbose = FALSE)
 {
   ## Purpose: Perform undirected part of PC-Algorithm, i.e.,
   ## estimate skeleton of DAG given data
@@ -1989,12 +1985,14 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
   ## - fixedEdges: Edges marked here are not changed (logical)
   ## - NAdelete: delete edge if pval=NA (for discrete data)
   ## - m.max: maximal size of conditioning set
+  ## - numCores: number of cores to be used for calculation if 
+  ##   method = "stable.fast"
   ## ----------------------------------------------------------------------
   ## Value:
   ## - G, sepset, pMax, ord, n.edgetests
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 09.12.2009
-  ## Modification: Diego Colombo; Martin Maechler
+  ## Modification: Diego Colombo; Martin Maechler; Alain Hauser
 
   ## x,y,S konstruieren
   ##-   tst <- try(indepTest(x,y,S, obj))
@@ -2045,6 +2043,11 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
   else if (!identical(fixedEdges, t(fixedEdges)) )
     stop("fixedEdges must be symmetric")
 
+  ## Check number of cores
+  stopifnot((is.integer(numCores) || is.numeric(numCores)) && numCores > 0)
+  if (numCores > 1 && method != "stable.fast") {
+    warning("Argument numCores ignored: parallelization only available for method = 'stable.fast'")
+  }
   if (method == "stable.fast") {
     ## Do calculation in C++...
     if (identical(indepTest, gaussCItest))
@@ -2054,7 +2057,8 @@ skeleton <- function(suffStat, indepTest, alpha, labels, p,
     options <- list(
       verbose = as.integer(verbose),
       m.max = as.integer(ifelse(is.infinite(m.max), p, m.max)),
-      NAdelete = NAdelete)
+        NAdelete = NAdelete,
+        numCores = numCores)
     res <- .Call("estimateSkeleton", G, suffStat, indepTestName, indepTest, alpha, fixedEdges, options);
     G <- res$amat
     ## sepset <- res$sepset
@@ -2158,7 +2162,7 @@ pc <- function(suffStat, indepTest, alpha, labels, p,
                u2pd = c("relaxed", "rand", "retry"),
                skel.method = c("stable", "original", "stable.fast"),
                conservative = FALSE, maj.rule = FALSE,
-               solve.confl = FALSE, verbose = FALSE)
+               solve.confl = FALSE, numCores = 1, verbose = FALSE)
 {
   ## Purpose: Perform PC-Algorithm, i.e., estimate skeleton of DAG given data
   ## ----------------------------------------------------------------------
@@ -2180,6 +2184,7 @@ pc <- function(suffStat, indepTest, alpha, labels, p,
   ##   "retry": udag2pdagSpecial
   ## - gTrue: Graph suffStatect of true DAG
   ## - conservative: If TRUE, conservative PC is done
+  ## - numCores: handed to skeleton(), used for parallelization
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: 26 Jan 2006; Martin Maechler
   ## Modifications: Sarah Gerster, Diego Colombo, Markus Kalisch
@@ -2215,7 +2220,7 @@ pc <- function(suffStat, indepTest, alpha, labels, p,
   ## Skeleton
   skel <- skeleton(suffStat, indepTest, alpha, labels = labels, method = skel.method,
                    fixedGaps = fixedGaps, fixedEdges = fixedEdges,
-                   NAdelete = NAdelete, m.max = m.max, verbose = verbose)
+                   NAdelete=NAdelete, m.max=m.max, numCores=numCores, verbose=verbose)
   skel@call <- cl # so that makes it into result
 
   ## Orient edges
@@ -3822,7 +3827,7 @@ fci <- function(suffStat, indepTest, alpha, labels, p,
                 fixedGaps = NULL, fixedEdges = NULL, NAdelete = TRUE,
                 m.max = Inf, pdsep.max = Inf, rules = rep(TRUE, 10),
                 doPdsep = TRUE, biCC = FALSE, conservative = FALSE,
-                maj.rule = FALSE, verbose = FALSE)
+                maj.rule = FALSE, numCores = 1, verbose = FALSE)
 {
   ## Purpose: Perform FCI-Algorithm, i.e., estimate PAG
   ## ----------------------------------------------------------------------
@@ -3854,6 +3859,7 @@ fci <- function(suffStat, indepTest, alpha, labels, p,
   ##         anytime for the Anytime FCI and in this cas m.max must be specified;
   ##         or it can be adaptive for Adaptive Anytime FCI and in this case
   ##         m.max must not be specified.
+  ## - numCores: handed to skeleton(), used for parallelization
 
   ## ----------------------------------------------------------------------
   ## Author: Markus Kalisch, Date: Dec 2009; update: Diego Colombo, 2012; Martin Maechler, 2013
@@ -3888,7 +3894,7 @@ fci <- function(suffStat, indepTest, alpha, labels, p,
 
   skel <- skeleton(suffStat, indepTest, alpha, labels = labels, method = skel.method,
                    fixedGaps = fixedGaps, fixedEdges = fixedEdges,
-                   NAdelete = NAdelete, m.max = m.max, verbose = verbose)
+                     NAdelete=NAdelete, m.max=m.max, numCores=numCores, verbose=verbose)
   skel@call <- cl # so that makes it into result
   G <- as(skel@graph, "matrix")
   sepset <- skel@sepset
@@ -4721,7 +4727,7 @@ rfci <- function(suffStat, indepTest, alpha, labels, p,
                  fixedGaps = NULL, fixedEdges = NULL,
                  NAdelete = TRUE, m.max = Inf, rules = rep(TRUE, 10),
                  conservative = FALSE, maj.rule = FALSE,
-                 verbose = FALSE)
+                 numCores = 1, verbose = FALSE)
 {
   ## Purpose: Perform RFCI-Algorithm, i.e., estimate PAG
   ## ----------------------------------------------------------------------
@@ -4743,6 +4749,7 @@ rfci <- function(suffStat, indepTest, alpha, labels, p,
   ## - maj.rule: TRUE or FALSE variable containing if the majority rule is
   ##             used instead of the normal conservative
   ## - labels: names of the variables or nodes
+  ## - numCores: handed to skeleton(), used for parallelization
 
   ## ----------------------------------------------------------------------
   ## Author: Diego Colombo, 2011; modifications: Martin Maechler
@@ -4768,7 +4775,7 @@ rfci <- function(suffStat, indepTest, alpha, labels, p,
 
   skel <- skeleton(suffStat, indepTest, alpha, labels = labels, method = skel.method,
                    fixedGaps = fixedGaps, fixedEdges = fixedEdges,
-                   NAdelete = NAdelete, m.max = m.max, verbose = verbose)
+                   NAdelete=NAdelete, m.max=m.max, numCores=numCores, verbose=verbose)
   sk.A <- as(skel@graph, "matrix")
   sepset <- skel@sepset
   ## the list of all ordered unshielded triples (the graph g does not change it is just a search!)

@@ -132,7 +132,7 @@ export(trueCov,
        gds,
        simy,
        mat2targets,
-       # targets2mat,
+       targets2mat,
        dag2essgraph,
        ## --- end{Alain}
        fciPlus,

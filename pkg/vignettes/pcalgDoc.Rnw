@@ -223,13 +223,13 @@ result.
 <<Iplot, echo=FALSE, eval=FALSE>>=
 stopifnot(require(Rgraphviz))# needed for all our graph plots
 par(mfrow = c(1,2))
-plot(gmG$g, main = "") ; plot(pc.gmG, main = "")
+plot(gmG8$g, main = "") ; plot(pc.gmG, main = "")
 @% two plots side by sid
 
 <<exIntroPlot>>=
-suffStat <- list(C = cor(gmG$x), n = nrow(gmG$x))
+suffStat <- list(C = cor(gmG8$x), n = nrow(gmG8$x))
 pc.gmG <- pc(suffStat, indepTest = gaussCItest,
-             p = ncol(gmG$x), alpha = 0.01)
+             p = ncol(gmG8$x), alpha = 0.01)
 <<Iplot>>
 @
 \begin{figure}[htb]
@@ -277,11 +277,11 @@ function \code{ida()}. To provide full quantitative information, we need to
 pass the covariance matrix in addition to the estimated causal structure.
 
 <<exIntro2>>=
-ida(1, 6, cov(gmG$x), pc.gmG@graph)
+ida(1, 6, cov(gmG8$x), pc.gmG@graph)
 @
 
 Since we simulated the data, we know that the true value of the causal
-effect is \Sexpr{gGtrue <- gmG$g; round(causalEffect(gGtrue, 6, 1), 2)}. %$
+effect is \Sexpr{gGtrue <- gmG8$g; round(causalEffect(gGtrue, 6, 1), 2)}. %$
 Thus, one of the two
 estimates is indeed close to the true value. Since both values are larger
 than zero, we can conclude that variable $V_1$ has a positive causal effect
@@ -295,7 +295,7 @@ times. However, a faster way is to call the function \code{idaFast()}, which
 was tailored for such situations.
 
 <<exIntro3>>=
-idaFast(1, c(4,5,6), cov(gmG$x), pc.gmG@graph)
+idaFast(1, c(4,5,6), cov(gmG8$x), pc.gmG@graph)
 @
 
 Each row in the output shows the estimated set of possible causal effects
@@ -893,11 +893,11 @@ underlying DAG are shown in Fig.~\ref{fig:skelExpl}.
   \centering
 <<skelExpl1Plot, fig=TRUE>>=
 ## using  data("gmG", package="pcalg")
-suffStat <- list(C = cor(gmG$x), n = nrow(gmG$x))
+suffStat <- list(C = cor(gmG8$x), n = nrow(gmG8$x))
 skel.gmG <- skeleton(suffStat, indepTest = gaussCItest,
-                   p = ncol(gmG$x), alpha = 0.01)
+                   p = ncol(gmG8$x), alpha = 0.01)
 par(mfrow = c(1,2))
-plot(gmG$g, main = ""); plot(skel.gmG, main = "")
+plot(gmG8$g, main = ""); plot(skel.gmG, main = "")
 @
 \caption{True underlying DAG (left) and estimated skeleton (right) fitted
   on the simulated Gaussian data set \texttt{gmG}.}
@@ -1075,9 +1075,9 @@ Fig.~\ref{fig:pcFit1}.
 \begin{figure}
   \centering
 <<pcExpl-plot, fig=TRUE>>=
-suffStat <- list(C = cor(gmG$x), n = nrow(gmG$x))
-pc.fit <- pc(suffStat, indepTest=gaussCItest, p = ncol(gmG$x), alpha = 0.01)
-par(mfrow= c(1,2));  plot(gmG$g, main = ""); plot(pc.fit, main = "")
+suffStat <- list(C = cor(gmG8$x), n = nrow(gmG8$x))
+pc.fit <- pc(suffStat, indepTest=gaussCItest, p = ncol(gmG8$x), alpha = 0.01)
+par(mfrow= c(1,2));  plot(gmG8$g, main = ""); plot(pc.fit, main = "")
 @
 \caption{True underlying DAG (left) and estimated CPDAG (right) fitted on the
   simulated Gaussian data set \code{gmG}.}
@@ -1125,9 +1125,9 @@ Once a score object is defined, the GES algorithm is called as follows:
 <<ges-args, echo = FALSE>>=
 showF(ges)
 @
-The argument \code{p} specifies the number of variables in the model,
-\code{score} is a score object defined before.  The argument \code{turning}
-indicates whether the novel turning phase (see Section \ref{sec:gm}) not
+The argument \code{score} is a score object defined before.  The
+argument \code{turning} indicates whether the novel turning phase 
+(see Section \ref{sec:gm}) not
 present in the original implementation of \cite{Chickering2002} should be
 used, and \code{maxdegree} can be used to bound the vertex degree of the
 estimated graph.  More details can be found in the help file of
@@ -1140,9 +1140,9 @@ exactly the same in this case.
 \begin{figure}
   \centering
 <<pcExpl-plot, fig=TRUE>>=
-score <- new("GaussL0penObsScore", gmG$x)
-ges.fit <- ges(ncol(gmG$x), score)
-par(mfrow=1:2); plot(gmG$g, main = ""); plot(ges.fit$essgraph, main = "")
+score <- new("GaussL0penObsScore", gmG8$x)
+ges.fit <- ges(score)
+par(mfrow=1:2); plot(gmG8$g, main = ""); plot(ges.fit$essgraph, main = "")
 @
 \caption{True underlying DAG (left) and essential graph (right) estimated
   with the GES algorithm fitted on the simulated Gaussian data set \code{gmG}.}
@@ -1515,8 +1515,8 @@ respectively) is estimated in Figure~\ref{fig:giesFit}.
 <<gies-fit-plot, fig=TRUE, height = 3>>=
 score <- new("GaussL0penIntScore", gmInt$x, targets = gmInt$targets,
              target.index = gmInt$target.index)
-gies.fit <- gies(ncol(gmInt$x), gmInt$targets, score)
-simy.fit <- simy(ncol(gmInt$x), gmInt$targets, score)
+gies.fit <- gies(score)
+simy.fit <- simy(score)
 par(mfrow = c(1, 3)) ; plot(gmInt$g, main = "")
 plot(gies.fit$essgraph, main = "")
 plot(simy.fit$essgraph, main = "")
@@ -1935,11 +1935,11 @@ myCItest <- function(x,y,S, suffStat) {
 @
 We can now use this function together with \code{pc()}.
 <<gaussCItest-ex, echo = FALSE>>=
-suffStat <- list(C = cor(gmG$x), n = 5000)
+suffStat <- list(C = cor(gmG8$x), n = 5000)
 pc.gmG <- pc(suffStat, indepTest=gaussCItest, p = 8, alpha = 0.01)
 @
 <<myCItest-def-plot, eval=False>>=
-pc.myfit <- pc(suffStat = gmG$x, indepTest = myCItest,
+pc.myfit <- pc(suffStat = gmG8$x, indepTest = myCItest,
                p = 8, alpha = 0.01)
 par(mfrow = c(1,2)); plot(pc.gmG, main = ""); plot(pc.myfit, main = "")
 @
@@ -1974,7 +1974,7 @@ system.time(for(i in 1:10)
       ##  User      System verstrichen
       ## 0.593       0.000       0.594
 system.time(for(i in 1:10)
-            pc.myfit <- pc(gmG$x,  indepTest = myCItest,  p = 8, alpha = 0.01))
+            pc.myfit <- pc(gmG8$x,  indepTest = myCItest,  p = 8, alpha = 0.01))
 ## Using  resid(lm(..)) twice:
      ##   User      System verstrichen
      ## 44.864       0.007      44.937

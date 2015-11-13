@@ -8,7 +8,7 @@
 #ifndef GIES_DEBUG_HPP_
 #define GIES_DEBUG_HPP_
 
-#include <iostream>
+#include <ostream>
 #include <Rcpp.h>
 
 // Define default debug level

@@ -8,8 +8,12 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include <boost/lambda/lambda.hpp>
+// #include <boost/lambda/lambda.hpp>
 #include <boost/graph/adjacency_list.hpp>
+// Experimental support for OpenMP; aim: parallelize more and more functions...
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 // Define BGL class for undirected graph
 typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> UndirectedGraph;
@@ -20,49 +24,8 @@ typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> Undi
 #define DEFINE_GLOBAL_DEBUG_STREAM
 #include "pcalg/gies_debug.hpp"
 
-using namespace boost::lambda;
+// using namespace boost::lambda;
 
-
-/**
- * Reads in a graph from a list of in-edges passed as a SEXP to
- * an EssentialGraph object
- */
-EssentialGraph castGraph(SEXP argInEdges)
-{
-	int i;
-	Rcpp::List listInEdges(argInEdges);
-	EssentialGraph result(listInEdges.size());
-
-	for (i = 0; i < listInEdges.size(); ++i) {
-		Rcpp::IntegerVector vecParents((SEXP)(listInEdges[i]));
-		// Adapt indices to C++ convention
-		for (Rcpp::IntegerVector::iterator vi = vecParents.begin(); vi != vecParents.end(); ++vi)
-			result.addEdge(*vi - 1, i);
-	}
-
-	return result;
-}
-
-/**
- * Wrap a graph structure to an R list of in-edges
- */
-Rcpp::List wrapGraph(EssentialGraph graph)
-{
-	Rcpp::List result;
-	Rcpp::IntegerVector vecEdges;
-	std::set<uint> edges;
-	std::set<uint>::iterator si;
-
-	for (uint i = 0; i < graph.getVertexCount(); ++i) {
-		edges = graph.getInEdges(i);
-		vecEdges = Rcpp::IntegerVector();
-		for (si = edges.begin(); si != edges.end(); ++si)
-			vecEdges.push_back(*si + 1);
-		result.push_back(vecEdges);
-	}
-
-	return result;
-}
 
 /**
  * Yields the local score of a vertex given its parents.
@@ -134,6 +97,7 @@ RcppExport SEXP globalScore(
 
 	// Calculate local score
 	double result = score->global(castGraph(argInEdges));
+	// TODO: check why this leads to a segfault!!!!
 	delete score;
 	return Rcpp::wrap(result);
 
@@ -206,7 +170,7 @@ RcppExport SEXP globalMLE(
 	TargetFamily targets = castTargets(data["targets"]);
 	Score* score = createScore(Rcpp::as<std::string>(argScore), &targets, data);
 
-	// Calculate local score
+	// Calculate global score
 	std::vector<std::vector<double> > result = score->globalMLE(castGraph(argInEdges));
 	delete score;
 	return Rcpp::wrap(result);
@@ -311,6 +275,9 @@ RcppExport SEXP causalInference(
 		graph.setFixedGaps(fixedGaps, gapsInverted);
 	}
 
+	// Cast option for adaptive handling of fixed gaps (cf. "AGES")
+	bool adaptive = options["adaptive"];
+
 	// Perform inference algorithm:
 	// GIES
 	if (algName == "GIES") {
@@ -327,7 +294,7 @@ RcppExport SEXP causalInference(
 			bool cont;
 			do {
 				cont = false;
-				for (steps.push_back(0); graph.greedyForward(); steps.back()++);
+				for (steps.push_back(0); graph.greedyForward(adaptive); steps.back()++);
 				for (steps.push_back(0); graph.greedyBackward(); steps.back()++)
 					cont = true;
 				for (steps.push_back(0); graph.greedyTurn(); steps.back()++)
@@ -335,7 +302,7 @@ RcppExport SEXP causalInference(
 			} while (cont);
 		}
 		else {
-			for (steps.push_back(0); graph.greedyForward(); steps.back()++);
+			for (steps.push_back(0); graph.greedyForward(adaptive); steps.back()++);
 			for (steps.push_back(0); graph.greedyBackward(); steps.back()++);
 		}
 	}
@@ -355,7 +322,7 @@ RcppExport SEXP causalInference(
 
 		steps.push_back(0);
 		if (algName == "GIES-F")
-			for (; steps.back() < stepLimit && graph.greedyForward(); steps.back()++);
+			for (; steps.back() < stepLimit && graph.greedyForward(adaptive); steps.back()++);
 		else if (algName == "GIES-B")
 			for (; steps.back() < stepLimit && graph.greedyBackward(); steps.back()++);
 		else if (algName == "GIES-T")
@@ -383,7 +350,7 @@ RcppExport SEXP causalInference(
 		} while (steps[0] + steps[1] + steps[2] < stepLimit && dir != SD_NONE);
 	}
 
-	// GDS
+	// GDS; yields a DAG, not an equivalence class!
 	else if (algName == "GDS") {
 		// TODO: evtl. caching für GDS implementieren...
 		// Perform a greedy search, with or without turning phase
@@ -403,14 +370,13 @@ RcppExport SEXP causalInference(
 			for (steps.push_back(0); graph.greedyDAGBackward(); steps.back()++);
 		}
 
-		// Construct equivalence class
-		graph.replaceUnprotected();
+		// graph.replaceUnprotected();
 	}
 
-	// DP
+	// DP; yields a DAG, not an equivalence class!
 	else if (algName == "SiMy") {
 		graph.siMySearch();
-		graph.replaceUnprotected();
+		// graph.replaceUnprotected();
 	}
 
 	// Other algorithm: throw an error
@@ -460,6 +426,7 @@ RcppExport SEXP dagToEssentialGraph(SEXP argGraph, SEXP argTargets)
 	END_RCPP
 }
 
+
 RcppExport SEXP optimalTarget(SEXP argGraph, SEXP argMaxSize)
 {
 	// Initialize automatic exception handling; manual one does not work any more...
@@ -474,7 +441,8 @@ RcppExport SEXP optimalTarget(SEXP argGraph, SEXP argMaxSize)
 
 	// Adapt numbering convention...
 	std::vector<uint> result(target.begin(), target.end());
-	std::for_each(result.begin(), result.end(), _1++);
+	for (std::vector<uint>::iterator vi = result.begin(); vi != result.end(); ++vi)
+		(*vi)--;
 	return Rcpp::wrap(result);
 
 	END_RCPP
@@ -509,7 +477,6 @@ RcppExport SEXP condIndTestGauss(
 	END_RCPP
 }
 
-
 /**
  * Perform undirected version of PC algorithm, i.e., estimate skeleton of DAG
  * given data
@@ -531,8 +498,6 @@ RcppExport SEXP estimateSkeleton(
 	Rcpp::List options(argOptions);
 	dout.setLevel(Rcpp::as<int>(options["verbose"]));
 
-	int i, j;
-
 	dout.level(1) << "Casting arguments...\n";
 
 	// Cast sufficient statistic and significance level
@@ -553,14 +518,22 @@ RcppExport SEXP estimateSkeleton(
 	// Invalid independence test name: throw error
 	else throw std::runtime_error(indepTestName + ": Invalid independence test name");
 
+	// Initialize OpenMP
+	#ifdef _OPENMP
+		int threads = Rcpp::as<int>(options["numCores"]);
+		if (threads < 0)
+			threads = omp_get_num_procs();
+		omp_set_num_threads(threads);
+	#endif
+
 	// Create list of lists for separation sets
 	Rcpp::LogicalMatrix adjMatrix(argAdjMatrix);
 	int p = adjMatrix.nrow();
 	SepSets sepSet(p, std::vector<arma::ivec>(p, arma::ivec(1)));
-	for (i = 0; i < p; ++i)
-		for (j = 0; j < p; ++j)
+	for (int i = 0; i < p; ++i)
+		for (int j = 0; j < p; ++j)
 			sepSet[i][j].fill(-1);
-	// TODO to save space, only create a triangular list only
+	// TODO to save space, create a triangular list only
 
 	// Cast graph and fixed edges
 	dout.level(2) << "Casting graph and fixed edges...\n";
@@ -570,20 +543,29 @@ RcppExport SEXP estimateSkeleton(
 	pMax.fill(-1.);
 	std::vector<uint> emptySet;
 	std::vector<int> edgeTests(1);
-	for (i = 0; i < p; i++)
-		for (j = i + 1; j < p; j++) {
+	for (int i = 0; i < p; i++) {
+		#pragma omp parallel for
+		for (int j = i + 1; j < p; j++) {
+			if (adjMatrix(i, j) && !fixedMatrix(i, j)) {
+				pMax(i, j) = indepTest->test(i, j, emptySet);
+				if (pMax(i, j) >= alpha)
+					sepSet[j][i].set_size(0);
+				dout.level(1) << "  x = " << i << ", y = " << j << ", S = () : pval = "
+						<< pMax(i, j) << std::endl;
+			}
+		}
+	}
+	for (int i = 0; i < p; i++) {
+		for (int j = i + 1; j < p; j++) {
 			if (fixedMatrix(i, j))
 				graph.addFixedEdge(i, j);
 			else if (adjMatrix(i, j)) {
-				pMax(i, j) = indepTest->test(i, j, emptySet);
 				edgeTests[0]++;
-				dout.level(1) << "  x = " << i << ", y = " << j << ", S = () : pval = " << pMax(i, j) << std::endl;
 				if (pMax(i, j) < alpha)
 					graph.addEdge(i, j);
-				else
-					sepSet[j][i].set_size(0);
 			}
 		}
+	}
 
 	// Estimate skeleton
 	graph.setIndepTest(indepTest);
