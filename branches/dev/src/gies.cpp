@@ -277,10 +277,12 @@ RcppExport SEXP causalInference(
 
 	// Cast option for adaptive handling of fixed gaps (cf. "ARGES")
 	ForwardAdaptiveFlag adaptive(NONE);
-	if (options["adaptive"] == "vstructures") {
+	std::string optAdaptive = options["adaptive"];
+	dout.level(2) << "Option 'adaptive': " << optAdaptive << std::endl;
+	if (optAdaptive == "vstructures") {
 		adaptive = VSTRUCTURES;
 	}
-	if (options["adaptive"] == "triples") {
+	if (optAdaptive == "triples") {
 		adaptive = TRIPLES;
 	}
 
