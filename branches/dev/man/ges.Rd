@@ -12,8 +12,8 @@
 }
 \usage{
 ges(score, labels = score$getNodes(),
-  fixedGaps = NULL, adaptive = FALSE, turning = TRUE, maxDegree = integer(0),
-  verbose = FALSE, ...)
+  fixedGaps = NULL, adaptive = c("none", "vstructures", "triples"), 
+  turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
 }
 \arguments{
   \item{score}{An instance of a class derived from \code{\linkS4class{Score}}
@@ -23,8 +23,8 @@ ges(score, labels = score$getNodes(),
   \item{fixedGaps}{logical \emph{symmetric} matrix of dimension p*p.  If entry
     \code{[i, j]} is \code{TRUE}, the result is guaranteed to have no edge
     between nodes \eqn{i} and \eqn{j}.}
-  \item{adaptive}{Logical indicating whether constraints should be adapted to
-    newly detected v-structures (cf. details).}
+  \item{adaptive}{indicating whether constraints should be adapted to
+    newly detected v-structures or unshielded triples (cf. details).}
   \item{turning}{Logical indicating whether the function should try to augment
     the score by turning edges (cf. details).}
   \item{maxDegree}{Parameter used to limit the vertex degree of the estimated
@@ -108,19 +108,31 @@ ges(score, labels = score$getNodes(),
   \code{[i, j]} of the matrix passed to \code{fixedGaps} is \code{TRUE}, there
   will be no edge between nodes \eqn{i} and \eqn{j}.  Using this argument 
   can speed up the execution of GIES and allows the user to account for
-  previous knowledge or other constraints.  Setting the argument 
-  \code{adaptive = TRUE} relaxes the constraints encoded by \code{fixedGaps}.
-  When \code{adaptive = TRUE} and the algorithm introduces a new v-structure
-  \eqn{a \longrightarrow b \longleftarrow c}{a → b ← c} in the forward phase,
-  then the edge \eqn{a - c} is removed from the list of fixed gaps, meaning
-  that the insertion of an edge between \eqn{a} and \eqn{c} becomes possible
-  even if it was forbidden by the initial matrix passed to \code{fixedGaps}.
-  This modification of GES is called ARGES (adaptively restricted greedy 
-  equivalence search) and has been presented in Nandy, Hauser and Maathuis
-  (2015). With this adaptive modification, the successive application of a 
+  previous knowledge or other constraints.  The argument \code{adaptive} can be
+  used to relax the constraints encoded by \code{fixedGaps} according to a 
+  modification of GES called ARGES (adaptively restricted greedy 
+  equivalence search) which has been presented in Nandy, Hauser and Maathuis
+  (2015):
+  \itemize{
+    \item When \code{adaptive = "vstructures"} and the algorithm introduces a 
+    new v-structure \eqn{a \longrightarrow b \longleftarrow c}{a → b ← c} in the 
+    forward phase, then the edge \eqn{a - c} is removed from the list of fixed 
+    gaps, meaning that the insertion of an edge between \eqn{a} and \eqn{c} 
+    becomes possible even if it was forbidden by the initial matrix passed to 
+    \code{fixedGaps}.
+    
+    \item When \code{adaptive = "triples"} and the algorithm introduces a new
+    unshielded triple in the forward phase (i.e., a subgraph of three nodes
+    \eqn{a}, \eqn{b} and \eqn{c} where \eqn{a} and \eqn{b} as well as \eqn{b}
+    and \eqn{c} are adjacent, but \eqn{a} and \eqn{c} are not), then the edge
+    \eqn{a - c} is removed from the list of fixed gaps.
+  }
+  With one of the adaptive modifications, the successive application of a 
   skeleton estimation method and GES restricted to an estimated skeleton still
   gives a \emph{consistent} estimator of the DAG, which is not the case without
   the adaptive modification.
+  % TODO: Adjust this last paragraph and write a note about the difference 
+  % between ARGES and ARGES-skeleton.
 }
 \value{
   \code{ges} returns a list with the following two components:

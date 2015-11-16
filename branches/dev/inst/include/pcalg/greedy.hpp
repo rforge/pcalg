@@ -20,6 +20,9 @@
 
 enum edge_flag { NOT_PROTECTED, UNDECIDABLE, PROTECTED };
 
+// Types of adaptiveness (cf. "ARGES")
+enum ForwardAdaptiveFlag { NONE, VSTRUCTURES, TRIPLES };
+
 /**
  * Help functions for easier handling of set operations
  */
@@ -698,7 +701,7 @@ public:
 	 * @param  adaptive: indicates whether set of allowed edges should be
 	 * adaptively enlarged according to AGES
 	 */
-	bool greedyForward(bool adaptive = false);
+	bool greedyForward(ForwardAdaptiveFlag adaptive = NONE);
 
 	/**
 	 * Does one backward step of the greedy interventional equivalence search

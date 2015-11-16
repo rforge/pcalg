@@ -275,8 +275,14 @@ RcppExport SEXP causalInference(
 		graph.setFixedGaps(fixedGaps, gapsInverted);
 	}
 
-	// Cast option for adaptive handling of fixed gaps (cf. "AGES")
-	bool adaptive = options["adaptive"];
+	// Cast option for adaptive handling of fixed gaps (cf. "ARGES")
+	ForwardAdaptiveFlag adaptive(NONE);
+	if (options["adaptive"] == "vstructures") {
+		adaptive = VSTRUCTURES;
+	}
+	if (options["adaptive"] == "triples") {
+		adaptive = TRIPLES;
+	}
 
 	// Perform inference algorithm:
 	// GIES

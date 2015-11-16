@@ -11,8 +11,8 @@
 }
 \usage{
 gies(score, labels = score$getNodes(), targets = score$getTargets(),
-     fixedGaps = NULL, adaptive = FALSE, turning = TRUE, maxDegree = integer(0), 
-     verbose = FALSE, ...)
+     fixedGaps = NULL, adaptive = c("none", "vstructures", "triples"), 
+     turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
 }
 \arguments{
   \item{score}{An \R object inheriting from \code{\linkS4class{Score}}.}
@@ -23,8 +23,8 @@ gies(score, labels = score$getNodes(), targets = score$getTargets(),
   \item{fixedGaps}{Logical \emph{symmetric} matrix of dimension p*p.  If entry
     \code{[i, j]} is \code{TRUE}, the result is guaranteed to have no edge
     between nodes \eqn{i} and \eqn{j}.}
-  \item{adaptive}{Logical indicating whether constraints should be adapted to
-    newly detected v-structures (cf. details).}
+  \item{adaptive}{indicating whether constraints should be adapted to
+    newly detected v-structures or unshielded triples (cf. details).}
   \item{turning}{Logical indicating whether the function should try to augment
     the score by turning edges (cf. details).}
   \item{maxDegree}{Parameter used to limit the vertex degree of the estimated
@@ -96,15 +96,24 @@ gies(score, labels = score$getNodes(), targets = score$getTargets(),
   \code{[i, j]} of the matrix passed to \code{fixedGaps} is \code{TRUE}, there
   will be no edge between nodes \eqn{i} and \eqn{j}.  Using this argument 
   can speed up the execution of GIES and allows the user to account for
-  previous knowledge or other constraints.  Setting the argument 
-  \code{adaptive = TRUE} relaxes the constraints encoded by \code{fixedGaps}.
-  When \code{adaptive = TRUE} and the algorithm introduces a new v-structure
-  \eqn{a \longrightarrow b \longleftarrow c}{a → b ← c} in the forward phase,
-  then the edge \eqn{a - c} is removed from the list of fixed gaps, meaning
-  that the insertion of an edge between \eqn{a} and \eqn{c} becomes possible
-  even if it was forbidden by the initial matrix passed to \code{fixedGaps}.
-  This modification of the forward phase of GIES is inspired by the 
-  analog modification in the forward phase of GES, which makes the successive
+  previous knowledge or other constraints.  The argument \code{adaptive} can be
+  used to relax the constraints encoded by \code{fixedGaps} as follows:
+  \itemize{
+    \item When \code{adaptive = "vstructures"} and the algorithm introduces a 
+    new v-structure \eqn{a \longrightarrow b \longleftarrow c}{a → b ← c} in the 
+    forward phase, then the edge \eqn{a - c} is removed from the list of fixed 
+    gaps, meaning that the insertion of an edge between \eqn{a} and \eqn{c} 
+    becomes possible even if it was forbidden by the initial matrix passed to 
+    \code{fixedGaps}.
+    
+    \item When \code{adaptive = "triples"} and the algorithm introduces a new
+    unshielded triple in the forward phase (i.e., a subgraph of three nodes
+    \eqn{a}, \eqn{b} and \eqn{c} where \eqn{a} and \eqn{b} as well as \eqn{b}
+    and \eqn{c} are adjacent, but \eqn{a} and \eqn{c} are not), then the edge
+    \eqn{a - c} is removed from the list of fixed gaps.
+  }
+  This modifications of the forward phase of GIES are inspired by the 
+  analog modifications in the forward phase of GES, which makes the successive
   application of a skeleton estimation method and GES restricted to an 
   estimated skeleton a \emph{consistent} estimator of the DAG (cf. Nandy,
   Hauser and Maathuis, 2015). 

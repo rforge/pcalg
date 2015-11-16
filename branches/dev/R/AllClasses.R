@@ -1062,12 +1062,17 @@ setRefClass("EssGraph",
             maxSteps = 0,
             childrenOnly = integer(0),
             fixedGaps = NULL,
-            adaptive = FALSE,
+            adaptive = c("none", "vstructures", "triples"),
             verbose = 0) {
           # Error checks for supplied arguments
           # TODO extend!
+          if (is.logical(adaptive)) {
+            adaptive <- ifelse(adaptive, "vstructures", "none")
+            warning("The parameter 'adaptive' should not be provided as logical any more; cf. the help page of 'ges' or 'gies'")
+          }
+          adaptive <- match.arg(adaptive)
           if (is.null(fixedGaps)) {
-            adaptive = FALSE
+            adaptive <- "none"
           }
           list(caching = caching,
               turning = turning,

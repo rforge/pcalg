@@ -161,13 +161,21 @@ caus.inf <- function(algorithm = c("GIES", "GDS", "SiMy"),
 ##' @param labels	node labels
 ##' @param targets	unique list of targets. Normally determined from the scoring object
 ##' @param fixedGaps	logical matrix indicating forbidden edges
+##' @param adaptive sets the behaviour for adaptiveness in the forward phase (cf. "ARGES")
 ##' @param turning	indicates whether the turning step should be indicated.
 ##' @param maxDegree	maximum vertex degree allowed
 ##' @param verbose	indicates whether debug output should be printed
 ##' @param ...		additional parameters (currently none)
-gies <- function(score, labels = score$getNodes(), targets = score$getTargets(),
-                 fixedGaps = NULL, adaptive = FALSE, turning = TRUE, maxDegree = integer(0),
-                 verbose = FALSE, ...)
+gies <- function(
+    score, 
+    labels = score$getNodes(), 
+    targets = score$getTargets(),
+    fixedGaps = NULL, 
+    adaptive = c("none", "vstructures", "triples"), 
+    turning = TRUE, 
+    maxDegree = integer(0),
+    verbose = FALSE, 
+    ...)
 {
   caus.inf("GIES", score = score, labels = labels, targets = targets,
            fixedGaps = fixedGaps, adaptive = adaptive, turning = turning,
@@ -179,16 +187,22 @@ gies <- function(score, labels = score$getNodes(), targets = score$getTargets(),
 ##' @param score 	scoring object to be used
 ##' @param labels 	node labels
 ##' @param fixedGaps 	logical matrix indicating forbidden edges
-##' @param adaptive
+##' @param adaptive sets the behaviour for adaptiveness in the forward phase (cf. "ARGES")
 ##' @param turning 	indicates whether the turning step should be indicated.
 ##' 		Setting this parameter to FALSE gives Chickering's original version
 ##' @param maxDegree 	maximum vertex degree allowed
 ##' @param verbose 	indicates whether debug output should be printed
 ##' @param ... 		additional parameters (currently none)
 ##' @param targets 	unique list of targets. Normally determined from the scoring object
-ges <- function(score, labels = score$getNodes(),
-                fixedGaps = NULL, adaptive = FALSE, turning = TRUE, maxDegree = integer(0),
-                verbose = FALSE, ...)
+ges <- function(
+    score, 
+    labels = score$getNodes(),
+    fixedGaps = NULL, 
+    adaptive = c("none", "vstructures", "triples"), 
+    turning = TRUE, 
+    maxDegree = integer(0),
+    verbose = FALSE, 
+    ...)
 {
   caus.inf("GIES", score = score, labels = labels, targets = list(integer(0)),
            fixedGaps = fixedGaps, adaptive = adaptive, turning = turning,
@@ -206,8 +220,15 @@ ges <- function(score, labels = score$getNodes(),
 ##' @param maxDegree 	maximum vertex degree allowed
 ##' @param verbose 	indicates whether debug output should be printed
 ##' @param ... 		additional parameters (currently none)
-gds <- function(score, labels = score$getNodes(), targets = score$getTargets(),
-                fixedGaps = NULL, turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
+gds <- function(
+    score, 
+    labels = score$getNodes(), 
+    targets = score$getTargets(),
+    fixedGaps = NULL, 
+    turning = TRUE, 
+    maxDegree = integer(0), 
+    verbose = FALSE, 
+    ...)
 {
   caus.inf("GDS", score = score, labels = labels, targets = targets,
            fixedGaps = fixedGaps, turning = turning, maxDegree = maxDegree, verbose = verbose, ...)

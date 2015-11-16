@@ -1,6 +1,6 @@
 Package: pcalg
-Version: 2.3-0
-Date: 2015-09-11
+Version: 2.3-1
+Date: 2015-11-16
 Title: Methods for Graphical Models and Causal Inference
 Description: Functions for causal structure
   learning and causal inference using graphical models. The main algorithms
