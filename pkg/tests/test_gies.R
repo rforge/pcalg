@@ -59,6 +59,34 @@ for (m in seq_along(settings)) {
   cat("[Ok]\n")
 }
 
+## Test compatibility with deprecated calling conventions
+cat("Compatibility with deprecated calling conventions... ")
+score <- new("GaussL0penIntScore", 
+    targets = gauss.targets, 
+    target.index = gauss.target.index, 
+    data = gauss.data)
+
+warningIssued <- FALSE
+tryCatch(est.graph <- gies(p, gauss.targets, score),
+    warning = function(w) warningIssued <<- TRUE)
+if (!warningIssued) {
+  stop("No warning issued for old calling conventions.")
+} else {
+  for (j in 1:p) {
+    if (!isTRUE(all.equal(est.graph$essgraph$.in.edges[[j]],
+            gauss.parents[[j]], tolerance = tol)))
+      stop("Parents are not estimated correctly.")
+  }
+}
+warningIssued <- FALSE
+tryCatch(est.graph <- gies(p = p, targets = gauss.targets, score = score),
+    warning = function(w) warningIssued <<- TRUE)
+if (!warningIssued) {
+  stop("No warning issued for old calling conventions.")
+}
+cat("[OK]\n")
+
+
 ## Test stepwise execution of GIES
 cat(if(doExtras)"\n\n", "GIES stepwise", if(doExtras)":\n" else ": ... ",
     if(doExtras) paste0(paste(rep("=", 14), collapse=""), "\n"),

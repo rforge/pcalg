@@ -169,6 +169,25 @@ gies <- function(score, labels = score$getNodes(), targets = score$getTargets(),
                  fixedGaps = NULL, adaptive = FALSE, turning = TRUE, maxDegree = integer(0),
                  verbose = FALSE, ...)
 {
+  # Catch calling convention of previous package versions:
+  # ges(p, targets, score, fixedGaps = NULL, ...)
+  # If this calling convention is used, issue a warning, but adjust the 
+  # arguments
+  if (is.numeric(score) && is.list(labels) && inherits(targets, "Score")) {
+    score <- targets
+    targets <- labels
+    labels <- as.character(1:length(score$getNodes()))
+    warning(paste("You are using a deprecated calling convention for gies()",
+            "which will be disabled in future versions of the package;",
+            "please refer to the help page of ges().", sep = " "))
+  }
+  
+  # Error checks
+  if (!inherits(score, "Score")) {
+    stop("Argument 'score' must be an instance of a class inherited from 'Score'.")
+  }
+  # TODO extend...
+  
   caus.inf("GIES", score = score, labels = labels, targets = targets,
            fixedGaps = fixedGaps, adaptive = adaptive, turning = turning,
            maxDegree = maxDegree, verbose = verbose, ...)
@@ -190,6 +209,24 @@ ges <- function(score, labels = score$getNodes(),
                 fixedGaps = NULL, adaptive = FALSE, turning = TRUE, maxDegree = integer(0),
                 verbose = FALSE, ...)
 {
+  # Catch calling convention of previous package versions:
+  # ges(p, score, fixedGaps = NULL, ...)
+  # If this calling convention is used, issue a warning, but adjust the 
+  # arguments
+  if (is.numeric(score) && inherits(labels, "Score")) {
+    score <- labels
+    labels <- as.character(1:length(score$getNodes()))
+    warning(paste("You are using a deprecated calling convention for ges()",
+            "which will be disabled in future versions of the package;",
+            "please refer to the help page of ges().", sep = " "))
+  }
+  
+  # Error checks
+  if (!inherits(score, "Score")) {
+    stop("Argument 'score' must be an instance of a class inherited from 'Score'.")
+  }
+  # TODO extend...
+  
   caus.inf("GIES", score = score, labels = labels, targets = list(integer(0)),
            fixedGaps = fixedGaps, adaptive = adaptive, turning = turning,
            maxDegree = maxDegree, verbose = verbose, ...)
