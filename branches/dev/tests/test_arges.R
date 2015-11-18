@@ -35,10 +35,10 @@ ges.fit <- ges(score)
 stopifnot(all.equal(adjMat, as(ges.fit$essgraph, "matrix")))
 
 # Test old calling convention of GES
-#warningIssued <- FALSE
-#tryCatch(ges.fit <- ges(3, score),
-#    warning = function(w) warningIssued <<- TRUE)
-#stopifnot(warningIssued)
+warningIssued <- FALSE
+tryCatch(ges.fit <- ges(3, score),
+    warning = function(w) warningIssued <<- TRUE)
+stopifnot(warningIssued)
 
 # Force a gap between vertices 1 and 3
 fixedGaps <- matrix(FALSE, 3, 3)

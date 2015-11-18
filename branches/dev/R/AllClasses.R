@@ -1063,7 +1063,15 @@ setRefClass("EssGraph",
             childrenOnly = integer(0),
             fixedGaps = NULL,
             adaptive = c("none", "vstructures", "triples"),
-            verbose = 0) {
+            verbose = 0,
+            p = 0) {
+          # Check for deprecated calling convention and issue a warning
+          if (p > 0) {
+            warning(paste("Argument 'p' is deprecated in calls of ges() or gies",
+                    "and will be disabled in future package versions;",
+                    "please refer to the corresponding help page.", sep = " "))
+          }
+          
           # Error checks for supplied arguments
           # TODO extend!
           if (is.logical(adaptive)) {
