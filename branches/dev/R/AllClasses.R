@@ -1056,8 +1056,10 @@ setRefClass("EssGraph",
 
         #' Creates a list of options for the C++ function "causalInference";
         #' internal function
-        causal.inf.options = function(caching = TRUE,
-            turning = TRUE,
+        causal.inf.options = function(
+            caching = TRUE,
+            phase = c("forward", "backward", "turning"),
+            iterate = length(phase) > 1,
             maxDegree = integer(0),
             maxSteps = 0,
             childrenOnly = integer(0),
@@ -1076,14 +1078,18 @@ setRefClass("EssGraph",
           # TODO extend!
           if (is.logical(adaptive)) {
             adaptive <- ifelse(adaptive, "vstructures", "none")
-            warning("The parameter 'adaptive' should not be provided as logical any more; cf. the help page of 'ges' or 'gies'")
+            warning(paste("The parameter 'adaptive' should not be provided as logical anymore;",
+                    "cf. ?ges or gies", sep = " "))
           }
+          phase <- match.arg(phase, several.ok = TRUE)
+          stopifnot(is.logical(iterate))
           adaptive <- match.arg(adaptive)
           if (is.null(fixedGaps)) {
             adaptive <- "none"
           }
           list(caching = caching,
-              turning = turning,
+              phase = phase,
+              iterate = iterate,
               maxDegree = maxDegree,
               maxSteps = maxSteps,
               childrenOnly = childrenOnly,
@@ -1155,9 +1161,6 @@ setRefClass("EssGraph",
                 "GDS", "SiMy"), ...) {
           stopifnot(!is.null(score <- getScore()))
           algorithm <- match.arg(algorithm)
-
-          stopifnot(!is.null(score <- getScore()))
-          stopifnot(algorithm %in% c("GIES", "GIES-F", "GIES-B", "GIES-T", "GIES-STEP", "GDS", "SiMy"))
 
           new.graph <- .Call("causalInference",
               .in.edges,

@@ -1217,7 +1217,7 @@ void EssentialGraph::turn(const uint u, const uint v, const std::set<uint> C)
 	replaceUnprotected();
 }
 
-bool EssentialGraph::greedyForward(ForwardAdaptiveFlag adaptive)
+bool EssentialGraph::greedyForward(const ForwardAdaptiveFlag adaptive)
 {
 	uint v_opt = 0;
 	ArrowChangeCmp comp;
@@ -1452,6 +1452,23 @@ bool EssentialGraph::greedyTurn()
 	}
 	else
 		return false;
+}
+
+bool EssentialGraph::greedyStepDir(const step_dir direction, const ForwardAdaptiveFlag adaptive)
+{
+	switch (direction) {
+	case SD_FORWARD:
+		return greedyForward(adaptive);
+
+	case SD_BACKWARD:
+		return greedyBackward();
+
+	case SD_TURNING:
+		return greedyTurning();
+
+	default:
+		return false;
+	} // SWITCH direction
 }
 
 step_dir EssentialGraph::greedyStep()

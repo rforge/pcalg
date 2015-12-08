@@ -219,8 +219,7 @@ RcppExport SEXP causalInference(
 	dout.level(1) << "Casting algorithm and options...\n";
 	std::string algName = Rcpp::as<std::string>(argAlgorithm);
 
-	// TODO: cast score type, allow for C++ scoring objects
-	// Up to now, only R functions are allowed for scoring...
+	// Cast score
 	dout.level(1) << "Casting score...\n";
 	Score* score = createScore(Rcpp::as<std::string>(argScore), &targets, data);
 
@@ -228,7 +227,6 @@ RcppExport SEXP causalInference(
 	graph.setTargets(&targets);
 
 	std::vector<int> steps;
-	uint i, j;
 
 	// Cast option for limits in vertex degree
 	dout.level(1) << "Casting maximum vertex degree...\n";
@@ -250,6 +248,24 @@ RcppExport SEXP causalInference(
 		}
 	}
 	
+	// Cast option for required phases
+	std::vector< std::string > optPhases = Rcpp::as< std::vector<string> >(options["phase"]);
+	std::vector< step_dir > phases(optPhases.size(), SD_FORWARD);
+	for (uint i = 0; i < optPhases.size(); ++i) {
+		if (optPhases[i] == "backward") {
+			phases[i] = SD_BACKWARD;
+		}
+		else if (optPhases[i] == "turning") {
+			phases[i] = SD_TURNING;
+		}
+	}
+	bool optIterative = Rcpp::as<bool>(options["iterative"]);
+
+	// TODO:
+	// - return vector for 'steps': generate a named vector with names corresponding to phases
+	//   ('forward1', 'backward1', 'turning1', 'forward2', 'backward2', etc.)
+
+
 	// Cast option for vertices which are not allowed to have parents
 	// TODO: activate function in R, and check for conversion from R to C indexing convention
 	std::vector<uint> childrenOnly = Rcpp::as< std::vector<uint> >(options["childrenOnly"]);
@@ -295,10 +311,8 @@ RcppExport SEXP causalInference(
 		if (Rcpp::as<bool>(options["caching"]))
 			graph.enableCaching();
 
-		// Perform a greedy search, with or without turning phase
-		// TODO: evtl. zusätzlichen Parameter einfügen, der wiederholtes Suchen
-		// auch ohne Drehphase erlaubt...
-		if (Rcpp::as<bool>(options["turning"])) {
+		// Perform a greedy search with the requested phases, either iteratively or only once
+		if (Rcpp::as<bool>(options["iterative"])) {
 			bool cont;
 			do {
 				cont = false;

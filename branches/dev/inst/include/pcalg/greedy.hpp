@@ -701,7 +701,7 @@ public:
 	 * @param  adaptive: indicates whether set of allowed edges should be
 	 * adaptively enlarged according to AGES
 	 */
-	bool greedyForward(ForwardAdaptiveFlag adaptive = NONE);
+	bool greedyForward(const ForwardAdaptiveFlag adaptive = NONE);
 
 	/**
 	 * Does one backward step of the greedy interventional equivalence search
@@ -712,6 +712,12 @@ public:
 	 * Does one turning step of the greedy interventional equivalence search
 	 */
 	bool greedyTurn();
+
+	/**
+	 * Wrapper function to the greedy... functions; first argument indicates requested
+	 * direction
+	 */
+	bool greedyStepDir(const step_dir direction, const ForwardAdaptiveFlag adaptive = NONE);
 
 	/**
 	 * Does one greedy step, either forward, backward, or turning, the one that
