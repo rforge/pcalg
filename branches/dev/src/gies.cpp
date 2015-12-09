@@ -211,25 +211,28 @@ RcppExport SEXP causalInference(
 	uint p = graph.getVertexCount();
 
 	// Cast list of targets
-	dout.level(1) << "Casting list of targets...\n";
+	dout.level(1) << "Casting options...\n";
+	dout.level(2) << "  Casting list of targets...\n";
 	Rcpp::List data(argPreprocData);
 	TargetFamily targets = castTargets(data["targets"]);
 
 	// Cast algorithm string
-	dout.level(1) << "Casting algorithm and options...\n";
+	dout.level(2) << "  Casting algorithm and options...\n";
 	std::string algName = Rcpp::as<std::string>(argAlgorithm);
 
 	// Cast score
-	dout.level(1) << "Casting score...\n";
+	dout.level(2) << "  Casting score...\n";
 	Score* score = createScore(Rcpp::as<std::string>(argScore), &targets, data);
 
 	graph.setScore(score);
 	graph.setTargets(&targets);
 
 	std::vector<int> steps;
+	std::vector<std::string> stepNames;
+	std::stringstream ss;
 
 	// Cast option for limits in vertex degree
-	dout.level(1) << "Casting maximum vertex degree...\n";
+	dout.level(2) << "  Casting maximum vertex degree...\n";
 	Rcpp::NumericVector maxDegree((SEXP)(options["maxDegree"]));
 	if (maxDegree.size() > 0) {
 		if (maxDegree.size() == 1) {
@@ -249,7 +252,8 @@ RcppExport SEXP causalInference(
 	}
 	
 	// Cast option for required phases
-	std::vector< std::string > optPhases = Rcpp::as< std::vector<string> >(options["phase"]);
+	dout.level(2) << "  Casting phases...\n";
+	std::vector< std::string > optPhases = Rcpp::as< std::vector<std::string> >(options["phase"]);
 	std::vector< step_dir > phases(optPhases.size(), SD_FORWARD);
 	for (uint i = 0; i < optPhases.size(); ++i) {
 		if (optPhases[i] == "backward") {
@@ -259,12 +263,8 @@ RcppExport SEXP causalInference(
 			phases[i] = SD_TURNING;
 		}
 	}
-	bool optIterative = Rcpp::as<bool>(options["iterative"]);
-
-	// TODO:
-	// - return vector for 'steps': generate a named vector with names corresponding to phases
-	//   ('forward1', 'backward1', 'turning1', 'forward2', 'backward2', etc.)
-
+	dout.level(2) << "  Casting iterative...\n";
+	bool doIterate = Rcpp::as<bool>(options["iterate"]);
 
 	// Cast option for vertices which are not allowed to have parents
 	// TODO: activate function in R, and check for conversion from R to C indexing convention
@@ -274,24 +274,26 @@ RcppExport SEXP causalInference(
 	int stepLimit;
 
 	// Cast option for fixed gaps: logical matrix, assumed to be symmetric by now
+	dout.level(2) << "  Casting fixed gaps...\n";
 	if (!Rf_isNull(options["fixedGaps"])) {
 		Rcpp::LogicalMatrix gapsMatrix((SEXP)(options["fixedGaps"]));
 		uint n_gaps = 0;
-		for (i = 0; i < p; ++i)
-			for (j = i + 1; j < p; ++j)
+		for (int i = 0; i < p; ++i)
+			for (int j = i + 1; j < p; ++j)
 				if (gapsMatrix(i, j))
 					n_gaps++;
 		// Invert gaps if more than half of the possible edges are fixed gaps
 		bool gapsInverted = 4*n_gaps > p*(p - 1);
 		EssentialGraph fixedGaps(p);
-		for (i = 0; i < p; ++i)
-			for (j = i + 1; j < p; ++j)
+		for (int i = 0; i < p; ++i)
+			for (int j = i + 1; j < p; ++j)
 				if (gapsMatrix(i, j) ^ gapsInverted)
 					fixedGaps.addEdge(i, j, true);
 		graph.setFixedGaps(fixedGaps, gapsInverted);
 	}
 
 	// Cast option for adaptive handling of fixed gaps (cf. "ARGES")
+	dout.level(2) << "  Casting adaptive flag...\n";
 	ForwardAdaptiveFlag adaptive(NONE);
 	std::string optAdaptive = options["adaptive"];
 	dout.level(2) << "Option 'adaptive': " << optAdaptive << std::endl;
@@ -312,21 +314,23 @@ RcppExport SEXP causalInference(
 			graph.enableCaching();
 
 		// Perform a greedy search with the requested phases, either iteratively or only once
-		if (Rcpp::as<bool>(options["iterative"])) {
-			bool cont;
-			do {
-				cont = false;
-				for (steps.push_back(0); graph.greedyForward(adaptive); steps.back()++);
-				for (steps.push_back(0); graph.greedyBackward(); steps.back()++)
+		bool cont;
+		int phaseCount(1);
+		do {
+			cont = false;
+			for (int i = 0; i < phases.size(); ++i) {
+				for (steps.push_back(0);
+						graph.greedyStepDir(phases[i], adaptive);
+						steps.back()++) {
 					cont = true;
-				for (steps.push_back(0); graph.greedyTurn(); steps.back()++)
-					cont = true;
-			} while (cont);
-		}
-		else {
-			for (steps.push_back(0); graph.greedyForward(adaptive); steps.back()++);
-			for (steps.push_back(0); graph.greedyBackward(); steps.back()++);
-		}
+				}
+				ss.str(std::string());
+				ss << optPhases[i] << phaseCount;
+				stepNames.push_back(ss.str());
+			}
+			cont &= doIterate;
+			phaseCount++;
+		} while (cont);
 	}
 
 	// Single phase or step of GIES
@@ -343,12 +347,18 @@ RcppExport SEXP causalInference(
 			graph.enableCaching();
 
 		steps.push_back(0);
-		if (algName == "GIES-F")
+		if (algName == "GIES-F") {
 			for (; steps.back() < stepLimit && graph.greedyForward(adaptive); steps.back()++);
-		else if (algName == "GIES-B")
+			stepNames.push_back("forward1");
+		}
+		else if (algName == "GIES-B") {
 			for (; steps.back() < stepLimit && graph.greedyBackward(); steps.back()++);
-		else if (algName == "GIES-T")
+			stepNames.push_back("backward1");
+		}
+		else if (algName == "GIES-T") {
 			for (; steps.back() < stepLimit && graph.greedyTurn(); steps.back()++);
+			stepNames.push_back("turning1");
+		}
 	}
 
 	// Single one or several steps of GIES into either direction
@@ -360,39 +370,59 @@ RcppExport SEXP causalInference(
 		if (stepLimit == 0)
 			stepLimit = graph.getVertexCount()*graph.getVertexCount();
 
-		// TODO: evtl. steps so ändern, dass man daraus ablesen kann, in welcher
-		// Reihenfolge die einzelnen Phasen ausgeführt wurden
 		// Steps: 3 entries, storing number of forward, backward, and turning steps
-		steps.resize(3, 0);
-		step_dir dir = SD_NONE;
+		step_dir dir(SD_NONE), lastDir(SD_NONE);
+		std::vector<int> stepCount(4);
 		do {
 			dir = graph.greedyStep();
-			if (dir != SD_NONE)
-				steps[dir - 1]++;
-		} while (steps[0] + steps[1] + steps[2] < stepLimit && dir != SD_NONE);
+			if (dir != SD_NONE) {
+				if (dir != lastDir) {
+					steps.push_back(1);
+					stepCount[0]++;
+					ss.str(std::string());
+					switch(dir) {
+					case SD_FORWARD:
+						ss << "forward";
+						break;
+
+					case SD_BACKWARD:
+						ss << "backward";
+						break;
+
+					case SD_TURNING:
+						ss << "turning";
+						break;
+					}
+					ss << stepCount[dir]++;
+					stepNames.push_back(ss.str());
+				} // IF dir
+				else {
+					steps.back()++;
+				}
+			} // IF dir
+		} while (stepCount[0] < stepLimit && dir != SD_NONE);
 	}
 
 	// GDS; yields a DAG, not an equivalence class!
 	else if (algName == "GDS") {
-		// TODO: evtl. caching für GDS implementieren...
-		// Perform a greedy search, with or without turning phase
-		if (Rcpp::as<bool>(options["turning"])) {
-			bool cont;
-			do {
-				cont = false;
-				for (steps.push_back(0); graph.greedyDAGForward(); steps.back()++);
-				for (steps.push_back(0); graph.greedyDAGBackward(); steps.back()++)
+		// Perform a greedy search with the requested phases, either iteratively or only once
+		bool cont;
+		int phaseCount(1);
+		do {
+			cont = false;
+			for (int i = 0; i < phases.size(); ++i) {
+				for (steps.push_back(0);
+						graph.greedyDAGStepDir(phases[i]);
+						steps.back()++) {
 					cont = true;
-				for (steps.push_back(0); graph.greedyDAGTurn(); steps.back()++)
-					cont = true;
-			} while (cont);
-		}
-		else {
-			for (steps.push_back(0); graph.greedyDAGForward(); steps.back()++);
-			for (steps.push_back(0); graph.greedyDAGBackward(); steps.back()++);
-		}
-
-		// graph.replaceUnprotected();
+				}
+				ss.str(std::string());
+				ss << optPhases[i] << phaseCount;
+				stepNames.push_back(ss.str());
+			}
+			cont &= doIterate;
+			phaseCount++;
+		} while (cont);
 	}
 
 	// DP; yields a DAG, not an equivalence class!
@@ -406,11 +436,14 @@ RcppExport SEXP causalInference(
 
 	// Return new list of in-edges and steps
 	delete score;
+	Rcpp::IntegerVector namedSteps(steps.begin(), steps.end());
+	namedSteps.names() = stepNames;
+
 	// TODO "interrupt" zurückgeben, falls Ausführung unterbrochen wurde. Problem:
 	// check_interrupt() scheint nur einmal true zurückzugeben...
 	return Rcpp::List::create(
 			Rcpp::Named("in.edges") = wrapGraph(graph),
-			Rcpp::Named("steps") = steps);
+			Rcpp::Named("steps") = namedSteps);
 
 	END_RCPP
 }

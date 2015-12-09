@@ -12,6 +12,7 @@
 \usage{
 gies(score, labels = score$getNodes(), targets = score$getTargets(),
      fixedGaps = NULL, adaptive = c("none", "vstructures", "triples"), 
+     phase = c("forward", "backward", "turning"), iterate = length(phase) > 1,
      turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
 }
 \arguments{
@@ -25,8 +26,14 @@ gies(score, labels = score$getNodes(), targets = score$getTargets(),
     between nodes \eqn{i} and \eqn{j}.}
   \item{adaptive}{indicating whether constraints should be adapted to
     newly detected v-structures or unshielded triples (cf. details).}
-  \item{turning}{Logical indicating whether the function should try to augment
-    the score by turning edges (cf. details).}
+  \item{phase}{Character vector listing the phases that should be used; possible
+    values: \code{forward}, \code{backward}, and \code{turning}}
+  \item{iterate}{Logical indicating whether the phases listed in the argument
+    \code{phase} should be iterated more than once (\code{iterate = TRUE}) or
+    not.}
+  \item{turning}{Setting \code{turning = TRUE} is equivalent to setting
+    \code{phases = c("forward", "backward")} and \code{iterate = FALSE}; the
+    use of the argument \code{turning} is deprecated.}
   \item{maxDegree}{Parameter used to limit the vertex degree of the estimated
     graph.  Possible values:
     \enumerate{

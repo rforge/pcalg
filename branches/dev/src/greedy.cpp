@@ -1464,7 +1464,7 @@ bool EssentialGraph::greedyStepDir(const step_dir direction, const ForwardAdapti
 		return greedyBackward();
 
 	case SD_TURNING:
-		return greedyTurning();
+		return greedyTurn();
 
 	default:
 		return false;
@@ -1684,6 +1684,24 @@ bool EssentialGraph::greedyDAGTurn()
 	}
 	else
 		return false;
+}
+
+bool EssentialGraph::greedyDAGStepDir(const step_dir direction)
+{
+	switch (direction) {
+	case SD_FORWARD:
+		return greedyDAGForward();
+
+	case SD_BACKWARD:
+		return greedyDAGBackward();
+
+	case SD_TURNING:
+		return greedyDAGTurn();
+
+	default:
+		return false;
+	} // SWITCH direction
+
 }
 
 void EssentialGraph::siMySearch()

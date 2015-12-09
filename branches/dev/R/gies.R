@@ -213,7 +213,7 @@ gies <- function(
   if (!inherits(score, "Score")) {
     stop("Argument 'score' must be an instance of a class inherited from 'Score'.")
   }
-  phase <- match.arg(phase)
+  phase <- match.arg(phase, several.ok = TRUE)
   # TODO extend...
   
   caus.inf(
@@ -282,6 +282,7 @@ ges <- function(
   if (!inherits(score, "Score")) {
     stop("Argument 'score' must be an instance of a class inherited from 'Score'.")
   }
+  phase <- match.arg(phase, several.ok = TRUE)
   # TODO extend...
   
   caus.inf(
@@ -332,6 +333,8 @@ gds <- function(
     warning(paste("The argument 'turning' is deprecated; please use 'phase' instead",
             "(cf. ?ges)", sep = " "))
   }
+  
+  phase <- match.arg(phase, several.ok = TRUE)
   
   caus.inf(
       "GDS", 

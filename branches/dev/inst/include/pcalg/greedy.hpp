@@ -744,6 +744,11 @@ public:
 	bool greedyDAGTurn();
 
 	/**
+	 * Wrapper function for any of the three preceding functions
+	 */
+	bool greedyDAGStepDir(const step_dir direction);
+
+	/**
 	 * Maximizes the BIC score by dynamic programming, as proposed by
 	 * Silander and Myllymäki (2006). Only works for small graphs
 	 * (technically, p <= 32; practically less due to memory and time
