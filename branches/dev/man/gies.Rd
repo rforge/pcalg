@@ -27,7 +27,7 @@ gies(score, labels = score$getNodes(), targets = score$getTargets(),
   \item{adaptive}{indicating whether constraints should be adapted to
     newly detected v-structures or unshielded triples (cf. details).}
   \item{phase}{Character vector listing the phases that should be used; possible
-    values: \code{forward}, \code{backward}, and \code{turning}}
+    values: \code{forward}, \code{backward}, and \code{turning} (cf. details).}
   \item{iterate}{Logical indicating whether the phases listed in the argument
     \code{phase} should be iterated more than once (\code{iterate = TRUE}) or
     not.}
@@ -92,11 +92,13 @@ gies(score, labels = score$getNodes(), targets = score$getTargets(),
       that correspond to the reversal of a single arrow in the space of DAGs
       until the score cannot be augmented any more.}
   }
-  GIES cycles through these three phases until no augmentation of the score is
-  possible any more.  GIES is an interventional extension of the GES (greedy
-  equivalence search) algorithm of Chickering (2002) which is limited to
-  observational data and hence operates on the space of observational instead
-  of interventional Markov equivalence classes.
+  The phases that are actually run are specified with the argument 
+  \code{phase}.  GIES cycles through the specified phases until no augmentation 
+  of the score is possible any more if \code{iterate = TRUE}.  GIES is an 
+  interventional extension of the GES (greedy equivalence search) algorithm of 
+  Chickering (2002) which is limited to observational data and hence operates 
+  on the space of observational instead of interventional Markov equivalence 
+  classes.
   
   Using the argument \code{fixedGaps}, one can make sure that certain edges
   will \emph{not} be present in the resulting essential graph: if the entry

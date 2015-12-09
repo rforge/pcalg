@@ -12,8 +12,9 @@
 }
 \usage{
 ges(score, labels = score$getNodes(),
-  fixedGaps = NULL, adaptive = c("none", "vstructures", "triples"), 
-  turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
+    fixedGaps = NULL, adaptive = c("none", "vstructures", "triples"), 
+    phase = c("forward", "backward", "turning"), iterate = length(phase) > 1,
+    turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
 }
 \arguments{
   \item{score}{An instance of a class derived from \code{\linkS4class{Score}}
@@ -25,8 +26,14 @@ ges(score, labels = score$getNodes(),
     between nodes \eqn{i} and \eqn{j}.}
   \item{adaptive}{indicating whether constraints should be adapted to
     newly detected v-structures or unshielded triples (cf. details).}
-  \item{turning}{Logical indicating whether the function should try to augment
-    the score by turning edges (cf. details).}
+  \item{phase}{Character vector listing the phases that should be used; possible
+    values: \code{forward}, \code{backward}, and \code{turning} (cf. details).}
+  \item{iterate}{Logical indicating whether the phases listed in the argument
+    \code{phase} should be iterated more than once (\code{iterate = TRUE}) or
+    not.}
+  \item{turning}{Setting \code{turning = TRUE} is equivalent to setting
+    \code{phases = c("forward", "backward")} and \code{iterate = FALSE}; the
+    use of the argument \code{turning} is deprecated.}
   \item{maxDegree}{Parameter used to limit the vertex degree of the estimated
     graph.  Valid arguments:
     \enumerate{
@@ -90,10 +97,12 @@ ges(score, labels = score$getNodes(),
     until the score cannot be augmented any more.}
   }
   GES cycles through these three phases until no augmentation of the score is
-  possible any more.  Note that the turning phase (activated with
-  \code{turning = TRUE}, the default behaviour) was not part of the original
-  implementation of Chickering (2002), but was introduced by Hauser and
-  Bühlmann (2012) and shown to improve the overall estimation performance.
+  possible any more if \code{iterate = TRUE}.  Note that the turning phase 
+  was not part of the original implementation of Chickering (2002), but was 
+  introduced by Hauser and Bühlmann (2012) and shown to improve the overall 
+  estimation performance.  The original algorithm of Chickering (2002) is 
+  reproduced with \code{phase = c("forward", "backward")} and 
+  \code{iterate = FALSE}.
 
   GES has the same purpose as the PC algorithm (see \code{\link{pc}}).  While
   the PC algorithm is based on conditional independence tests (requiring the

@@ -196,7 +196,15 @@ gies <- function(
     labels <- as.character(1:length(score$getNodes()))
     warning(paste("You are using a deprecated calling convention for gies()",
             "which will be disabled in future versions of the package;",
-            "please refer to the help page of ges().", sep = " "))
+            "cf. ?gies.", sep = " "))
+  }
+  # If the old calling convention was used with named arguments, "p = ..."
+  # would assign a numerical value to "phase" (expanding arguments...)
+  if (is.numeric(phase)) {
+    phase <- c("forward", "backward", "turning")
+    warning(paste("You are using a deprecated calling convention for gies()",
+            "which will be disabled in future versions of the package;",
+            "cf. ?gies.", sep = " "))
   }
   
   # Issue warning if argument 'turning' was used
@@ -266,6 +274,14 @@ ges <- function(
     warning(paste("You are using a deprecated calling convention for ges()",
             "which will be disabled in future versions of the package;",
             "please refer to the help page of ges().", sep = " "))
+  }
+  # If the old calling convention was used with named arguments, "p = ..."
+  # would assign a numerical value to "phase" (expanding arguments...)
+  if (is.numeric(phase)) {
+    phase <- c("forward", "backward", "turning")
+    warning(paste("You are using a deprecated calling convention for ges()",
+            "which will be disabled in future versions of the package;",
+            "cf. ?ges.", sep = " "))
   }
   
   # Issue warning if argument 'turning' was used

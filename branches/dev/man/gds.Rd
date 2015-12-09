@@ -13,7 +13,9 @@
 }
 \usage{
 gds(score, labels = score$getNodes(), targets = score$getTargets(),
-    fixedGaps = NULL, turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
+    fixedGaps = NULL, phase = c("forward", "backward", "turning"), 
+    iterate = length(phase) > 1, turning = TRUE, maxDegree = integer(0), 
+    verbose = FALSE, ...)
 }
 \arguments{
   \item{score}{An instance of a class derived from \code{\linkS4class{Score}}.}
@@ -25,8 +27,14 @@ gds(score, labels = score$getNodes(), targets = score$getTargets(),
   \item{fixedGaps}{Logical \emph{symmetric} matrix of dimension p*p.  If entry
     \code{[i, j]} is \code{TRUE}, the result is guaranteed to have no edge
     between nodes \eqn{i} and \eqn{j}.}
-  \item{turning}{Logical indicating whether the function should try to augment
-    the score by turning edges (cf. details).}
+  \item{phase}{Character vector listing the phases that should be used; possible
+    values: \code{forward}, \code{backward}, and \code{turning} (cf. details).}
+  \item{iterate}{Logical indicating whether the phases listed in the argument
+    \code{phase} should be iterated more than once (\code{iterate = TRUE}) or
+    not.}
+  \item{turning}{Setting \code{turning = TRUE} is equivalent to setting
+    \code{phases = c("forward", "backward")} and \code{iterate = FALSE}; the
+    use of the argument \code{turning} is deprecated.}
   \item{maxDegree}{Parameter used to limit the vertex degree of the estimated
     graph.  Valid arguments:
     \enumerate{
@@ -82,9 +90,11 @@ gds(score, labels = score$getNodes(), targets = score$getTargets(),
     \item{Turning phase}{In the turning phase, the algorithm reverts arrows of
       the DAG as long as this augments the score.}
   }
-  GIES cycles through these three phases until no augmentation of the score is
-  possible any more.  In the end, \code{gds} returns the (interventional or
-  observational) essential graph of the last visited DAG.
+  The phases that are actually run are specified with the argument 
+  \code{phase}.  GDS cycles through the specified phases until no augmentation 
+  of the score is possible any more if \code{iterate = TRUE}.  In the end, 
+  \code{gds} returns the (interventional or observational) essential graph of 
+  the last visited DAG.
   
   It is well-known that a greedy search in the space of DAGs instead of 
   essential graphs is more prone to be stuck in local optima of the score
