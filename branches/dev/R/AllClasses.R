@@ -240,6 +240,49 @@ setMethod("plot", signature(x = "fciAlgo"),
 ### Part 2 : Reference classes and Methods used by GIES
 #######################################################
 
+#' Auxiliary function bringing targets in a standard format.
+#' 
+#' At the same time, the function checks if the targets are valid; if not,
+#' it throws an exception.
+#' 
+#' @param 	p				number of vertices
+#' @param 	targets			list of (unique) targets
+#' @param 	target.index	vector of target indices, or NULL
+#' @return  depends on arguments:
+#'   if target.index == NULL: list of sorted targets
+#'   if target.index != NULL: list with two entries, "targets" and "target.index"
+.tidyTargets <- function(p, targets, target.index = NULL) {
+  p <- as.integer(p)
+  cleanTargets <- lapply(targets, function(v) as.integer(sort(unique(v)))),
+  
+  ## Checks
+  if (any(sapply(cleanTargets, length) != sapply(targets, length))) {
+    stop("Target variables must not be listed multiple times.")
+  }
+  if (anyDuplicated(cleanTargets)) {
+    stop("Targets must not be listed multiple times.")
+  }
+  min.max <- range(cleanTargets)
+  if (min.max[1] <= 0 || min.max[2] > p) {
+    stop("Targets are out of range.")
+  }
+  
+  # Check validity of target index, if provided
+  if (!is.null(target.index)) {
+    min.max <- range(target.index)
+    if (min.max[1] <= 0 || min.max[2] > length(targets)) {
+      stop("Target index is out of range.")
+    }
+  }
+  
+  # Return value
+  if (is.null(target.index)) {
+    cleanTargets
+  } else {
+    list(targets = cleanTargets, target.index = target.index)
+  }
+}
+
 #' Create a list of targets and a vector of target indices out of a
 #' matrix indicating interventions
 #'
@@ -251,6 +294,8 @@ setMethod("plot", signature(x = "fciAlgo"),
 #' 					i is given by targets[[target.index[i]]].
 mat2targets <- function(A)
 {
+  stopifnot(is.matrix(A) && is.logical(A) && all(dim(A) > 0))
+  
   targets.raw <- as.list(apply(A, 1, which))
   targets <- unique(targets.raw)
   list(targets = targets, target.index = match(targets.raw, targets))
@@ -260,11 +305,14 @@ mat2targets <- function(A)
 #' and a vector of target indices.  Can be seen as the "inverse function"
 #' of "mat2targets"
 #'
-#' @param 	p							number of vertices
-#' @param 	targets				list of (unique) targets
+#' @param 	p				number of vertices
+#' @param 	targets			list of (unique) targets
 #' @param 	target.index	vector of target indices
 targets2mat <- function(p, targets, target.index)
 {
+  # Check validity of targets
+  targetList <- .tidyTargets(p, targets, target.index)
+  
   res <- matrix(FALSE, nrow = length(target.index), ncol = p)
   for (i in seq_along(target.index))
     res[i, targets[[target.index[i]]]] <- TRUE
@@ -463,13 +511,15 @@ setMethod("plot", "ParDAG",
 
 #' Virtual base class for all scoring classes
 setRefClass("Score",
+    contains = "VIRTUAL",
+    
     fields = list(
         .nodes = "character",
         decomp = "logical",
         c.fcn = "character",
         pp.dat = "list",
         .pardag.class = "character"),
-
+    
     validity = function(object) {
       ## Check if targets are valid (i.e., unique)
       targets.tmp <- object$pp.dat$targets
@@ -478,25 +528,44 @@ setRefClass("Score",
         if (length(targets.tmp[[i]]) != length(object$pp.dat$targets[[i]]))
           return("Target variables must not be listed multiple times.")
       }
-      if (length(unique(targets.tmp)) != length(targets.tmp))
+      if (length(unique(targets.tmp)) != length(targets.tmp)) {
         return("Targets must not be listed multiple times.")
-
-      ## Check whether data is available from all intervention targets
-      if (unique(object$pp.dat$target.index) != 1:length(object$pp.dat$targets))
-        return("Data from all intervention targets must be available")
-
-      ## Check if dimensions of target.index and data conincide
-      if (length(object$pp.dat$target.index) != nrow(object$pp.dat$data))
-        return("Length of target index vector does not coincide with sample size.")
-
+      }
+            
       ## Check node names
       if (anyDuplicated(object$.nodes)) {
         return("The node names must be unique")
       }
-
+      
       return(TRUE)
     },
+    
+    methods = list(
+        #' Constructor
+        initialize = function(
+            targets = list(integer(0)), 
+            nodes = character(0),
+            ...) {
+          pp.dat$targets <<- .tidyTargets(length(nodes), targets)
+        }
+        )
+    )
 
+setRefClass("DataScore",
+    contains = "Score",
+    
+    validity = function(object) {
+      ## Check whether data is available from all intervention targets
+      if (sort(unique(object$pp.dat$target.index)) != 1:length(object$pp.dat$targets))
+        return("Data from all intervention targets must be available")
+      
+      ## Check if dimensions of target.index and data conincide
+      if (length(object$pp.dat$target.index) != nrow(object$pp.dat$data))
+        return("Length of target index vector does not coincide with sample size.")
+      
+      return(TRUE)
+    },
+    
     methods = list(
         #' Constructor
         #'
@@ -513,6 +582,8 @@ setRefClass("Score",
             target.index = rep(as.integer(1), nrow(data)),
             nodes = colnames(data),
             ...) {
+          
+          
           ## Order by ascending target indices (necessary for certain scoring objects)
           if (is.unsorted(target.index)) {
             perm <- order(target.index)
@@ -536,6 +607,7 @@ setRefClass("Score",
           ## Store list of index vectors of "non-interventions": for each vertex k,
           ## store the indices of the data points for which k has NOT been intervened
           A <- !targets2mat(pp.dat$vertex.count, pp.dat$targets, pp.dat$target.index)
+          # TODO: use apply!!
           pp.dat$non.int <<- lapply(1:pp.dat$vertex.count, function(i) which(A[, i]))
           pp.dat$data.count <<- as.integer(colSums(A))
           pp.dat$total.data.count <<- as.integer(nrow(data))
@@ -632,7 +704,7 @@ setRefClass("Score",
             if (decomp) {
               in.edge <- dag$.in.edges
               lapply(1:pp.dat$vertex.count,
-                  function(i) local.fit(i, dag$.in.edges[[i]], ...))
+                  function(i) local.fit(i, in.edge[[i]], ...))
             } else {
               stop("global.fit is not implemented in this class.")
             }
@@ -650,7 +722,7 @@ setRefClass("Score",
 #' choosable penalty lambda.
 #' Special case: BIC where \lambda = 1/2 \log n (default value for lambda)
 setRefClass("GaussL0penIntScore",
-    contains = "Score",
+    contains = "DataScore",
 
     fields = list(
         .format = "character"),

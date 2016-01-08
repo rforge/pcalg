@@ -182,6 +182,8 @@ public:
 	ScoreRFunction(uint vertexCount, TargetFamily* targets) :
 			Score(vertexCount, targets) {}
 
+	virtual ~ScoreRFunction() {}
+
 	virtual uint getTotalDataCount() const { return _totalDataCount;	}
 
 	virtual void setData(Rcpp::List& data);
@@ -242,7 +244,9 @@ public:
 	ScoreGaussL0PenScatter(uint vertexCount, TargetFamily* targets) :
 		Score(vertexCount, targets),
 		_dataCount(vertexCount),
-		_scatterMatrices(vertexCount) {};
+		_scatterMatrices(vertexCount) {}
+
+	virtual ~ScoreGaussL0PenScatter() {}
 
 	virtual uint getTotalDataCount() const { return _totalDataCount; }
 
@@ -298,7 +302,9 @@ public:
 	ScoreGaussL0PenRaw(uint vertexCount, TargetFamily* targets) :
 		Score(vertexCount, targets),
 		_dataCount(vertexCount),
-		_nonInt(vertexCount) {};
+		_nonInt(vertexCount) {}
+
+	virtual ~ScoreGaussL0PenRaw() {}
 
 	virtual uint getTotalDataCount() const { return _totalDataCount; }
 

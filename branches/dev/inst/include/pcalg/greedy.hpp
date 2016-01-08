@@ -189,6 +189,11 @@ public:
 		_removedEdges() {};
 
 	/**
+	 * Destructor
+	 */
+	virtual ~EdgeOperationLogger() {};
+
+	/**
 	 * Reference to added or removed edges
 	 */
 	const std::set<Edge, EdgeCmp>& addedEdges() { return _addedEdges; }

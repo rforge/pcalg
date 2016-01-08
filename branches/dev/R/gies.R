@@ -144,6 +144,52 @@ caus.inf <- function(
     ...)
 {
   algorithm <- match.arg(algorithm)
+  
+  # Catching error occurring when a user called one of the causal 
+  # inference algorithms using the old calling conventions: try to
+  # rearrange passed arguments, print a warning
+  #
+  # NOTE: old calling conventions were
+  # (algorithm, p, targets, score) for caus.inf
+  # (p, targets, score) for all functions allowing interventional data
+  # (p, score) for GES
+  if (is.numeric(score)) {
+    # This happens when the old calling convention is used with all 
+    # mandatory arguments unnamed
+    p <- score
+    if (is.list(labels) && is(targets, "Score")) {
+      score <- targets
+      targets <- labels
+      labels <- as.character(1:p)
+      warning(paste("You are using a DEPRECATED calling convention for",
+              "gies(), gds() or simy(); please refer to the documentation",
+              "of these functions to adapt to the new calling conventions."))
+    } else if (is(labels, "Score")) {
+      score <- labels
+      labels <- as.character(1:p)
+      warning(paste("You are using a DEPRECATED calling convention for",
+              "ges(); please refer to the documentation",
+              "to adapt to the new calling convention."))
+    }
+  } else if (is.numeric(labels) && length(labels) == 1) {
+    # This happens when the old calling convention is used with only the
+    # 'score' argument named
+    labels <- as.character(1:labels)
+    warning(paste("You are using a DEPRECATED calling convention for",
+            "gies(), ges(), gds() or simy(); please refer to the documentation",
+            "of these functions to adapt to the new calling conventions."))
+  }
+  
+  if (!is(score, "Score")) {
+    stop("'score' must be of a class inherited from the class 'Score'.")
+  }
+  if (!is.character(labels)) {
+    stop("'labels' must be a character vector.")
+  }
+  if (!is.list(targets) || !all(sapply(targets, is.numeric))) {
+    stop("'targets' must be a list of integer vectors.")
+  }
+  
   essgraph <- new("EssGraph", nodes = labels, targets = targets, score = score)
   if (essgraph$caus.inf(algorithm, ...)) {
     if (algorithm == "GIES") {
