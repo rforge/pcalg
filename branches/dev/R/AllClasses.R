@@ -252,34 +252,46 @@ setMethod("plot", signature(x = "fciAlgo"),
 #'   if target.index == NULL: list of sorted targets
 #'   if target.index != NULL: list with two entries, "targets" and "target.index"
 .tidyTargets <- function(p, targets, target.index = NULL) {
-  p <- as.integer(p)
-  cleanTargets <- lapply(targets, function(v) as.integer(sort(unique(v)))),
+  stopifnot((p <- as.integer(p)) > 0)
   
-  ## Checks
-  if (any(sapply(cleanTargets, length) != sapply(targets, length))) {
-    stop("Target variables must not be listed multiple times.")
+  # Check and convert targets
+  if (!is.list(targets) || !all(sapply(targets, is.numeric))) {
+    stop("Argument 'targets' must be a list of integer vectors.")
   }
-  if (anyDuplicated(cleanTargets)) {
-    stop("Targets must not be listed multiple times.")
+  rawTargets <- lapply(targets, function(v) unique(sort(as.integer(v))))
+  targets <- unique(rawTargets)
+  if (length(targets) < length(rawTargets)) {
+    stop("List of targets must be unique.")
   }
-  min.max <- range(cleanTargets)
-  if (min.max[1] <= 0 || min.max[2] > p) {
-    stop("Targets are out of range.")
+  allTargets <- unlist(targets)
+  if (length(allTargets) > 0) {
+    if (any(is.na(allTargets))) {
+      stop("Argument 'targets' must not contain NAs.")
+    }
+    min.max <- range(allTargets)
+    if (min.max[1] <= 0 || min.max[2] > p) {
+      stop("Targets are out of range.")
+    }
   }
   
   # Check validity of target index, if provided
   if (!is.null(target.index)) {
+    if (!is.numeric(target.index)) {
+      stop("Argument 'target.index' must be an integer vector.")
+    }
+    target.index <- as.integer(target.index)
     min.max <- range(target.index)
     if (min.max[1] <= 0 || min.max[2] > length(targets)) {
       stop("Target index is out of range.")
     }
+    # target.index <- match(rawTargets, targets)[target.index]
   }
   
   # Return value
   if (is.null(target.index)) {
-    cleanTargets
+    targets
   } else {
-    list(targets = cleanTargets, target.index = target.index)
+    list(targets = targets, target.index = target.index)
   }
 }
 
@@ -546,6 +558,7 @@ setRefClass("Score",
             targets = list(integer(0)), 
             nodes = character(0),
             ...) {
+          .nodes <<- nodes
           pp.dat$targets <<- .tidyTargets(length(nodes), targets)
         }
         )
@@ -582,28 +595,28 @@ setRefClass("DataScore",
             target.index = rep(as.integer(1), nrow(data)),
             nodes = colnames(data),
             ...) {
-          
+          ## Node names (stored in constructor of "Score"):
+          ## if data has no column names, correct them
+          if (is.null(nodes)) {
+            nodes <- as.character(1:ncol(data))
+          }
+          targetList <- .tidyTargets(ncol(data), targets, target.index)
+          callSuper(targets = targetList$targets, nodes, ...)
           
           ## Order by ascending target indices (necessary for certain scoring objects)
-          if (is.unsorted(target.index)) {
-            perm <- order(target.index)
+          if (is.unsorted(targetList$target.index)) {
+            perm <- order(targetList$target.index)
           } else {
-            perm <- 1:length(target.index)
+            perm <- 1:length(targetList$target.index)
           }
 
           ## Store pre-processed data
-          pp.dat$targets <<- lapply(targets, sort)
-          pp.dat$target.index <<- target.index[perm]
+          # pp.dat$targets <<- lapply(targets, sort)
+          pp.dat$target.index <<- targetList$target.index[perm]
           pp.dat$data <<- data[perm, ]
           pp.dat$vertex.count <<- ncol(data)
 
-          ## Store node names
-          if (is.null(nodes)) {
-            .nodes <<- as.character(1:ncol(data))
-          } else {
-            .nodes <<- nodes
-          }
-
+          
           ## Store list of index vectors of "non-interventions": for each vertex k,
           ## store the indices of the data points for which k has NOT been intervened
           A <- !targets2mat(pp.dat$vertex.count, pp.dat$targets, pp.dat$target.index)
@@ -623,8 +636,6 @@ setRefClass("DataScore",
           pp.dat$global.score <<- function(edges) global.score(vertex, parents)
           pp.dat$local.fit <<- function(vertex, parents) local.fit(vertex, parents)
           pp.dat$global.fit <<- function(edges) global.fit(vertex, parents)
-
-          callSuper(...)
         },
 
         #' Checks whether a vertex is valid
@@ -730,12 +741,14 @@ setRefClass("GaussL0penIntScore",
     validity = function(object) {
       p <- ncol(object$pp.dat$data)
       if (!is.null(object$pp.dat$scatter)) {
-          ## Data storage with precalculated scatter matrices
-          if (unique(object$pp.dat$scatter.index) != 1:length(object$pp.dat$scatter))
-            return("The index list of distinct scatter matrices has an invalid range.")
-          if (any(sapply(object$pp.dat$scatter, function(mat) dim(mat) != c(p, p))))
-            return("The scatter matrices have invalid dimensions.")
+        ## Data storage with precalculated scatter matrices
+        if (unique(object$pp.dat$scatter.index) != 1:length(object$pp.dat$scatter)) {
+          return("The index list of distinct scatter matrices has an invalid range.")
         }
+        if (any(sapply(object$pp.dat$scatter, function(mat) dim(mat) != c(p, p)))) {
+          return("The scatter matrices have invalid dimensions.")
+        }
+      }
 
       return(TRUE)
     },
@@ -773,11 +786,11 @@ setRefClass("GaussL0penIntScore",
 
           ## Store data format. Currently supporting scatter matrices
           ## and raw data only (recommended for high-dimensional data)
-          .format <<- match.arg(format)
+          format <- match.arg(format, several.ok = TRUE)
           ## If format not specified by user, choose it based on dimensions
           ## TODO: check if this choice is reasonable...
           if (length(format) > 1) {
-            .format <<- ifelse(p >= nrow(data), "raw", "scatter")
+            .format <<- ifelse(p >= nrow(data) && length(pp.dat$targets) > 1, "raw", "scatter")
 		  }
 
           ## Use C++ functions if requested
@@ -963,6 +976,123 @@ setRefClass("GaussL0penObsScore",
           }
         )
     )
+
+#' l0-penalized log-likelihood for general discrete models, with freely
+#' choosable penalty lambda.
+#' Special case: BIC where \lambda = 1/2 \log n (default value for lambda)
+setRefClass("DiscrL0penIntScore",
+    contains = "DataScore",
+        
+    validity = function(object) {
+      # TODO write function!
+      
+      return(TRUE)
+    },
+    
+    methods = list(
+        #' Constructor
+        initialize = function(data = matrix(1, 1, 1),
+            targets = list(integer(0)),
+            target.index = rep(as.integer(1), nrow(data)),
+            nodes = colnames(data),
+            lambda = 0.5*log(nrow(data)),
+            ...) {
+          ## Store supplied data in sorted form. Make sure data is a data.frame
+          ## for discrete data.
+          if (is.matrix(data)) {
+            data <- as.data.frame(apply(data, 2, factor))
+          }
+          if (!is.data.frame(data)) {
+            stop("Argument 'data' must be supplied as data.frame (preferred) or matrix.")
+          }
+          callSuper(data = data, targets = targets, target.index = target.index, nodes = nodes, ...)
+          
+          ## Number of variables
+          p <- ncol(data)
+          
+          ## l0-penalty is decomposable
+          decomp <<- TRUE
+          
+          ## Underlying causal model class: Gaussian
+          # TODO change!!
+          .pardag.class <<- "GaussParDAG"
+          
+          ## Store different settings
+          pp.dat$lambda <<- lambda
+        },
+        
+        #' Calculates the local score of a vertex and its parents
+        local.score = function(vertex, parents, ...) {
+          ## Check validity of arguments
+          validate.vertex(vertex)
+          validate.parents(parents)
+          
+          # Extract subset of data relevant for calculation
+          # Y <- pp.dat$data[pp.dat$non.int[[vertex]], vertex]
+          Z <- pp.dat$data[pp.dat$non.int[[vertex]], c(vertex, parents), drop = FALSE]
+          
+          # Calculate contingency table
+          cont.table <- table(Z)
+          
+          # Normalize to get "local log-likelihood scores"
+          # (M[u, x] * log(M[u, x]/M[u])
+          ll <- apply(cont.table, 2:length(dim(cont.table)),
+              function(x) {
+                s <- sum(x)
+                if (s > 0) {
+                  y <- x
+                  y[x == 0] <- 1
+                  x * log(y/s)
+                } else {
+                  rep(0, length(x))
+                  # if all counts are 0: return result of maximum entropy
+                }
+              })
+          
+          # Degrees of freedom
+          df <- prod(dim(cont.table)[-1]) * (length(levels(pp.dat$data[[vertex]])) - 1)
+          cat(sprintf("df: %d \n", df))
+              
+          # Return local score
+          cat(sprintf("Log-L: %f \n", sum(ll)))
+          return(sum(ll) - pp.dat$lambda*df)
+        },
+        
+        #' Calculates the local MLE for a vertex and its parents
+        #'
+        #' @param 	vertex		vertex whose parameters shall be fitted
+        #' @param 	parents		parents of the vertex
+        #' @param 	...				ignored; for compatibility with the base class
+        local.fit = function(vertex, parents, ...) {
+          ## Check validity of arguments
+          validate.vertex(vertex)
+          validate.parents(parents)
+          
+          # Extract subset of data relevant for calculation
+          # Y <- pp.dat$data[pp.dat$non.int[[vertex]], vertex]
+          Z <- pp.dat$data[pp.dat$non.int[[vertex]], c(vertex, parents), drop = FALSE]
+          
+          # Calculate contingency table
+          cont.table <- table(Z)
+          
+          # Normalize to get conditional probability distribution
+          cpd <- apply(cont.table, 2:length(dim(cont.table)),
+              function(x) {
+                s <- sum(x)
+                if (s > 0) {
+                  x/s
+                } else {
+                  rep(1/length(x), length(x))
+                  # if all counts are 0: return result of maximum entropy
+                }
+              })
+          
+          # Return vectorized CPD
+          return(as.vector(cpd))
+        }
+    )
+)
+
 
 #' Score for causal additive models; very experimental...
 setRefClass("CAMIntScore",
