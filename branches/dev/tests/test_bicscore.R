@@ -155,4 +155,12 @@ stopifnot(isTRUE(
         }
     )))
 
+## Test calculation of BIC score for discrete data
+# TODO use more sophisticated data set...
+discr.data <- cbind(c(3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4),
+    c(5,5,5,5,7,7,7,7,7,7,5,5,5,5,5,7,7,7,7,7),
+    c(1,1,9,8,1,1,8,8,9,9,1,1,9,9,9,1,1,1,9,9))
+score <- new("DiscrL0penIntScore", data = discr.data)
+# score$local.score(1, integer(0))
+
 cat("Done.\n")

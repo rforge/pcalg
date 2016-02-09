@@ -476,6 +476,26 @@ setRefClass("ParDAG",
           sum(sapply(.in.edges, length))
         },
 
+        #' Yields the variable types. 
+        #' Function must be overridden in inherited classes!
+        #' 
+        #' @param vertex vector of indices of the vertices for which the 
+        #' variable types should be reported. If vertex == NULL, the types of
+        #' all variables are returned.
+        var.type = function(vertex = NULL) {
+          stop("var.type() is not implemented in this class.")
+        },
+        
+        #' Yields the levels of the factor variables.
+        #' Function must be overridden in inherited classes!
+        #' 
+        #' @param vertex vector of indices of the vertices for which the 
+        #' variable types should be reported. If vertex == NULL, the types of
+        #' all variables are returned.
+        levels = function(vertex = NULL) {
+          stop("var.type() is not implemented in this class.")
+        },
+    
         #' Simulates (draws a sample of) interventional (or observational) data
         simulate = function(n, target = integer(0), int.level = numeric(0)) {
           stop("simulate() is not implemented in this class.")
@@ -560,9 +580,108 @@ setRefClass("Score",
             ...) {
           .nodes <<- nodes
           pp.dat$targets <<- .tidyTargets(length(nodes), targets)
+        },
+        
+        #' Yields a vector of node names
+        getNodes = function() {
+          .nodes
+        },
+        
+        #' Yields the number of nodes
+        node.count = function() {
+          length(.nodes)
+        },
+        
+        #' Checks whether a vertex is valid
+        #' @param vertex vector of vertex indices
+        validate.vertex = function(vertex) {
+          if (length(vertex) > 0) {
+            stopifnot(all(is.whole(vertex)))
+            min.max <- range(vertex)
+            stopifnot(1 <= min.max[1] && min.max[2] <= node.count())
+          }
+        },
+        
+        #' Checks whether a vector is a valid list of parents
+        validate.parents = function(parents) {
+          validate.vertex(parents)
+          stopifnot(anyDuplicated(parents) == 0L)
+        },
+        
+        #' Creates an instance of the corresponding ParDAG class
+        create.dag = function() {
+          tryCatch(
+              new(.pardag.class, nodes = .nodes),
+              error = function(e) stop(paste("Instance of class '", .pardag.class, 
+                        "' cannot be created.", sep = "")))
+        },
+        
+        #' Getter and setter function for the targets
+        getTargets = function() {
+          pp.dat$targets
+        },
+        
+        setTargets = function(targets) {
+          pp.dat$targets <<- lapply(targets, sort)
+        },
+        
+        #' Creates a list of options for the C++ functions for the internal
+        #' calculation of scores and MLEs
+        c.fcn.options = function(DEBUG.LEVEL = 0) {
+          list(DEBUG.LEVEL = DEBUG.LEVEL)
+        },
+        
+        #' Calculates the local score of a vertex and its parents
+        local.score = function(vertex, parents, ...) {
+          stop("local.score is not implemented in this class.")
+        },
+        
+        #' Calculates the global score of a DAG which is only specified
+        #' by its list of in-edges
+        global.score.int = function(edges, ...) {
+          if (c.fcn == "none") {
+            ## Calculate score in R
+            sum(sapply(1:pp.dat$vertex.count,
+                    function(i) local.score(i, edges[[i]], ...)))
+          } else {
+            ## Calculate score with the C++ library
+            .Call("globalScore", c.fcn, pp.dat, edges, c.fcn.options(...), PACKAGE = "pcalg")
+          }
+        },
+        
+        #' Calculates the global score of a DAG
+        global.score = function(dag, ...) {
+          global.score.int(dag$.in.edges, ...)
+        },
+        
+        #' Calculates a local model fit for a vertex and its parents
+        local.fit = function(vertex, parents, ...) {
+          if (!decomp) {
+            stop("local.fit can only be calculated for decomposable scores.")
+          } else {
+            stop("local.fit is not implemented in this class.")
+          }
+        },
+        
+        #' Calculates a global model fit
+        global.fit = function(dag, ...) {
+          if (c.fcn == "none") {
+            ## Calculate score in R
+            if (decomp) {
+              in.edge <- dag$.in.edges
+              lapply(1:pp.dat$vertex.count,
+                  function(i) local.fit(i, in.edge[[i]], ...))
+            } else {
+              stop("global.fit is not implemented in this class.")
+            }
+          } else {
+            ## Calculate score with the C++ library
+            .Call("globalMLE", c.fcn, pp.dat, dag$.in.edges, c.fcn.options(...),
+                PACKAGE = "pcalg")
+          }
         }
-        )
     )
+)
 
 setRefClass("DataScore",
     contains = "Score",
@@ -636,98 +755,9 @@ setRefClass("DataScore",
           pp.dat$global.score <<- function(edges) global.score(vertex, parents)
           pp.dat$local.fit <<- function(vertex, parents) local.fit(vertex, parents)
           pp.dat$global.fit <<- function(edges) global.fit(vertex, parents)
-        },
-
-        #' Checks whether a vertex is valid
-        validate.vertex = function(vertex) {
-          stopifnot(is.whole(vertex))
-          stopifnot(abs(vertex - round(vertex)) < sqrt(.Machine$double.eps))
-          stopifnot(1 <= vertex && vertex <= pp.dat$vertex.count)
-        },
-
-        #' Checks whether a vector is a valid list of parents
-        validate.parents = function(parents) {
-          stopifnot(all(parents %in% 1:pp.dat$vertex.count))
-          stopifnot(anyDuplicated(parents) == 0)
-        },
-
-        #' Getter and setter function for the targets
-        getTargets = function() {
-          pp.dat$targets
-        },
-
-        setTargets = function(targets) {
-          pp.dat$targets <<- lapply(targets, sort)
-        },
-
-        #' Yields a vector of node names
-        getNodes = function() {
-          .nodes
-        },
-
-        #' Yields the number of nodes
-        node.count = function() {
-          length(.nodes)
-        },
-
-        #' Creates a list of options for the C++ functions for the internal
-        #' calculation of scores and MLEs
-        c.fcn.options = function(DEBUG.LEVEL = 0) {
-          list(DEBUG.LEVEL = DEBUG.LEVEL)
-        },
-
-        #' Calculates the local score of a vertex and its parents
-        local.score = function(vertex, parents, ...) {
-          stop("local.score is not implemented in this class.")
-        },
-
-        #' Calculates the global score of a DAG which is only specified
-        #' by its list of in-edges
-        global.score.int = function(edges, ...) {
-          if (c.fcn == "none") {
-            ## Calculate score in R
-            sum(sapply(1:pp.dat$vertex.count,
-                    function(i) local.score(i, edges[[i]], ...)))
-          } else {
-            ## Calculate score with the C++ library
-            .Call("globalScore", c.fcn, pp.dat, edges, c.fcn.options(...), PACKAGE = "pcalg")
-          }
-        },
-
-        #' Calculates the global score of a DAG
-        global.score = function(dag, ...) {
-          global.score.int(dag$.in.edges, ...)
-        },
-
-        #' Calculates a local model fit for a vertex and its parents
-        local.fit = function(vertex, parents, ...) {
-          if (!decomp) {
-            stop("local.fit can only be calculated for decomposable scores.")
-          } else {
-            stop("local.fit is not implemented in this class.")
-          }
-        },
-
-        #' Calculates a global model fit
-        global.fit = function(dag, ...) {
-          if (c.fcn == "none") {
-            ## Calculate score in R
-            if (decomp) {
-              in.edge <- dag$.in.edges
-              lapply(1:pp.dat$vertex.count,
-                  function(i) local.fit(i, in.edge[[i]], ...))
-            } else {
-              stop("global.fit is not implemented in this class.")
-            }
-          } else {
-            ## Calculate score with the C++ library
-            .Call("globalMLE", c.fcn, pp.dat, dag$.in.edges, c.fcn.options(...),
-                  PACKAGE = "pcalg")
-          }
         }
-        ),
-
-    "VIRTUAL")
+    )
+)
 
 #' l0-penalized log-likelihood for Gaussian models, with freely
 #' choosable penalty lambda.
@@ -786,10 +816,11 @@ setRefClass("GaussL0penIntScore",
 
           ## Store data format. Currently supporting scatter matrices
           ## and raw data only (recommended for high-dimensional data)
-          format <- match.arg(format, several.ok = TRUE)
+          .format <<- match.arg(format, several.ok = TRUE)
+
           ## If format not specified by user, choose it based on dimensions
           ## TODO: check if this choice is reasonable...
-          if (length(format) > 1) {
+          if (length(.format) > 1) {
             .format <<- ifelse(p >= nrow(data) && length(pp.dat$targets) > 1, "raw", "scatter")
 		  }
 
@@ -1014,8 +1045,7 @@ setRefClass("DiscrL0penIntScore",
           decomp <<- TRUE
           
           ## Underlying causal model class: Gaussian
-          # TODO change!!
-          .pardag.class <<- "GaussParDAG"
+          .pardag.class <<- "DiscrParDAG"
           
           ## Store different settings
           pp.dat$lambda <<- lambda
@@ -1036,25 +1066,28 @@ setRefClass("DiscrL0penIntScore",
           
           # Normalize to get "local log-likelihood scores"
           # (M[u, x] * log(M[u, x]/M[u])
-          ll <- apply(cont.table, 2:length(dim(cont.table)),
-              function(x) {
-                s <- sum(x)
-                if (s > 0) {
-                  y <- x
-                  y[x == 0] <- 1
-                  x * log(y/s)
-                } else {
-                  rep(0, length(x))
-                  # if all counts are 0: return result of maximum entropy
-                }
-              })
+          ll.elem <- function(x) {
+            s <- sum(x)
+            if (s > 0) {
+              y <- x
+              y[x == 0] <- 1
+              x * log(y/s)
+            } else {
+              rep(0, length(x))
+              # if all counts are 0: return result of maximum entropy
+            }
+          }
+          if (length(parents) > 0) {
+            ll <- apply(cont.table, 2L:length(dim(cont.table)), ll.elem)
+          } else {
+            ll <- ll.elem(cont.table)
+          }
           
-          # Degrees of freedom
+          # Degrees of freedom (NOTE: calculation is correct if cont.table
+          # has only one dimension, because prod(integer(0)) == 1)
           df <- prod(dim(cont.table)[-1]) * (length(levels(pp.dat$data[[vertex]])) - 1)
-          cat(sprintf("df: %d \n", df))
               
           # Return local score
-          cat(sprintf("Log-L: %f \n", sum(ll)))
           return(sum(ll) - pp.dat$lambda*df)
         },
         
@@ -1069,26 +1102,38 @@ setRefClass("DiscrL0penIntScore",
           validate.parents(parents)
           
           # Extract subset of data relevant for calculation
-          # Y <- pp.dat$data[pp.dat$non.int[[vertex]], vertex]
           Z <- pp.dat$data[pp.dat$non.int[[vertex]], c(vertex, parents), drop = FALSE]
           
           # Calculate contingency table
           cont.table <- table(Z)
           
           # Normalize to get conditional probability distribution
-          cpd <- apply(cont.table, 2:length(dim(cont.table)),
-              function(x) {
-                s <- sum(x)
-                if (s > 0) {
-                  x/s
-                } else {
-                  rep(1/length(x), length(x))
-                  # if all counts are 0: return result of maximum entropy
-                }
-              })
+          # TODO: perhaps outsource this function to sfsmisc
+          normalize <- function(x) {
+            s <- sum(x)
+            if (s > 0) {
+              x/s
+            } else {
+              rep(1/length(x), length(x))
+              # if all counts are 0: return result of maximum entropy
+            }
+          }
+          if (length(parents) > 0) {
+            cpd <- apply(cont.table, 2L:length(dim(cont.table)), normalize)
+          } else {
+            cpd <- normalize(cont.table)
+          }
           
           # Return vectorized CPD
           return(as.vector(cpd))
+        },
+        
+        #' Creates an instance of the corresponding ParDAG class. Sets the
+        #' correct levels
+        create.dag = function() {
+          new(.pardag.class, 
+              nodes = .nodes, 
+              levels = lapply(pp.dat$data, base::levels))
         }
     )
 )
@@ -1150,7 +1195,6 @@ setRefClass("CAMIntScore",
           # print(sprintf("RSS: %f, df: %f", sum(resid(local.gam)^2), sum(local.gam$edf)))
           s
         },
-
 
         #' Calculates the local MLE for a vertex and its parents
         #' TODO: implement that function after deciding for a format...
@@ -1384,8 +1428,9 @@ setRefClass("EssGraph",
         #' Yields a representative (estimating parameters via MLE)
         repr = function() {
           stopifnot(!is.null(score <- getScore()))
-          in.edges <- .Call("representative", .in.edges, PACKAGE = "pcalg")
-          result <- new(score$.pardag.class, nodes = .nodes, in.edges = in.edges)
+          
+          result <- score$create.dag()
+          result$.in.edges <- .Call("representative", .in.edges, PACKAGE = "pcalg")
           result$.params <- score$global.fit(result)
 
           return(result)
@@ -1435,6 +1480,8 @@ setMethod("plot", "EssGraph",
       invisible(plot(.ess2graph(x), y, ...))
     })
 
+########################################################################
+
 #' Gaussian causal model
 setRefClass("GaussParDAG",
     contains = "ParDAG",
@@ -1450,6 +1497,25 @@ setRefClass("GaussParDAG",
     },
 
     methods = list(
+        #' Yields the variable types. 
+        #' 
+        #' @param vertex vector of indices of the vertices for which the 
+        #' variable types should be reported. If vertex == NULL, the types of
+        #' all variables are returned.
+        var.type = function(vertex = NULL) {
+          rep("numeric", ifelse(is.null(vertex), node.count, length(vertex)))
+        },
+        
+        #' Yields the levels of the factor variables. Always NULL in a Gaussian
+        #' model.
+        #' 
+        #' @param vertex vector of indices of the vertices for which the 
+        #' variable types should be reported. If vertex == NULL, the types of
+        #' all variables are returned.
+        levels = function(vertex = NULL) {
+          vector("list", ifelse(is.null(vertex), node.count(), length(vertex)))
+        },
+        
         #' Yields the intercept
         intercept = function() {
           sapply(.params, function(par.vec) par.vec[2])
@@ -1457,7 +1523,7 @@ setRefClass("GaussParDAG",
 
         #' Sets the intercept
         set.intercept = function(value) {
-          for (i in 1:node.count())
+          for (i in 1L:node.count())
             .params[[i]][2] <<- value[i]
         },
 
@@ -1631,3 +1697,130 @@ setMethod("predict", "GaussParDAG",
 
       fit
     })
+
+########################################################################
+
+#' General discrete causal model
+setRefClass("DiscrParDAG",
+    contains = "ParDAG",
+    
+    fields = list(
+        # List of character vectors listing the levels of the variables
+        .levels = "list"
+        ),
+    
+    validity = function(object) {
+      if (any(names(object$.params) != object$.nodes)) {
+        return("The elements of 'params' must be named after the nodes.")
+      }
+      if (any(names(object$.levels) != object$.nodes)) {
+        return("The elements of 'levels' must be named after the nodes.")
+      }
+      if (!all(sapply(object$.levels, is.character))) {
+        return("Factor levels must be represented as characters.")
+      }
+      levelCount <- sapply(object$.levels, length)
+      if (!all(sapply(1:object$node.count(),
+              function(i) 
+                length(object$.params[[i]]) == prod(levelCount[object$.in.edges[[i]]])
+          ))) {
+        return("The number of parameters does not match the number of in-edges.")
+      }
+      
+      return(TRUE)
+    },
+    
+    methods = list(
+        #' Constructor
+        initialize = function(nodes, in.edges = NULL, params = list(), levels = list()) {
+          .nodes <<- nodes
+          
+          if (is.null(in.edges)) {
+            .in.edges <<- replicate(length(nodes), integer(0), simplify = FALSE)
+          } else {
+            .in.edges <<- lapply(1:length(in.edges), function(i) as.integer(in.edges[[i]]))
+          }
+          # names(.in.edges) <<- nodes
+          names(.in.edges) <<- NULL
+          for (i in 1:length(nodes)) {
+            names(.in.edges[[i]]) <<- NULL
+          }
+          
+          .params <<- params
+          .levels <<- levels
+        },
+        
+        #' Yields the variable types. 
+        #' 
+        #' @param vertex vector of indices of the vertices for which the 
+        #' variable types should be reported. If vertex == NULL, the types of
+        #' all variables are returned.
+        var.type = function(vertex = NULL) {
+          rep("factor", ifelse(is.null(vertex), node.count, length(vertex)))
+        },
+        
+        #' Yields the levels of the factor variables.
+        #' 
+        #' @param vertex vector of indices of the vertices for which the 
+        #' variable types should be reported. If vertex == NULL, the types of
+        #' all variables are returned.
+        levels = function(vertex = NULL) {
+          if (is.null(vertex)) {
+            .levels
+          } else {
+            validate.vertex(vertex)
+            .levels[vertex]
+          }
+          vector("list", ifelse(is.null(vertex), node.count(), length(vertex)))
+        },
+        
+        #' Sets the variable levels
+        set.levels = function(vertex, levels) {
+          .levels[vertex] <<- levels
+        },
+        
+        #' Yields the conditional probability distribution of a variable
+        #' given its parents
+        #' @param vertex  index of vertex whose CPD is needed
+        #' @return array of dimension k + 1, where k is the in-degree of the
+        #' vertex. The first dimension refers to the levels of "vertex", the 
+        #' following dimensions refer to the levels of the parents of "vertex".
+        cpd = function(vertex) {
+          array(.params[[vertex]], 
+              dim = sapply(.levels[c(vertex, .in.edges[[vertex]])], length),
+              dimnames = .levels[.in.edges[[vertex]]])
+        },
+        
+        #' Yields an observational or interventional covariance matrix
+        #'
+        #' @param   target    intervention target
+        #' @param   ivent.var variances of the intervention variables
+        #' @return  (observational or interventional) covariance matrix
+        cov.mat = function(target = integer(0), ivent.var = numeric(0)) {
+          A <- -weight.mat()
+          A[, target] <- 0
+          diag(A) <- 1
+          A <- solve(A)
+          
+          all.var <- err.var()
+          all.var[target] <- ivent.var
+          
+          return(t(A) %*% diag(all.var) %*% A)
+        },
+        
+        #' Simulates (draws a sample of) interventional (or observational)
+        #' data
+        #'
+        #' @param   n
+        #' @param   target
+        #' @param   int.level   intervention level: values of the intervened
+        #'                      variables. Either a vector of the same length
+        #'                      as "target", or a matrix with dimensions
+        #'                      n x length(target)
+        #' @return  a vector with the simulated values if n = 1, or a matrix
+        #'          with rows corresponding to different samples if n > 1
+        simulate = function(n, target = integer(0), int.level = numeric(0)) {
+          stop("Function 'simulate' is not implemented yet for 'DiscrParDAG'")
+        }
+    )
+)
