@@ -355,6 +355,11 @@ inEdgeList <- function(from)
   }
 }
 
+# TODO: for all reference classes, make sure the constructor also works
+# without arguments; or find another way to make the $copy() method work...
+# (The default implementation of the $copy() method calls the constructor
+# without arguments)
+
 #' Virtual base class for all causal models
 setRefClass("CausMod",
     fields = list(
