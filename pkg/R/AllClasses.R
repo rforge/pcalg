@@ -5,7 +5,7 @@
 ## $Id$
 
 setClass("gAlgo",
-         representation(call = "call",
+         slots = c(call = "call",
                         n = "integer",
                         max.ord = "integer",
                         n.edgetests= "numeric",
@@ -13,14 +13,12 @@ setClass("gAlgo",
                         pMax= "matrix"), "VIRTUAL")
 
 
-setClass("fciAlgo",
-         representation(amat = "matrix", allPdsep = "list",
-                        n.edgetestsPDSEP = "numeric", max.ordPDSEP = "integer"),
-         contains = "gAlgo")
+setClass("fciAlgo", contains = "gAlgo",
+         slots = c(amat = "matrix", allPdsep = "list",
+                   n.edgetestsPDSEP = "numeric", max.ordPDSEP = "integer"))
 
-setClass("pcAlgo",
-         representation(graph = "graph", zMin = "matrix"), ## zMin for compatibility
-         contains = "gAlgo")
+setClass("pcAlgo", contains = "gAlgo",
+         slots = c(graph = "graph", zMin = "matrix")) ## zMin for compatibility
 
 ## Methods
 
@@ -1071,7 +1069,7 @@ setRefClass("EssGraph",
                     "and will be disabled in future package versions;",
                     "please refer to the corresponding help page.", sep = " "))
           }
-          
+
           # Error checks for supplied arguments
           # TODO extend!
           if (is.null(fixedGaps)) {
