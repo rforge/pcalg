@@ -1217,7 +1217,7 @@ void EssentialGraph::turn(const uint u, const uint v, const std::set<uint> C)
 	replaceUnprotected();
 }
 
-bool EssentialGraph::greedyForward(bool adaptive)
+bool EssentialGraph::greedyForward(const ForwardAdaptiveFlag adaptive)
 {
 	uint v_opt = 0;
 	ArrowChangeCmp comp;
@@ -1272,15 +1272,36 @@ bool EssentialGraph::greedyForward(bool adaptive)
 		}
 		insert(u_opt, v_opt, optInsertion.clique);
 
-		// Adapt fixed gaps if requested (cf. "AGES")
-		if (adaptive && !hasEdge(v_opt, u_opt)) {
+		// Adapt fixed gaps if requested (cf. "ARGES")
+		if (adaptive == VSTRUCTURES && !hasEdge(v_opt, u_opt)) {
 			std::set<uint> sources = set_difference(getParents(v_opt), getAdjacent(u_opt));
 			sources.erase(u_opt);
 			for (std::set<uint>::iterator si = sources.begin(); si != sources.end(); ++si) {
 				setFixedGap(*si, u_opt, false);
 				setFixedGap(u_opt, *si, false);
 			}
-		}
+		} // IF VSTRUCTURES
+		else if (adaptive == TRIPLES) {
+			// Adjacent sets of u_opt and v_opt
+			std::vector< std::set<uint> > adjacentSets(2);
+			adjacentSets[0] = getAdjacent(u_opt);
+			adjacentSets[1] = getAdjacent(v_opt);
+			std::vector<uint> edgeVertices(2);
+			edgeVertices[0] = u_opt;
+			edgeVertices[1] = v_opt;
+
+			// Vertices adjacent to u, but not to v (without v itself) (and vice versa)
+			// build new unshielded triples
+			std::set<uint> triples;
+			for (uint j = 0; j <= 1; j++) {
+				triples = set_difference(adjacentSets[j % 2], adjacentSets[(j + 1) % 2]);
+				triples.erase(edgeVertices[(j + 1) % 2]);
+				for (std::set<uint>::iterator si = triples.begin(); si != triples.end(); ++si) {
+					setFixedGap(*si, edgeVertices[(j + 1) % 2], false);
+					setFixedGap(edgeVertices[(j + 1) % 2], *si, false);
+				} // FOR si
+			} // FOR j
+		} // IF TRIPLES
 
 		// If caching is enabled, recalculate the optimal arrow insertions where
 		// necessary
@@ -1431,6 +1452,23 @@ bool EssentialGraph::greedyTurn()
 	}
 	else
 		return false;
+}
+
+bool EssentialGraph::greedyStepDir(const step_dir direction, const ForwardAdaptiveFlag adaptive)
+{
+	switch (direction) {
+	case SD_FORWARD:
+		return greedyForward(adaptive);
+
+	case SD_BACKWARD:
+		return greedyBackward();
+
+	case SD_TURNING:
+		return greedyTurn();
+
+	default:
+		return false;
+	} // SWITCH direction
 }
 
 step_dir EssentialGraph::greedyStep()
@@ -1646,6 +1684,24 @@ bool EssentialGraph::greedyDAGTurn()
 	}
 	else
 		return false;
+}
+
+bool EssentialGraph::greedyDAGStepDir(const step_dir direction)
+{
+	switch (direction) {
+	case SD_FORWARD:
+		return greedyDAGForward();
+
+	case SD_BACKWARD:
+		return greedyDAGBackward();
+
+	case SD_TURNING:
+		return greedyDAGTurn();
+
+	default:
+		return false;
+	} // SWITCH direction
+
 }
 
 void EssentialGraph::siMySearch()

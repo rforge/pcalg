@@ -20,6 +20,9 @@
 
 enum edge_flag { NOT_PROTECTED, UNDECIDABLE, PROTECTED };
 
+// Types of adaptiveness (cf. "ARGES")
+enum ForwardAdaptiveFlag { NONE, VSTRUCTURES, TRIPLES };
+
 /**
  * Help functions for easier handling of set operations
  */
@@ -184,6 +187,11 @@ public:
 		GraphOperationLogger(),
 		_addedEdges(),
 		_removedEdges() {};
+
+	/**
+	 * Destructor
+	 */
+	virtual ~EdgeOperationLogger() {};
 
 	/**
 	 * Reference to added or removed edges
@@ -698,7 +706,7 @@ public:
 	 * @param  adaptive: indicates whether set of allowed edges should be
 	 * adaptively enlarged according to AGES
 	 */
-	bool greedyForward(bool adaptive = false);
+	bool greedyForward(const ForwardAdaptiveFlag adaptive = NONE);
 
 	/**
 	 * Does one backward step of the greedy interventional equivalence search
@@ -709,6 +717,12 @@ public:
 	 * Does one turning step of the greedy interventional equivalence search
 	 */
 	bool greedyTurn();
+
+	/**
+	 * Wrapper function to the greedy... functions; first argument indicates requested
+	 * direction
+	 */
+	bool greedyStepDir(const step_dir direction, const ForwardAdaptiveFlag adaptive = NONE);
 
 	/**
 	 * Does one greedy step, either forward, backward, or turning, the one that
@@ -733,6 +747,11 @@ public:
 	 * equivalence classes).
 	 */
 	bool greedyDAGTurn();
+
+	/**
+	 * Wrapper function for any of the three preceding functions
+	 */
+	bool greedyDAGStepDir(const step_dir direction);
 
 	/**
 	 * Maximizes the BIC score by dynamic programming, as proposed by

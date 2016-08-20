@@ -239,6 +239,61 @@ setMethod("plot", signature(x = "fciAlgo"),
 ### Part 2 : Reference classes and Methods used by GIES
 #######################################################
 
+#' Auxiliary function bringing targets in a standard format.
+#' 
+#' At the same time, the function checks if the targets are valid; if not,
+#' it throws an exception.
+#' 
+#' @param 	p				number of vertices
+#' @param 	targets			list of (unique) targets
+#' @param 	target.index	vector of target indices, or NULL
+#' @return  depends on arguments:
+#'   if target.index == NULL: list of sorted targets
+#'   if target.index != NULL: list with two entries, "targets" and "target.index"
+.tidyTargets <- function(p, targets, target.index = NULL) {
+  stopifnot((p <- as.integer(p)) > 0)
+  
+  # Check and convert targets
+  if (!is.list(targets) || !all(sapply(targets, is.numeric))) {
+    stop("Argument 'targets' must be a list of integer vectors.")
+  }
+  rawTargets <- lapply(targets, function(v) unique(sort(as.integer(v))))
+  targets <- unique(rawTargets)
+  if (length(targets) < length(rawTargets)) {
+    stop("List of targets must be unique.")
+  }
+  allTargets <- unlist(targets)
+  if (length(allTargets) > 0) {
+    if (any(is.na(allTargets))) {
+      stop("Argument 'targets' must not contain NAs.")
+    }
+    min.max <- range(allTargets)
+    if (min.max[1] <= 0 || min.max[2] > p) {
+      stop("Targets are out of range.")
+    }
+  }
+  
+  # Check validity of target index, if provided
+  if (!is.null(target.index)) {
+    if (!is.numeric(target.index)) {
+      stop("Argument 'target.index' must be an integer vector.")
+    }
+    target.index <- as.integer(target.index)
+    min.max <- range(target.index)
+    if (min.max[1] <= 0 || min.max[2] > length(targets)) {
+      stop("Target index is out of range.")
+    }
+    # target.index <- match(rawTargets, targets)[target.index]
+  }
+  
+  # Return value
+  if (is.null(target.index)) {
+    targets
+  } else {
+    list(targets = targets, target.index = target.index)
+  }
+}
+
 #' Create a list of targets and a vector of target indices out of a
 #' matrix indicating interventions
 #'
@@ -250,6 +305,8 @@ setMethod("plot", signature(x = "fciAlgo"),
 #' 					i is given by targets[[target.index[i]]].
 mat2targets <- function(A)
 {
+  stopifnot(is.matrix(A) && is.logical(A) && all(dim(A) > 0))
+  
   targets.raw <- as.list(apply(A, 1, which))
   targets <- unique(targets.raw)
   list(targets = targets, target.index = match(targets.raw, targets))
@@ -259,11 +316,14 @@ mat2targets <- function(A)
 #' and a vector of target indices.  Can be seen as the "inverse function"
 #' of "mat2targets"
 #'
-#' @param 	p							number of vertices
-#' @param 	targets				list of (unique) targets
+#' @param 	p				number of vertices
+#' @param 	targets			list of (unique) targets
 #' @param 	target.index	vector of target indices
 targets2mat <- function(p, targets, target.index)
 {
+  # Check validity of targets
+  targetList <- .tidyTargets(p, targets, target.index)
+  
   res <- matrix(FALSE, nrow = length(target.index), ncol = p)
   for (i in seq_along(target.index))
     res[i, targets[[target.index[i]]]] <- TRUE
@@ -293,6 +353,11 @@ inEdgeList <- function(from)
     stop(sprintf("Input of class '%s' is not supported.", class(from)))
   }
 }
+
+# TODO: for all reference classes, make sure the constructor also works
+# without arguments; or find another way to make the $copy() method work...
+# (The default implementation of the $copy() method calls the constructor
+# without arguments)
 
 #' Virtual base class for all causal models
 setRefClass("CausMod",
@@ -414,6 +479,26 @@ setRefClass("ParDAG",
           sum(sapply(.in.edges, length))
         },
 
+        #' Yields the variable types. 
+        #' Function must be overridden in inherited classes!
+        #' 
+        #' @param vertex vector of indices of the vertices for which the 
+        #' variable types should be reported. If vertex == NULL, the types of
+        #' all variables are returned.
+        var.type = function(vertex = NULL) {
+          stop("var.type() is not implemented in this class.")
+        },
+        
+        #' Yields the levels of the factor variables.
+        #' Function must be overridden in inherited classes!
+        #' 
+        #' @param vertex vector of indices of the vertices for which the 
+        #' variable types should be reported. If vertex == NULL, the types of
+        #' all variables are returned.
+        levels = function(vertex = NULL) {
+          stop("var.type() is not implemented in this class.")
+        },
+    
         #' Simulates (draws a sample of) interventional (or observational) data
         simulate = function(n, target = integer(0), int.level = numeric(0)) {
           stop("simulate() is not implemented in this class.")
@@ -461,13 +546,15 @@ setMethod("plot", "ParDAG",
 
 #' Virtual base class for all scoring classes
 setRefClass("Score",
+    contains = "VIRTUAL",
+    
     fields = list(
         .nodes = "character",
         decomp = "logical",
         c.fcn = "character",
         pp.dat = "list",
         .pardag.class = "character"),
-
+    
     validity = function(object) {
       ## Check if targets are valid (i.e., unique)
       targets.tmp <- object$pp.dat$targets
@@ -476,25 +563,144 @@ setRefClass("Score",
         if (length(targets.tmp[[i]]) != length(object$pp.dat$targets[[i]]))
           return("Target variables must not be listed multiple times.")
       }
-      if (length(unique(targets.tmp)) != length(targets.tmp))
+      if (length(unique(targets.tmp)) != length(targets.tmp)) {
         return("Targets must not be listed multiple times.")
-
-      ## Check whether data is available from all intervention targets
-      if (unique(object$pp.dat$target.index) != 1:length(object$pp.dat$targets))
-        return("Data from all intervention targets must be available")
-
-      ## Check if dimensions of target.index and data conincide
-      if (length(object$pp.dat$target.index) != nrow(object$pp.dat$data))
-        return("Length of target index vector does not coincide with sample size.")
-
+      }
+            
       ## Check node names
       if (anyDuplicated(object$.nodes)) {
         return("The node names must be unique")
       }
-
+      
       return(TRUE)
     },
+    
+    methods = list(
+        #' Constructor
+        initialize = function(
+            targets = list(integer(0)), 
+            nodes = character(0),
+            ...) {
+          .nodes <<- nodes
+          pp.dat$targets <<- .tidyTargets(length(nodes), targets)
+        },
+        
+        #' Yields a vector of node names
+        getNodes = function() {
+          .nodes
+        },
+        
+        #' Yields the number of nodes
+        node.count = function() {
+          length(.nodes)
+        },
+        
+        #' Checks whether a vertex is valid
+        #' @param vertex vector of vertex indices
+        validate.vertex = function(vertex) {
+          if (length(vertex) > 0) {
+            stopifnot(all(is.whole(vertex)))
+            min.max <- range(vertex)
+            stopifnot(1 <= min.max[1] && min.max[2] <= node.count())
+          }
+        },
+        
+        #' Checks whether a vector is a valid list of parents
+        validate.parents = function(parents) {
+          validate.vertex(parents)
+          stopifnot(anyDuplicated(parents) == 0L)
+        },
+        
+        #' Creates an instance of the corresponding ParDAG class
+        create.dag = function() {
+          tryCatch(
+              new(.pardag.class, nodes = .nodes),
+              error = function(e) stop(paste("Instance of class '", .pardag.class, 
+                        "' cannot be created.", sep = "")))
+        },
+        
+        #' Getter and setter function for the targets
+        getTargets = function() {
+          pp.dat$targets
+        },
+        
+        setTargets = function(targets) {
+          pp.dat$targets <<- lapply(targets, sort)
+        },
+        
+        #' Creates a list of options for the C++ functions for the internal
+        #' calculation of scores and MLEs
+        c.fcn.options = function(DEBUG.LEVEL = 0) {
+          list(DEBUG.LEVEL = DEBUG.LEVEL)
+        },
+        
+        #' Calculates the local score of a vertex and its parents
+        local.score = function(vertex, parents, ...) {
+          stop("local.score is not implemented in this class.")
+        },
+        
+        #' Calculates the global score of a DAG which is only specified
+        #' by its list of in-edges
+        global.score.int = function(edges, ...) {
+          if (c.fcn == "none") {
+            ## Calculate score in R
+            sum(sapply(1:pp.dat$vertex.count,
+                    function(i) local.score(i, edges[[i]], ...)))
+          } else {
+            ## Calculate score with the C++ library
+            .Call("globalScore", c.fcn, pp.dat, edges, c.fcn.options(...), PACKAGE = "pcalg")
+          }
+        },
+        
+        #' Calculates the global score of a DAG
+        global.score = function(dag, ...) {
+          global.score.int(dag$.in.edges, ...)
+        },
+        
+        #' Calculates a local model fit for a vertex and its parents
+        local.fit = function(vertex, parents, ...) {
+          if (!decomp) {
+            stop("local.fit can only be calculated for decomposable scores.")
+          } else {
+            stop("local.fit is not implemented in this class.")
+          }
+        },
+        
+        #' Calculates a global model fit
+        global.fit = function(dag, ...) {
+          if (c.fcn == "none") {
+            ## Calculate score in R
+            if (decomp) {
+              in.edge <- dag$.in.edges
+              lapply(1:pp.dat$vertex.count,
+                  function(i) local.fit(i, in.edge[[i]], ...))
+            } else {
+              stop("global.fit is not implemented in this class.")
+            }
+          } else {
+            ## Calculate score with the C++ library
+            .Call("globalMLE", c.fcn, pp.dat, dag$.in.edges, c.fcn.options(...),
+                PACKAGE = "pcalg")
+          }
+        }
+    )
+)
 
+setRefClass("DataScore",
+    contains = "Score",
+    
+    validity = function(object) {
+      ## Check whether data is available from all intervention targets
+      if (sort(unique(object$pp.dat$target.index)) != 1:length(object$pp.dat$targets))
+        return("Data from all intervention targets must be available")
+      
+      ## Check if dimensions of target.index and data conincide
+      if (length(object$pp.dat$target.index) != nrow(object$pp.dat$data))
+        return("Length of target index vector does not coincide with sample size.")
+      
+      return(TRUE)
+    },
+    
     methods = list(
         #' Constructor
         #'
@@ -511,29 +717,32 @@ setRefClass("Score",
             target.index = rep(as.integer(1), nrow(data)),
             nodes = colnames(data),
             ...) {
+          ## Node names (stored in constructor of "Score"):
+          ## if data has no column names, correct them
+          if (is.null(nodes)) {
+            nodes <- as.character(1:ncol(data))
+          }
+          targetList <- .tidyTargets(ncol(data), targets, target.index)
+          callSuper(targets = targetList$targets, nodes, ...)
+          
           ## Order by ascending target indices (necessary for certain scoring objects)
-          if (is.unsorted(target.index)) {
-            perm <- order(target.index)
+          if (is.unsorted(targetList$target.index)) {
+            perm <- order(targetList$target.index)
           } else {
-            perm <- 1:length(target.index)
+            perm <- 1:length(targetList$target.index)
           }
 
           ## Store pre-processed data
-          pp.dat$targets <<- lapply(targets, sort)
-          pp.dat$target.index <<- target.index[perm]
+          # pp.dat$targets <<- lapply(targets, sort)
+          pp.dat$target.index <<- targetList$target.index[perm]
           pp.dat$data <<- data[perm, ]
           pp.dat$vertex.count <<- ncol(data)
 
-          ## Store node names
-          if (is.null(nodes)) {
-            .nodes <<- as.character(1:ncol(data))
-          } else {
-            .nodes <<- nodes
-          }
-
+          
           ## Store list of index vectors of "non-interventions": for each vertex k,
           ## store the indices of the data points for which k has NOT been intervened
           A <- !targets2mat(pp.dat$vertex.count, pp.dat$targets, pp.dat$target.index)
+          # TODO: use apply!!
           pp.dat$non.int <<- lapply(1:pp.dat$vertex.count, function(i) which(A[, i]))
           pp.dat$data.count <<- as.integer(colSums(A))
           pp.dat$total.data.count <<- as.integer(nrow(data))
@@ -549,105 +758,15 @@ setRefClass("Score",
           pp.dat$global.score <<- function(edges) global.score(vertex, parents)
           pp.dat$local.fit <<- function(vertex, parents) local.fit(vertex, parents)
           pp.dat$global.fit <<- function(edges) global.fit(vertex, parents)
-
-          callSuper(...)
-        },
-
-        #' Checks whether a vertex is valid
-        validate.vertex = function(vertex) {
-          stopifnot(is.whole(vertex))
-          stopifnot(abs(vertex - round(vertex)) < sqrt(.Machine$double.eps))
-          stopifnot(1 <= vertex && vertex <= pp.dat$vertex.count)
-        },
-
-        #' Checks whether a vector is a valid list of parents
-        validate.parents = function(parents) {
-          stopifnot(all(parents %in% 1:pp.dat$vertex.count))
-          stopifnot(anyDuplicated(parents) == 0)
-        },
-
-        #' Getter and setter function for the targets
-        getTargets = function() {
-          pp.dat$targets
-        },
-
-        setTargets = function(targets) {
-          pp.dat$targets <<- lapply(targets, sort)
-        },
-
-        #' Yields a vector of node names
-        getNodes = function() {
-          .nodes
-        },
-
-        #' Yields the number of nodes
-        node.count = function() {
-          length(.nodes)
-        },
-
-        #' Creates a list of options for the C++ functions for the internal
-        #' calculation of scores and MLEs
-        c.fcn.options = function(DEBUG.LEVEL = 0) {
-          list(DEBUG.LEVEL = DEBUG.LEVEL)
-        },
-
-        #' Calculates the local score of a vertex and its parents
-        local.score = function(vertex, parents, ...) {
-          stop("local.score is not implemented in this class.")
-        },
-
-        #' Calculates the global score of a DAG which is only specified
-        #' by its list of in-edges
-        global.score.int = function(edges, ...) {
-          if (c.fcn == "none") {
-            ## Calculate score in R
-            sum(sapply(1:pp.dat$vertex.count,
-                    function(i) local.score(i, edges[[i]], ...)))
-          } else {
-            ## Calculate score with the C++ library
-            .Call("globalScore", c.fcn, pp.dat, edges, c.fcn.options(...), PACKAGE = "pcalg")
-          }
-        },
-
-        #' Calculates the global score of a DAG
-        global.score = function(dag, ...) {
-          global.score.int(dag$.in.edges, ...)
-        },
-
-        #' Calculates a local model fit for a vertex and its parents
-        local.fit = function(vertex, parents, ...) {
-          if (!decomp) {
-            stop("local.fit can only be calculated for decomposable scores.")
-          } else {
-            stop("local.fit is not implemented in this class.")
-          }
-        },
-
-        #' Calculates a global model fit
-        global.fit = function(dag, ...) {
-          if (c.fcn == "none") {
-            ## Calculate score in R
-            if (decomp) {
-              in.edge <- dag$.in.edges
-              lapply(1:pp.dat$vertex.count,
-                  function(i) local.fit(i, dag$.in.edges[[i]], ...))
-            } else {
-              stop("global.fit is not implemented in this class.")
-            }
-          } else {
-            ## Calculate score with the C++ library
-            .Call("globalMLE", c.fcn, pp.dat, dag$.in.edges, c.fcn.options(...),
-                  PACKAGE = "pcalg")
-          }
         }
-        ),
-
-    contains = "VIRTUAL")
+    )
+)
 
 #' l0-penalized log-likelihood for Gaussian models, with freely
 #' choosable penalty lambda.
 #' Special case: BIC where \lambda = 1/2 \log n (default value for lambda)
-setRefClass("GaussL0penIntScore", contains = "Score",
+setRefClass("GaussL0penIntScore",
+    contains = "DataScore",
 
     fields = list(
         .format = "character"),
@@ -655,12 +774,14 @@ setRefClass("GaussL0penIntScore", contains = "Score",
     validity = function(object) {
       p <- ncol(object$pp.dat$data)
       if (!is.null(object$pp.dat$scatter)) {
-          ## Data storage with precalculated scatter matrices
-          if (unique(object$pp.dat$scatter.index) != 1:length(object$pp.dat$scatter))
-            return("The index list of distinct scatter matrices has an invalid range.")
-          if (any(sapply(object$pp.dat$scatter, function(mat) dim(mat) != c(p, p))))
-            return("The scatter matrices have invalid dimensions.")
+        ## Data storage with precalculated scatter matrices
+        if (unique(object$pp.dat$scatter.index) != 1:length(object$pp.dat$scatter)) {
+          return("The index list of distinct scatter matrices has an invalid range.")
         }
+        if (any(sapply(object$pp.dat$scatter, function(mat) dim(mat) != c(p, p)))) {
+          return("The scatter matrices have invalid dimensions.")
+        }
+      }
 
       return(TRUE)
     },
@@ -698,11 +819,12 @@ setRefClass("GaussL0penIntScore", contains = "Score",
 
           ## Store data format. Currently supporting scatter matrices
           ## and raw data only (recommended for high-dimensional data)
-          .format <<- match.arg(format)
+          .format <<- match.arg(format, several.ok = TRUE)
+
           ## If format not specified by user, choose it based on dimensions
           ## TODO: check if this choice is reasonable...
-          if (length(format) > 1) {
-            .format <<- ifelse(p >= nrow(data), "raw", "scatter")
+          if (length(.format) > 1) {
+            .format <<- ifelse(p >= nrow(data) && length(pp.dat$targets) > 1, "raw", "scatter")
 		  }
 
           ## Use C++ functions if requested
@@ -890,6 +1012,137 @@ setRefClass("GaussL0penObsScore", contains = "GaussL0penIntScore",
         )
     )
 
+#' l0-penalized log-likelihood for general discrete models, with freely
+#' choosable penalty lambda.
+#' Special case: BIC where \lambda = 1/2 \log n (default value for lambda)
+setRefClass("DiscrL0penIntScore",
+    contains = "DataScore",
+        
+    validity = function(object) {
+      # TODO write function!
+      
+      return(TRUE)
+    },
+    
+    methods = list(
+        #' Constructor
+        initialize = function(data = matrix(1, 1, 1),
+            targets = list(integer(0)),
+            target.index = rep(as.integer(1), nrow(data)),
+            nodes = colnames(data),
+            lambda = 0.5*log(nrow(data)),
+            ...) {
+          ## Store supplied data in sorted form. Make sure data is a data.frame
+          ## for discrete data.
+          if (is.matrix(data)) {
+            data <- as.data.frame(apply(data, 2, factor))
+          }
+          if (!is.data.frame(data)) {
+            stop("Argument 'data' must be supplied as data.frame (preferred) or matrix.")
+          }
+          callSuper(data = data, targets = targets, target.index = target.index, nodes = nodes, ...)
+          
+          ## Number of variables
+          p <- ncol(data)
+          
+          ## l0-penalty is decomposable
+          decomp <<- TRUE
+          
+          ## Underlying causal model class: Gaussian
+          .pardag.class <<- "DiscrParDAG"
+          
+          ## Store different settings
+          pp.dat$lambda <<- lambda
+        },
+        
+        #' Calculates the local score of a vertex and its parents
+        local.score = function(vertex, parents, ...) {
+          ## Check validity of arguments
+          validate.vertex(vertex)
+          validate.parents(parents)
+          
+          # Extract subset of data relevant for calculation
+          # Y <- pp.dat$data[pp.dat$non.int[[vertex]], vertex]
+          Z <- pp.dat$data[pp.dat$non.int[[vertex]], c(vertex, parents), drop = FALSE]
+          
+          # Calculate contingency table
+          cont.table <- table(Z)
+          
+          # Normalize to get "local log-likelihood scores"
+          # (M[u, x] * log(M[u, x]/M[u])
+          ll.elem <- function(x) {
+            s <- sum(x)
+            if (s > 0) {
+              y <- x
+              y[x == 0] <- 1
+              x * log(y/s)
+            } else {
+              rep(0, length(x))
+              # if all counts are 0: return result of maximum entropy
+            }
+          }
+          if (length(parents) > 0) {
+            ll <- apply(cont.table, 2L:length(dim(cont.table)), ll.elem)
+          } else {
+            ll <- ll.elem(cont.table)
+          }
+          
+          # Degrees of freedom (NOTE: calculation is correct if cont.table
+          # has only one dimension, because prod(integer(0)) == 1)
+          df <- prod(dim(cont.table)[-1]) * (length(levels(pp.dat$data[[vertex]])) - 1)
+              
+          # Return local score
+          return(sum(ll) - pp.dat$lambda*df)
+        },
+        
+        #' Calculates the local MLE for a vertex and its parents
+        #'
+        #' @param 	vertex		vertex whose parameters shall be fitted
+        #' @param 	parents		parents of the vertex
+        #' @param 	...				ignored; for compatibility with the base class
+        local.fit = function(vertex, parents, ...) {
+          ## Check validity of arguments
+          validate.vertex(vertex)
+          validate.parents(parents)
+          
+          # Extract subset of data relevant for calculation
+          Z <- pp.dat$data[pp.dat$non.int[[vertex]], c(vertex, parents), drop = FALSE]
+          
+          # Calculate contingency table
+          cont.table <- table(Z)
+          
+          # Normalize to get conditional probability distribution
+          # TODO: perhaps outsource this function to sfsmisc
+          normalize <- function(x) {
+            s <- sum(x)
+            if (s > 0) {
+              x/s
+            } else {
+              rep(1/length(x), length(x))
+              # if all counts are 0: return result of maximum entropy
+            }
+          }
+          if (length(parents) > 0) {
+            cpd <- apply(cont.table, 2L:length(dim(cont.table)), normalize)
+          } else {
+            cpd <- normalize(cont.table)
+          }
+          
+          # Return vectorized CPD
+          return(as.vector(cpd))
+        },
+        
+        #' Creates an instance of the corresponding ParDAG class. Sets the
+        #' correct levels
+        create.dag = function() {
+          new(.pardag.class, 
+              nodes = .nodes, 
+              levels = lapply(pp.dat$data, base::levels))
+        }
+    )
+)
+
+
 #' Score for causal additive models; very experimental...
 setRefClass("CAMIntScore", contains = "Score",
 
@@ -945,7 +1198,6 @@ setRefClass("CAMIntScore", contains = "Score",
           # print(sprintf("RSS: %f, df: %f", sum(resid(local.gam)^2), sum(local.gam$edf)))
           s
         },
-
 
         #' Calculates the local MLE for a vertex and its parents
         #' TODO: implement that function after deciding for a format...
@@ -1053,13 +1305,15 @@ setRefClass("EssGraph",
 
         #' Creates a list of options for the C++ function "causalInference";
         #' internal function
-        causal.inf.options = function(caching = TRUE,
-            turning = TRUE,
+        causal.inf.options = function(
+            caching = TRUE,
+            phase = c("forward", "backward", "turning"),
+            iterate = length(phase) > 1,
             maxDegree = integer(0),
             maxSteps = 0,
             childrenOnly = integer(0),
             fixedGaps = NULL,
-            adaptive = FALSE,
+            adaptive = c("none", "vstructures", "triples"),
             verbose = 0,
             p = 0) {
           # Check for deprecated calling convention and issue a warning
@@ -1071,11 +1325,20 @@ setRefClass("EssGraph",
 
           # Error checks for supplied arguments
           # TODO extend!
+          if (is.logical(adaptive)) {
+            adaptive <- ifelse(adaptive, "vstructures", "none")
+            warning(paste("The parameter 'adaptive' should not be provided as logical anymore;",
+                    "cf. ?ges or gies", sep = " "))
+          }
+          phase <- match.arg(phase, several.ok = TRUE)
+          stopifnot(is.logical(iterate))
+          adaptive <- match.arg(adaptive)
           if (is.null(fixedGaps)) {
-            adaptive = FALSE
+            adaptive <- "none"
           }
           list(caching = caching,
-              turning = turning,
+              phase = phase,
+              iterate = iterate,
               maxDegree = maxDegree,
               maxSteps = maxSteps,
               childrenOnly = childrenOnly,
@@ -1148,9 +1411,6 @@ setRefClass("EssGraph",
           stopifnot(!is.null(score <- getScore()))
           algorithm <- match.arg(algorithm)
 
-          stopifnot(!is.null(score <- getScore()))
-          stopifnot(algorithm %in% c("GIES", "GIES-F", "GIES-B", "GIES-T", "GIES-STEP", "GDS", "SiMy"))
-
           new.graph <- .Call("causalInference",
               .in.edges,
               score$pp.dat,
@@ -1171,8 +1431,9 @@ setRefClass("EssGraph",
         #' Yields a representative (estimating parameters via MLE)
         repr = function() {
           stopifnot(!is.null(score <- getScore()))
-          in.edges <- .Call("representative", .in.edges, PACKAGE = "pcalg")
-          result <- new(score$.pardag.class, nodes = .nodes, in.edges = in.edges)
+          
+          result <- score$create.dag()
+          result$.in.edges <- .Call("representative", .in.edges, PACKAGE = "pcalg")
           result$.params <- score$global.fit(result)
 
           return(result)
@@ -1222,6 +1483,8 @@ setMethod("plot", "EssGraph",
       invisible(plot(.ess2graph(x), y, ...))
     })
 
+########################################################################
+
 #' Gaussian causal model
 setRefClass("GaussParDAG", contains = "ParDAG",
 
@@ -1236,6 +1499,25 @@ setRefClass("GaussParDAG", contains = "ParDAG",
     },
 
     methods = list(
+        #' Yields the variable types. 
+        #' 
+        #' @param vertex vector of indices of the vertices for which the 
+        #' variable types should be reported. If vertex == NULL, the types of
+        #' all variables are returned.
+        var.type = function(vertex = NULL) {
+          rep("numeric", ifelse(is.null(vertex), node.count, length(vertex)))
+        },
+        
+        #' Yields the levels of the factor variables. Always NULL in a Gaussian
+        #' model.
+        #' 
+        #' @param vertex vector of indices of the vertices for which the 
+        #' variable types should be reported. If vertex == NULL, the types of
+        #' all variables are returned.
+        levels = function(vertex = NULL) {
+          vector("list", ifelse(is.null(vertex), node.count(), length(vertex)))
+        },
+        
         #' Yields the intercept
         intercept = function() {
           sapply(.params, function(par.vec) par.vec[2])
@@ -1243,7 +1525,7 @@ setRefClass("GaussParDAG", contains = "ParDAG",
 
         #' Sets the intercept
         set.intercept = function(value) {
-          for (i in 1:node.count())
+          for (i in 1L:node.count())
             .params[[i]][2] <<- value[i]
         },
 
@@ -1417,3 +1699,130 @@ setMethod("predict", "GaussParDAG",
 
       fit
     })
+
+########################################################################
+
+#' General discrete causal model
+setRefClass("DiscrParDAG",
+    contains = "ParDAG",
+    
+    fields = list(
+        # List of character vectors listing the levels of the variables
+        .levels = "list"
+        ),
+    
+    validity = function(object) {
+      if (any(names(object$.params) != object$.nodes)) {
+        return("The elements of 'params' must be named after the nodes.")
+      }
+      if (any(names(object$.levels) != object$.nodes)) {
+        return("The elements of 'levels' must be named after the nodes.")
+      }
+      if (!all(sapply(object$.levels, is.character))) {
+        return("Factor levels must be represented as characters.")
+      }
+      levelCount <- sapply(object$.levels, length)
+      if (!all(sapply(1:object$node.count(),
+              function(i) 
+                length(object$.params[[i]]) == prod(levelCount[object$.in.edges[[i]]])
+          ))) {
+        return("The number of parameters does not match the number of in-edges.")
+      }
+      
+      return(TRUE)
+    },
+    
+    methods = list(
+        #' Constructor
+        initialize = function(nodes, in.edges = NULL, params = list(), levels = list()) {
+          .nodes <<- nodes
+          
+          if (is.null(in.edges)) {
+            .in.edges <<- replicate(length(nodes), integer(0), simplify = FALSE)
+          } else {
+            .in.edges <<- lapply(1:length(in.edges), function(i) as.integer(in.edges[[i]]))
+          }
+          # names(.in.edges) <<- nodes
+          names(.in.edges) <<- NULL
+          for (i in 1:length(nodes)) {
+            names(.in.edges[[i]]) <<- NULL
+          }
+          
+          .params <<- params
+          .levels <<- levels
+        },
+        
+        #' Yields the variable types. 
+        #' 
+        #' @param vertex vector of indices of the vertices for which the 
+        #' variable types should be reported. If vertex == NULL, the types of
+        #' all variables are returned.
+        var.type = function(vertex = NULL) {
+          rep("factor", ifelse(is.null(vertex), node.count, length(vertex)))
+        },
+        
+        #' Yields the levels of the factor variables.
+        #' 
+        #' @param vertex vector of indices of the vertices for which the 
+        #' variable types should be reported. If vertex == NULL, the types of
+        #' all variables are returned.
+        levels = function(vertex = NULL) {
+          if (is.null(vertex)) {
+            .levels
+          } else {
+            validate.vertex(vertex)
+            .levels[vertex]
+          }
+          vector("list", ifelse(is.null(vertex), node.count(), length(vertex)))
+        },
+        
+        #' Sets the variable levels
+        set.levels = function(vertex, levels) {
+          .levels[vertex] <<- levels
+        },
+        
+        #' Yields the conditional probability distribution of a variable
+        #' given its parents
+        #' @param vertex  index of vertex whose CPD is needed
+        #' @return array of dimension k + 1, where k is the in-degree of the
+        #' vertex. The first dimension refers to the levels of "vertex", the 
+        #' following dimensions refer to the levels of the parents of "vertex".
+        cpd = function(vertex) {
+          array(.params[[vertex]], 
+              dim = sapply(.levels[c(vertex, .in.edges[[vertex]])], length),
+              dimnames = .levels[.in.edges[[vertex]]])
+        },
+        
+        #' Yields an observational or interventional covariance matrix
+        #'
+        #' @param   target    intervention target
+        #' @param   ivent.var variances of the intervention variables
+        #' @return  (observational or interventional) covariance matrix
+        cov.mat = function(target = integer(0), ivent.var = numeric(0)) {
+          A <- -weight.mat()
+          A[, target] <- 0
+          diag(A) <- 1
+          A <- solve(A)
+          
+          all.var <- err.var()
+          all.var[target] <- ivent.var
+          
+          return(t(A) %*% diag(all.var) %*% A)
+        },
+        
+        #' Simulates (draws a sample of) interventional (or observational)
+        #' data
+        #'
+        #' @param   n
+        #' @param   target
+        #' @param   int.level   intervention level: values of the intervened
+        #'                      variables. Either a vector of the same length
+        #'                      as "target", or a matrix with dimensions
+        #'                      n x length(target)
+        #' @return  a vector with the simulated values if n = 1, or a matrix
+        #'          with rows corresponding to different samples if n > 1
+        simulate = function(n, target = integer(0), int.level = numeric(0)) {
+          stop("Function 'simulate' is not implemented yet for 'DiscrParDAG'")
+        }
+    )
+)

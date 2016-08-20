@@ -136,10 +136,60 @@ rmvnorm.ivent <- function(n, object, target = integer(0), target.value = numeric
 ##' @param labels 	node labels
 ##' @param targets 	unique list of targets. Normally determined from the scoring object
 ##' @param ... 		additional parameters passed to the algorithm chosen
-caus.inf <- function(algorithm = c("GIES", "GDS", "SiMy"),
-                     score, labels = score$getNodes(), targets = score$getTargets(), ...)
+caus.inf <- function(
+    algorithm = c("GIES", "GDS", "SiMy"),
+    score, 
+    labels = score$getNodes(), 
+    targets = score$getTargets(), 
+    ...)
 {
   algorithm <- match.arg(algorithm)
+  
+  # Catching error occurring when a user called one of the causal 
+  # inference algorithms using the old calling conventions: try to
+  # rearrange passed arguments, print a warning
+  #
+  # NOTE: old calling conventions were
+  # (algorithm, p, targets, score) for caus.inf
+  # (p, targets, score) for all functions allowing interventional data
+  # (p, score) for GES
+  if (is.numeric(score)) {
+    # This happens when the old calling convention is used with all 
+    # mandatory arguments unnamed
+    p <- score
+    if (is.list(labels) && is(targets, "Score")) {
+      score <- targets
+      targets <- labels
+      labels <- as.character(1:p)
+      warning(paste("You are using a DEPRECATED calling convention for",
+              "gies(), gds() or simy(); please refer to the documentation",
+              "of these functions to adapt to the new calling conventions."))
+    } else if (is(labels, "Score")) {
+      score <- labels
+      labels <- as.character(1:p)
+      warning(paste("You are using a DEPRECATED calling convention for",
+              "ges(); please refer to the documentation",
+              "to adapt to the new calling convention."))
+    }
+  } else if (is.numeric(labels) && length(labels) == 1) {
+    # This happens when the old calling convention is used with only the
+    # 'score' argument named
+    labels <- as.character(1:labels)
+    warning(paste("You are using a DEPRECATED calling convention for",
+            "gies(), ges(), gds() or simy(); please refer to the documentation",
+            "of these functions to adapt to the new calling conventions."))
+  }
+  
+  if (!is(score, "Score")) {
+    stop("'score' must be of a class inherited from the class 'Score'.")
+  }
+  if (!is.character(labels)) {
+    stop("'labels' must be a character vector.")
+  }
+  if (!is.list(targets) || !all(sapply(targets, is.numeric))) {
+    stop("'targets' must be a list of integer vectors.")
+  }
+  
   essgraph <- new("EssGraph", nodes = labels, targets = targets, score = score)
   if (essgraph$caus.inf(algorithm, ...)) {
     if (algorithm == "GIES") {
@@ -161,13 +211,26 @@ caus.inf <- function(algorithm = c("GIES", "GDS", "SiMy"),
 ##' @param labels	node labels
 ##' @param targets	unique list of targets. Normally determined from the scoring object
 ##' @param fixedGaps	logical matrix indicating forbidden edges
-##' @param turning	indicates whether the turning step should be indicated.
+##' @param adaptive sets the behaviour for adaptiveness in the forward phase (cf. "ARGES")
+##' @param phase  lists the phases that should be executed
+##' @param iterate  indicates whether the phases should be iterated. iterated = FALSE
+##'   means that the required phases are run just once
+##' @param turning	indicates whether the turning step should be included (DEPRECATED).
 ##' @param maxDegree	maximum vertex degree allowed
 ##' @param verbose	indicates whether debug output should be printed
 ##' @param ...		additional parameters (currently none)
-gies <- function(score, labels = score$getNodes(), targets = score$getTargets(),
-                 fixedGaps = NULL, adaptive = FALSE, turning = TRUE, maxDegree = integer(0),
-                 verbose = FALSE, ...)
+gies <- function(
+    score, 
+    labels = score$getNodes(), 
+    targets = score$getTargets(),
+    fixedGaps = NULL, 
+    adaptive = c("none", "vstructures", "triples"), 
+    phase = c("forward", "backward", "turning"),
+    iterate = length(phase) > 1,
+    turning = TRUE, 
+    maxDegree = integer(0),
+    verbose = FALSE, 
+    ...)
 {
   # Catch calling convention of previous package versions:
   # ges(p, targets, score, fixedGaps = NULL, ...)
@@ -179,18 +242,46 @@ gies <- function(score, labels = score$getNodes(), targets = score$getTargets(),
     labels <- as.character(1:length(score$getNodes()))
     warning(paste("You are using a deprecated calling convention for gies()",
             "which will be disabled in future versions of the package;",
-            "please refer to the help page of ges().", sep = " "))
+            "cf. ?gies.", sep = " "))
+  }
+  # If the old calling convention was used with named arguments, "p = ..."
+  # would assign a numerical value to "phase" (expanding arguments...)
+  if (is.numeric(phase)) {
+    phase <- c("forward", "backward", "turning")
+    warning(paste("You are using a deprecated calling convention for gies()",
+            "which will be disabled in future versions of the package;",
+            "cf. ?gies.", sep = " "))
+  }
+  
+  # Issue warning if argument 'turning' was used
+  # TODO: do not check whether 'turning' is false, but whether 'turning'
+  # was provided as an argument.
+  if (!turning) {
+    phase <- c("forward", "backward")
+    iterate <- FALSE
+    warning(paste("The argument 'turning' is deprecated; please use 'phase' instead",
+                "(cf. ?gies)", sep = " "))
   }
   
   # Error checks
   if (!inherits(score, "Score")) {
     stop("Argument 'score' must be an instance of a class inherited from 'Score'.")
   }
+  phase <- match.arg(phase, several.ok = TRUE)
   # TODO extend...
   
-  caus.inf("GIES", score = score, labels = labels, targets = targets,
-           fixedGaps = fixedGaps, adaptive = adaptive, turning = turning,
-           maxDegree = maxDegree, verbose = verbose, ...)
+  caus.inf(
+      "GIES", 
+      score = score, 
+      labels = labels, 
+      targets = targets,
+      fixedGaps = fixedGaps, 
+      adaptive = adaptive, 
+      phase = phase,
+      iterate = iterate,
+      maxDegree = maxDegree, 
+      verbose = verbose, 
+      ...)
 }
 
 ##' Greedy Equivalence Search - GES --> ../man/ges.Rd
@@ -198,16 +289,26 @@ gies <- function(score, labels = score$getNodes(), targets = score$getTargets(),
 ##' @param score 	scoring object to be used
 ##' @param labels 	node labels
 ##' @param fixedGaps 	logical matrix indicating forbidden edges
-##' @param adaptive
-##' @param turning 	indicates whether the turning step should be indicated.
-##' 		Setting this parameter to FALSE gives Chickering's original version
+##' @param adaptive sets the behaviour for adaptiveness in the forward phase (cf. "ARGES")
+##' @param phase  lists the phases that should be executed
+##' @param iterate  indicates whether the phases should be iterated. iterated = FALSE
+##'   means that the required phases are run just once
+##' @param turning	indicates whether the turning step should be included (DEPRECATED).
 ##' @param maxDegree 	maximum vertex degree allowed
 ##' @param verbose 	indicates whether debug output should be printed
 ##' @param ... 		additional parameters (currently none)
 ##' @param targets 	unique list of targets. Normally determined from the scoring object
-ges <- function(score, labels = score$getNodes(),
-                fixedGaps = NULL, adaptive = FALSE, turning = TRUE, maxDegree = integer(0),
-                verbose = FALSE, ...)
+ges <- function(
+    score, 
+    labels = score$getNodes(),
+    fixedGaps = NULL, 
+    adaptive = c("none", "vstructures", "triples"), 
+    phase = c("forward", "backward", "turning"),
+    iterate = length(phase) > 1,
+    turning = TRUE, 
+    maxDegree = integer(0),
+    verbose = FALSE, 
+    ...)
 {
   # Catch calling convention of previous package versions:
   # ges(p, score, fixedGaps = NULL, ...)
@@ -220,16 +321,44 @@ ges <- function(score, labels = score$getNodes(),
             "which will be disabled in future versions of the package;",
             "please refer to the help page of ges().", sep = " "))
   }
+  # If the old calling convention was used with named arguments, "p = ..."
+  # would assign a numerical value to "phase" (expanding arguments...)
+  if (is.numeric(phase)) {
+    phase <- c("forward", "backward", "turning")
+    warning(paste("You are using a deprecated calling convention for ges()",
+            "which will be disabled in future versions of the package;",
+            "cf. ?ges.", sep = " "))
+  }
+  
+  # Issue warning if argument 'turning' was used
+  # TODO: do not check whether 'turning' is false, but whether 'turning'
+  # was provided as an argument.
+  if (!turning) {
+    phase <- c("forward", "backward")
+    iterate <- FALSE
+    warning(paste("The argument 'turning' is deprecated; please use 'phase' instead",
+            "(cf. ?ges)", sep = " "))
+  }
   
   # Error checks
   if (!inherits(score, "Score")) {
     stop("Argument 'score' must be an instance of a class inherited from 'Score'.")
   }
+  phase <- match.arg(phase, several.ok = TRUE)
   # TODO extend...
   
-  caus.inf("GIES", score = score, labels = labels, targets = list(integer(0)),
-           fixedGaps = fixedGaps, adaptive = adaptive, turning = turning,
-           maxDegree = maxDegree, verbose = verbose, ...)
+  caus.inf(
+      "GIES", 
+      score = score, 
+      labels = labels, 
+      targets = list(integer(0)),
+      fixedGaps = fixedGaps, 
+      adaptive = adaptive, 
+      phase = phase,
+      iterate = iterate,
+      maxDegree = maxDegree, 
+      verbose = verbose, 
+      ...)
 }
 
 ##' Greedy DAG Search - GDS : greedy search in the DAG space --> ../man/gds.Rd
@@ -238,16 +367,48 @@ ges <- function(score, labels = score$getNodes(),
 ##' @param labels 	node labels
 ##' @param targets
 ##' @param fixedGaps 	logical matrix indicating forbidden edges
-##' @param turning 	indicates whether the turning step should be indicated.
-##' 		Setting this parameter to FALSE gives Chickering's original version
+##' @param phase  lists the phases that should be executed
+##' @param iterate  indicates whether the phases should be iterated. iterated = FALSE
+##'   means that the required phases are run just once
+##' @param turning	indicates whether the turning step should be included (DEPRECATED).
 ##' @param maxDegree 	maximum vertex degree allowed
 ##' @param verbose 	indicates whether debug output should be printed
 ##' @param ... 		additional parameters (currently none)
-gds <- function(score, labels = score$getNodes(), targets = score$getTargets(),
-                fixedGaps = NULL, turning = TRUE, maxDegree = integer(0), verbose = FALSE, ...)
+gds <- function(
+    score, 
+    labels = score$getNodes(), 
+    targets = score$getTargets(),
+    fixedGaps = NULL, 
+    phase = c("forward", "backward", "turning"),
+    iterate = length(phase) > 1,
+    turning = TRUE, 
+    maxDegree = integer(0), 
+    verbose = FALSE, 
+    ...)
 {
-  caus.inf("GDS", score = score, labels = labels, targets = targets,
-           fixedGaps = fixedGaps, turning = turning, maxDegree = maxDegree, verbose = verbose, ...)
+  # Issue warning if argument 'turning' was used
+  # TODO: do not check whether 'turning' is false, but whether 'turning'
+  # was provided as an argument.
+  if (!turning) {
+    phase <- c("forward", "backward")
+    iterate <- FALSE
+    warning(paste("The argument 'turning' is deprecated; please use 'phase' instead",
+            "(cf. ?ges)", sep = " "))
+  }
+  
+  phase <- match.arg(phase, several.ok = TRUE)
+  
+  caus.inf(
+      "GDS", 
+      score = score, 
+      labels = labels, 
+      targets = targets,
+      fixedGaps = fixedGaps, 
+      phase = phase, 
+      iterate = iterate,
+      maxDegree = maxDegree, 
+      verbose = verbose, 
+      ...)
 }
 
 ##' Dynamic programming approach of Silander and Myllimäki - SiMy --> ../man/simy.Rd
