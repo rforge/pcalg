@@ -5,22 +5,21 @@
 ## $Id$
 
 setClass("gAlgo",
-         representation(call = "call",
+         slots = c(call = "call",
                         n = "integer",
                         max.ord = "integer",
                         n.edgetests= "numeric",
                         sepset= "list",
-                        pMax= "matrix"), "VIRTUAL")
+                   pMax= "matrix"),
+         contains = "VIRTUAL")
 
 
-setClass("fciAlgo",
-         representation(amat = "matrix", allPdsep = "list",
-                        n.edgetestsPDSEP = "numeric", max.ordPDSEP = "integer"),
-         contains = "gAlgo")
+setClass("fciAlgo", contains = "gAlgo",
+         slots = c(amat = "matrix", allPdsep = "list",
+                   n.edgetestsPDSEP = "numeric", max.ordPDSEP = "integer"))
 
-setClass("pcAlgo",
-         representation(graph = "graph", zMin = "matrix"), ## zMin for compatibility
-         contains = "gAlgo")
+setClass("pcAlgo", contains = "gAlgo",
+         slots = c(graph = "graph", zMin = "matrix")) ## zMin for compatibility
 
 ## Methods
 
@@ -425,8 +424,7 @@ setRefClass("CausMod",
           .struct.eqn <<- score$global.fit(.self, method = method)
         }
     ),
-
-    "VIRTUAL")
+    contains = "VIRTUAL")
 
 ##' Virtual base class for all parametric causal models.
 ##' The meaning of the "params" depends on the model used.
@@ -512,7 +510,7 @@ setRefClass("ParDAG",
         }
         ),
 
-    "VIRTUAL")
+    contains = "VIRTUAL")
 
 #' Coercion to a graphNEL instance
 setAs("ParDAG", "graphNEL",
@@ -909,10 +907,11 @@ setRefClass("GaussL0penIntScore",
               if (pp.dat$intercept)
                 parents <- c(pp.dat$vertex.count + 1, parents)
 
-              sigma2 <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, vertex]
+              pd.scMat <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]]
+              sigma2 <- pd.scMat[vertex, vertex]
               if (length(parents) != 0) {
-                b <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents]
-                sigma2 <- sigma2 - as.numeric(b %*% solve(pp.dat$scatter[[pp.dat$scatter.index[vertex]]][parents, parents], b))
+                b <- pd.scMat[vertex, parents]
+                sigma2 <- sigma2 - as.numeric(b %*% solve(pd.scMat[parents, parents], b))
               }
             }
 
@@ -964,11 +963,12 @@ setRefClass("GaussL0penIntScore",
               if (pp.dat$intercept)
                 parents <- c(pp.dat$vertex.count + 1, parents)
 
-              sigma2 <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, vertex]
+              pd.scMat <- pp.dat$scatter[[pp.dat$scatter.index[vertex]]]
+              sigma2 <- pd.scMat[vertex, vertex]
               if (length(parents) != 0) {
-                beta <- solve(pp.dat$scatter[[pp.dat$scatter.index[vertex]]][parents, parents],
-                    pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents])
-                sigma2 <- sigma2 - pp.dat$scatter[[pp.dat$scatter.index[vertex]]][vertex, parents] %*% beta
+                beta <- solve(pd.scMat[parents, parents],
+                    pd.scMat[vertex, parents])
+                sigma2 <- sigma2 - pd.scMat[vertex, parents] %*% beta
               }
               else
                 beta <- numeric(0)
@@ -988,8 +988,7 @@ setRefClass("GaussL0penIntScore",
     )
 
 ##' Observational score as special case
-setRefClass("GaussL0penObsScore",
-    contains = "GaussL0penIntScore",
+setRefClass("GaussL0penObsScore", contains = "GaussL0penIntScore",
 
     methods = list(
         #' Constructor
@@ -1145,8 +1144,7 @@ setRefClass("DiscrL0penIntScore",
 
 
 #' Score for causal additive models; very experimental...
-setRefClass("CAMIntScore",
-    contains = "Score",
+setRefClass("CAMIntScore", contains = "Score",
 
     methods = list(
         #' Constructor
@@ -1192,7 +1190,7 @@ setRefClass("CAMIntScore",
           }
           formula.string <- paste(.nodes[vertex], formula.string, sep = " ~ ")
           local.gam <- gam(as.formula(formula.string), family = gaussian(),
-              data = pp.dat$data, subset = pp.dat$non.int[[vertex]])
+                           data = pp.dat$data, subset = pp.dat$non.int[[vertex]])
 
           ## Return local score
           s <- -0.5*pp.dat$data.count[vertex]*log(sum(resid(local.gam)^2)) -
@@ -1324,7 +1322,7 @@ setRefClass("EssGraph",
                     "and will be disabled in future package versions;",
                     "please refer to the corresponding help page.", sep = " "))
           }
-          
+
           # Error checks for supplied arguments
           # TODO extend!
           if (is.logical(adaptive)) {
@@ -1488,8 +1486,7 @@ setMethod("plot", "EssGraph",
 ########################################################################
 
 #' Gaussian causal model
-setRefClass("GaussParDAG",
-    contains = "ParDAG",
+setRefClass("GaussParDAG", contains = "ParDAG",
 
     validity = function(object) {
       if (any(names(object$.params) != object$.nodes))
