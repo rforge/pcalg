@@ -988,6 +988,8 @@ std::set<Edge, EdgeCmp> EssentialGraph::replaceUnprotected()
 	// of an unprotected arrow
 	std::set<Edge, EdgeCmp> result;
 
+	dout.level(2) << "  replacing unprotected arrows...\n";
+
 	Edge edge;
 
 	// Find all arrows in the graph. Mark them as "protected", if they are
@@ -1023,7 +1025,14 @@ std::set<Edge, EdgeCmp> EssentialGraph::replaceUnprotected()
 	// Successively check all undecidable arrows, until no one remains
 	std::set<Edge, EdgeCmp>::iterator undIter;
 	edge_flag flag;
-	while (!undecidableArrows.empty()) {
+	// If the graph is in a valid state in the beginning, the following loop
+	// finally flags all undecidable arrows as protected or unprotected. In
+	// case the graph is in an invalid state in the beginning, it might happen
+	// that the loop does not terminate; to avoid this, we also check that the
+	// loop indeed labels undecidable arrows (as PROTECTED or NOT_PROTECTED) in
+	// every run, and throw an error otherwise.
+	int labeledArrows = 1;
+	while (!undecidableArrows.empty() && labeledArrows > 0) {
 		// Find unprotected and protected arrows
 		for (undIter = undecidableArrows.begin(); undIter != undecidableArrows.end(); undIter++) {
 			edge = *undIter;
@@ -1060,32 +1069,33 @@ std::set<Edge, EdgeCmp> EssentialGraph::replaceUnprotected()
 		}
 
 		// Replace unprotected arrows by lines; store affected edges in result set
+		labeledArrows = undecidableArrows.size();
 		for (arrIter1 = arrowFlags.begin(); arrIter1 != arrowFlags.end(); ) {
 			arrIter2 = arrIter1;
 			arrIter1++;
-			if (arrIter2->second != UNDECIDABLE)
+			if (arrIter2->second != UNDECIDABLE) {
 				undecidableArrows.erase(arrIter2->first);
+			}
 			if (arrIter2->second == NOT_PROTECTED) {
 				addEdge((arrIter2->first).target, (arrIter2->first).source);
 				result.insert(arrIter2->first);
 				arrowFlags.erase(arrIter2);
 			}
 		}
+		labeledArrows = labeledArrows - undecidableArrows.size();
+		dout.level(3) << "  Labeled " << labeledArrows << " undecidable arrows\n";
 	}
+
+	if (labeledArrows == 0 && !undecidableArrows.empty()) {
+		throw std::runtime_error("Invalid graph passed to replaceUnprotected().");
+	}
+	dout.level(2) << "  Done.\n";
 
 	return result;
 }
 
 void EssentialGraph::insert(const uint u, const uint v, const std::set<uint> C)
 {
-	// Temporary variables for caching
-	std::set<Edge, EdgeCmp> directed, undirected, diffSet;
-	std::set<Edge, EdgeCmp>::iterator ei;
-	uint a;
-	std::set<uint> recalc, recalcAnt;
-	std::set<uint>::iterator si;
-	boost::dynamic_bitset<> refreshCache(getVertexCount());
-
 	// Get a LexBFS-ordering on the chain component of v, in which all edges of C
 	// point toward v, and all other edges point away from v, and orient the edges
 	// of the chain component accordingly
@@ -1094,13 +1104,13 @@ void EssentialGraph::insert(const uint u, const uint v, const std::set<uint> C)
 	startOrder.push_back(v);
 	chainComp.erase(v);
 	std::set_difference(chainComp.begin(), chainComp.end(), C.begin(), C.end(), std::inserter(startOrder, startOrder.end()));
-	lexBFS(startOrder.begin(), startOrder.end(), true, &directed);
+	lexBFS(startOrder.begin(), startOrder.end(), true);
 
 	// Add new arrow
 	addEdge(u, v);
 
 	// Successively replace unprotected arrows by lines
-	undirected = replaceUnprotected();
+	replaceUnprotected();
 
 	/* MOVED TO greedyForward()
 
@@ -1331,7 +1341,9 @@ bool EssentialGraph::greedyForward(const ForwardAdaptiveFlag adaptive)
 			// the source of any newly undirected edge
 			for (std::set<Edge, EdgeCmp>::iterator ei = edgeLogger.addedEdges().begin();
 					ei != edgeLogger.addedEdges().end(); ++ei) {
-				if (ei->source != u_opt && ei->target != v_opt) {
+				// The newly inserted arrow is not a newly undirected one
+				// Thanks to Marco Eigenmann for reported a bug here.
+				if (ei->source != u_opt || ei->target != v_opt) {
 					dout.level(3) << "New undirected edge: (" << ei-> source << ", " << ei->target << ")\n";
 					recalcAnt.insert(ei->target);
 					recalc.insert(ei->source);
