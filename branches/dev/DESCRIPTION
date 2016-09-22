@@ -12,7 +12,7 @@ Description: Functions for causal structure
   variables). For causal inference the IDA algorithm, the Generalized
   Backdoor Criterion (GBC) and the Generalized Adjustment Criterion (GAC)
   are implemented.
-Maintainer: Markus Kalisch <kalisch@stat.math.ethz.ch>
+Maintainer: Alain Hauser <alain.hauser@bfh.ch>
 Authors@R: c(person("Markus","Kalisch",
                     email="kalisch@stat.math.ethz.ch", role=c("aut","cre")),
   person("Alain", "Hauser", role="aut"),  person("Martin","Maechler", role="aut"),
