@@ -11,7 +11,7 @@ importFrom("utils", combn, str)
 
 importFrom("graphics", par, plot.default, plot, title)
 
-## try to import all we need, but not more
+importMethodsFrom("methods", coerce, show)
 importFrom("methods",
            setClass, setClassUnion, setMethod, setOldClass, setValidity,
            getClass, getClassDef, callGeneric, as, is, extends,
