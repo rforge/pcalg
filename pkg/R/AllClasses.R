@@ -691,8 +691,10 @@ setRefClass("DataScore",
 
     validity = function(object) {
       ## Check whether data is available from all intervention targets
-      if (sort(unique(object$pp.dat$target.index)) != 1:length(object$pp.dat$targets))
+      if (!isTRUE(all.equal(sort(unique(object$pp.dat$target.index)), 
+                            1:length(object$pp.dat$targets)))) {
         return("Data from all intervention targets must be available")
+      }
 
       ## Check if dimensions of target.index and data conincide
       if (length(object$pp.dat$target.index) != nrow(object$pp.dat$data))
@@ -775,10 +777,12 @@ setRefClass("GaussL0penIntScore",
       p <- ncol(object$pp.dat$data)
       if (!is.null(object$pp.dat$scatter)) {
         ## Data storage with precalculated scatter matrices
-        if (unique(object$pp.dat$scatter.index) != 1:length(object$pp.dat$scatter)) {
+        if (!isTRUE(all.equal(unique(object$pp.dat$scatter.index),
+                              1:length(object$pp.dat$scatter)))) {
           return("The index list of distinct scatter matrices has an invalid range.")
         }
-        if (any(sapply(object$pp.dat$scatter, function(mat) dim(mat) != c(p, p)))) {
+        if (any(sapply(object$pp.dat$scatter, 
+                       function(mat) !isTRUE(all.equal(dim(mat), c(p, p)))))) {
           return("The scatter matrices have invalid dimensions.")
         }
       }
