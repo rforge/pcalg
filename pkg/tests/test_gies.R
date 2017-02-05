@@ -124,12 +124,4 @@ for (cpp in c(FALSE, TRUE)) {
   }
 }
 
-## Test G(I)ES with discrete data
-# TODO: replace by a better example data set!!
-discr.data <- cbind(c(3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4),
-    c(5,5,5,5,7,7,7,7,7,7,5,5,5,5,5,7,7,7,7,7),
-    c(1,1,9,8,1,1,8,8,9,9,1,1,9,9,9,1,1,1,9,9))
-score <- new("DiscrL0penIntScore", data = discr.data)
-ges.fit <- ges(score)
-
 cat(if(doExtras) "\n", "Done.\n")
