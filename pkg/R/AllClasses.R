@@ -754,12 +754,12 @@ setRefClass("GaussL0penIntScore",
           ## If format not specified by user, choose it based on dimensions
           ## TODO: check if this choice is reasonable...
           if (length(.format) > 1) {
-            .format <<- ifelse(p >= nrow(data) && length(pp.dat$targets) > 1, "raw", "scatter")
+            .format <<- if(p >= nrow(data) && length(pp.dat$targets) > 1) "raw" else "scatter"
           }
 
           ## Use C++ functions if requested
-          if (use.cpp) {
-            c.fcn <<- ifelse(.format == "scatter", "gauss.l0pen.scatter", "gauss.l0pen.raw")
+          if (use.cpp) { ## now .format is of length one: if() is __much__ faster than ifelse()
+            c.fcn <<- if(.format == "scatter") "gauss.l0pen.scatter" else "gauss.l0pen.raw"
           }
 
           ## Preprocess data if storage format is "scatter"; for "raw" format,
@@ -1238,7 +1238,7 @@ setRefClass("GaussParDAG", contains = "ParDAG",
         #' variable types should be reported. If vertex == NULL, the types of
         #' all variables are returned.
         var.type = function(vertex = NULL) {
-          rep("numeric", ifelse(is.null(vertex), node.count, length(vertex)))
+          rep("numeric", if(is.null(vertex)) node.count else length(vertex))
         },
 
         #' Yields the levels of the factor variables. Always NULL in a Gaussian
@@ -1248,7 +1248,7 @@ setRefClass("GaussParDAG", contains = "ParDAG",
         #' variable types should be reported. If vertex == NULL, the types of
         #' all variables are returned.
         levels = function(vertex = NULL) {
-          vector("list", ifelse(is.null(vertex), node.count(), length(vertex)))
+          vector("list", if(is.null(vertex)) node.count() else length(vertex))
         },
 
         #' Yields the intercept
