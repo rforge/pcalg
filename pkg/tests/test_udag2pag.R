@@ -2,8 +2,7 @@ library(pcalg)
 
 m <- matrix(FALSE, 3,3)
 tmp <- list(NULL, NULL, NULL)
-sepset <- list(tmp, tmp, tmp)
-mm <- mode(udag2pag(m,sepset))
-if (mm != "numeric") {
-    stop("Test of udag2pag: Output does not have mode numeric!")
-}
+
+(pag0 <- udag2pag(m, sepset = rep(tmp, 3)))
+stopifnot(is.numeric(pag0))
+
