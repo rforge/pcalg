@@ -6586,6 +6586,7 @@ AugmentGraph <- function(M, suffStat, sepsets, indepTest, alpha = 0.01)
   for(i in i.p) {
     seps.i <- sepsets[[i]]
     for(j in i.p) ## go through all the sepsets
+      ## cat("i=",i," - j=",j,"\n")
       if (!is.null(sep <- seps.i[[j]])) {
         ## only check neighbors of i, j and sepset
         adjacent <- union(which(M[i,] != 0),
@@ -6690,7 +6691,11 @@ fciplus.intern <- function(pc.fit, alpha = 0.01, suffStat, indepTest, verbose=TR
             mindsep <- MinimalDsep(x,y,potential,suffStat,indepTest)
 
             ## update sepsets
-            sepsets[[x]][[y]] <- mindsep
+            if (is.null(mindsep)) {
+              sepsets[[x]][y] <- list(NULL)
+            } else {
+              sepsets[[x]][[y]] <- mindsep
+            }
 
             ## update matrix by removing the Dsep link
             mat[x,y] <- mat[y,x] <- 0
