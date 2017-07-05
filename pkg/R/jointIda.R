@@ -172,7 +172,13 @@ MCD <- function(cov.mat, intervention.set, var.y, pasets, return.modified.cov.ma
     pa.x <- match(pa.x,ind)
     temp <- gchol(cov.mat)
     Lower.tri.mat <- solve(as.matrix(temp))
-    tmp1 <- bdsmatrix::diag(temp)
+    ## tmp1 <- bdsmatrix::diag(temp)  ## bug in diag function ?
+    #################################################
+    ## temp solution until bug in bdsmatrix is fixed
+    stopifnot(length(temp@Dim)==2, temp@Dim[1] == temp@Dim[2]) ## double check input for temp solution
+    tmpSeq <- seq(from = 1, to = prod(temp@Dim), by = (temp@Dim[1]+1)) ## index of diagonal
+    tmp1 <- temp@.Data[tmpSeq]
+    ##################################################
     Diag.mat <- base::diag(tmp1)
     Lower.tri.mat[x,pa.x] <- 0
     ## MM{FIXME !} :
