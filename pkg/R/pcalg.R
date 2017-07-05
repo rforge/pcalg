@@ -6302,7 +6302,9 @@ backdoor <- function(amat, x, y, type = "pag", max.chordal = 10, verbose = FALSE
     }
 
     ## 3. compute possible descendants of x along definite status paths
-    list.de <- possibleDe(amat, x)
+  ## list.de <- possibleDe(amat, x)
+  list.de <- possDe(m = amat, x = x, y = NULL, possible = TRUE,
+                          ds = TRUE, type = "pag") ## sic !!!
 
     ## 4. compute D-SEP(x,y)_path in the truncated graph
     dsep.set <- dreach(x, y, amat.r)

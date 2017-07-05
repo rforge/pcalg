@@ -143,7 +143,9 @@ export(trueCov,
        gac,
        ## no longer: use as(*,"amat")
        ##  displayAmat,
-       pdag2allDags)
+       pdag2allDags,
+       possDe,
+       possAn)
 
 ## These are "internal" i.e., in man/pcalg-internal.Rd
 ## _FIXME ?_                     ---------------------
