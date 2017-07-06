@@ -6862,7 +6862,246 @@ allDags.internal <- function(gm,a,tmp, verbose = FALSE)
 }
 
 
+## this is taken from the  udag2pdag code from pcalg
+## since these rules were already implemented there.
+## This fucntion, given a graphNEL object, or an adjacency matrix
+## just completes orientations under rules R1-R4 from Meek 1995
 
+## note that this function accepts the t(amat.cpdag) encoding that is 
+## m[i,j]=1,m[j,i]=0 <=> i -> j 
+## same as udag2pdag
+applyOrientationRules <- function(gInput, verbose=FALSE) {
+  res <- gInput
+  ##new line
+  if (!is.matrix(gInput))
+  {
+    if (numEdges(gInput)>0) {
+      g <- as(gInput,"matrix") ## g_ij if i->j
+      p <- as.numeric(dim(g)[1])
+      pdag <- g
+      ind <- which(g==1,arr.ind=TRUE)
+    } else {
+      cat("Invalid or empty PDAG! This function only accepts graphNEL or adj mat!\n")
+      return(NULL)
+    }
+  } else {
+    ##also new, for me its easier to use an adjacency matrix
+    if (length(res[1,])>0){
+      g <- res
+      p <- length(g[1,])
+      pdag <- g
+      ind <- which(g==1,arr.ind=TRUE)
+    } else {
+      cat("Invalid or empty PDAG! This function only accepts graphNEL or adj mat!\n")
+      return(NULL)
+    }
+  }
+  ## Convert to complete pattern: use rules by Pearl/Meek also someone else Verma?
+  old_pdag <- matrix(0, p,p)
+  while (!all(old_pdag == pdag)) {
+    old_pdag <- pdag
+    ## rule 1
+    ind <- which((pdag==1 & t(pdag)==0), arr.ind=TRUE) ## a -> b
+    for (i in seq_len(nrow(ind))) {
+      a <- ind[i,1]
+      b <- ind[i,2]
+      indC <- which( (pdag[b,]==1 & pdag[,b]==1) & (pdag[a,]==0 & pdag[,a]==0))
+      if (length(indC)>0) {
+        pdag[b,indC] <- 1
+        pdag[indC,b] <- 0
+        if (verbose)
+          cat("\nRule 1:",a,"->",b," and ",b,"-",indC,
+              " where ",a," and ",indC," not connected: ",b,"->",indC,"\n")
+      }
+    }
+    ## x11()
+    ## plot(as(pdag,"graphNEL"), main="After Rule1")
+    
+    ## rule 2
+    ind <- which((pdag==1 & t(pdag)==1), arr.ind=TRUE) ## a -> b
+    for (i in seq_len(nrow(ind))) {
+      a <- ind[i,1]
+      b <- ind[i,2]
+      indC <- which( (pdag[a,]==1 & pdag[,a]==0) & (pdag[,b]==1 & pdag[b,]==0))
+      if (length(indC)>0) {
+        pdag[a,b] <- 1
+        pdag[b,a] <- 0
+        if (verbose) cat("\nRule 2: Kette ",a,"->",indC,"->",
+                         b,":",a,"->",b,"\n")
+      }
+    }
+    ## x11()
+    ## plot(as(pdag,"graphNEL"), main="After Rule2")
+    
+    ## rule 3
+    ind <- which((pdag==1 & t(pdag)==1), arr.ind=TRUE) ## a - b
+    for (i in seq_len(nrow(ind))) {
+      a <- ind[i,1]
+      b <- ind[i,2]
+      indC <- which( (pdag[a,]==1 & pdag[,a]==1) & (pdag[,b]==1 & pdag[b,]==0))
+      if (length(indC)>=2) {
+        ## cat("R3: indC = ",indC,"\n")
+        g2 <- pdag[indC,indC]
+        ## print(g2)
+        if (length(g2)<=1) {
+          g2 <- 0
+        } else {
+          diag(g2) <- rep(1,length(indC)) ## no self reference
+        }
+        if (any(g2==0)) { ## if two nodes in g2 are not connected
+          pdag[a,b] <- 1
+          pdag[b,a] <- 0
+          if (verbose) cat("\nRule 3:",a,"->",b,"\n")
+        }
+      }
+    }
+    ## x11()
+    ## plot(as(pdag,"graphNEL"), main="After Rule3")
+    
+    ## rule 4
+    ind <- which((pdag==1 & t(pdag)==1), arr.ind=TRUE) ## a - b
+    if (length(ind)>0) {
+      for (i in seq_len(nrow(ind))) {
+        a <- ind[i,1]
+        b <- ind[i,2]
+        indC <- which( (pdag[a,]==1 & pdag[,a]==1) & (pdag[,b]==0 & pdag[b,]==0))
+        l.indC <- length(indC)
+        if (l.indC>0) {
+          found <- FALSE
+          ic <- 0
+          while(!found & (ic < l.indC)) {
+            ic <- ic + 1
+            c <- indC[ic]
+            indD <- which( (pdag[c,]==1 & pdag[,c]==0) & (pdag[,b]==1 & pdag[b,]==0))
+            if (length(indD)>0) {
+              found <- TRUE
+              pdag[b,a] = 0
+              if (verbose) cat("Rule 4 applied \n")
+            }
+          }
+        }
+      }
+      
+      
+    }
+  }
+  if (!is.matrix(res))
+  {
+    res <- as(pdag,"graphNEL") 
+  } else {
+    res <- pdag
+  }
+  return(res)
+}
+
+## This function is supposed to add the bg knowledge x -> y to the pdag in gInput
+## x and y should be vectors of node LABELS 
+## gInput can be either the graphNEL object or adjacency matrix
+## same encoding as in amat.cpdag above m[i,j]=0, m[j,i]=1 <=> i->j
+addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE)      ##CHANGED to by default take empty bgKnoledge
+{
+  ##need to add validGraph check!
+  res <- gInput
+  ##new line
+  if (!is.matrix(gInput))
+  { if (numEdges(gInput)>0) {
+    g <- t(as(gInput,"matrix")) ## g_ji if i->j
+    p <- as.numeric(dim(g)[1])
+    pdag <- g
+    lab <- dimnames(g)[[1]]
+  } else {
+    stop("Invalid or empty PDAG! This function only accepts graphNEL or adj mat\n")
+    return(NULL)
+  }
+  } else { 
+    ##for me its easier to use an adjacency matrix
+    if (length(res[1,])>0)
+    {
+      g <- res
+      p <- length(g[1,])
+      pdag <- g
+      lab <- dimnames(g)[[1]]
+    } else {
+      stop("Invalid or empty PDAG! This function only accepts graphNEL or adj mat\n")
+      return(NULL)
+    }
+  }
+  ##CHANGED!
+  #  if (!is.vector(x) | !is.vector(y)){
+  #    stop(x,"or",y,"are not vectors!\n")
+  #    return(NULL)    
+  #  } else {
+  if (length(x)!=length(y))
+  {
+    stop("length of\n",x,"and\n",y,"\nshould be the same!\n")
+    return(NULL)    
+  }
+  #  }
+  ## real code starts from here
+  ## previously was just dealing w gInput type
+  ##how many new orientations -> k
+  k <- length(x)
+  i <- 1
+  ## orient edge by edge
+  ## after adding one orientation complete the orientation rules
+  
+  ##NEW if there are no edges to orient!!
+  if (k ==0){
+    pdag <- t(applyOrientationRules(t(pdag),verbose))
+    if (!is.matrix(res))
+    {
+      res <- as(t(pdag),"graphNEL") 
+    } else {
+      res <- pdag
+    }
+    return(res)
+  }
+  
+  
+  ##NEW: check that the pdag is maximal!
+  tmp.pdag <- t(applyOrientationRules(t(pdag),verbose))
+  isMaximal <- (sum(tmp.pdag-pdag)==0)
+  if (!isMaximal){
+    message("Your input pdag is not maximal! You can obtain a maximal pdag by calling: addBgKnowledge(gInput)\n")
+    return(NULL)
+  }
+  
+  
+  while (i <=k)
+  {
+    ## for each new edge
+    ##find the nodes by the labels
+    from <- which(lab==x[i])
+    to <- which(lab==y[i])
+    ##add the orientation if the edge in the current pdag to be undirected
+    ##and complete the orientation rules
+    if ((pdag[from,to] ==1) & (pdag[to,from] ==1))  {
+      pdag[from,to] <- 0
+      if (verbose) cat("Added orientation",x[i],"->",y[i],"to the PDAG.\n")
+      pdag <- t(applyOrientationRules(t(pdag),verbose))  ##uses different matrix encoding
+    } else {
+      ## the orientation we want to add conflicts with the current pdag
+      ##either the opposite orientation is present in the current pdag
+      ##or there is no edge between these two nodes in the pdag at all
+      if ((pdag[from,to] ==1) & (pdag[to,from] ==0)){
+        if (verbose) cat("Invalid bg knowledge! Cannot add orientation ",x[i],"->",y[i]," because",y[i],"->",x[i],"is already in the PDAG. \n")
+        return(NULL)
+      } 
+      if ((pdag[from,to] ==0) & (pdag[to,from] ==0)){
+        if (verbose) cat("Invalid bg knowledge! Cannot add orientation",x[i],"->",y[i]," because there is no edge between",x[i],"and",y[i],"in the PDAG. \n")
+        return(NULL)
+      }
+    }
+    i <- i+1
+  }
+  if (!is.matrix(res))
+  {
+    res <- as(t(pdag),"graphNEL") 
+  } else {
+    res <- pdag
+  }
+  return(res)
+}
 
 
 

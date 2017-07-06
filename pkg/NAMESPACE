@@ -147,7 +147,8 @@ export(trueCov,
        pdag2allDags,
        possDe,
        possAn,
-       pcalg2dagitty)
+       pcalg2dagitty,
+       addBgKnowledge)
 
 ## These are "internal" i.e., in man/pcalg-internal.Rd
 ## _FIXME ?_                     ---------------------
