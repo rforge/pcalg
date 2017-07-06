@@ -53,7 +53,7 @@ importFrom("RBGL",
 	   biConnComp, johnson.all.pairs.sp, separates, bfs, connectedComp)
 ## also    sp.between -- but only for deprecated beta.special(), hence RBGL::*
 
-importFrom("ggm", isAcyclic, transClos, topOrder)
+importFrom("ggm", isAcyclic, transClos, topOrder, msep)
 importFrom("Rcpp", evalCpp) # Needed for any package relying on Rcpp headers...
   # Otherwise, there are runtime errors.
 
