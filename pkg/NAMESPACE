@@ -64,6 +64,7 @@ importFrom("sfsmisc", digitsBase, is.whole)
 importFrom("fastICA", fastICA)
 importFrom("clue", solve_LSAP)
 importFrom("gmp", as.bigz, chooseZ, as.bigq)
+importFrom("dagitty", dagitty, isAdjustmentSet)
 ###----- Exports ------------------------------------------------------
 
 export(getGraph)# our S4 generic including methods
@@ -145,7 +146,8 @@ export(trueCov,
        ##  displayAmat,
        pdag2allDags,
        possDe,
-       possAn)
+       possAn,
+       pcalg2dagitty)
 
 ## These are "internal" i.e., in man/pcalg-internal.Rd
 ## _FIXME ?_                     ---------------------
