@@ -2948,180 +2948,167 @@ binCItest <- function(x,y,S,suffStat) {
   gSquareBin(x = x, y = y, S = S, dm = dm, adaptDF = adaptDF, verbose = FALSE)
 }
 
+hasExtension <- function(amat, amatSkel, x, pa1, pa2.t, pa2.f, type, nl) {
+  ## nl are colnames of amat
+  ## x, pa1, pa2.x: col positions (NULL if not existing)
+  ## type is in c("pdag", "cpdag")
+  ## VALUE: TRUE if amat has extension
+  if (type == "pdag") {
+    xNL <- nl[x]
+    fromXNL <- rep(xNL, length(pa2.f)) 
+    toXNL <- rep(xNL, length(pa2.t))
+    pa2.fNL <- nl[pa2.f]
+    pa2.tNL <- nl[pa2.t]
+    tmp <- addBgKnowledge(gInput = amat, x = c(fromXNL, pa2.tNL),
+                          y = c(pa2.fNL, toXNL))
+    res <- !is.null(tmp) ## TRUE if amat is extendable
+  } else {
+    res <- !has.new.coll(amat, amatSkel, x, pa1, pa2.t, pa2.f)
+  }
+  res
+}
 
+revealEdge <- function(c,d,s) { ## cpdag, dag, selected edges to reveal
+  if (all(!is.na(s))) { ## something to reveal
+    for (i in 1:nrow(s)) {
+      c[s[i,1], s[i,2]] <- d[s[i,1], s[i,2]]
+      c[s[i,2], s[i,1]] <- d[s[i,2], s[i,1]]
+    }
+  }
+  c
+}
 
-ida <- function(x.pos, y.pos, mcov, graphEst, method = c("local","global"),
-                y.notparent = FALSE, verbose = FALSE, all.dags = NA)
+ida <- function (x.pos, y.pos, mcov, graphEst, method = c("local", "global"), 
+                 y.notparent = FALSE, verbose = FALSE, all.dags = NA,
+                 type = c("cpdag", "pdag")) 
 {
-  ## Purpose: Estimate the causal effect of x on y; the graphEst and correlation
-  ## matrix have to be precomputed; all DAGs can be precomputed;
-  ## Orient undirected edges at x in a way so that no new collider
-  ## is introduced
-  ## ----------------------------------------------------------------------
-  ## Arguments:
-  ## - x.pos, y.pos: Column of x and y in d.mat
-  ## - mcov: Covariance matrix that was used to estimate graphEst
-  ## - graphEst: Fit of PC Algorithm (semidirected)
-  ## - method: "local" - local (all combinations of parents in regr.)
-  ##           "global" - all DAGs
-  ## - y.notparent: if TRUE, the effect of x <- y is ignored;
-  ##                (remove y from all parents set pa1 or pa2)
-  ##                if FALSE, the effect of x <- y is set to zero
-  ## - verbose: if TRUE, details on regressions that were used
-  ## - all.dags: All DAGs in the format of function allDags; if this is
-  ##   available, no new function call allDags is done
-  ## ----------------------------------------------------------------------
-  ## Value: causal values
-  ## ----------------------------------------------------------------------
-  ## Author: Markus Kalisch, Date: 7 Jan 2010; tweaks: Martin Maechler
-
   stopifnot(x.pos == (x <- as.integer(x.pos)),
-            y.pos == (y <- as.integer(y.pos)),
-            length(x) == 1, length(y) == 1)
+            y.pos == (y <- as.integer(y.pos)), 
+            length(x) == 1, length(y) == 1,
+            type %in% c("pdag", "cpdag"))
   method <- match.arg(method)
-
-  ## prepare adjMatrix and skeleton
+  type <- match.arg(type)
   amat <- ad.g <- wgtMatrix(graphEst)
-  amat[which(amat != 0)] <- 1 ## i->j if amat[j,i]==1
+  amat[which(amat != 0)] <- 1 ## coding: amat.cpdag
+  nl <- colnames(amat) ## Node labels
+  ## double-check that node labels exist (they should given a graph input)
+  stopifnot(!is.null(nl)) 
   amatSkel <- amat + t(amat)
   amatSkel[amatSkel != 0] <- 1
-
+  ##local method needs changing
   if (method == "local") {
-##############################
-    ## local method
-    ## Main Input: mcov, graphEst
-##############################
-    ## find unique parents of x
     wgt.est <- (ad.g != 0)
     if (y.notparent) {
-      ## Direct edge btw. x and y towards y
       wgt.est[x, y] <- FALSE
     }
-    tmp <- wgt.est-t(wgt.est)
+    tmp <- wgt.est - t(wgt.est)
     tmp[which(tmp < 0)] <- 0
     wgt.unique <- tmp
-    pa1 <- which(wgt.unique[x,] != 0)
+    ##orient pa1 into x
+    pa1 <- which(wgt.unique[x, ] != 0)
     if (y %in% pa1) {
-      ## x is parent of y -> zero effect
       beta.hat <- 0
-    } else { ## y not in pa1
-      ## find ambiguous parents of x
-      wgt.ambig <- wgt.est-wgt.unique
-      pa2 <- which(wgt.ambig[x,] != 0)
-      if (verbose)
-        cat("\n\nx=", x, "y=",y, "\npa1=",pa1, "\npa2=",pa2,"\n")
-
-      ## estimate beta
+    }
+    else {
+      wgt.ambig <- wgt.est - wgt.unique
+      ##orient pa2 out of x
+      pa2 <- which(wgt.ambig[x, ] != 0)
+      if (verbose) 
+        cat("\n\nx=", x, "y=", y, "\npa1=", pa1, "\npa2=", 
+            pa2, "\n")
       if (length(pa2) == 0) {
-        beta.hat <- lm.cov(mcov,y,c(x,pa1))
-        if (verbose) cat("Fit - y:",y,"x:",c(x,pa1), "|b.hat=",beta.hat,"\n")
-      } else {
-        ## at least one undirected parent
+        beta.hat <- lm.cov(mcov, y, c(x, pa1))
+        if (verbose) 
+          cat("Fit - y:", y, "x:", c(x, pa1), "|b.hat=", 
+              beta.hat, "\n")
+      }
+      else {
         beta.hat <- NA
-        ii <- 1
-
-        ## no member of pa2
+        ii <- 0 ## CHANGED LINE
         pa2.f <- pa2
-        pa2.t <- NA
-        if (!has.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)) {
-          beta.hat[ii] <- lm.cov(mcov,y,c(x,pa1))
-          if (verbose) cat("Fit - y:",y,"x:",c(x,pa1),
-                           "|b.hat=",beta.hat[ii],"\n")
+        pa2.t <- NULL
+        if (hasExtension(amat, amatSkel, x, pa1, pa2.t, pa2.f, type, nl)) {
+          ii <- ii + 1 ## NEW LINE
+          beta.hat[ii] <- lm.cov(mcov, y, c(x, pa1))
+          if (verbose)
+            cat("Fit - y:", y, "x:", c(x, pa1), "|b.hat=",
+                beta.hat[ii], "\n")
         }
-        ## exactly one member of pa2
         for (i2 in seq_along(pa2)) {
           pa2.f <- pa2[-i2]
           pa2.t <- pa2[i2]
-          if (!has.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)) {
-            ii <-  ii+1
+          if (hasExtension(amat, amatSkel, x, pa1, pa2.t, pa2.f, type, nl)) {
+            ii <- ii + 1
             if (y %in% pa2.t) {
               beta.hat[ii] <- 0
-            } else {
-              beta.hat[ii] <- lm.cov(mcov,y,c(x,pa1,pa2[i2]))
-              if (verbose) cat("Fit - y:",y,"x:",c(x,pa1,pa2[i2]),
-                               "|b.hat=",beta.hat[ii],"\n")
             }
-          } ## if (!check..)
-        } ## for (i2 in seq_along(pa2))
-
-        ## higher order subsets of pa2
-        if (length(pa2) > 1)
+            else {
+              beta.hat[ii] <- lm.cov(mcov, y, c(x, pa1, 
+                                                pa2[i2]))
+              if (verbose) 
+                cat("Fit - y:", y, "x:", c(x, pa1, pa2[i2]), 
+                    "|b.hat=", beta.hat[ii], "\n")
+            }
+          }
+        }
+        if (length(pa2) > 1) 
           for (i in 2:length(pa2)) {
-            pa.tmp <- combn(pa2,i,simplify = TRUE)
+            pa.tmp <- combn(pa2, i, simplify = TRUE)
             for (j in seq_len(ncol(pa.tmp))) {
-              pa2.t <- pa.tmp[,j]
-              pa2.f <- setdiff(pa2,pa2.t)
-              if (!has.new.coll(amat,amatSkel,x,pa1,pa2.t,pa2.f)) {
-                ii <- ii+1
+              pa2.t <- pa.tmp[, j]
+              pa2.f <- setdiff(pa2, pa2.t)
+              if (hasExtension(amat, amatSkel, x, pa1, pa2.t, pa2.f, type, nl)) {
+                ii <- ii + 1
                 if (y %in% pa2.t) {
                   beta.hat[ii] <- 0
-                } else {
-                  beta.hat[ii] <- lm.cov(mcov,y,c(x,pa1,pa2.t))
-                  if (verbose)
-                    cat("Fit - y:",y,"x:",c(x,pa1,pa2.t),
-                        "|b.hat=",beta.hat[ii],"\n")
                 }
-              } ## if (!check..)
-            } ## for (j ...)
-          } ## for (i ...)
-      } ## if (length(pa2) ..)
-    } ## if (y %in% pa1)
-
-  } else {
-##############################
-    ## global method
-    ## Main Input: mcov, graphEst
-##############################
+                else {
+                  beta.hat[ii] <- lm.cov(mcov, y, c(x, 
+                                                    pa1, pa2.t))
+                  if (verbose) 
+                    cat("Fit - y:", y, "x:", c(x, pa1, 
+                                               pa2.t), "|b.hat=", beta.hat[ii], 
+                        "\n")
+                }
+              }
+            }
+          }
+      }
+    }
+  }
+  ##method global
+  ##should stay the same for pdags
+  else {
     p <- numNodes(graphEst)
     am.pdag <- ad.g
     am.pdag[am.pdag != 0] <- 1
     if (y.notparent) {
-      ## Direct edge btw. x and y towards y
       am.pdag[x, y] <- 0
     }
-
-    ## find all DAGs if not provided externally
-    ## ad <- if(is.na(all.dags)) allDags(am.pdag,am.pdag,NULL) else all.dags
     if (is.na(all.dags)) {
-      ## allDags(am.pdag,am.pdag,NULL)
       ad <- pdag2allDags(am.pdag)$dags
-    } else {
+    }
+    else {
       ad <- all.dags
     }
-
     n.dags <- nrow(ad)
-    beta.hat <- rep(NA,n.dags)
+    beta.hat <- rep(NA, n.dags)
     for (i in 1:n.dags) {
-      ## compute effect for every DAG
-      ## gDag <- as(matrix(ad[i,],p,p),"graphNEL")
-      ## path from y to x
-      ## rev.pth <- RBGL::sp.between(gDag,as.character(y),
-      ##                    as.character(x))[[1]]$path
-      ## if (length(rev.pth)>1) {
-      ## if reverse path exists, beta=0
-      ##  beta.hat[i] <- 0
-      ## } else {
-      ## path from x to y
-      ##       pth <- RBGL::sp.between(gDag,as.character(x),
-      ##                       as.character(y))[[1]]$path
-      ##   if (length(pth)<2) {
-      ## sic! There is NO path from x to y
-      ##   beta.hat[i] <- 0
-      ## } else {
-      ## There is a path from x to y
-      wgt.unique <- t(matrix(ad[i,],p,p)) ## wgt.est is wgtMatrix of DAG
-      pa1 <- which(wgt.unique[x,] != 0)
+      wgt.unique <- t(matrix(ad[i, ], p, p))
+      pa1 <- which(wgt.unique[x, ] != 0)
       if (y %in% pa1) {
         beta.hat[i] <- 0
-      } else {
-        beta.hat[i] <- lm.cov(mcov, y, c(x,pa1))
-        if (verbose) cat("Fit - y:",y,"x:",c(x,pa1),
-                         "|b.hat=",beta.hat[i],"\n")
       }
-    } ## for ( i  n.dags)
-  } ## else : method = "global"
-  beta.hat
-} ## {ida}
+      else {
+        beta.hat[i] <- lm.cov(mcov, y, c(x, pa1))
+        if (verbose) 
+          cat("Fit - y:", y, "x:", c(x, pa1), "|b.hat=", 
+              beta.hat[i], "\n")
+      }
+    }
+  }
+  unname(beta.hat)
+}
 
 idaFast <- function(x.pos, y.pos.set, mcov, graphEst)
 {

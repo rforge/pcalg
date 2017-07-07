@@ -1,4 +1,9 @@
 library(pcalg)
+library(graph)
+source("/sfs/u/kalischm/research/packages/pcalg/pkg/R/gacFuns.R")
+source("/sfs/u/kalischm/research/packages/pcalg/pkg/R/pcalg.R")
+source("/sfs/u/kalischm/research/marloes/DraftPapers/Ema/CPDAGs-with-background-knowledge/RCode/functionsUAI2017.R")
+
 
 set.seed(123)
 nreps <- 100
@@ -11,15 +16,15 @@ for (i in 1:nreps) {
   myDAG <- randomDAG(p, prob = 0.2)
   myCPDAG <- dag2cpdag(myDAG)
   mcov <- trueCov(myDAG)
-
+  
   ## x != y  in {1,2,...p} ;
   xy <- sample.int(p, 2); x <- xy[1]; y <- xy[2]
-
+  
   ## plot(myCPDAG)
   eff.true <- Rnd(causalEffect(myDAG, y, x))
   all.eff.true[i] <- eff.true
   ## cat("x=",x," y=",y," eff=",eff.true,"\n")
-
+  
   eff.est <- Rnd(ida(x,y, mcov, myCPDAG, method="local"))
   res[i] <- (eff.true %in% eff.est)
 }
