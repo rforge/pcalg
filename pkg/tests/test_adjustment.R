@@ -1,15 +1,4 @@
-## option 'canonical' does not give same results
-## IDEA for testing:
-## - Compate cpdag and pdag branch on many random CPDAGs
-## - check with gac() if all produced adj.sets are indeed valid
-
-library(dagitty)
 library(pcalg)
-library(ggm)
-source("/sfs/u/kalischm/research/packages/pcalg/pkg/R/gacFuns.R")
-source("/sfs/u/kalischm/research/marloes/DraftPapers/Ema/CPDAGs-with-background-knowledge/RCode/functionsUAI2017.R")
-source("/sfs/u/kalischm/research/marloes/DraftPapers/Ema/CPDAGs-with-background-knowledge/RCode/adjustmentFun.R")
-
 
 #####################################################################################
 ## Test 1: Compare CPDAG and PDAG implementation and validate all sets using gac()
