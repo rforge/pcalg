@@ -1,5 +1,5 @@
-\name{validGraph}
-\alias{validGraph}
+\name{isValidGraph}
+\alias{isValidGraph}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Check for a DAG, CPDAG or a maximally oriented PDAG
@@ -10,7 +10,7 @@ Check whether the adjacency matrix \code{amat} matches the specified \code{type}
   %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-validGraph(amat, type = c("pdag", "cpdag", "dag"), verbose = FALSE)
+isValidGraph(amat, type = c("pdag", "cpdag", "dag"), verbose = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -43,7 +43,7 @@ For \code{type = "pdag"} we require that \code{amat} does NOT contain
 directed cycles. We also require that the PDAG is maximally oriented
 according to rules from Meek (1995). Additionally, we require that the
 adjacency matrix \code{amat1} of the CPDAG corresponding to our PDAG
-(represented by \code{amat}), satisfies \code{validGraph(amat =
+(represented by \code{amat}), satisfies \code{isValidGraph(amat =
   amat1,type = "cpdag") == TRUE} and that there is no mismatch in the
 orientations implied by \code{amat} and \code{amat1}. We obtain
 \code{amat1} by extracting the skeleton and v-structures from
@@ -63,31 +63,25 @@ TRUE, if the adjacency matrix \code{amat} is of the \code{type} specified and FA
 amat <- matrix(c(0,1,0, 0,0,1, 0,0,0), 3,3)
 colnames(amat) <- rownames(amat) <- letters[1:3]
 ## graph::plot(as(t(amat), "graphNEL"))             
-validGraph(amat = amat, type = "dag") ## is a valid DAG
-validGraph(amat = amat, type = "cpdag") ## is a valid CPDAG 
-## ??? is that what we want ??? I guess so => mention in details, that if valid DAG, it is always a valid CPDAG/PDAG (same for CPDAG vs PDAG)
-validGraph(amat = amat, type = "pdag") ## is a valid PDAG
+isValidGraph(amat = amat, type = "dag") ## is a valid DAG
+isValidGraph(amat = amat, type = "cpdag") ## not a valid CPDAG 
+isValidGraph(amat = amat, type = "pdag") ## is a valid PDAG
 
 ## a -- b -- c
 amat <- matrix(c(0,1,0, 1,0,1, 0,1,0), 3,3)
 colnames(amat) <- rownames(amat) <- letters[1:3]
 ## plot(as(t(amat), "graphNEL"))             
-validGraph(amat = amat, type = "dag") ## not a valid DAG
-validGraph(amat = amat, type = "cpdag") ## is a valid CPDAG
-validGraph(amat = amat, type = "pdag") ## is a valid PDAG
+isValidGraph(amat = amat, type = "dag") ## not a valid DAG
+isValidGraph(amat = amat, type = "cpdag") ## is a valid CPDAG
+isValidGraph(amat = amat, type = "pdag") ## is a valid PDAG
 
 ## a -- b -- c -- d -- a
 amat <- matrix(c(0,1,0,1, 1,0,1,0, 0,1,0,1, 1,0,1,0), 4,4)
 colnames(amat) <- rownames(amat) <- letters[1:4]
 ## plot(as(t(amat), "graphNEL"))             
-validGraph(amat = amat, type = "dag") ## not a valid DAG
-validGraph(amat = amat, type = "cpdag") ## is a valid CPDAG
-validGraph(amat = amat, type = "pdag") ## is a valid PDAG
-
-## ??? are the tests "sound and complete" ?
-## DAG: Yes
-## CPDAG: 
-## PDAG:
+isValidGraph(amat = amat, type = "dag") ## not a valid DAG
+isValidGraph(amat = amat, type = "cpdag") ## not a valid CPDAG
+isValidGraph(amat = amat, type = "pdag") ## not a valid PDAG
 }
 \keyword{graphs}% use one of  RShowDoc("KEYWORDS")
 

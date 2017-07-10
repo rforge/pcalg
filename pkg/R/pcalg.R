@@ -2991,7 +2991,7 @@ ida <- function (x.pos, y.pos, mcov, graphEst, method = c("local", "global"),
   amat <- ad.g <- wgtMatrix(graphEst)
   amat[which(amat != 0)] <- 1 ## coding: amat.cpdag
   ## test if valid input amat
-  validGraph(amat = amat, type = type)
+  isValidGraph(amat = amat, type = type)
   nl <- colnames(amat) ## Node labels
   ## double-check that node labels exist (they should given a graph input)
   stopifnot(!is.null(nl)) 
@@ -7046,7 +7046,7 @@ addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE)      ##CHANGED to b
   }
 
   ## Check if input is valid PDAG:
-  validGraph(amat = pdag, type = "pdag")
+  isValidGraph(amat = pdag, type = "pdag")
   
   ##NEW: check that the pdag is maximal!
   tmp.pdag <- t(applyOrientationRules(t(pdag),verbose))

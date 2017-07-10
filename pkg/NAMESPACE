@@ -150,7 +150,7 @@ export(trueCov,
        pcalg2dagitty,
        addBgKnowledge,
        adjustment,
-       validGraph)
+       isValidGraph)
 
 ## These are "internal" i.e., in man/pcalg-internal.Rd
 ## _FIXME ?_                     ---------------------

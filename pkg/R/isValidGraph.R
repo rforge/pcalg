@@ -1,6 +1,3 @@
-source("/sfs/u/kalischm/research/marloes/DraftPapers/Ema/CPDAGs-with-background-knowledge/RCode/functionsUAI2017.R")
-
-
 ## the following function returns TRUE if there are no partially directed or directed cycles in G
 ## where G is a pdag (cpdag) represented by it's adjacency matrix: mat (which is in the form of amat.cpdag)
 noCycles <- function(mat)
@@ -16,11 +13,12 @@ noCycles <- function(mat)
     ## if there are any parents
     if (length(pa.i) !=0){
       for (j in 1: length(pa.i)){
-        pos.anc <-  setdiff(pcalg:::possibleAnProper(mat,pa.i[j]),pa.i[j])
-        if (i %in% pos.anc)    ## if i is a possible ancestor of a parent of i in G
-                               ## then there is a partially directed (or directed)
-                               ## cycle in G
-          ok <- FALSE
+          pos.anc <-  setdiff(possAn(m=mat, x=pa.i[j], ds=FALSE, possible=TRUE),
+                              pa.i[j])
+          if (i %in% pos.anc)    ## if i is a possible ancestor of a parent of i in G
+              ## then there is a partially directed (or directed)
+              ## cycle in G
+              ok <- FALSE
       }
     }
   }
@@ -118,7 +116,7 @@ correspondingCpdag <- function(amat){
 ## type - a string that is either dag, pdag or cpdag
 ## the following function returns TRUE if amat is inded of the specified type
 ##otherwise returns FALSE
-validGraph <- function(amat, type = c("pdag", "cpdag", "dag"), verbose = FALSE) {
+isValidGraph <- function(amat, type = c("pdag", "cpdag", "dag"), verbose = FALSE) {
   
     ## we will first check that the amat contains only 0 and 1 as entries  
    tmp.amat <- amat

@@ -247,7 +247,7 @@ jointIda <- function(x.pos, y.pos, mcov, graphEst = NULL,
     amat <- as(graphEst,"matrix")
     amat[which(amat != 0)] <- 1
     ## check if valid input amat
-    validGraph(amat = amat, type = type)
+    isValidGraph(amat = amat, type = type)
     ##########################
     ##EMA changes below
     if (type == "pdag"){

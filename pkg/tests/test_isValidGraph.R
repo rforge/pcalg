@@ -38,10 +38,10 @@ for (r in seed1:num_setings) {
     dag.amat[dag.amat != 0] <- 1
 
     amat.cpdag <- cpdag.amat
-    if (!validGraph(amat.cpdag,type="cpdag")){
+    if (!isValidGraph(amat.cpdag,type="cpdag")){
       counterr <- counterr +1
     }
-    if (!validGraph(dag.amat,type="dag")){
+    if (!isValidGraph(dag.amat,type="dag")){
       counterr <- counterr +1
     }
   }
@@ -51,22 +51,22 @@ counterr
 amat <- matrix(c(0,1,0, 0,0,1, 0,0,0), 3,3)
 colnames(amat) <- rownames(amat) <- letters[1:3]
 ## graph::plot(as(t(amat), "graphNEL"))             
-stopifnot(validGraph(amat = amat, type = "dag"), ## is a valid DAG
-  validGraph(amat = amat, type = "cpdag"), ## is a valid CPDAG 
-  validGraph(amat = amat, type = "pdag") ) ## is a valid PDAG
+stopifnot(isValidGraph(amat = amat, type = "dag"), ## is a valid DAG
+  !isValidGraph(amat = amat, type = "cpdag"), ## is a valid CPDAG 
+  isValidGraph(amat = amat, type = "pdag") ) ## is a valid PDAG
 
 ## a -- b -- c
 amat <- matrix(c(0,1,0, 1,0,1, 0,1,0), 3,3)
 colnames(amat) <- rownames(amat) <- letters[1:3]
 ## plot(as(t(amat), "graphNEL"))             
-stopifnot(!validGraph(amat = amat, type = "dag"), ## not a valid DAG
-  validGraph(amat = amat, type = "cpdag"), ## is a valid CPDAG
-  validGraph(amat = amat, type = "pdag") )## is a valid PDAG
+stopifnot(!isValidGraph(amat = amat, type = "dag"), ## not a valid DAG
+  isValidGraph(amat = amat, type = "cpdag"), ## is a valid CPDAG
+  isValidGraph(amat = amat, type = "pdag") )## is a valid PDAG
 
 ## a -- b -- c -- d -- a
 amat <- matrix(c(0,1,0,1, 1,0,1,0, 0,1,0,1, 1,0,1,0), 4,4)
 colnames(amat) <- rownames(amat) <- letters[1:4]
 ## plot(as(t(amat), "graphNEL"))             
-stopifnot(!validGraph(amat = amat, type = "dag"),  ## not a valid DAG
-  !validGraph(amat = amat, type = "cpdag"), ## not a valid CPDAG
-  !validGraph(amat = amat, type = "pdag") ) ## not a valid PDAG
+stopifnot(!isValidGraph(amat = amat, type = "dag"),  ## not a valid DAG
+  !isValidGraph(amat = amat, type = "cpdag"), ## not a valid CPDAG
+  !isValidGraph(amat = amat, type = "pdag") ) ## not a valid PDAG
