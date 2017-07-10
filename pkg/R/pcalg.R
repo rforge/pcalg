@@ -7149,10 +7149,10 @@ adjustb <- function(m,x,y)
   bpossanx <- bpossany <- c()
   for(i in 1:length(x))
   {
-    bpossanx <- union(bpossanx,bPossibleAn(m,x[i]))
+    bpossanx <- union(bpossanx,possAn(m,x[i]))
   }
   for(j in 1:length(y)){
-    bpossany <- union(bpossany,bPossibleAn(m,y[j]))
+    bpossany <- union(bpossany,possAn(m,y[j]))
   }
   
   adjustbb <- union(bpossanx,bpossany)
