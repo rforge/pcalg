@@ -64,7 +64,7 @@ importFrom("sfsmisc", digitsBase, is.whole)
 importFrom("fastICA", fastICA)
 importFrom("clue", solve_LSAP)
 importFrom("gmp", as.bigz, chooseZ, as.bigq)
-importFrom("dagitty", dagitty, isAdjustmentSet)
+importFrom("dagitty", dagitty, isAdjustmentSet, adjustmentSets)
 ###----- Exports ------------------------------------------------------
 
 export(getGraph)# our S4 generic including methods
