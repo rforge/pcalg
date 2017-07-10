@@ -6987,7 +6987,7 @@ applyOrientationRules <- function(gInput, verbose=FALSE) {
 ## x and y should be vectors of node LABELS 
 ## gInput can be either the graphNEL object or adjacency matrix
 ## same encoding as in amat.cpdag above m[i,j]=0, m[j,i]=1 <=> i->j
-addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE)      ##CHANGED to by default take empty bgKnoledge
+addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE)      
 {
   res <- gInput
   ##new line
@@ -7014,6 +7014,11 @@ addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE)      ##CHANGED to b
       return(NULL)
     }
   }
+  ## check if input is valid pdag
+  if( !isValidGraph(amat = pdag, type = "pdag") ) {
+    message("Input to addBgKnowledge() is not a valid PDAG.\n")
+  }
+
   ##CHANGED!
   #  if (!is.vector(x) | !is.vector(y)){
   #    stop(x,"or",y,"are not vectors!\n")
@@ -7081,8 +7086,6 @@ addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE)      ##CHANGED to b
     }
     i <- i+1
   }
-  ## check if result is valid pdag
-  isValidGraph(amat = pdag, type = "pdag")
 
   if (!is.matrix(res))
   {
@@ -7093,6 +7096,71 @@ addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE)      ##CHANGED to b
   return(res)
 }
 
+revealEdge <- function(c,d,s) { ## cpdag, dag, selected edges to reveal
+  if (all(!is.na(s))) { ## something to reveal
+    for (i in 1:nrow(s)) {
+      c[s[i,1], s[i,2]] <- d[s[i,1], s[i,2]]
+      c[s[i,2], s[i,1]] <- d[s[i,2], s[i,1]]
+    }
+  }
+  c
+}
+
+connectedNodes <- function(m,x){
+  #q denotes unvisited nodes/ nodes in queue
+  #v denotes visited nodes
+  q <- v <- rep(0,length(m[,1])) 
+  i <- k <-  1     
+  if(length(x)>1){
+    cat("Need to do this node by node!\n")
+    return(NULL)
+  }
+  q <- sort(x)           
+  tmp <- m
+  
+  while(q[k]!=0 & k<=i)
+  {
+    t <- q[k]
+    #mark t as visited
+    v[k] <- t       
+    k <- k+1
+    #find all neighbors of t   
+    s <- tmp[t,] + tmp[,t]
+    neighborss <- which(s!=0)
+    ## if there are neighbors of t
+    ## add the ones not already added
+    if (length(neighborss)>0){
+      for(j in 1: length(neighborss))
+        if (!(neighborss[j] %in% q))   
+        {
+          i <- i+1
+          q[i] <- neighborss[j]
+        }
+    }
+  }
+  ## remove all leftover zeros from initialization and x
+  connectt <-setdiff(v,c(0,x))   
+  
+  return(sort(connectt))
+}
+
+adjustb <- function(m,x,y)
+{
+  bpossanx <- bpossany <- c()
+  for(i in 1:length(x))
+  {
+    bpossanx <- union(bpossanx,bPossibleAn(m,x[i]))
+  }
+  for(j in 1:length(y)){
+    bpossany <- union(bpossany,bPossibleAn(m,y[j]))
+  }
+  
+  adjustbb <- union(bpossanx,bpossany)
+  notbb <- bforbiddenNodes(m, x, y)
+  notbb <- union(notbb,c(x,y))
+  adjustbb <- setdiff(adjustbb,notbb)
+  sort(adjustbb)
+}
 
 
 ###-- This *MUST* remain at bottom of file !
