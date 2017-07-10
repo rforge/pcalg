@@ -2991,7 +2991,7 @@ ida <- function (x.pos, y.pos, mcov, graphEst, method = c("local", "global"),
   amat <- ad.g <- wgtMatrix(graphEst)
   amat[which(amat != 0)] <- 1 ## coding: amat.cpdag
   ## test if valid input amat
-  isValidGraph(amat = amat, type = type)
+  ## isValidGraph(amat = amat, type = type)
   nl <- colnames(amat) ## Node labels
   ## double-check that node labels exist (they should given a graph input)
   stopifnot(!is.null(nl)) 
