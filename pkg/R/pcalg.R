@@ -7045,9 +7045,6 @@ addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE)      ##CHANGED to b
     return(res)
   }
 
-  ## Check if input is valid PDAG:
-  isValidGraph(amat = pdag, type = "pdag")
-  
   ##NEW: check that the pdag is maximal!
   tmp.pdag <- t(applyOrientationRules(t(pdag),verbose))
   isMaximal <- (sum(tmp.pdag-pdag)==0)
@@ -7084,6 +7081,9 @@ addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE)      ##CHANGED to b
     }
     i <- i+1
   }
+  ## check if result is valid pdag
+  isValidGraph(amat = pdag, type = "pdag")
+
   if (!is.matrix(res))
   {
     res <- as(t(pdag),"graphNEL") 
