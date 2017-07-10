@@ -1,9 +1,4 @@
 library(pcalg)
-library(graph)
-source("/sfs/u/kalischm/research/packages/pcalg/pkg/R/gacFuns.R")
-source("/sfs/u/kalischm/research/packages/pcalg/pkg/R/pcalg.R")
-source("/sfs/u/kalischm/research/marloes/DraftPapers/Ema/CPDAGs-with-background-knowledge/RCode/functionsUAI2017.R")
-
 
 set.seed(123)
 nreps <- 100
