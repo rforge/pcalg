@@ -143,6 +143,9 @@ forbiddenNodes <- function(m,x,y,type)
 ## uses amat.cpdag encoding amat[i,j]=0,amat[j,i]=1 <=> i ->j
 gac <- function (amat, x, y, z, type = "pag") 
 {
+    if (type %in% c("dag", "cpdag", "pdag")) {
+        validGraph(amat = amat, type = type)
+    }
   res <- rep(NA, 3)
   f <- NULL
   if (type %in% c("dag","pdag","cpdag")){
