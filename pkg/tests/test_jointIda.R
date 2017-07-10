@@ -43,26 +43,31 @@ ajv.pasets <- list(list(5, c(3,4)),
 m3 <- jointIda(x.pos=c(1,2), y.pos=6, covTrue, all.pasets=ajv.pasets, technique="RRC")
 m4 <- jointIda(x.pos=c(1,2), y.pos=6, covTrue, all.pasets=ajv.pasets, technique="MCD") 
 
-tempres2 <- all( all.equal(m3, m4))
-if (!tempres2) stop("There is a mismatch with jointIda RRC and MCD with given parent sets!")
-
+##sorting for comparison
+order.m3 <- m3[,order(m3[1,])]
+order.m4 <- m4[,order(m4[1,])]
+tempres2 <- all( all.equal(order.m3, order.m4) )
+if (!tempres2) stop("There is a mismatch with jointIda RRC and MCD!")
 
 ## From the true DAG, we can compute the true total joint effects
 ## using RRC or MCD
 m5 <- jointIda(x.pos=c(1,2),y.pos=6,covTrue,graphEst=myDAG,technique="RRC")
 m6 <- jointIda(x.pos=c(1,2),y.pos=6,covTrue,graphEst=myDAG,technique="MCD")
 
-tempres3 <- all( all.equal(m5, m6))
+##sorting for comparison
+order.m5 <- m5[,order(m5[1,])]
+order.m6 <- m6[,order(m6[1,])]
+tempres3 <- all( all.equal(order.m5, order.m6))
 if (!tempres3) stop("There is a mismatch with jointIda  RRC and MCD!")
 
 ################################################################
 
-mTrue <- matrix(c(0.99, 0.4, 0.99, 0.4, 0, 0.4), 2,3)
+mTrue <- rbind(c(0,0.99,0.99), c(0.4,0.4,0.4))
 Rnd <- 7
-res1 <- (all(round(m1,Rnd) == mTrue) &
-         all(round(m2,Rnd) == mTrue) &
-         all(round(m3,Rnd) == mTrue) &
-         all(round(m4,Rnd) == mTrue) )
+res1 <- (all(round(order.m1,Rnd) == mTrue) &
+         all(round(order.m2,Rnd) == mTrue) &
+         all(round(order.m3,Rnd) == mTrue) &
+         all(round(order.m4,Rnd) == mTrue) )
 
 if(!res1) stop("Test in jointIda: True causal effects were not recovered!")
 
@@ -73,12 +78,12 @@ if(!res1) stop("Test in jointIda: True causal effects were not recovered!")
 ## it gives the same result as ida() (see Note)
 ##
 ## When the CPDAG is known
-v1 <- round(jointIda(x.pos=1,y.pos=6,covTrue,graphEst=myCPDAG,
-                     technique="RRC"), Rnd)
-v2 <- round(jointIda(x.pos=1,y.pos=6,covTrue,graphEst=myCPDAG,
-               technique="MCD"), Rnd)    ###EMA MCD problem as above
-v3 <- round(ida(x.pos=1,y.pos=6,covTrue,graphEst=myCPDAG,
-          method="global"), Rnd)   ###EMA there is an issue in v3 with lm.cov ??? i get the error:
+v1 <- sort(round(jointIda(x.pos=1,y.pos=6,covTrue,graphEst=myCPDAG,
+                     technique="RRC"), Rnd))
+v2 <- sort(round(jointIda(x.pos=1,y.pos=6,covTrue,graphEst=myCPDAG,
+               technique="MCD"), Rnd))    ###EMA MCD problem as above
+v3 <- sort(round(ida(x.pos=1,y.pos=6,covTrue,graphEst=myCPDAG,
+          method="global"), Rnd))   ###EMA there is an issue in v3 with lm.cov ??? i get the error:
 
 res2 <- (all(v1==v2) & all(v2==v3) & all(v3==v1))
 
