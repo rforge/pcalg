@@ -122,19 +122,18 @@ isValidGraph <- function(amat, type = c("pdag", "cpdag", "dag"), verbose = FALSE
    tmp.amat <- amat
    tmp.amat[amat ==1] <- 0
    if (sum(tmp.amat) !=0){
-     message("This is not a valid adjacency matrix.\n Your matrix must be of the type amat.cpdag\n
-             Check: ?amatType for more info. \n\n")
+       if (verbose) message("This is not a valid adjacency matrix.\n Your matrix must be of the type amat.cpdag\n Check: ?amatType for more info. \n\n")
      return(FALSE)
    }
   
    if (type == "dag"){ ## for a dag, we check for no cycles and no undirected edges
     okDir <- all(amat + t(amat) <= 1)
     if (!okDir) {
-      message("There are undirected edges in this DAG. \n")
+        if (verbose) message("There are undirected edges in this DAG. \n")
     }
     okCycle <- noCycles(amat)  
     if (!okCycle) {
-      message("There is a cycle in this DAG. \n")
+        if (verbose) message("There is a cycle in this DAG. \n")
     }
     ok <- (okDir & okCycle)
     
@@ -168,19 +167,20 @@ isValidGraph <- function(amat, type = c("pdag", "cpdag", "dag"), verbose = FALSE
       ok <- (ok1 & ok2) & ok3 & ok4  
       
       if (!ok1){
-        message("There is a directed or partially directed cycle in this CPDAG! \n\n")}
+          if (verbose) message("There is a directed or partially directed cycle in this CPDAG! \n\n")}
       
       if (!ok2){
-        message("The undirected component of this CPDAG is not made up of chordal components! \nComponents: ", which(chordal == "FALSE"),
-                " are not chordal. \n")}
+          if (verbose) message("The undirected component of this CPDAG is not made up of chordal components! \nComponents: ",
+                               which(chordal == "FALSE"),
+                               " are not chordal. \n")
+      }
         ## You can check this by calling: chordalComponents(Input)\n Be sure to replace Input with your adjacency matrix.\n\n")}
        
-      if (!ok3){
-        message("Your input CPDAG is not maximally oriented! \n
-                  You can obtain a maximally oriented CPDAG by calling: addBgKnowledge(amat)\n
-                  Be sure to replace amat with your adjacency matrix.\n\n")}
-      if (!ok4){
-        message("Your input CPDAG has more orientations then it should and/or contradicting orientations! Maybe you meant to specify a pdag? \n")}
+        if (!ok3){
+          if (verbose) message("Your input CPDAG is not maximally oriented! \n You can obtain a maximally oriented CPDAG by calling: addBgKnowledge(amat)\n Be sure to replace amat with your adjacency matrix.\n\n")
+      }
+        if (!ok4){
+            if (verbose) message("Your input CPDAG has more orientations then it should and/or contradicting orientations! Maybe you meant to specify a pdag? \n")}
     } else { 
       if (type=="pdag"){
         ## for a pdag we check whether all orientations in the corresponding cpdag are also in our pdag 
@@ -226,26 +226,26 @@ isValidGraph <- function(amat, type = c("pdag", "cpdag", "dag"), verbose = FALSE
         ok <- ok1 & ok2 & ok3 & ok4
         
         if (!ok1){
-          message("The corresponding CPDAG of this PDAG is invalid. The undirected component of the CPDAG is not made up of chordal components!\n")
+          if (verbose) message("The corresponding CPDAG of this PDAG is invalid. The undirected component of the CPDAG is not made up of chordal components!\n")
                   ## You can check this by calling: correspondingCpdag(chordalComponents(amat))\n Be sure to replace amat with your adjacency matrix.\n\n")
         }
         if (!ok4){
-          message("Your input PDAG and its corresponding CPDAG have a mismatch in orientations!\n 
+          if (verbose) message("Your input PDAG and its corresponding CPDAG have a mismatch in orientations!\n 
                   Check: graph::plot(as(t(amat),\"graphNEL\") \n
                   Be sure to replace amat with your adjacency matrix. \n\n")
         }
         
         if (!ok2){
-          message("There is a directed cycle in this PDAG! \n\n")
+          if (verbose) message("There is a directed cycle in this PDAG! \n\n")
         }
         
        if (!ok3){
-          message("Your input PDAG is not maximally oriented! You can obtain a maximally oriented PDAG by calling: addBgKnowledge(amat)\n
+          if (verbose) message("Your input PDAG is not maximally oriented! You can obtain a maximally oriented PDAG by calling: addBgKnowledge(amat)\n
                   Be sure to replace amat with your adjacency matrix.\n\n")
         }
         
       } else {
-        message("Your input graph is not a DAG, PDAG, or CPDAG and so cannot be evaluated.\n")
+        if (verbose) message("Your input graph is not a DAG, PDAG, or CPDAG and so cannot be evaluated.\n")
         return(FALSE)
       }
      }

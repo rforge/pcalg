@@ -23,7 +23,7 @@ isValidGraph(amat, type = c("pdag", "cpdag", "dag"), verbose = FALSE)
     maximally oriented PDAG (\code{type="pdag"}) from Meek (1995). 
 }
   \item{verbose}{
-    If TRUE, detailed output is provided.
+    If TRUE, detailed output on why the graph might not be valid is provided.
 }
 }
 \details{
