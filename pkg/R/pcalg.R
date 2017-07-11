@@ -6987,47 +6987,38 @@ applyOrientationRules <- function(gInput, verbose=FALSE) {
 ## x and y should be vectors of node LABELS 
 ## gInput can be either the graphNEL object or adjacency matrix
 ## same encoding as in amat.cpdag above m[i,j]=0, m[j,i]=1 <=> i->j
-addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE)      
+addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE, checkInput = TRUE)      
 {
   res <- gInput
   ##new line
-  if (!is.matrix(gInput))
-  { if (numEdges(gInput)>0) {
-    g <- t(as(gInput,"matrix")) ## g_ji if i->j
-    p <- as.numeric(dim(g)[1])
-    pdag <- g
-    lab <- dimnames(g)[[1]]
-  } else {
-    stop("Invalid or empty PDAG! This function only accepts graphNEL or adj mat\n")
-    return(NULL)
-  }
-  } else { 
-    ##for me its easier to use an adjacency matrix
-    if (length(res[1,])>0)
-    {
-      g <- res
-      p <- length(g[1,])
-      pdag <- g
-      lab <- dimnames(g)[[1]]
+  if (!is.matrix(gInput)) { 
+    if (numEdges(gInput)>0) {
+      g <- t(as(gInput,"matrix")) ## g_ji if i->j
+      p <- as.numeric(dim(g)[1])
     } else {
       stop("Invalid or empty PDAG! This function only accepts graphNEL or adj mat\n")
-      return(NULL)
+    }
+  } else { 
+    ##for me its easier to use an adjacency matrix
+    if (length(res[1,])>0) {
+      g <- res
+      p <- length(g[1,])
+    } else {
+      stop("Invalid or empty PDAG! This function only accepts graphNEL or adj mat\n")
     }
   }
+  pdag <- g
+  lab <- dimnames(g)[[1]]
   ## check if input is valid pdag
-  if( !isValidGraph(amat = pdag, type = "pdag") ) {
-    message("Input to addBgKnowledge() is not a valid PDAG.\n")
+  if( checkInput ) {
+    if ( !isValidGraph(amat = pdag, type = "pdag") ) {
+      if (verbose) message("Input to addBgKnowledge() is not a valid PDAG.\n")
+    }
   }
-
+  
   ##CHANGED!
-  #  if (!is.vector(x) | !is.vector(y)){
-  #    stop(x,"or",y,"are not vectors!\n")
-  #    return(NULL)    
-  #  } else {
-  if (length(x)!=length(y))
-  {
+  if (length(x)!=length(y)) {
     stop("length of\n",x,"and\n",y,"\nshould be the same!\n")
-    return(NULL)    
   }
   #  }
   ## real code starts from here
@@ -7041,8 +7032,7 @@ addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE)
   ##NEW if there are no edges to orient!!
   if (k ==0){
     pdag <- t(applyOrientationRules(t(pdag),verbose))
-    if (!is.matrix(res))
-    {
+    if (!is.matrix(res)) {
       res <- as(t(pdag),"graphNEL") 
     } else {
       res <- pdag
@@ -7054,10 +7044,8 @@ addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE)
   tmp.pdag <- t(applyOrientationRules(t(pdag),verbose))
   isMaximal <- (sum(tmp.pdag-pdag)==0)
   if (!isMaximal){
-    message("Your input pdag is not maximal! You can obtain a maximal pdag by calling: addBgKnowledge(gInput)\n")
-    return(NULL)
+    stop("Your input pdag is not maximal! You can obtain a maximal pdag by calling: addBgKnowledge(gInput)\n")
   }
-  
   
   while (i <=k)
   {
@@ -7076,12 +7064,10 @@ addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE)
       ##either the opposite orientation is present in the current pdag
       ##or there is no edge between these two nodes in the pdag at all
       if ((pdag[from,to] ==1) & (pdag[to,from] ==0)){
-        if (verbose) cat("Invalid bg knowledge! Cannot add orientation ",x[i],"->",y[i]," because",y[i],"->",x[i],"is already in the PDAG. \n")
-        return(NULL)
+        stop("Invalid bg knowledge! Cannot add orientation ",x[i],"->",y[i]," because",y[i],"->",x[i],"is already in the PDAG. \n")
       } 
       if ((pdag[from,to] ==0) & (pdag[to,from] ==0)){
-        if (verbose) cat("Invalid bg knowledge! Cannot add orientation",x[i],"->",y[i]," because there is no edge between",x[i],"and",y[i],"in the PDAG. \n")
-        return(NULL)
+        stop("Invalid bg knowledge! Cannot add orientation",x[i],"->",y[i]," because there is no edge between",x[i],"and",y[i],"in the PDAG. \n")
       }
     }
     i <- i+1

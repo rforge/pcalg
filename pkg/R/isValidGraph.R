@@ -106,7 +106,7 @@ getPattern <- function(amat){
 ## that is the cpdag that contains the same skeleton and v-structures as the given pdag
 correspondingCpdag <- function(amat){
   patt <- getPattern(amat)
-  corresp.cpdag <- addBgKnowledge(patt)
+  corresp.cpdag <- addBgKnowledge(patt, checkInput = FALSE)
   corresp.cpdag
 }
 
