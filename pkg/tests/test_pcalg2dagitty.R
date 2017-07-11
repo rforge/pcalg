@@ -361,7 +361,7 @@ xx <- xx &  gacVSdagitty(mMMp, x,y, z=c(1,4,2,3), V=V, type)
 ## V=V, type = "pag" -- Tests from Ema
 ##################################################
 type <- "pag"
-pag.m <- readRDS("/u/kalischm/research/packages/pcalg/pkg/inst/external/gac-pags.rds")
+pag.m <- readRDS(system.file("external/gac-pags.rds", package="pcalg"))
 m1 <- pag.m[["m1"]]
 V <- colnames(m1)
 x <- 6; y <- 9

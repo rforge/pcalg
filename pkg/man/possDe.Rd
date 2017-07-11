@@ -8,7 +8,8 @@ Find possible descendants of given node(s).
 In a DAG, CPDAG, MAG or PAG determine which nodes are (possible) descendants of x on definite status or just any paths potentially avoiding given nodes on the paths.
 }
 \usage{
-possDe(m, x, y = NULL, possible = TRUE, ds = TRUE, type = c("cpdag", "pdag", "dag", "mag", "pag"))
+possDe(m, x, y = NULL, possible = TRUE, ds = TRUE,
+type = c("cpdag", "pdag", "dag", "mag", "pag"))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

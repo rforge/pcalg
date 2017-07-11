@@ -8,7 +8,8 @@ Find possible ancestors of given node(s).
 In a DAG, CPDAG, MAG or PAG determine which nodes are (possible) ancestors of x on definite status or just any paths potentially avoiding given nodes on the paths.
 }
 \usage{
-possAn(m, x, y = NULL, possible = TRUE, ds = TRUE, type = c("cpdag", "pdag", "dag", "mag", "pag"))
+possAn(m, x, y = NULL, possible = TRUE, ds = TRUE,
+type = c("cpdag", "pdag", "dag", "mag", "pag"))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

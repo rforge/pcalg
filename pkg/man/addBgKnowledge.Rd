@@ -42,17 +42,24 @@ amat <- matrix(c(0,1,0, 1,0,1, 0,1,0), 3,3)
 colnames(amat) <- rownames(amat) <- letters[1:3]
 ## plot(as(t(amat), "graphNEL"))             
 addBgKnowledge(gInput = amat) ## amat is a valid CPDAG
-bg1 <- addBgKnowledge(gInput = amat, x = "b", y = "c") ## b -> c is directed; a -- b is not directed by applying Meek's orientation rules
-## plot(as(t(bg1), "graphNEL")) 
-bg2 <- addBgKnowledge(gInput = amat, x = c("b","b"), y = c("c","a")) ## b -> c and b -> a are directed
+## b -> c is directed; a -- b is not directed by applying
+## Meek's orientation rules
+bg1 <- addBgKnowledge(gInput = amat, x = "b", y = "c") 
+## plot(as(t(bg1), "graphNEL"))
+## b -> c and b -> a are directed
+bg2 <- addBgKnowledge(gInput = amat, x = c("b","b"), y = c("c","a")) 
 ## plot(as(t(bg2), "graphNEL")) 
 
-bg3 <- addBgKnowledge(gInput = amat, x = "c", y = "b") ## c -> b is directed; as a consequence of Meek's orientation rules, b -> a is directed as well
+## c -> b is directed; as a consequence of Meek's orientation rules,
+## b -> a is directed as well
+bg3 <- addBgKnowledge(gInput = amat, x = "c", y = "b") 
 ## plot(as(t(bg3), "graphNEL")) 
 
 amat2 <- matrix(c(0,1,0, 1,0,1, 0,1,0), 3,3)
 colnames(amat2) <- rownames(amat2) <- letters[1:3]
-addBgKnowledge(gInput = amat2, x = c("c", "a"), y = c("b", "b")) ## new collider is inconsistent with original CPDAG; thus, NULL is returned
+## new collider is inconsistent with original CPDAG; thus, NULL is returned
+addBgKnowledge(gInput = amat2, x = c("c", "a"), y = c("b", "b"))
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
