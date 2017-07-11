@@ -2,20 +2,22 @@
 \alias{addBgKnowledge}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-  Add bakcground knowledge to a CPDAG or PDAG
+  Add background knowledge to a CPDAG or PDAG
 }
 \description{
 Add background knowledge x -> y to an adjacency matrix and complete the orientation rules from Meek (1995).
 }
 \usage{
-addBgKnowledge(gInput, x = c(), y = c(), verbose = FALSE)
+addBgKnowledge(gInput, x = c(), y = c(), verbose = FALSE, checkInput = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{gInput}{\code{graphNEL} object or adjacency matrix of type \code{amat.cpdag} (see \code{\link{amatType}})}
 
   \item{x,y}{node labels of \code{x} or \code{y} in the adjacency matrix. \code{x} and \code{y} can be vectors representing several nodes (see details below).}
- \item{verbose}{If TRUE, detailed output is provided.}
+  \item{verbose}{If TRUE, detailed output is provided.}
+  \item{checkInput}{If TRUE, the input adjacency matrix is carefully
+  checked to see if it is a valid graph using function \code{\link{isValidGraph}}}
 }
 
 \details{
