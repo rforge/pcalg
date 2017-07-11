@@ -125,3 +125,6 @@ for (cpp in c(FALSE, TRUE)) {
 }
 
 cat(if(doExtras) "\n", "Done.\n")
+
+## add test to confirm bug-fix in 2.5-0
+new("GaussParDAG", "a") ## produced a warning prior to 2.5-0
