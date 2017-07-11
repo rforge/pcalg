@@ -373,11 +373,17 @@ setRefClass("ParDAG",
       if (!all(sapply(object$.in.edges, is.numeric)))
         return("The vectors in 'in.edges' must contain numbers.")
 
-      edgeRange <- range(unlist(object$.in.edges))
-      if (object$edge.count() > 0 &&
-          (edgeRange[1] < 1 || edgeRange[2] > object$node.count()))
-        return("Invalid range of edge sources.")
+      ## edgeRange <- range(unlist(object$.in.edges))
+      ## if (object$edge.count() > 0 &&
+      ##     (edgeRange[1] < 1 || edgeRange[2] > object$node.count()))
+      ##   return("Invalid range of edge sources.")
 
+      if (object$edge.count() > 0) {
+          edgeRange <- range(unlist(object$.in.edges))
+          if (edgeRange[1] < 1 || edgeRange[2] > object$node.count())
+              return("Invalid range of edge sources.")
+      }
+      
       return(TRUE)
     },
 
