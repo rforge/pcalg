@@ -2990,8 +2990,12 @@ ida <- function (x.pos, y.pos, mcov, graphEst, method = c("local", "global"),
   type <- match.arg(type)
   amat <- ad.g <- wgtMatrix(graphEst)
   amat[which(amat != 0)] <- 1 ## coding: amat.cpdag
+
   ## test if valid input amat
-  ## isValidGraph(amat = amat, type = type)
+  if (!isValidGraph(amat = amat, type = type)) {
+    message("The input graph is not a valid ",type,". See function isValidGraph() for details.\n")
+  }
+
   nl <- colnames(amat) ## Node labels
   ## double-check that node labels exist (they should given a graph input)
   stopifnot(!is.null(nl)) 
@@ -7015,6 +7019,7 @@ addBgKnowledge <- function(gInput,x=c(),y=c(),verbose=FALSE, checkInput = TRUE)
   if( checkInput ) {
     if ( !isValidGraph(amat = pdag, type = "pdag") ) {
       if (verbose) cat("Input to addBgKnowledge() is not a valid PDAG.\n")
+      return(NULL)
     }
   }
   

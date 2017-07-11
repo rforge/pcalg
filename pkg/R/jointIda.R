@@ -246,9 +246,13 @@ jointIda <- function(x.pos, y.pos, mcov, graphEst = NULL,
   if (is.null(all.pasets)) {
     amat <- as(graphEst,"matrix")
     amat[which(amat != 0)] <- 1
+
     ## check if valid input amat
-    isValidGraph(amat = amat, type = type)
-    ##########################
+    if (!isValidGraph(amat = amat, type = type)) {
+      message("The input graph is not a valid ",type,". See function isValidGraph() for details.\n")
+    }
+
+##########################
     ##EMA changes below
     if (type == "pdag"){
       all.pasets <- b.extract.parent.sets(x.pos,t(amat)) 

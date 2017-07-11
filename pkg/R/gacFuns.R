@@ -144,7 +144,9 @@ forbiddenNodes <- function(m,x,y,type)
 gac <- function (amat, x, y, z, type = "pag") 
 {
     if (type %in% c("dag", "cpdag", "pdag")) {
-        isValidGraph(amat = amat, type = type)
+          if (!isValidGraph(amat = amat, type = type)) {
+              message("The input graph is not a valid ",type,". See function isValidGraph() for details.\n")
+          }
     }
   res <- rep(NA, 3)
   f <- NULL
