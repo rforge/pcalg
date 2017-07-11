@@ -1,5 +1,5 @@
 Package: pcalg
-Version: 2.4-16
+Version: 2.5-0
 Date: 2017-07-11
 Title: Methods for Graphical Models and Causal Inference
 Description: Functions for causal structure
@@ -10,8 +10,9 @@ Description: Functions for causal structure
   (i.e. observational data) and data from experiments
   involving interventions (i.e. interventional data) without hidden
   variables). For causal inference the IDA algorithm, the Generalized
-  Backdoor Criterion (GBC) and the Generalized Adjustment Criterion (GAC)
-  are implemented.
+  Backdoor Criterion (GBC), the Generalized Adjustment Criterion (GAC)
+  and some related functions are implemented. Functions for incorporating
+  background knowledge are provided.
 Maintainer: Markus Kalisch <kalisch@stat.math.ethz.ch>
 Authors@R: c(person("Markus","Kalisch",
                     email="kalisch@stat.math.ethz.ch", role=c("aut","cre")),
