@@ -51,6 +51,14 @@ importFrom("igraph", graph.adjacency, igraph.from.graphNEL, is.chordal,
 
 importFrom("RBGL",
 	   biConnComp, johnson.all.pairs.sp, separates, bfs, connectedComp)
+## problems on Mac;
+## used in
+## biConnComp: pdsep -> fci
+## johnson.all.pairs.sp -> dsep (-> dsepTest), dreach (-> backdoor)
+## separates -> dsep
+## bfs -> dsep
+## connectedComp -> pag2magAM, backdoor
+
 ## also    sp.between -- but only for deprecated beta.special(), hence RBGL::*
 
 importFrom("ggm", isAcyclic, transClos, topOrder, msep)
