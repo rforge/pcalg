@@ -298,3 +298,24 @@ if (!xx) {
   message("OK, no issues were found.")
 }
 
+##################################################
+## given same graph, type=cpdag and type=pdag
+## should give same canonical set
+##################################################
+m <- rbind(c(0,1,0,0,0,0),
+           c(1,0,1,0,0,0),
+           c(0,1,0,0,0,0),
+           c(0,0,0,0,0,0),
+           c(0,1,1,1,0,0),
+           c(1,0,1,1,1,0))
+colnames(m) <- rownames(m) <- as.character(1:6)
+
+## You can see that the current adjustment function outputs different sets
+## if type = "cpdag" or type = "pdag" which shouldn't happen 
+## because it is the same graph:
+res1 <- adjustment(m,amat.type="cpdag",2,4,set.type="canonical")
+res2 <- adjustment(m,amat.type="pdag",2,4,set.type="canonical")
+
+if (!all.equal(res1, res2)) {
+    stop("Canonical set is not the same for type=cpdag and type=pdag\n")
+}
