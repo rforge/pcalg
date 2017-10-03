@@ -396,7 +396,7 @@ gbg <-  function(m,x,y)
 {
   tmp <- m
   for (i in 1:length(x))
-  { i <- 1
+  {
   Desc <- bPossibleDeProper(m,x[i],x[-i])
   if (length(intersect(y, Desc)) != 0) {
     ch <- as.vector(which(m[x[i], ] == 0 & m[, x[i]] == 1))
