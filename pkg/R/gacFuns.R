@@ -143,6 +143,9 @@ forbiddenNodes <- function(m,x,y,type)
 ## uses amat.cpdag encoding amat[i,j]=0,amat[j,i]=1 <=> i ->j
 gac <- function (amat, x, y, z, type = "pag") 
 {
+    if (class(amat) == "amat") amat <- as(amat, "matrix")
+    if (!is.null(row.names(amat))) row.names(amat) <- NULL
+    if (!is.null(col.names(amat))) col.names(amat) <- NULL
     if (type %in% c("dag", "cpdag", "pdag")) {
           if (!isValidGraph(amat = amat, type = type)) {
               message("The input graph is not a valid ",type,". See function isValidGraph() for details.\n")
