@@ -79,9 +79,10 @@ adjustment <- function(amat, amat.type, x, y, set.type)
       {
         nn <- length(adjustb)
         if (nn > 0) {
-          res <- list('1' = adjustb)
+            res <- list('1' = adjustb)
         } else {
-          res <- vector("list", 0L)
+            ## res <- vector("list", 0L)
+            res <- list('1' = integer(0))
         }
       } else {
         res <-  vector(mode = "list", length = 0)

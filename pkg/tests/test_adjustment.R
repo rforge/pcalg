@@ -1,5 +1,29 @@
 library(pcalg)
 
+## Test that "no adjustment set" and "empty adjustment set" are distinguished properly
+x <- 1; y <- 2
+cpdag <- matrix(c(0,1,1,0),2,2) ## 1 --- 2 => no adj set
+dag <- matrix(c(0,1,0,0),2,2) ## 1 --> 2 => empty adj set
+
+adjC <- adjustment(amat = cpdag, amat.type = "cpdag", x = 1, y = 2, set.type = "canonical")
+adjD <- adjustment(amat = dag, amat.type = "dag", x = 1, y = 2, set.type = "canonical")
+adjP <- adjustment(amat = dag, amat.type = "pdag", x = 1, y = 2, set.type = "canonical")
+
+stopifnot(!identical(adjC, adjD), identical(adjD, adjP) )
+
+adjCAll <- adjustment(amat = cpdag, amat.type = "cpdag", x = 1, y = 2, set.type = "all")
+adjDAll <- adjustment(amat = dag, amat.type = "dag", x = 1, y = 2, set.type = "all")
+adjPAll <- adjustment(amat = dag, amat.type = "pdag", x = 1, y = 2, set.type = "all")
+
+stopifnot( !identical(adjCAll, adjDAll), identical(adjDAll, adjPAll) )
+
+adjCMin <- adjustment(amat = cpdag, amat.type = "cpdag", x = 1, y = 2, set.type = "minimal")
+adjDMin <- adjustment(amat = dag, amat.type = "dag", x = 1, y = 2, set.type = "minimal")
+adjPMin <- adjustment(amat = dag, amat.type = "pdag", x = 1, y = 2, set.type = "minimal")
+
+stopifnot( !identical(adjCMin, adjDMin), identical(adjDMin, adjPMin) )
+
+
 #####################################################################################
 ## Test 1: Compare CPDAG and PDAG implementation and validate all sets using gac()
 #####################################################################################
