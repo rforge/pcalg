@@ -16,6 +16,7 @@
   urlcolor = {Red},
   pdfview = {XYZ null null null}
 }
+\newcommand*{\pkg}[1]{\texttt{#1}}% or use jss.cls which defines that
 
 %\bibliographystyle{unsrtnat}
 \bibliographystyle{plainnat}
@@ -38,7 +39,7 @@ PCversion <- packageDescription('pcalg')$Version # *not* "2.6-0" - needs updatin
 @
 
 %\VignetteIndexEntry{Overview of the 'pcalg' Package for R}
-%\VignetteDepends{pcalg, Rgraphviz, graph, ggplot2, huge}
+%\VignetteDepends{pcalg, Rgraphviz, huge, ggplot2} % plus pcalg's dep. graph, dagitty, igraph
 \SweaveOpts{engine=R, eps=FALSE, pdf=TRUE, strip.white=true, keep.source=TRUE}% ,width=7,height=4
 
 % title
@@ -71,7 +72,7 @@ showF <- function(f, width = 50) {
 \section{Introduction}
 The paper \cite{KalischEtAl12} reports on pcalg Version 1.1-4. Back then,
 the package covered basic functions for
-structure learning (\texttt{pc}, \texttt{fci}, \texttt{rfci}), as well as a method to compute bounds on total causal effects (\texttt{ida}). Since 2012, the \texttt{pcalg} package has been extended in two main areas: structure learning methods and covariate adjustment methods.
+structure learning (\texttt{pc}, \texttt{fci}, \texttt{rfci}), as well as a method to compute bounds on total causal effects (\texttt{ida}). Since 2012, the \pkg{pcalg} package has been extended in two main areas: structure learning methods and covariate adjustment methods.
 
 In this document, we give an overview of the functionality of \texttt{pcalg}  (\Sexpr{PCversion}). In section~2 and 3 we focus on methods for structure learning and covariate adjustment, respectively. In section~4 we discuss provided methods for random graph generation (e.g. for simulation studies). In section~5 we end with notes on some implementation details. The sections can be read independently.
 
@@ -87,7 +88,7 @@ observational data or a mix of observational and interventional data might
 be available. Sometimes it might only be possible to estimate the Markov
 equivalence class of the true DAG or MAG.
 
-The available functions for structure learning in package \texttt{pcalg} can be categorized in the following way:
+The available functions for structure learning in package \pkg{pcalg} can be categorized in the following way:
 
 \begin{itemize}
 \item Constraint-based assuming no hidden confounders, i.i.d.: \\ \texttt{skeleton()}, \texttt{pc()}, \texttt{lingam()}
@@ -249,7 +250,7 @@ parameter.
 
 As an example, we show the usage of function \texttt{fci()} on a built-in dataset \texttt{gmL} containing four variables with a multivariate Gaussian distribution. The data was generated from a DAG model with one latent variable (variable $1$) and four observed variables (variables $2$, $3$, $4$ and $5$) as shown in Fig.~\ref{fig:intro2}. We use the correlation matrix as sufficient statistic and function \texttt{gaussCItest()} as conditional independence test. Based on this input, the function \texttt{fci()}
 estimates the causal structure of the observed variables in the form of a PAG as shown in
-Fig.~\ref{fig:intro2}\footnote{Due to a persistent bug in package \texttt{Rgraphviz} the edge marks are not always placed at the end of an edge, as here on the edge between node $2$ and node $5$.}.
+Fig.~\ref{fig:intro2}\footnote{Due to a persistent bug in package \pkg{Rgraphviz} the edge marks are not always placed at the end of an edge, as here on the edge between node $2$ and node $5$.}.
 
 <<exIntroFCI>>=
 data("gmL")
@@ -333,7 +334,7 @@ The algorithm can be improved by including a turning phase ("third step") of edg
 For the score-based GES algorithm, we have to define a score object before applying the inference algorithm.
 A score object is an instance of a class derived from the base class
 \texttt{Score}.  This base class is implemented as a virtual reference class.
-At the moment, the \texttt{pcalg} package only contains classes derived from
+At the moment, the \pkg{pcalg} package only contains classes derived from
 \texttt{Score} for Gaussian data: \texttt{GaussL0penObsScore} for purely
 i.i.d. data, and \texttt{GaussL0penIntScore} for a mixture of
 data sources (e.g. observational and interventional data); for the GES algorithm, we only need
@@ -536,7 +537,7 @@ cig <- as.matrix(huge.fit$refit)
 ges.fit <- ges(score, fixedGaps = !cig, adaptive = "vstructures")
 @
 
-In this example (which again yields the same plot as in Fig.~\ref{fig:gesFit}), we used methods from package \texttt{huge} to estimate the CIG in advance.  Next, we called \texttt{ges()} with the argument \texttt{adaptive="vstructures"}, which calls a variant of ARGES called ARGES-CIG.  When estimating the \emph{skeleton} instead of the CPDAG in advance, one should use ARGES-skeleton instead, another variant of ARGES (called by the argument \texttt{adaptive="triples"}).  In both variants of ARGES, only the forward phase is different from the base version of GES, the backward (and possibly turning) phase are identical. Note that the instruction on fixed gaps is not guaranteed to be respected in the final output as explained in \cite{NandyHauserMaathuis18}.
+In this example (which again yields the same plot as in Fig.~\ref{fig:gesFit}), we used methods from package \pkg{huge} to estimate the CIG in advance.  Next, we called \texttt{ges()} with the argument \texttt{adaptive="vstructures"}, which calls a variant of ARGES called ARGES-CIG.  When estimating the \emph{skeleton} instead of the CPDAG in advance, one should use ARGES-skeleton instead, another variant of ARGES (called by the argument \texttt{adaptive="triples"}).  In both variants of ARGES, only the forward phase is different from the base version of GES, the backward (and possibly turning) phase are identical. Note that the instruction on fixed gaps is not guaranteed to be respected in the final output as explained in \cite{NandyHauserMaathuis18}.
 
 \subsection{Restricted structural equation models: LINGAM}
 Given observational data, the causal structure can in general only be
@@ -731,7 +732,7 @@ on $Y$ as $\frac{\partial }{\partial x}E(Y | do(x))$. Thus, the total
 causal effect of $X$ on $Y$ is $\gamma$, which is the regression
 coefficient of $X$ in the regression of $Y$ on $X$ and $\mathbf{Z}$.
 
-The available functions for covariate adjustment in package \texttt{pcalg} can be categorized in the following way:
+The available functions for covariate adjustment in package \pkg{pcalg} can be categorized in the following way:
 \begin{itemize}
 \item Compute causal effect by (conceptually) listing all DAGs in a given equivalence class:
 \texttt{ida()}, \texttt{jointIda()}
@@ -1112,7 +1113,7 @@ if (require(Rgraphviz)) {
 \end{figure}
 
 \subsubsection[adjustment()]{\texttt{adjustment()}}
-The previously discussed functions check whether a given set of variables is valid for adjustment or not. However, with the exception of \texttt{backdoor()}, they don't help finding a valid adjustment set in the first place. For finding valid adjustment sets the function \texttt{adjustment()} can be used. This function is an interface to the function \texttt{adjustmentSet()} from package \texttt{dagitty}. This function can be called in the following way:
+The previously discussed functions check whether a given set of variables is valid for adjustment or not. However, with the exception of \texttt{backdoor()}, they don't help finding a valid adjustment set in the first place. For finding valid adjustment sets the function \texttt{adjustment()} can be used. This function is an interface to the function \texttt{adjustmentSet()} from package \pkg{dagitty}. This function can be called in the following way:
 
 <<showAdjustment>>=
 showF(adjustment)
@@ -1141,7 +1142,7 @@ showF(adjustment)
 \end{description}
 
 \section{Random DAG Generation}
-Simulation methods are essential to investigate the performance of estimation methods. For that reason, the \texttt{pcalg} package included from the
+Simulation methods are essential to investigate the performance of estimation methods. For that reason, the \pkg{pcalg} package included from the
 beginning the function \texttt{randomDAG} to generate random
 DAGs. However, the method implemented there was restricted to Erd\"os-Renyi
 graphs. We now include the new function \texttt{randDAG()} which can sample
@@ -1151,7 +1152,7 @@ Eight different random graph models are provided. The Erd\"os-Renyi Graph Model 
 Graph Model and the Interconnected-Island Random Graph Model). Moreover, graph models with
 power law degree distributions are provided (Power-Law Random Graph Model and the
 Barabasi-Albert Random Graph Model). The methods are based on the analogous
-\texttt{.game} functions in the \texttt{igraph} package.
+\texttt{.game} functions in the \pkg{igraph} package.
 
 As an option, individual parameters can be
 passed for all methods. Alternatively, the desired expected neighborhood
@@ -1205,13 +1206,13 @@ dag2 <- randDAG(n=n, d=d, method = "power", DAG = TRUE,
                 weighted = TRUE, wFUN = list(myWgtFun, 0, s))
 @
 
-Previous versions of package \texttt{pcalg} contained the functions \texttt{unifDAG()} and \\
+Previous versions of package \pkg{pcalg} contained the functions \texttt{unifDAG()} and \\
 \texttt{unifDAG.approx()} for sampling DAGs uniformly from the space of all DAGs
-given a certain number of nodes. These functions were moved to the package \texttt{unifDAG}.
+given a certain number of nodes. These functions were moved to the package \pkg{unifDAG}.
 
 \section{General Object Handling}
 \subsection{A comment on design}
-The \texttt{pcalg} package is an organically growing collection of functions related to structure learning and causal inference. It captures several research results produced at the Seminar for Statistics, ETH Z\"urich and also implements several other common algorithms (e.g. for comparison). Given this history, we hope the user will forgive the lack of an overarching design.
+The \pkg{pcalg} package is an organically growing collection of functions related to structure learning and causal inference. It captures several research results produced at the Seminar for Statistics, ETH Z\"urich and also implements several other common algorithms (e.g. for comparison). Given this history, we hope the user will forgive the lack of an overarching design.
 
 Functionality centered around constraint based learning (\texttt{skeleton()}, \texttt{pc()}, \texttt{fci()}, \texttt{rfci()} and \texttt{fciPlus()}) is based on the S4 classes \texttt{pcAlgo} and \texttt{fciAlgo} (both inheriting from virtual class \texttt{gAlgo}) and the S3 class \texttt{amat}.
 
@@ -1220,7 +1221,7 @@ Functionality centered around score based learning (\texttt{gies()}, \texttt{ges
 Functionality centered around covariate adjustment mainly follows functional programming.
 
 \subsection{Adjacency matrices} \label{sec:amat}
-Two types of adjacency matrices are used in package \texttt{pcalg}: Type
+Two types of adjacency matrices are used in package \pkg{pcalg}: Type
   \texttt{amat.cpdag} for DAGs and CPDAGs and type \texttt{amat.pag} for
   MAGs and PAGs. See helpfile of \texttt{amatType} for coding conventions for the entries of the adjacency matrices. The required type of adjacency matrix is documented in the help files of the respective functions or classes.
 
@@ -1241,11 +1242,11 @@ as(pc.gmG8, "amat")
 m1 <- matrix(c(0,1,0,1,0,0, 0,0,1,0,1,0, 0,0,0,0,0,1,
                0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0), 6,6)
 ## more detailed information on the graph type needed by gac()
-gac(m1, x=1,y=3, z=NULL, type = "dag")
+str( gac(m1, x=1,y=3, z=NULL, type = "dag") )
 @
 
 \subsection{Interface to package dagitty}
-The web-based software \emph{DAGitty} offers functionality for analyzing causal graphical models. The R package \texttt{dagitty} offers an interface to \emph{DAGitty}. In our package \texttt{pcalg} we offer the function \texttt{pcalg2dagitty()} for converting the adjacency matrix of type \texttt{amat.cpdag} or \texttt{amat.pag} into a \texttt{dagitty} object. Thus, it is easy to use the full functionality of \texttt{dagitty}. As an example, we convert an adjacency matrix to a dagitty object and use the function \texttt{is.dagitty()} from the \texttt{dagitty} package to verify that the resulting object is indeed a \texttt{dagitty} object.
+The web-based software \emph{DAGitty} offers functionality for analyzing causal graphical models. The R package \texttt{dagitty} offers an interface to \emph{DAGitty}. In our package \texttt{pcalg} we offer the function \texttt{pcalg2dagitty()} for converting the adjacency matrix of type \texttt{amat.cpdag} or \texttt{amat.pag} into a \texttt{dagitty} object. Thus, it is easy to use the full functionality of \texttt{dagitty}. As an example, we convert an adjacency matrix to a dagitty object and use the function \texttt{is.dagitty()} from the \pkg{dagitty} package to verify that the resulting object is indeed a \texttt{dagitty} object.
 
 <<pcalg2dagitty, message = FALSE>>=
 n <- nrow    (gmG8$x)
@@ -1259,7 +1260,7 @@ dagitty::is.dagitty(dagitty_dag1)
 %% MM: above, do *not* require(dagitty) : it masks our randomDAG() !
 
 \subsection{Methods for visualizing graph objects}
-The most flexible way to visualize graph objects is via the \texttt{Rgraphviz} package. In this package, several different edge marks are possible. Unfortunately, due to a persistent bug, the edgemarks are sometimes not placed at the end of an edge but at some other position along the edge. Nevertheless, for most purposes \texttt{Rgraphviz} will probably produce the best visualization of the graph. As an example, we plot in Fig.~\ref{fig:rgraphviz} a DAG and a PAG (which requires more complex edgemarks).
+The most flexible way to visualize graph objects is via the \pkg{Rgraphviz} package. In this package, several different edge marks are possible. Unfortunately, due to a persistent bug, the edgemarks are sometimes not placed at the end of an edge but at some other position along the edge. Nevertheless, for most purposes \pkg{Rgraphviz} will probably produce the best visualization of the graph. As an example, we plot in Fig.~\ref{fig:rgraphviz} a DAG and a PAG (which requires more complex edgemarks).
 
 \begin{figure}[h!]
   \centering
@@ -1284,7 +1285,7 @@ if (require(Rgraphviz)) {
 \label{fig:rgraphviz}
 \end{figure}
 
-If the package \texttt{Rgraphviz} is not available, we provide the function \texttt{iplotPC()} as an interface to the \texttt{igraph} package for plotting \texttt{pcAlgo} objects (graphs with more complex edge marks, e.g. circles, are currently not supported). As an example, we plot in Fig.~\ref{fig:igraph} the result of calling the function \texttt{pc()} using the function \texttt{iplotPC()}:
+If the package \texttt{Rgraphviz} is not available, we provide the function \texttt{iplotPC()} as an interface to the \pkg{igraph} package for plotting \texttt{pcAlgo} objects (graphs with more complex edge marks, e.g. circles, are currently not supported). As an example, we plot in Fig.~\ref{fig:igraph} the result of calling the function \texttt{pc()} using the function \texttt{iplotPC()}:
 
 \begin{figure}[h!]
   \centering
@@ -1302,7 +1303,7 @@ if (require(igraph)) {
   iplotPC(pc.fit)
 }
 @
-\caption{Visualizing with the \texttt{Rgraphviz} package: True CPDAG (left) and the corresponding PAG (right).}
+\caption{Visualizing with the \pkg{ipgraph} package: True CPDAG (left) and the corresponding PAG (right).}
 \label{fig:igraph}
 \end{figure}
 
