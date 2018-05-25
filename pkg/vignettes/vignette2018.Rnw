@@ -1,28 +1,54 @@
 \documentclass{article}
 \usepackage{amsmath}% sophisticated mathematical formulas with amstex (includes \text{})
-\usepackage{amssymb}% sophisticated mathematical symbols with amstex
-%\usepackage{natbib}
+\usepackage{amssymb}% (ditto)
 \usepackage{natbib}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\definecolor{Red}{rgb}{0.5,0,0}
+\definecolor{Blue}{rgb}{0,0,0.5}
+\hypersetup{% no ugly  color rectangles around links
+  hyperindex = {true},
+  colorlinks = {true},
+  linktocpage = {true},
+  plainpages = {false},
+  linkcolor = {Blue},
+  citecolor = {Blue},
+  urlcolor = {Red},
+  pdfview = {XYZ null null null}
+}
+
 %\bibliographystyle{unsrtnat}
 \bibliographystyle{plainnat}
-\usepackage{hyperref}
 
 \begin{document}
 
+<<preliminaries, echo=FALSE>>=
+op.orig <-
+options(width = 79,
+        ## SweaveHooks= list(fig=function() par(mar=c(5.1, 4.1, 1.1, 2.1))),
+        useFancyQuotes = FALSE,
+        ## prompt="R> ", continue="+  " # << JSS
+           prompt="> " , continue="  "  # << nicer
+        )
+Sys.setenv(LANGUAGE = "en")
+if(.Platform$OS.type != "windows")
+  Sys.setlocale("LC_MESSAGES","C")
 
-<<PCversion, echo=FALSE>>=
 PCversion <- packageDescription('pcalg')$Version # *not* "2.6-0" - needs updating
 @
 
 %\VignetteIndexEntry{Overview of the 'pcalg' Package for R}
-%\VignetteDepends{pcalg, Rgraphviz, graph, ggplot2}
+%\VignetteDepends{pcalg, Rgraphviz, graph, ggplot2, huge}
+\SweaveOpts{engine=R, eps=FALSE, pdf=TRUE, strip.white=true, keep.source=TRUE}% ,width=7,height=4
 
 % title
 \title{An Overview of the \texttt{pcalg} Package for \texttt{R}}
-\author{M. Kalisch\thanks{ETH Z\"urich} \and A. Hauser\thanks{Bern University of Applied Sciences} \and M.H. Maathuis\footnotemark[1] \and Martin M\"achler\footnotemark[1]}
+\author{M. Kalisch\thanks{ETH Z\"urich} \and
+  A. Hauser\thanks{Bern University of Applied Sciences} \and
+  M.H. Maathuis\footnotemark[1] \and
+  Martin M\"achler\footnotemark[1]}
 \maketitle
 % end title
-
 \tableofcontents
 
 <<loadPackage, echo=FALSE, message=FALSE, warning=FALSE>>=
@@ -36,9 +62,7 @@ showF <- function(f, width = 50) {
     ## 'width': larger than default on purpose:
     nam <- deparse(substitute(f))
     stopifnot(is.function(f))
-    attr(f, "source") <- NULL # if ...
-    attr(f, "srcref") <- NULL
-    ll <- capture.output(str(f, width=width))
+    ll <- capture.output(str(removeSource(f), width=width))
     ll[1] <- sub("function *", nam, ll[1])
     writeLines(ll)
 }
@@ -49,7 +73,7 @@ The paper \cite{KalischEtAl12} reports on pcalg Version 1.1-4. Back then,
 the package covered basic functions for
 structure learning (\texttt{pc}, \texttt{fci}, \texttt{rfci}), as well as a method to compute bounds on total causal effects (\texttt{ida}). Since 2012, the \texttt{pcalg} package has been extended in two main areas: structure learning methods and covariate adjustment methods.
 
-In this document, we give an overview of the functionality of \texttt{pcalg}  (\Sexpr{PCversion}). In section 2 and 3 we focus on methods for structure learning and covariate adjustment, respectively. In section 4 we discuss provided methods for random graph generation (e.g. for simulation studies). In section 5 we end with notes on some implementation details. The sections can be read independently.
+In this document, we give an overview of the functionality of \texttt{pcalg}  (\Sexpr{PCversion}). In section~2 and 3 we focus on methods for structure learning and covariate adjustment, respectively. In section~4 we discuss provided methods for random graph generation (e.g. for simulation studies). In section~5 we end with notes on some implementation details. The sections can be read independently.
 
 We assume that the reader is familiar with basic terminology of structure learning and causal inference. For theoretical background or technical details we refer the reader to papers throughout the text. As a first introduction, one might consult the overview papers \cite{KalischBuehlmann14}, \cite{handbookNandy16}, \cite{drton17} or \cite{deml18}.
 
@@ -136,7 +160,7 @@ Fig.~\ref{fig:intro1}.
 suffStat <- list(C = cor(gmG8$x), n = nrow(gmG8$x))
 varNames <- gmG8$g@nodes
 skel.gmG8 <- skeleton(suffStat, indepTest = gaussCItest,
-             labels = varNames, alpha = 0.01)
+                      labels = varNames, alpha = 0.01)
 @
 
 Finding the skeleton is also the first step in the algorithms FCI, RFCI and FCI+.
@@ -150,18 +174,18 @@ Fig.~\ref{fig:intro1} (bidirected edges need to be interpreted as undirected edg
 suffStat <- list(C = cor(gmG8$x), n = nrow(gmG8$x))
 varNames <- gmG8$g@nodes
 pc.gmG8 <- pc(suffStat, indepTest = gaussCItest,
-             labels = varNames, alpha = 0.01)
+              labels = varNames, alpha = 0.01)
 @
 
 
 \begin{figure}[htb]
   \centering
-<<exIntroPlot, echo=FALSE, fig.width=5, fig.height=2.5>>=
+<<exIntroPlot, echo=FALSE, fig=TRUE, fig.width=5, fig.height=2.5>>=
 stopifnot(require(Rgraphviz))# needed for all our graph plots
 par(mfrow = c(1,3))
-plot(gmG8$g, main = "")
-plot(skel.gmG8, main = "")
-plot(pc.gmG8, main = "")
+plot(gmG8$g, main = "");    box(col="gray")
+plot(skel.gmG8, main = ""); box(col="gray")
+plot(pc.gmG8, main = "");   box(col="gray")
 @
 \caption{True causal DAG (left), estimated skeleton (middle) and estimated CPDAG (right). In the CPDAG, bidirected edges need to be interpreted as undirected edges.}
 \label{fig:intro1}
@@ -231,16 +255,16 @@ Fig.~\ref{fig:intro2}\footnote{Due to a persistent bug in package \texttt{Rgraph
 data("gmL")
 suffStat <- list(C = cor(gmL$x), n = nrow(gmL$x))
 fci.gmL <- fci(suffStat, indepTest=gaussCItest,
-           alpha = 0.9999, labels = c("2","3","4","5"))
+               alpha = 0.9999, labels = c("2","3","4","5"))
 @
 
 \begin{figure}[htb]
   \centering
-<<exIntroPlotFCI, echo=FALSE, fig.width=5, fig.height=2.5>>=
+<<exIntroPlotFCI, echo=FALSE, fig=TRUE, fig.width=5, fig.height=2.5>>=
 stopifnot(require(Rgraphviz))# needed for all our graph plots
 par(mfrow = c(1,2))
-plot(gmL$g)
-plot(fci.gmL)
+plot(gmL$g) ; box(lty=2)
+plot(fci.gmL);box(lty=2)
 @
 \caption{True causal DAG (left) and estimated PAG on the observed nodes with the labels $2$, $3$, $4$ and $5$ (right).}
 \label{fig:intro2}
@@ -356,12 +380,12 @@ function.
 
 \begin{figure}
   \centering
-<<gesExpl-plot, fig.width=5, fig.height=2.5>>=
+<<gesExpl-plot, fig=TRUE, fig.width=5, fig.height=2.5>>=
 score <- new("GaussL0penObsScore", gmG8$x)
 ges.fit <- ges(score)
 par(mfrow=1:2)
-plot(gmG8$g, main = "")
-plot(ges.fit$essgraph, main = "")
+plot(gmG8$g, main = "")          ; box(lty=3)
+plot(ges.fit$essgraph, main = ""); box(lty=3)
 @
 \caption{True underlying DAG (left) and CPDAG (right) estimated
   with the GES algorithm fitted on the simulated Gaussian dataset \texttt{gmG8}.}
@@ -437,27 +461,27 @@ target.index <- c(rep(1, 0.6*n), rep(2, n/5), rep(3, n/5))
 
 x1 <- rmvnorm.ivent(0.6*n, pardag)
 x2 <- rmvnorm.ivent(n/5, pardag, targets[[2]],
-  matrix(rnorm(n/5, mean = 4, sd = 0.02), ncol = 1))
+                    matrix(rnorm(n/5, mean = 4, sd = 0.02), ncol=1))
 x3 <- rmvnorm.ivent(n/5, pardag, targets[[3]],
-  matrix(rnorm(n/5, mean = 4, sd = 0.02), ncol = 1))
+                    matrix(rnorm(n/5, mean = 4, sd = 0.02), ncol=1))
 gmInt <- list(x = rbind(x1, x2, x3),
-  targets = targets,
-  target.index = target.index,
-  g = gGtrue)
+              targets = targets,
+              target.index = target.index,
+              g = gGtrue)
 @
 
 
 \begin{figure}
   \centering
-<<gies-fit-plot, fig.width=5, fig.height=2.5>>=
+<<gies-fit-plot, fig=TRUE, fig.width=5, fig.height=2.5>>=
 score <- new("GaussL0penIntScore", gmInt$x, targets = gmInt$targets,
              target.index = gmInt$target.index)
 gies.fit <- gies(score)
 simy.fit <- simy(score)
-par(mfrow = c(1, 3))
-plot(gmInt$g, main = "")
-plot(gies.fit$essgraph, main = "")
-plot(simy.fit$essgraph, main = "")
+par(mfrow = c(1,3))
+plot(gmInt$g, main = "")           ; box(lty=3)
+plot(gies.fit$essgraph, main = "") ; box(lty=3)
+plot(simy.fit$essgraph, main = "") ; box(lty=3)
 @
   \caption{The underlying DAG (left) and the CPDAG estimated with
     the GIES algorithm (middle) and the dynamic programming approach of
@@ -593,10 +617,10 @@ bg <- addBgKnowledge(gInput = amat, x = "a", y = "b")
 
 \begin{figure}
   \centering
-<<explAddBgKnowledgePlot, fig.width=5, fig.height=2.5>>=
+<<explAddBgKnowledgePlot, fig=TRUE, fig.width=5, fig.height=2.5>>=
 par(mfrow = c(1,2))
 plot(as(t(amat), "graphNEL"))
-plot(as(t(bg), "graphNEL"))
+plot(as(t( bg ), "graphNEL"))
 @
   \caption{Left: Original CPDAG. Right: After adding the background knowledge $a \to b$ the edge $b \to c$ is automatically directed by applying the orientation rules from \cite{Meek95}. The result is a maximally oriented PDAG.}
   \label{fig:addBgKnowledge}
@@ -769,7 +793,7 @@ pc.fit <- pc(suffStat, indepTest = gaussCItest, p=p, alpha = 0.01)
 
 \begin{figure}
   \centering
-<<plotExIDA>>=
+<<plotExIDA, fig=TRUE>>=
 if (require(Rgraphviz)) {
   ## plot the true and estimated graphs
   par(mfrow = c(1,2))
@@ -869,10 +893,10 @@ In this example, the multisets contain three elements. The first and the third c
 
 \begin{figure}
   \centering
-<<jointIdaPlot>>=
-par(mfrow = c(1, 2))
-plot(myDAG)
-plot(myCPDAG)
+<<jointIdaPlot, fig=TRUE>>=
+par(mfrow = c(1,2))
+plot(myDAG)  ; box(lty=3)
+plot(myCPDAG); box(lty=3)
 @
   \caption{The true DAG (left) and the true CPDAG (right) in the example
     illustrating \texttt{jointIda()}.}
@@ -996,7 +1020,7 @@ true.amat <- as(myCPDAG, "matrix")
 The DAG \texttt{g} and the CPDAG \texttt{myCPDAG} are shown in Fig.~\ref{fig:backdoor}.
 \begin{figure}
   \centering
-<<backdoorExpl, echo = FALSE>>=
+<<backdoorExpl, fig=TRUE, echo=FALSE>>=
 par(mfrow = c(1,2))
 plot(g, main = "")
 plot(myCPDAG, main = "")
@@ -1065,12 +1089,12 @@ mFig3a <- matrix(c(0,1,0,0, 0,0,1,1, 0,0,0,1, 0,0,1,0), 4,4)
 type <- "pdag"
 x <- 2; y <- 4
 ## Z does not satisfy GAC
-gac(mFig3a,x,y, z=NULL, type) ## not amenable rel. to (X,Y)
+str( gac(mFig3a,x,y, z=NULL, type) )## not amenable rel. to (X,Y)
 @
 
 \begin{figure}
   \centering
-<<plotGacExpl, echo = FALSE>>=
+<<plotGacExpl, fig=TRUE, echo = FALSE>>=
 if (require(Rgraphviz)) {
   colnames(mFig1) <- rownames(mFig1) <- as.character(1:6)
   g1 <- as(t(mFig1), "graphNEL")
@@ -1079,7 +1103,7 @@ if (require(Rgraphviz)) {
   ## plot the true and estimated graphs
   par(mfrow = c(1,2))
   plot(g1, main = "(a)")
-  plot(g2 , main = "(b)")
+  plot(g2, main = "(b)")
 }
 @
   \caption{A CPDAG (left) and the PDAG from Example 4.7 (right) from \cite{emaBackground17} used in the example
@@ -1176,11 +1200,9 @@ n <- 100; d <- 3; s <- 2
 myWgtFun <- function(m,mu,sd) { rnorm(m,mu,sd) }
 set.seed(42)
 dag1 <- randDAG(n=n, d=d, method = "er", DAG = TRUE,
-                weighted = TRUE,
-                wFUN = list(myWgtFun, 0, s))
+                weighted = TRUE, wFUN = list(myWgtFun, 0, s))
 dag2 <- randDAG(n=n, d=d, method = "power", DAG = TRUE,
-                weighted = TRUE,
-                wFUN = list(myWgtFun, 0, s))
+                weighted = TRUE, wFUN = list(myWgtFun, 0, s))
 @
 
 Previous versions of package \texttt{pcalg} contained the functions \texttt{unifDAG()} and \\
@@ -1232,16 +1254,16 @@ V <- colnames(gmG8$x) # labels aka node names
 amat <- wgtMatrix(gmG8$g)
 amat[amat != 0] <- 1
 dagitty_dag1 <- pcalg2dagitty(amat,V,type="dag")
-if (require(dagitty)) is.dagitty(dagitty_dag1)
+dagitty::is.dagitty(dagitty_dag1)
 @
-
+%% MM: above, do *not* require(dagitty) : it masks our randomDAG() !
 
 \subsection{Methods for visualizing graph objects}
 The most flexible way to visualize graph objects is via the \texttt{Rgraphviz} package. In this package, several different edge marks are possible. Unfortunately, due to a persistent bug, the edgemarks are sometimes not placed at the end of an edge but at some other position along the edge. Nevertheless, for most purposes \texttt{Rgraphviz} will probably produce the best visualization of the graph. As an example, we plot in Fig.~\ref{fig:rgraphviz} a DAG and a PAG (which requires more complex edgemarks).
 
 \begin{figure}[h!]
   \centering
-<<Rgraphviz, message=FALSE>>=
+<<Rgraphviz, fig=TRUE, message=FALSE>>=
 set.seed(42)
 p <- 4
 ## generate and draw random DAG :
@@ -1251,7 +1273,7 @@ myCPDAG <- dag2cpdag(myDAG)
 ## find skeleton and PAG using the FCI algorithm
 suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
 fci.fit <- fci(suffStat, indepTest=gaussCItest,
-           alpha = 0.9999, p=p, doPdsep = FALSE)
+               alpha = 0.9999, p=p, doPdsep = FALSE)
 if (require(Rgraphviz)) {
   par(mfrow = c(1,2))
   plot(myCPDAG) ## CPDAG
@@ -1266,7 +1288,7 @@ If the package \texttt{Rgraphviz} is not available, we provide the function \tex
 
 \begin{figure}[h!]
   \centering
-<<iplot, message=FALSE>>=
+<<iplot, fig=TRUE, message=FALSE>>=
 data(gmG)
 n <- nrow    (gmG8$ x)
 V <- colnames(gmG8$ x) # labels aka node names
@@ -1286,8 +1308,8 @@ if (require(igraph)) {
 
 Finally, if neither \texttt{Rgraphviz} nor \texttt{igraph} are available, the estimated graph object can be converted to an adjacency matrix and inspected in the console. See the helpfile of \texttt{amatType} for coding details.
 <<showAmat>>=
-as(pc.fit, "amat") ## Adj. matrix of type amat.cpdag
-as(fci.fit, "amat") ## Adj. matrix of type amat.pag
+as(pc.fit,  "amat") ## Adj. matrix of type  'amat.cpdag'
+as(fci.fit, "amat") ## Adj. matrix of type  'amat.pag'
 @
 
 Alternatively, for \texttt{pcAlgo} objects also an edge list can be produced.
@@ -1312,24 +1334,20 @@ In this section we give more details on the simulation study in chapter 5 of \ci
 
 First, we set up the parameters. In the comments we indicate the parameter settings that were chosen in \cite{emaBackground17}:
 <<simParSettings>>=
-possible_p <- c(seq(5,10,by=1))
-## paper: possible_p = c(seq(20,100,by=10))
-possible_neighb_size <- c(1:3)
-## paper: possible_neighb_size = c(3:10)
-num_settings <-10
-## paper: num_settings = 1000
-num_rep <- 2
-## paper: num_rep = 20
-pb <- seq(0,1,by=0.5)
-## paper: pb = seq(0,1,by=0.2)
+possible_p <- c(seq(5,10,by=1))   # paper: possible_p = c(seq(20,100,by=10))
+possible_neighb_size <- c(1:3)    # paper: possible_neighb_size = c(3:10)
+num_settings <-10                 # paper: num_settings = 1000
+num_rep <- 2                      # paper: num_rep = 20
+pb <- seq(0,1,by=0.5)             # paper: pb = seq(0,1,by=0.2)
 @
 
+%% FIXME: gives  10 x  message  " Graph is not amenable "  :
 Next we define a helper function and run the simulation:
 <<simRunSim, message=FALSE, warning=FALSE>>=
 ## helper function
 revealEdge <- function(c,d,s) {
   ## cpdag, dag, selected edges to reveal
-  if (all(!is.na(s))) { ## something to reveal
+  if (!anyNA(s)) { ## something to reveal
     for (i in 1:nrow(s)) {
       c[s[i,1], s[i,2]] <- d[s[i,1], s[i,2]]
       c[s[i,2], s[i,1]] <- d[s[i,2], s[i,1]]
@@ -1345,7 +1363,7 @@ resFin <- vector("list", num_settings)
 for(r in 1:num_settings) {
 
   set.seed(r)
-  ##Then we sample one setting:
+  ## Then we sample one setting:
   p <-  sample(possible_p,1)
   neigh <- sample(possible_neighb_size,1)
   prob <- round(neigh/(p-1),3)
@@ -1355,7 +1373,7 @@ for(r in 1:num_settings) {
   ## then for every setting selected we generate num_rep graphs
   for (i in 1:num_rep){
 
-    ##get DAG
+    ## get DAG
     isEmpty <-  1
     while(isEmpty){
       g <- pcalg:::randomDAG(p, prob)  ## true DAG
@@ -1372,72 +1390,64 @@ for(r in 1:num_settings) {
       }
     }
 
-    ##choose x and y
+    ## choose x and y
     y <- NULL
     while(is.null(y)){
-      #choose x
+      # choose x
       x <- sample(p,1)
 
       ## choose y as a node connected to x but not x <- y
       skeleton <- cpdag.amat + t(cpdag.amat)
       skeleton[skeleton == 2] <- 1
       connectt <- possDe(skeleton,x, type = "pdag")
-      if (length(connectt) != 1){
+      if (length(connectt) != 1) {
         pa.x <- which(dag.amat[x,]==1 & dag.amat[,x]==0)
-        ##remove x and parents of x (in the DAG) from pos.y
-        pos.y <- setdiff(setdiff(connectt, pa.x),x)
+        ## remove x and parents of x (in the DAG) from pos.y
+        pos.y <- setdiff(setdiff(connectt, pa.x), x)
         if (length(pos.y)==1){
           y <- pos.y[1]
-        } else {
-          if (length(pos.y) > 0) {
-            y <- sample(pos.y, 1)
-          }
+        } else if (length(pos.y) > 0) {
+          y <- sample(pos.y, 1)
         }
       }
     }
 
-    ##calculate true effect:
+    ## calculate true effect:
     true_effect <- causalEffect(g,y,x)
 
-    ##sample data for ida
+    ## sample data for ida
     ## need to set nData
     nData <- 200
     dat <- rmvDAG(nData, g) ## sample data from true DAG
 
-    pdag.amat <- list()
-    adjust_set <- list()
-    result_adjust_set <- list()
-    ida_effects <- list()
+    ## Resulting lists, of same length as 'pb' :
+    pdag.amat <-
+    adjust_set <-
+    result_adjust_set <-
+    ida_effects <- vector("list", length(pb))
 
-    ##for each proportion of background knowledge
+    ## for each proportion of background knowledge
     ## find a PDAG and an adjustment set relative to (x,y) in this
     ## PDAG aditionally calculate the set of possible total
     ## causal effects of x on y using ida in this PDAG
     for (j in 1:length(pb)){
-      ##reveal proportion pb[j] of bg knowledge
+      ## reveal proportion pb[j] of bg knowledge
       tmp <- ( (cpdag.amat + t(cpdag.amat))==2 ) &
         lower.tri(cpdag.amat)
       ude <- which(tmp, arr.ind = TRUE) ## undir edges
       nbg <- round(pb[j] * nrow(ude)) ## nmb of edges to reveal
       ## edges to reveal
-      if (nbg>0) {sele <- ude[sample(nrow(ude), nbg),,drop=FALSE]
-      } else {sele <- NA}
+      sele <- if (nbg>0) ude[sample(nrow(ude), nbg),,drop=FALSE] else NA
       ## reveal edges
-      pdag.amat[[j]] <- revealEdge(cpdag.amat,dag.amat,sele)
+      pdag.amat[[j]] <- revealEdge(cpdag.amat, dag.amat, sele)
       pdag.amat[[j]] <- addBgKnowledge(pdag.amat[[j]],
                                        checkInput = FALSE)
 
-      ##find adjustment set (if it exists)
+      ## find adjustment set (if it exists)
       adjust <- adjustment(pdag.amat[[j]],amat.type="pdag",x,y,
                            set.type="canonical")
-      if (length(adjust)>0){
-        adjust_set[[j]] <- adjust$'1'
-      } else {
-        adjust_set[[j]] <- NA
-      }
-      result_adjust_set[[j]] <- ifelse(length(adjust) == 0, FALSE,
-                                       TRUE)
-
+      adjust_set[[j]] <- if (length(adjust) > 0) adjust$'1' else NA
+      result_adjust_set[[j]] <- length(adjust) > 0
       ## ida
       ## convert to graph for ida()
       pdag.g <- as(t(pdag.amat[[j]]), "graphNEL")
@@ -1456,8 +1466,8 @@ for(r in 1:num_settings) {
       }
     }
 
-    ##save the results
-    resFin[[r]][[i]] <- list(seed=r,p=p,prob=prob, neigh=neigh,
+    ## save the results
+    resFin[[r]][[i]] <- list(seed=r, p=p, prob=prob, neigh=neigh,
                              pb=pb, i=i, nData=nData,
                              dag.amat=dag.amat,
                              pdag.amat=pdag.amat,
@@ -1468,7 +1478,6 @@ for(r in 1:num_settings) {
                              ida_effects = ida_effects,
                              time.taken.ida = time.taken.ida,
                              time.taken.bida = time.taken.bida)
-
   }
 }
 @
@@ -1542,7 +1551,7 @@ Finally, we illustrate the result using plots. First, we reproduce a plot like F
 
 \begin{figure}
   \centering
-<<simFig4, message = FALSE>>=
+<<simFig4, fig=TRUE, message = FALSE>>=
 if(require(ggplot2)) {
   k <- ggplot(dfID, aes(pb, fit, ymin = fit-se,
                         ymax = fit+se, col = TrueEffect))
@@ -1580,20 +1589,19 @@ df3N$idaNumF <- droplevels(df3N$idaNumF)
 
 \begin{figure}
   \centering
-<<simFig5>>=
+<<simFig5, fig=TRUE>>=
 ggplot(df3N, aes(x = pb, y=idx, fill = idaNumF)) +
   geom_bar(stat = "identity") +
   ylab("Number of simulation settings") +
   xlab("Proportion of background knowledge")+
-  theme(axis.text=element_text(size = 14),
-        axis.title = element_text(size = 14),
-        legend.text=element_text(size = 14),
+  theme(axis.text =  element_text(size = 14),
+        axis.title=  element_text(size = 14),
+        legend.text= element_text(size = 14),
         legend.title=element_text(size = 14)) +
   guides(fill=guide_legend(title="#effects"))
 @
-  \caption{Conceptually reproducing Fig.~5 from \cite{emaBackground17}. The parameter setting was simplified a lot in order to reduce runtime, but the qualitative result is still observable: As the proportion of background knowledge increases, the fraction simulation settings in which unambiguous identification of the causal effect is possible increases.}
-  \label{fig:simFig5}
-  \end{figure}
-
+\caption{Conceptually reproducing Fig.~5 from \cite{emaBackground17}. The parameter setting was simplified a lot in order to reduce runtime, but the qualitative result is still observable: As the proportion of background knowledge increases, the fraction simulation settings in which unambiguous identification of the causal effect is possible increases.}
+\label{fig:simFig5}
+\end{figure}
 
 \end{document}
