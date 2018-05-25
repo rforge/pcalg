@@ -10,9 +10,12 @@
 \begin{document}
 
 
-<<PCversion, echo = FALSE>>=
-PCversion <- "2.6-0" ## packageDescription('pcalg')$Version
+<<PCversion, echo=FALSE>>=
+PCversion <- packageDescription('pcalg')$Version # *not* "2.6-0" - needs updating
 @
+
+%\VignetteIndexEntry{Overview of the 'pcalg' Package for R}
+%\VignetteDepends{pcalg, Rgraphviz, graph, ggplot2}
 
 % title
 \title{An Overview of the \texttt{pcalg} Package for \texttt{R}}
@@ -58,7 +61,7 @@ the causal structure of the data generating mechanism, while the exact
 parameters of the causal structure are of less importance. For this,
 observational data or a mix of observational and interventional data might
 be available. Sometimes it might only be possible to estimate the Markov
-equivalence class of the true DAG or MAG. 
+equivalence class of the true DAG or MAG.
 
 The available functions for structure learning in package \texttt{pcalg} can be categorized in the following way:
 
@@ -72,8 +75,8 @@ The available functions for structure learning in package \texttt{pcalg} can be 
 More details on the assumptions can be found in section \ref{sec:slAssumptions}.
 
 \subsection{Constraint-based methods}
-This section follows \cite{KalischBuehlmann14}, where more details can 
-be found. 
+This section follows \cite{KalischBuehlmann14}, where more details can
+be found.
 Given a causal structure one can derive constraints which every
 distribution generated from this causal structure must obey. The most
 prominent example of such constraints are conditional independence
@@ -88,7 +91,7 @@ variables are present) is the PC-algorithm \cite{SpirtesEtAl00} which
 estimates the CPDAG of the true causal structure. It can be outlined in
 three steps.
 
-In the first step of the PC-algorithm, the skeleton of the DAG is estimated. 
+In the first step of the PC-algorithm, the skeleton of the DAG is estimated.
 The skeleton of a DAG is the undirected graph that has the same edges as the DAG but no edge orientations.
 The algorithm starts with a complete undirected graph. Then, for each edge (say, between
 $a$ and $c$) the constraint is tested, whether there is any conditioning
@@ -96,12 +99,12 @@ set $s$, so that $a$ and $c$ are conditional independent given $s$. If such
 a set (called a \emph{separation set} or $sepset(a,c)$) is found, the edge between $a$ and
 $c$ is deleted.
 
-In the second step of the PC-algorithm (i.e. after finding the skeleton as explained above), 
+In the second step of the PC-algorithm (i.e. after finding the skeleton as explained above),
 unshielded triples are oriented. An unshielded triple are three nodes $a$, $b$ and $c$ with $a-b$, $b-c$ but $a$ and $c$ are not connected. If node $b$ is not in $sepset(a,c)$, the unshielded triples $a-b-c$ is oriented into an unshielded collider $a \rightarrow b \leftarrow c$. Otherwise $b$ is marked as a non-collider on $a-b-c$.
 
 In the third step, the partially directed graph from step two is checked using three rules to see if further edges can be oriented while avoiding new unshielded colliders (all of them were already found in step two) or cycles (which is forbidden in a DAG).
 
-The first part of the PC-algorithm is implemented in function \texttt{skeleton()}. 
+The first part of the PC-algorithm is implemented in function \texttt{skeleton()}.
 The main task of function \texttt{skeleton()} in finding the skeleton is to compute and test several conditional
 independencies. To keep the function flexible, \texttt{skeleton()} takes as
 argument a function \texttt{indepTest()} that performs these conditional
@@ -123,7 +126,7 @@ data("gmG") ## loads data set gmG8
 @
 
 In this example, the predefined function
-\texttt{gaussCItest()} is used for testing conditional independence. The 
+\texttt{gaussCItest()} is used for testing conditional independence. The
 corresponding sufficient statistic consists of the correlation matrix of
 the data and the sample size. Based on this input, the function \texttt{skeleton()}
 estimates the skeleton of the causal structure. The true DAG and the estimated skeleton of the causal structure are shown in
@@ -156,7 +159,7 @@ pc.gmG8 <- pc(suffStat, indepTest = gaussCItest,
 <<exIntroPlot, echo=FALSE, fig.width=5, fig.height=2.5>>=
 stopifnot(require(Rgraphviz))# needed for all our graph plots
 par(mfrow = c(1,3))
-plot(gmG8$g, main = "") 
+plot(gmG8$g, main = "")
 plot(skel.gmG8, main = "")
 plot(pc.gmG8, main = "")
 @
@@ -176,20 +179,20 @@ While the argument \texttt{method = "stable"} calls an implementation
 of PC-stable written completely in \texttt{R}, the argument
 \texttt{method = "stable.fast"} calls a faster \texttt{C++}
 implementation of the same algorithm. In most cases,
-\texttt{method = "stable.fast"} will be the method of choice. The 
+\texttt{method = "stable.fast"} will be the method of choice. The
 method \texttt{"stable"} is mostly of use in cases where strict backward-compatibility
 is required.  Backward-compatibility is also the reason why the default value
 for the argument \texttt{method} is still \texttt{"stable"} rather than
 \texttt{"stable.fast"}.
 
-We recall that in the default implementation unshielded triples $a-b-c$ are oriented based on $sepset(a,c)$. 
+We recall that in the default implementation unshielded triples $a-b-c$ are oriented based on $sepset(a,c)$.
 In the conservative (\texttt{conservative = TRUE}; see \cite{Ramsey06cons}) or majority rule (\texttt{maj.rule = TRUE}; see \cite{ColomboMaathuis14}) versions, the algorithm determines all subsets of $Adj(a) \setminus {c}$ (where $Adj(a)$ are all nodes adjecent to $a$) and $Adj(c) \setminus {a}$ that make $a$ and $c$ conditionally independent. They are called separating sets. In the conservative version $a-b-c$ is oriented as $a \rightarrow b \leftarrow c$ if $b$ is in none of the separating sets. If $b$ is in all separating sets, it is set as a non v-structure. If, however, $b$ is in only some separating sets, the triple $a - b - c$ is marked as "ambiguous".  Moreover, if no separating set is found among the neighbors, the triple is also marked as "ambiguous".
 
 In the majority rule version the triple $a - b - c$
 is marked as "ambiguous" if and only if $b$ is in exactly 50 percent of such
 separating sets or no separating set was found. If $b$ is in less than 50
 percent of the separating sets it is set as a v-structure, and if in more
-than 50 percent it is set as a non v-structure. 
+than 50 percent it is set as a non v-structure.
 
 Drawing a conclusion, the stable version of estimating the skeleton resolves the order-dependence issue wrt. the skeleton. Moreover, the useage of either the conservative or the majority rule versions resolve the order-dependence issues of the
 determination of the v-structures.
@@ -218,7 +221,7 @@ we need two types of input: A function that evaluates conditional independence t
 way and a sufficient statistic of the data (i.e.,
 a suitable summary) on which the conditional independence function
 works. Again, significance level \texttt{alpha} acts as a tuning
-parameter. 
+parameter.
 
 As an example, we show the usage of function \texttt{fci()} on a built-in dataset \texttt{gmL} containing four variables with a multivariate Gaussian distribution. The data was generated from a DAG model with one latent variable (variable $1$) and four observed variables (variables $2$, $3$, $4$ and $5$) as shown in Fig.~\ref{fig:intro2}. We use the correlation matrix as sufficient statistic and function \texttt{gaussCItest()} as conditional independence test. Based on this input, the function \texttt{fci()}
 estimates the causal structure of the observed variables in the form of a PAG as shown in
@@ -271,7 +274,7 @@ We return to the example from section \ref{sec:fci} and show the usage of functi
 
 <<exIntroFCIplus>>=
 suffStat <- list(C = cor(gmL$x), n = nrow(gmL$x))
-fciPlus.gmL <- fciPlus(suffStat, indepTest=gaussCItest, 
+fciPlus.gmL <- fciPlus(suffStat, indepTest=gaussCItest,
                        alpha = 0.9999, labels = c("2","3","4","5"))
 @
 
@@ -326,15 +329,15 @@ where $L(D)$ stands for the maximum of the likelihood function of the model, and
 An instance of \texttt{GaussL0penObsScore} is generated as follows:
 <<obs-score-args, eval = FALSE>>=
 score <- new("GaussL0penObsScore", data = matrix(1, 1, 1),
-    lambda = 0.5*log(nrow(data)), intercept = FALSE, 
+    lambda = 0.5*log(nrow(data)), intercept = FALSE,
     use.cpp = TRUE, ...)
 @
 The data matrix is provided by the argument \texttt{data}.  The penalization
-constant $\lambda$ (see equation (\ref{eqn:score-definition})) is specified 
+constant $\lambda$ (see equation (\ref{eqn:score-definition})) is specified
 by \texttt{lambda}.  The default value of \texttt{lambda}
 corresponds to the BIC score; the AIC score is realized by setting
 \texttt{lambda} to $1$.  The argument \texttt{intercept} indicates whether the
-model should allow for intercepts (\texttt{c} in the above equation) in the linear structural equations. 
+model should allow for intercepts (\texttt{c} in the above equation) in the linear structural equations.
 The last argument \texttt{use.cpp} indicates whether the
 internal C++ library should be used for calculation, which is in most cases
 the best choice for reasons of speed.
@@ -378,7 +381,7 @@ observational data points), but also accounts for the improved
 identifiablity of causal models under interventional data by returning an
 \emph{interventional CPDAG}.
 
-The usage of \texttt{gies()} is similar to that of 
+The usage of \texttt{gies()} is similar to that of
 \texttt{ges()} described above. Actually, the function \texttt{ges()} is only an
 internal wrapper for \texttt{gies()}.
 
@@ -389,9 +392,9 @@ specifying the arguments \texttt{target} and \texttt{target.index} when
 generating an instance of \texttt{GaussL0penIntScore}:
 <<int-score-args, eval = FALSE>>=
 score <- new("GaussL0penIntScore", data = matrix(1, 1, 1),
-    targets = list(integer(0)), 
+    targets = list(integer(0)),
     target.index = rep(as.integer(1), nrow(data)),
-    lambda = 0.5*log(nrow(data)), intercept = FALSE, 
+    lambda = 0.5*log(nrow(data)), intercept = FALSE,
     use.cpp = TRUE, ...)
 @
 The argument \texttt{targets} is a list of all (mutually different) targets
@@ -471,7 +474,7 @@ plot(simy.fit$essgraph, main = "")
 As an alternative to GIES, we can also use the dynamic programming approach
 of \cite{Silander2006} to estimate the interventional CPDAG from
 this interventional dataset.  This algorithm is implemented in the
-function \texttt{simy()} which has the same arguments as \texttt{gies()}. 
+function \texttt{simy()} which has the same arguments as \texttt{gies()}.
 This approach yields the \emph{exact}
 optimum of the BIC score at the price of a computational complexity which
 is exponential in the number of variables.  On the small example based on
@@ -491,7 +494,7 @@ of a previously estimated CIG or skeleton, as illustrated in the follwing code e
 <<rgesExpl>>=
 score <- new("GaussL0penObsScore", gmG8$x)
 suffStat <- list(C = cor(gmG8$x), n = nrow(gmG8$x))
-skel.fit <- skeleton(suffStat = suffStat, indepTest = gaussCItest, 
+skel.fit <- skeleton(suffStat = suffStat, indepTest = gaussCItest,
                      alpha = 0.01, p = ncol(gmG8$x))
 skel <- as(skel.fit@graph, "matrix")
 ges.fit <- ges(score, fixedGaps = !skel)
@@ -545,12 +548,12 @@ structure. However, since we now assume non-Gaussian errors,
 set.seed(1234)
 n <- 500
 ## Truth: stde[1] = 0.89
-eps1 <- sign(rnorm(n)) * sqrt(abs(rnorm(n))) 
+eps1 <- sign(rnorm(n)) * sqrt(abs(rnorm(n)))
 ## Truth: stde[2] = 0.29
 eps2 <- runif(n) - 0.5
 
 ## Truth: ci[2] = 3, Bpruned[1,1] = Bpruned[2,1] = 0
-x2 <- 3 + eps2 
+x2 <- 3 + eps2
 ## Truth: ci[1] = 7, Bpruned[1,2] = 0.9, Bpruned[2,2] = 0
 x1 <- 0.9*x2 + 7 + eps1
 # Truth: x1 <- x2
@@ -562,7 +565,7 @@ Thus, the causal graph of variables $x_1$ and $x_2$ is $x_1 \leftarrow x_2$. In 
 X <- cbind(x1,x2)
 res <- lingam(X)
 res
-@ 
+@
 
 We can see that the structure of the causal model was estimated correctly: The only non-zero entry in the estimated linear coefficients matrix (called \texttt{Bpruned} in output) is $\hat{B}_{1,2}$, i.e., the estimated causal structure is $x_1 \leftarrow x_2$. Moreover, the estimated value of $\hat{B}_{1,2}=0.91$ comes very close to the true value $B_{1,2}=0.9$. The estimated vector of intercepts (called \texttt{ci} in the output: $6.92$ and $3.01$) is also close to the true vector of intercepts ($7$ and $3$).
 
@@ -585,7 +588,7 @@ As an example, we force on the CPDAG in Fig.~\ref{fig:addBgKnowledge} (left) the
 amat <- matrix(c(0,1,0, 1,0,1, 0,1,0), 3,3) ## a -- b -- c
 colnames(amat) <- rownames(amat) <- letters[1:3]
 ## force a -> b
-bg <- addBgKnowledge(gInput = amat, x = "a", y = "b") 
+bg <- addBgKnowledge(gInput = amat, x = "a", y = "b")
 @
 
 \begin{figure}
@@ -615,23 +618,23 @@ learning methods.
 \item[FCI algorithm:] Faithfulness; allows for hidden and selection variables; consistent
   in high-dimensional settings given suitable assumptions; consistency in a standard asymptotic regime with a fixed number
   of variables follows as a special case; implemented in function \texttt{fci()}; see \cite{rfci} for full
-  details. 
+  details.
 
 \item[RFCI algorithm:] Faithfulness; allows for hidden and selection variables; polynomial runtime if the graph resulting in step 1 of RFCI is
-  sparse; consistent in high-dimensional settings given suitable assumptions; consistency in a standard asymptotic regime with a fixed number of variables follows as a special case; implemented in function \texttt{rfci()}; see \cite{rfci} for full details. 
+  sparse; consistent in high-dimensional settings given suitable assumptions; consistency in a standard asymptotic regime with a fixed number of variables follows as a special case; implemented in function \texttt{rfci()}; see \cite{rfci} for full details.
 
 \item[FCI+ algorithm:] Faithfulness; allows for hidden and selection variables; polynomial runtime if the true underlying causal PAG is sparse; implemented in function \texttt{fciPlus()}. See \cite{ClaassenMooijHeskes13} for full details.
 
 \item[LINGAM:] No hidden or selection variables; data generating process is a linear structural equation model with non-Gaussian errors; see \cite{ShimizuEtAl06-JMLR} for full details.
-  
+
 \item[GES algorithm:] Faithfulness; no hidden or selection variables; consistency in high-dimensional setting given suitable assumptions (see \cite{NandyHauserMaathuis18}); consistency in a standard asymptotic regime with a fixed number of variables. Implemented in function \texttt{ges()}. See \cite{Chickering2002} for full details.
 
 \item[ARGES algorithm:] Faithfulness; no hidden or selection variables; consistency in high-dimensional
   settings given suitable assumptions; implemented in function \texttt{ges()}, using argument \texttt{adaptive = TRUE}; see \cite{NandyHauserMaathuis18} for full details.
-  
+
 \item[GIES algorithm:] Faithfulness; no hidden or selection variables; mix of observational
   and interventional data; implemented in function \texttt{gies()}; see \cite{HauserBuehlmann12} for full details.
-  
+
 \item[Dynamic programming approach of Silander and Myllymäki:] Same assumptions as for GIES,
   but only up to approximately $25$ variables (depending on CPU and memory
   resources).  Implemented in function \texttt{simy()}. See \cite{Silander2006} for full details.
@@ -642,15 +645,15 @@ learning methods.
 \section{Covariate Adjustment}
 \subsection{Introduction}
 Estimating causal effects from observational data is possible when
-using the right confounding variables as an adjustment set: 
+using the right confounding variables as an adjustment set:
 
 \textbf{Adjustment set}; \cite{maathuis2013generalized}
    Let $\mathbf{X,Y}$ and $\mathbf{Z}$ be pairwise disjoint node sets in a DAG, CPDAG, MAG or PAG $G$. Then $\mathbf{Z}$ is an adjustment set relative to $(\mathbf{X,Y})$ in $G$  if for any density\footnote{We use the notation for continuous random variables throughout. The discrete analogues should be obvious.} $f$ consistent with $G$ we have
-   \begin{equation} 
+   \begin{equation}
    f(\mathbf{y}|do(\mathbf{x}))=
    \begin{cases}
    f(\mathbf{y}|\mathbf{x}) & \text{if }\mathbf{Z} = \emptyset,\\
-   \int_{\mathbf{z}}f(\mathbf{y}|\mathbf{x,z})f(\mathbf{z})d\mathbf{z}  & \text{otherwise.} 
+   \int_{\mathbf{z}}f(\mathbf{y}|\mathbf{x,z})f(\mathbf{z})d\mathbf{z}  & \text{otherwise.}
    \end{cases}
    \label{lab}
    \end{equation}
@@ -682,7 +685,7 @@ covariate adjustment that is sound and complete for DAGs, CPDAGs,
 MAGs and PAGs without selection variables (Generalize Adjustment
 Criterion, GAC). The theoretical contribution of that paper closes the
 chapter on covariate adjustment for the corresponding graph classes. More
-details on GAC can be found in \cite{perkovic16_arxiv}. 
+details on GAC can be found in \cite{perkovic16_arxiv}.
 
 Recently, \cite{emaBackground17} extended the use of GAC on graphs incorporating background knowledge: PDAGs.
 
@@ -696,7 +699,7 @@ GAC) relative to two
 variables $X$ and $Y$ in~$G$ such that $\mathbf{Z} \cap \{ X \cup Y \} = \{\}$. Then
 \begin{eqnarray}
 E(Y | do(x))& =& \alpha + \gamma x + \beta^T E(\mathbf{z}).
-\label{eqn:totalEffect}                      
+\label{eqn:totalEffect}
 \end{eqnarray}
 
 \noindent{} We define the total causal effect of $X$
@@ -741,7 +744,7 @@ showF(ida)
 If \texttt{method} is set to \texttt{global} the algorithm considers all DAGs in the represented by the CPDAG or PDAG, hence is slow. If \texttt{method} is set to \texttt{local} the algorithm only considers the neighborhood of $X$ in the CPDAG or PDAG, hence is faster. Moreover, the multiplicities of the estimated causal effects might be wrong.
 As an example, suppose that a CPDAG represents eight DAGs. The global method might produce the multiset {1.3, -0.5, 0.7, 1.3, 1.3, -0.5, 0.7, 0.7}. The unique values in this set are -0.5, 0.7 and 1.3, and the multiplicities are 2, 3 and 3. The local method, on the other hand, might produce {1.3, -0.5, -0.5, 0.7}. The unique values are again -0.5, 0.7 and 1.3, but the multiplicities are now 2, 1 and 1. Since the unique values of the multisets of the "global" and "local" method are identical, summary measures of the multiset that only depend on the unique values (e.g. minimum absolute value) can be estimate by the faster local method.
 
-As an example, we simulate a random DAG, sample data, estimate the CPDAG (see Fig. \ref{fig:ida}) and apply \texttt{ida} to find the total causal effect from node number $2$ to node number $5$ using both the local and the global method. We can see that both methods produce the same unique values but different multiplicities.
+As an example, we simulate a random DAG, sample data, estimate the CPDAG (see Fig.~\ref{fig:ida}) and apply \texttt{ida} to find the total causal effect from node number $2$ to node number $5$ using both the local and the global method. We can see that both methods produce the same unique values but different multiplicities.
 <<exIDA>>=
 ## Simulate the true DAG
 set.seed(123)
@@ -758,9 +761,9 @@ suffStat <- list(C = cor(dat), n = n)
 pc.fit <- pc(suffStat, indepTest = gaussCItest, p=p, alpha = 0.01)
 
 ## Supppose that we know the true CPDAG and covariance matrix
-(l.ida.cpdag <- ida(2,5, cov(dat), 
+(l.ida.cpdag <- ida(2,5, cov(dat),
                     myCPDAG, method = "local", type = "cpdag"))
-(g.ida.cpdag <- ida(2,5, cov(dat), 
+(g.ida.cpdag <- ida(2,5, cov(dat),
                     myCPDAG, method = "global", type = "cpdag"))
 @
 
@@ -782,7 +785,7 @@ if (require(Rgraphviz)) {
 \subsubsection[jointIda()]{\texttt{jointIda()}}
 The function \texttt{jointIda()} extends \texttt{ida()} by allowing a
 \emph{set} of intervention variables (i.e., not just a single intervention
-variable). 
+variable).
 
 Assuming observational data that are multivariate Gaussian and faithful to
 the true (but unknown) underlying causal DAG (without hidden variables),
@@ -813,7 +816,7 @@ the resulting multiset (i.e., it matches \texttt{ida()} with
 the effect on several target variables can be computed at the same time.
 
 In the following example, we generate a DAG on six nodes and generate data
-from it (see Fig. \ref{fig:jointIda}). 
+from it (see Fig.~\ref{fig:jointIda}).
 
 <<jointIdaExpl1, echo = TRUE>>=
 ## Generate DAG for simulating data
@@ -826,29 +829,29 @@ edL <- list(
     "4" = list(edges=c(2),weights=c(0.5)),
     "5" = list(edges=c(1,4),weights=c(0.2,0.7)),
     "6" = NULL)
-myDAG <- new("graphNEL", nodes=V, edgeL=edL, 
+myDAG <- new("graphNEL", nodes=V, edgeL=edL,
              edgemode="directed") ## true DAG
 myCPDAG <- dag2cpdag(myDAG) ## true CPDAG
 covTrue <- trueCov(myDAG) ## true covariance matrix
-@ 
+@
 
 Then, we use \texttt{jointIda()} to estimate (using method
 \texttt{RCC}) the causal effect of an intervention at nodes $1$ and $2$ on
 the target variable $6$. First, we use the true DAG and the true
-covariance matrix for illustration. 
+covariance matrix for illustration.
 
 <<jointIdaDAG>>=
 ## Compute causal effect using true CPDAG and true cov. matrix
-(resExactDAG <- jointIda(x.pos = c(1,2), y.pos = 6, 
-                         mcov = covTrue, 
-                         graphEst = myDAG, 
+(resExactDAG <- jointIda(x.pos = c(1,2), y.pos = 6,
+                         mcov = covTrue,
+                         graphEst = myDAG,
                          technique = "RRC"))
 @
 
 The result is a matrix representing the estimated possible total joint effects of $X$ on $Y$.  The
 number of rows equals the number of intervention variables. Thus, when intervening at both node 1 and node 2, a unit increase
 in node 1 leads to an increase of 0.99 in node 6, while a unit increase
-in node 2 leads to an increase of 0.40 in node 6. 
+in node 2 leads to an increase of 0.40 in node 6.
 
 Now we replace the true DAG by the true CPDAG. It is usually not possible anymore to estimate the causal effects uniquely. Thus, the result is a matrix representing the multiset
 containing the estimated possible total joint effects of $X$ on $Y$.  The
@@ -856,9 +859,9 @@ number of rows equals the number of intervention variables. Each column
 represents a vector of possible joint causal effects.
 
 <<jointIdaCPDAG>>=
-(resExactCPDAG <- jointIda(x.pos = c(1,2), y.pos = 6, 
-                           mcov = covTrue, 
-                           graphEst = myCPDAG, 
+(resExactCPDAG <- jointIda(x.pos = c(1,2), y.pos = 6,
+                           mcov = covTrue,
+                           graphEst = myCPDAG,
                            technique = "RRC"))
 @
 
@@ -867,7 +870,7 @@ In this example, the multisets contain three elements. The first and the third c
 \begin{figure}
   \centering
 <<jointIdaPlot>>=
-par(mfrow = c(1, 2)) 
+par(mfrow = c(1, 2))
 plot(myDAG)
 plot(myCPDAG)
 @
@@ -1041,7 +1044,7 @@ logical vector of length three indicating if each of the three conditions
 (0), (1) and (2) of GAC are true. \texttt{f} is a vector containing (integer)
 node positions of nodes in the forbidden set.
 
-In the following example we consider the CPDAG shown in Fig. \ref{fig:gac}(a) and check whether the set consisting of node 2 and node 4
+In the following example we consider the CPDAG shown in Fig.~\ref{fig:gac}(a) and check whether the set consisting of node 2 and node 4
 satisfies the GAC for estimating the causal effect from node 3 to node 6.
 <<gacExample, echo = TRUE>>=
 mFig1 <- matrix(c(0,1,1,0,0,0, 1,0,1,1,1,0, 0,0,0,0,0,1,
@@ -1050,12 +1053,12 @@ type <- "cpdag"
 x <- 3; y <- 6
 ## Z satisfies GAC :
 gac(mFig1, x,y, z=c(2,4),    type)
-@ 
+@
 
 In the output we can see that all three conditions of GAC are satisfied and
-thus, GAC is satisfied. The forbidden set consists of node 6. 
+thus, GAC is satisfied. The forbidden set consists of node 6.
 
-Function \texttt{gac()} can also be used on maximally oriented PDAGs. Such a graph might arise by adding orientational background knowledge to a CPDAG (see section \ref{sec:addBK}). Details can be found in \cite{emaBackground17}. As an illustration we reproduce Example 4.7b in \cite{emaBackground17} (shown in Fig. \ref{fig:gac}(b)):
+Function \texttt{gac()} can also be used on maximally oriented PDAGs. Such a graph might arise by adding orientational background knowledge to a CPDAG (see section \ref{sec:addBK}). Details can be found in \cite{emaBackground17}. As an illustration we reproduce Example 4.7b in \cite{emaBackground17} (shown in Fig.~\ref{fig:gac}(b)):
 
 <<>>=
 mFig3a <- matrix(c(0,1,0,0, 0,0,1,1, 0,0,0,1, 0,0,1,0), 4,4)
@@ -1101,7 +1104,7 @@ showF(adjustment)
     details. Implemented in function \texttt{ida()}.
   \item[jointIDA:] Same assumptions as IDA but can deal with several
     intervention variables at the same time. Implemented in function
-    \texttt{jointIda()}. 
+    \texttt{jointIda()}.
   \item[Pearl's Backdoor Criterion (BC):]  No hidden or selection
     variables. Sound, but not complete. Implemented as a special case of GBC
     in function \texttt{gbc()}.
@@ -1111,7 +1114,7 @@ showF(adjustment)
   \item[Generalized Adjustment Criterion (GAC):] Allows for arbitrarily many
     hidden but no selection variables; works on DAG, CPDAG, MAG and
     PAG. Sound and complete. Implemented in function \texttt{gac()}.
-\end{description}  
+\end{description}
 
 \section{Random DAG Generation}
 Simulation methods are essential to investigate the performance of estimation methods. For that reason, the \texttt{pcalg} package included from the
@@ -1122,9 +1125,9 @@ random graphs from a much wider class.
 
 Eight different random graph models are provided. The Erd\"os-Renyi Graph Model and some important extensions are available (Regular Random Graph Model, Geometric Random Graph Model, Bipartite Random Graph Model, Watts-Strogatz Random
 Graph Model and the Interconnected-Island Random Graph Model). Moreover, graph models with
-power law degree distributions are provided (Power-Law Random Graph Model and the 
+power law degree distributions are provided (Power-Law Random Graph Model and the
 Barabasi-Albert Random Graph Model). The methods are based on the analogous
-\texttt{.game} functions in the \texttt{igraph} package. 
+\texttt{.game} functions in the \texttt{igraph} package.
 
 As an option, individual parameters can be
 passed for all methods. Alternatively, the desired expected neighborhood
@@ -1137,14 +1140,14 @@ In the following example we generate a random graph \texttt{dag1} according
 to the Erd\"os-Renyi random graph model (\texttt{method="er"}) and a random graph \texttt{dag2}
 according to the Power-Law random graph model (\texttt{method="power"}). In both cases, the number of
 nodes is $n=100$ and the expected neighborhood size is
-$d=3$. 
+$d=3$.
 
 <<randDAGexplSimple, echo=TRUE>>=
 n <- 100; d <- 3; s <- 2
 myWgtFun <- function(m,mu,sd) { rnorm(m,mu,sd) }
 set.seed(42)
-dag1 <- randDAG(n=n, d=d, method = "er", DAG = TRUE) 
-dag2 <- randDAG(n=n, d=d, method = "power", DAG = TRUE) 
+dag1 <- randDAG(n=n, d=d, method = "er", DAG = TRUE)
+dag2 <- randDAG(n=n, d=d, method = "power", DAG = TRUE)
 @
 
 
@@ -1158,7 +1161,7 @@ w2 <- wgtMatrix(dag2)
 deg2 <- apply(w2 + t(w2), 2, function(x) sum(x != 0))
 max2 <- max(deg2)
 mean2 <- mean(deg2)
-@ 
+@
 
 The average neighborhood sizes in \texttt{dag1} and \texttt{dag2} are
 $\Sexpr{mean1}$ and $\Sexpr{mean2}$, respectively. The maximum neighborhood
@@ -1166,25 +1169,25 @@ sizes in \texttt{dag1} and \texttt{dag2}, however, are $\Sexpr{max1}$ and
 $\Sexpr{max2}$, respectively. Thus, as expected, in the power-law graph
 some nodes have a much larger neighborhood size than in the Erd\"os-Renyi graph.
 
-We now expand the previous example by also generating edge weights. This is done using the arguments \texttt{weighted = TRUE} and \texttt{wFUN}. The argument \texttt{wFUN} takes a function for randomly generating the edge weights. For this example, function \texttt{myWgtFun} is defined and passed to argument \texttt{wFUN}. Function \texttt{myWgtFun} takes as first argument a number of edges \texttt{m} (this value will be automatically specified within the call of \texttt{randDAG} and therefore it need not be specified by the user) for which it returns a vector of length \texttt{m} containing the generated weights. Alternatively, \texttt{wFUN} can be a list consisting of the function in the first entry and of further arguments of the function in the additional entries. In this example, the edge weights are sampled independently from $N(0, s^2)$ where $s=2$. 
+We now expand the previous example by also generating edge weights. This is done using the arguments \texttt{weighted = TRUE} and \texttt{wFUN}. The argument \texttt{wFUN} takes a function for randomly generating the edge weights. For this example, function \texttt{myWgtFun} is defined and passed to argument \texttt{wFUN}. Function \texttt{myWgtFun} takes as first argument a number of edges \texttt{m} (this value will be automatically specified within the call of \texttt{randDAG} and therefore it need not be specified by the user) for which it returns a vector of length \texttt{m} containing the generated weights. Alternatively, \texttt{wFUN} can be a list consisting of the function in the first entry and of further arguments of the function in the additional entries. In this example, the edge weights are sampled independently from $N(0, s^2)$ where $s=2$.
 
 <<randDAGexplExtended, echo=TRUE>>=
 n <- 100; d <- 3; s <- 2
 myWgtFun <- function(m,mu,sd) { rnorm(m,mu,sd) }
 set.seed(42)
-dag1 <- randDAG(n=n, d=d, method = "er", DAG = TRUE, 
-                weighted = TRUE, 
-                wFUN = list(myWgtFun, 0, s)) 
-dag2 <- randDAG(n=n, d=d, method = "power", DAG = TRUE, 
-                weighted = TRUE, 
-                wFUN = list(myWgtFun, 0, s)) 
+dag1 <- randDAG(n=n, d=d, method = "er", DAG = TRUE,
+                weighted = TRUE,
+                wFUN = list(myWgtFun, 0, s))
+dag2 <- randDAG(n=n, d=d, method = "power", DAG = TRUE,
+                weighted = TRUE,
+                wFUN = list(myWgtFun, 0, s))
 @
 
 Previous versions of package \texttt{pcalg} contained the functions \texttt{unifDAG()} and \\
 \texttt{unifDAG.approx()} for sampling DAGs uniformly from the space of all DAGs
 given a certain number of nodes. These functions were moved to the package \texttt{unifDAG}.
 
-\section{General Object Handling} 
+\section{General Object Handling}
 \subsection{A comment on design}
 The \texttt{pcalg} package is an organically growing collection of functions related to structure learning and causal inference. It captures several research results produced at the Seminar for Statistics, ETH Z\"urich and also implements several other common algorithms (e.g. for comparison). Given this history, we hope the user will forgive the lack of an overarching design.
 
@@ -1197,7 +1200,7 @@ Functionality centered around covariate adjustment mainly follows functional pro
 \subsection{Adjacency matrices} \label{sec:amat}
 Two types of adjacency matrices are used in package \texttt{pcalg}: Type
   \texttt{amat.cpdag} for DAGs and CPDAGs and type \texttt{amat.pag} for
-  MAGs and PAGs. See helpfile of \texttt{amatType} for coding conventions for the entries of the adjacency matrices. The required type of adjacency matrix is documented in the help files of the respective functions or classes.  
+  MAGs and PAGs. See helpfile of \texttt{amatType} for coding conventions for the entries of the adjacency matrices. The required type of adjacency matrix is documented in the help files of the respective functions or classes.
 
   Using the coercion \texttt{as(from, "amat")} one can extract such adjacency
   matrices as (S3) objects of \texttt{class} \texttt{"amat"}. We illustrate this using the estimated CPDAG from section \ref{sec:skeleton}:
@@ -1234,7 +1237,7 @@ if (require(dagitty)) is.dagitty(dagitty_dag1)
 
 
 \subsection{Methods for visualizing graph objects}
-The most flexible way to visualize graph objects is via the \texttt{Rgraphviz} package. In this package, several different edge marks are possible. Unfortunately, due to a persistent bug, the edgemarks are sometimes not placed at the end of an edge but at some other position along the edge. Nevertheless, for most purposes \texttt{Rgraphviz} will probably produce the best visualization of the graph. As an example, we plot in Fig. \ref{fig:rgraphviz} a DAG and a PAG (which requires more complex edgemarks).
+The most flexible way to visualize graph objects is via the \texttt{Rgraphviz} package. In this package, several different edge marks are possible. Unfortunately, due to a persistent bug, the edgemarks are sometimes not placed at the end of an edge but at some other position along the edge. Nevertheless, for most purposes \texttt{Rgraphviz} will probably produce the best visualization of the graph. As an example, we plot in Fig.~\ref{fig:rgraphviz} a DAG and a PAG (which requires more complex edgemarks).
 
 \begin{figure}[h!]
   \centering
@@ -1248,7 +1251,7 @@ myCPDAG <- dag2cpdag(myDAG)
 ## find skeleton and PAG using the FCI algorithm
 suffStat <- list(C = cov2cor(trueCov(myDAG)), n = 10^9)
 fci.fit <- fci(suffStat, indepTest=gaussCItest,
-           alpha = 0.9999, p=p, doPdsep = FALSE) 
+           alpha = 0.9999, p=p, doPdsep = FALSE)
 if (require(Rgraphviz)) {
   par(mfrow = c(1,2))
   plot(myCPDAG) ## CPDAG
@@ -1259,7 +1262,7 @@ if (require(Rgraphviz)) {
 \label{fig:rgraphviz}
 \end{figure}
 
-If the package \texttt{Rgraphviz} is not available, we provide the function \texttt{iplotPC()} as an interface to the \texttt{igraph} package for plotting \texttt{pcAlgo} objects (graphs with more complex edge marks, e.g. circles, are currently not supported). As an example, we plot in Fig. \ref{fig:igraph} the result of calling the function \texttt{pc()} using the function \texttt{iplotPC()}:
+If the package \texttt{Rgraphviz} is not available, we provide the function \texttt{iplotPC()} as an interface to the \texttt{igraph} package for plotting \texttt{pcAlgo} objects (graphs with more complex edge marks, e.g. circles, are currently not supported). As an example, we plot in Fig.~\ref{fig:igraph} the result of calling the function \texttt{pc()} using the function \texttt{iplotPC()}:
 
 \begin{figure}[h!]
   \centering
@@ -1305,26 +1308,26 @@ For graph objects it is possible to visualize only a sub-graph using function \t
 
 \newpage
 \section{Appendix A: Simulation study}
-In this section we give more details on the simulation study in chapter 5 of \cite{emaBackground17}. We show how to reproduce Fig. 4 and Fig. 5 in that document. However, in this document we choose parameter settings so that the simulation study can be computed very quickly but the results are much less informative. Still, they show the same qualitative behavior as in the paper.
+In this section we give more details on the simulation study in chapter 5 of \cite{emaBackground17}. We show how to reproduce Fig.~4 and Fig.~5 in that document. However, in this document we choose parameter settings so that the simulation study can be computed very quickly but the results are much less informative. Still, they show the same qualitative behavior as in the paper.
 
 First, we set up the parameters. In the comments we indicate the parameter settings that were chosen in \cite{emaBackground17}:
 <<simParSettings>>=
-possible_p <- c(seq(5,10,by=1)) 
+possible_p <- c(seq(5,10,by=1))
 ## paper: possible_p = c(seq(20,100,by=10))
-possible_neighb_size <- c(1:3)  
+possible_neighb_size <- c(1:3)
 ## paper: possible_neighb_size = c(3:10)
-num_settings <-10               
-## paper: num_settings = 1000 
-num_rep <- 2                    
-## paper: num_rep = 20 
-pb <- seq(0,1,by=0.5)           
+num_settings <-10
+## paper: num_settings = 1000
+num_rep <- 2
+## paper: num_rep = 20
+pb <- seq(0,1,by=0.5)
 ## paper: pb = seq(0,1,by=0.2)
 @
 
 Next we define a helper function and run the simulation:
 <<simRunSim, message=FALSE, warning=FALSE>>=
 ## helper function
-revealEdge <- function(c,d,s) { 
+revealEdge <- function(c,d,s) {
   ## cpdag, dag, selected edges to reveal
   if (all(!is.na(s))) { ## something to reveal
     for (i in 1:nrow(s)) {
@@ -1335,137 +1338,137 @@ revealEdge <- function(c,d,s) {
   c
 }
 
-## save results from each iteration in here: 
+## save results from each iteration in here:
 resFin <- vector("list", num_settings)
 
 ## run simulation
 for(r in 1:num_settings) {
-  
+
   set.seed(r)
   ##Then we sample one setting:
   p <-  sample(possible_p,1)
   neigh <- sample(possible_neighb_size,1)
   prob <- round(neigh/(p-1),3)
-  
+
   resFin[[r]] <- vector("list", num_rep)
-  
+
   ## then for every setting selected we generate num_rep graphs
   for (i in 1:num_rep){
-    
+
     ##get DAG
     isEmpty <-  1
     while(isEmpty){
       g <- pcalg:::randomDAG(p, prob)  ## true DAG
       cpdag <- dag2cpdag(g) ## true CPDAG
-      
+
       ## get adjacency matrix of the CPDAG  and DAG
       cpdag.amat <- t(as(cpdag,"matrix"))
       dag.amat <- t(as(g,"matrix"))
       dag.amat[dag.amat != 0] <- 1
-      
+
       ## only continue if the graph is not fully un-connected
       if (sum(dag.amat)!= 0){
         isEmpty <- 0
       }
     }
-    
+
     ##choose x and y
     y <- NULL
     while(is.null(y)){
       #choose x
       x <- sample(p,1)
-      
+
       ## choose y as a node connected to x but not x <- y
       skeleton <- cpdag.amat + t(cpdag.amat)
       skeleton[skeleton == 2] <- 1
       connectt <- possDe(skeleton,x, type = "pdag")
       if (length(connectt) != 1){
-        pa.x <- which(dag.amat[x,]==1 & dag.amat[,x]==0) 
+        pa.x <- which(dag.amat[x,]==1 & dag.amat[,x]==0)
         ##remove x and parents of x (in the DAG) from pos.y
-        pos.y <- setdiff(setdiff(connectt, pa.x),x) 
-        if (length(pos.y)==1){   
+        pos.y <- setdiff(setdiff(connectt, pa.x),x)
+        if (length(pos.y)==1){
           y <- pos.y[1]
         } else {
           if (length(pos.y) > 0) {
             y <- sample(pos.y, 1)
           }
         }
-      } 
+      }
     }
-    
+
     ##calculate true effect:
     true_effect <- causalEffect(g,y,x)
-    
+
     ##sample data for ida
     ## need to set nData
     nData <- 200
     dat <- rmvDAG(nData, g) ## sample data from true DAG
-    
+
     pdag.amat <- list()
     adjust_set <- list()
     result_adjust_set <- list()
     ida_effects <- list()
-    
+
     ##for each proportion of background knowledge
-    ## find a PDAG and an adjustment set relative to (x,y) in this 
-    ## PDAG aditionally calculate the set of possible total 
+    ## find a PDAG and an adjustment set relative to (x,y) in this
+    ## PDAG aditionally calculate the set of possible total
     ## causal effects of x on y using ida in this PDAG
     for (j in 1:length(pb)){
       ##reveal proportion pb[j] of bg knowledge
-      tmp <- ( (cpdag.amat + t(cpdag.amat))==2 ) & 
+      tmp <- ( (cpdag.amat + t(cpdag.amat))==2 ) &
         lower.tri(cpdag.amat)
       ude <- which(tmp, arr.ind = TRUE) ## undir edges
       nbg <- round(pb[j] * nrow(ude)) ## nmb of edges to reveal
       ## edges to reveal
-      if (nbg>0) {sele <- ude[sample(nrow(ude), nbg),,drop=FALSE] 
+      if (nbg>0) {sele <- ude[sample(nrow(ude), nbg),,drop=FALSE]
       } else {sele <- NA}
       ## reveal edges
       pdag.amat[[j]] <- revealEdge(cpdag.amat,dag.amat,sele)
       pdag.amat[[j]] <- addBgKnowledge(pdag.amat[[j]],
                                        checkInput = FALSE)
-      
+
       ##find adjustment set (if it exists)
       adjust <- adjustment(pdag.amat[[j]],amat.type="pdag",x,y,
-                           set.type="canonical") 
+                           set.type="canonical")
       if (length(adjust)>0){
         adjust_set[[j]] <- adjust$'1'
       } else {
         adjust_set[[j]] <- NA
       }
-      result_adjust_set[[j]] <- ifelse(length(adjust) == 0, FALSE, 
+      result_adjust_set[[j]] <- ifelse(length(adjust) == 0, FALSE,
                                        TRUE)
-      
+
       ## ida
       ## convert to graph for ida()
-      pdag.g <- as(t(pdag.amat[[j]]), "graphNEL") 
-      ida_effects[[j]] <- ida(x,y,cov(dat), graphEst = pdag.g, 
+      pdag.g <- as(t(pdag.amat[[j]]), "graphNEL")
+      ida_effects[[j]] <- ida(x,y,cov(dat), graphEst = pdag.g,
                               method = "local", type = "pdag")
-      
-      ## for j = 1 that is when pdag.g == cpdag compare 
+
+      ## for j = 1 that is when pdag.g == cpdag compare
       ## runtime of local method for CPDAGs vs. PDAGs
       if (j == 1){
-        time.taken.ida <- 
-          system.time(ida(x,y,cov(dat), graphEst = pdag.g, 
+        time.taken.ida <-
+          system.time(ida(x,y,cov(dat), graphEst = pdag.g,
                           method = "local", type = "cpdag"))
-        time.taken.bida <- 
-          system.time(ida(x,y,cov(dat), graphEst = pdag.g, 
+        time.taken.bida <-
+          system.time(ida(x,y,cov(dat), graphEst = pdag.g,
                           method = "local", type = "pdag"))
-      } 
+      }
     }
-    
+
     ##save the results
-    resFin[[r]][[i]] <- list(seed=r,p=p,prob=prob, neigh=neigh, 
-                             pb=pb, i=i, nData=nData, 
+    resFin[[r]][[i]] <- list(seed=r,p=p,prob=prob, neigh=neigh,
+                             pb=pb, i=i, nData=nData,
                              dag.amat=dag.amat,
                              pdag.amat=pdag.amat,
-                             x=x, y=y, 
+                             x=x, y=y,
                              adjust_set = adjust_set,
                              result_adjust_set = result_adjust_set,
                              true_effect = true_effect,
                              ida_effects = ida_effects,
                              time.taken.ida = time.taken.ida,
                              time.taken.bida = time.taken.bida)
-    
+
   }
 }
 @
@@ -1473,12 +1476,12 @@ for(r in 1:num_settings) {
 Next we transform the output of the simulation into a data frame containing summary statistics:
 <<simList2Df>>=
 ## total number of unique cpdags = num_settings*num_rep graphs
-nn <- sum(sapply(resFin, length)) 
+nn <- sum(sapply(resFin, length))
 ## make data frame with relevant summary info
 nBG <- length(pb)
 x <- rep(NA, nn*nBG)
 df1 <- data.frame(setting=x, g=x, p=x, neigh=x, pb=x,
-                  resAdj = x, idaNum = x, idaRange = x, 
+                  resAdj = x, idaNum = x, idaRange = x,
                   timeIda = x, timeBida = x,
                   trueEff = x)
 ii <- 0
@@ -1491,49 +1494,49 @@ for (i1 in 1:length(resFin)) { ## settings
       df1[ii,"g"] <- i2 ## List index for graph within setting
       df1[ii,"p"] <- resFin[[i1]][[i2]]$p ## Nmb nodes in graph
       ## Ave size of neighborhood
-      df1[ii,"neigh"] <- resFin[[i1]][[i2]]$neigh 
+      df1[ii,"neigh"] <- resFin[[i1]][[i2]]$neigh
       ## fraction of background knowledge
-      df1[ii,"pb"] <- resFin[[i1]][[i2]]$pb[i3] 
+      df1[ii,"pb"] <- resFin[[i1]][[i2]]$pb[i3]
       ## true if adj set exists
-      df1[ii,"resAdj"] <- 
-        resFin[[i1]][[i2]]$result_adjust_set[[i3]] 
+      df1[ii,"resAdj"] <-
+        resFin[[i1]][[i2]]$result_adjust_set[[i3]]
       ## nmb unique results of ida
-      df1[ii,"idaNum"] <- 
+      df1[ii,"idaNum"] <-
         length(unique(resFin[[i1]][[i2]]$ida_effects[[i3]]))
       ## range of results of ida
-      df1[ii,"idaRange"] <- 
-        diff(range(resFin[[i1]][[i2]]$ida_effects[[i3]])) 
+      df1[ii,"idaRange"] <-
+        diff(range(resFin[[i1]][[i2]]$ida_effects[[i3]]))
       ## runtime for CPDAG using option "cpdag"
-      df1[ii,"timeIda"] <- 
-        resFin[[i1]][[i2]]$time.taken.ida[[1]] 
+      df1[ii,"timeIda"] <-
+        resFin[[i1]][[i2]]$time.taken.ida[[1]]
       ## runtime for CPDAG using option "pdag"
-      df1[ii,"timeBida"] <- 
-        resFin[[i1]][[i2]]$time.taken.bida[[1]] 
-      df1[ii,"trueEff"] <- 
+      df1[ii,"timeBida"] <-
+        resFin[[i1]][[i2]]$time.taken.bida[[1]]
+      df1[ii,"trueEff"] <-
         resFin[[i1]][[i2]]$true_effect
     }
   }
 }
 @
 
-Finally, we illustrate the result using plots. First, we reproduce a plot like Fig. 4 in \cite{emaBackground17} in Fig. \ref{fig:simFig4}:
+Finally, we illustrate the result using plots. First, we reproduce a plot like Fig.~4 in \cite{emaBackground17} in Fig.~\ref{fig:simFig4}:
 <<simFig4Prepare>>=
   ## Fig 4 in paper: Fraction of identifiable effects
   ## Fraction of identifiable effects: ALL EFFECTS
   tm1 <- tapply(X=df1$resAdj, INDEX=as.factor(df1$pb), FUN = mean)
-  ts1 <- tapply(X=df1$resAdj, INDEX=as.factor(df1$pb), 
+  ts1 <- tapply(X=df1$resAdj, INDEX=as.factor(df1$pb),
                 FUN = function(x) sd(x)/sqrt(length(x)))
-  ## Fraction of identifiable effects: add means for 
+  ## Fraction of identifiable effects: add means for
   ## only NON-ZERO EFFECTS
   dfNZ <- subset(df1, subset = (trueEff!=0) )
-  tm <- c(tm1,tapply(X=dfNZ$resAdj, INDEX=as.factor(dfNZ$pb), 
+  tm <- c(tm1,tapply(X=dfNZ$resAdj, INDEX=as.factor(dfNZ$pb),
                      FUN = mean))
-  ts <- c(ts1,tapply(X=dfNZ$resAdj, INDEX=as.factor(dfNZ$pb), 
+  ts <- c(ts1,tapply(X=dfNZ$resAdj, INDEX=as.factor(dfNZ$pb),
                      FUN = function(x) sd(x)/sqrt(length(x))))
-  
+
   dfID <- data.frame(pb = as.factor(names(tm)), fit = tm, se = ts,
-                     TrueEffect = 
-                       as.factor(c(rep("All", length(tm)/2), 
+                     TrueEffect =
+                       as.factor(c(rep("All", length(tm)/2),
                                    rep("Non-zero", length(tm)/2))))
 @
 
@@ -1541,29 +1544,29 @@ Finally, we illustrate the result using plots. First, we reproduce a plot like F
   \centering
 <<simFig4, message = FALSE>>=
 if(require(ggplot2)) {
-  k <- ggplot(dfID, aes(pb, fit, ymin = fit-se, 
+  k <- ggplot(dfID, aes(pb, fit, ymin = fit-se,
                         ymax = fit+se, col = TrueEffect))
-  k + geom_pointrange() + 
-    xlab("Proportion of background knowledge") + 
-    ylab("Fraction of identifiable effects via adjustment") + 
-    theme(legend.position = c(0.9,0.1), 
-          axis.text=element_text(size = 14), 
-          axis.title = element_text(size = 14), 
-          legend.text=element_text(size = 14), 
+  k + geom_pointrange() +
+    xlab("Proportion of background knowledge") +
+    ylab("Fraction of identifiable effects via adjustment") +
+    theme(legend.position = c(0.9,0.1),
+          axis.text=element_text(size = 14),
+          axis.title = element_text(size = 14),
+          legend.text=element_text(size = 14),
           legend.title=element_text(size = 14))
 }
 @
-  \caption{Conceptually reproducing Fig. 4 from \cite{emaBackground17}. The parameter setting was simplified a lot in order to reduce runtime, but the qualitative result is still observable: As the proportion of background knowledge increases, the fraction of identifiable effects increases, too.}
+  \caption{Conceptually reproducing Fig.~4 from \cite{emaBackground17}. The parameter setting was simplified a lot in order to reduce runtime, but the qualitative result is still observable: As the proportion of background knowledge increases, the fraction of identifiable effects increases, too.}
   \label{fig:simFig4}
 \end{figure}
 
-Then we reproduce a plot like Fig. 5 in \cite{emaBackground17} in Fig. \ref{fig:simFig5}:
+Then we reproduce a plot like Fig.~5 in \cite{emaBackground17} in Fig.~\ref{fig:simFig5}:
 <<simFig5prepare>>=
 ## use dfNU2: settings where effect is NOT unique given zero bg knowledge
 nn <- length(pb)
 idx <- rep(seq(1,nrow(df1), by = nn), each = nn) ## pb=0 rows
 nmbIda <- df1$idaNum[idx]
-dfNU2 <- df1[nmbIda > 1,] 
+dfNU2 <- df1[nmbIda > 1,]
 
 bnTmp <- cut(x=dfNU2$idaNum, breaks = c(0,1,2,3,4,1e9),
              labels = c("1", "2", "3", "4", "5+"))
@@ -1578,17 +1581,17 @@ df3N$idaNumF <- droplevels(df3N$idaNumF)
 \begin{figure}
   \centering
 <<simFig5>>=
-ggplot(df3N, aes(x = pb, y=idx, fill = idaNumF)) + 
-  geom_bar(stat = "identity") + 
-  ylab("Number of simulation settings") + 
-  xlab("Proportion of background knowledge")+ 
-  theme(axis.text=element_text(size = 14), 
-        axis.title = element_text(size = 14), 
-        legend.text=element_text(size = 14), 
-        legend.title=element_text(size = 14)) + 
+ggplot(df3N, aes(x = pb, y=idx, fill = idaNumF)) +
+  geom_bar(stat = "identity") +
+  ylab("Number of simulation settings") +
+  xlab("Proportion of background knowledge")+
+  theme(axis.text=element_text(size = 14),
+        axis.title = element_text(size = 14),
+        legend.text=element_text(size = 14),
+        legend.title=element_text(size = 14)) +
   guides(fill=guide_legend(title="#effects"))
 @
-  \caption{Conceptually reproducing Fig. 5 from \cite{emaBackground17}. The parameter setting was simplified a lot in order to reduce runtime, but the qualitative result is still observable: As the proportion of background knowledge increases, the fraction simulation settings in which unambiguous identification of the causal effect is possible increases.}
+  \caption{Conceptually reproducing Fig.~5 from \cite{emaBackground17}. The parameter setting was simplified a lot in order to reduce runtime, but the qualitative result is still observable: As the proportion of background knowledge increases, the fraction simulation settings in which unambiguous identification of the causal effect is possible increases.}
   \label{fig:simFig5}
   \end{figure}
 
