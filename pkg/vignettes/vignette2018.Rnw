@@ -23,7 +23,7 @@
 
 \begin{document}
 
-<<preliminaries, echo=FALSE>>=
+<<preliminaries, echo=FALSE, results=hide>>=
 op.orig <-
 options(width = 79,
         ## SweaveHooks= list(fig=function() par(mar=c(5.1, 4.1, 1.1, 2.1))),
@@ -1268,7 +1268,7 @@ The most flexible way to visualize graph objects is via the \pkg{Rgraphviz} pack
 set.seed(42)
 p <- 4
 ## generate and draw random DAG :
-myDAG <- pcalg::randomDAG(p, prob = 0.4)
+myDAG <- randomDAG(p, prob = 0.4)
 myCPDAG <- dag2cpdag(myDAG)
 
 ## find skeleton and PAG using the FCI algorithm
@@ -1377,7 +1377,7 @@ for(r in 1:num_settings) {
     ## get DAG
     isEmpty <-  1
     while(isEmpty){
-      g <- pcalg:::randomDAG(p, prob)  ## true DAG
+      g <- randomDAG(p, prob)  ## true DAG
       cpdag <- dag2cpdag(g) ## true CPDAG
 
       ## get adjacency matrix of the CPDAG  and DAG
