@@ -264,8 +264,8 @@ fci.gmL <- fci(suffStat, indepTest=gaussCItest,
 <<exIntroPlotFCI, echo=FALSE, fig=TRUE, fig.width=5, fig.height=2.5>>=
 stopifnot(require(Rgraphviz))# needed for all our graph plots
 par(mfrow = c(1,2))
-plot(gmL$g) ; box(lty=2)
-plot(fci.gmL);box(lty=2)
+plot(gmL$g) ; box(col="gray")
+plot(fci.gmL); box(col="gray")
 @
 \caption{True causal DAG (left) and estimated PAG on the observed nodes with the labels $2$, $3$, $4$ and $5$ (right).}
 \label{fig:intro2}
@@ -385,8 +385,8 @@ function.
 score <- new("GaussL0penObsScore", gmG8$x)
 ges.fit <- ges(score)
 par(mfrow=1:2)
-plot(gmG8$g, main = "")          ; box(lty=3)
-plot(ges.fit$essgraph, main = ""); box(lty=3)
+plot(gmG8$g, main = "")          ; box(col="gray")
+plot(ges.fit$essgraph, main = ""); box(col="gray")
 @
 \caption{True underlying DAG (left) and CPDAG (right) estimated
   with the GES algorithm fitted on the simulated Gaussian dataset \texttt{gmG8}.}
@@ -480,9 +480,9 @@ score <- new("GaussL0penIntScore", gmInt$x, targets = gmInt$targets,
 gies.fit <- gies(score)
 simy.fit <- simy(score)
 par(mfrow = c(1,3))
-plot(gmInt$g, main = "")           ; box(lty=3)
-plot(gies.fit$essgraph, main = "") ; box(lty=3)
-plot(simy.fit$essgraph, main = "") ; box(lty=3)
+plot(gmInt$g, main = "")           ; box(col="gray")
+plot(gies.fit$essgraph, main = "") ; box(col="gray")
+plot(simy.fit$essgraph, main = "") ; box(col="gray")
 @
   \caption{The underlying DAG (left) and the CPDAG estimated with
     the GIES algorithm (middle) and the dynamic programming approach of
@@ -620,8 +620,8 @@ bg <- addBgKnowledge(gInput = amat, x = "a", y = "b")
   \centering
 <<explAddBgKnowledgePlot, fig=TRUE, fig.width=5, fig.height=2.5>>=
 par(mfrow = c(1,2))
-plot(as(t(amat), "graphNEL"))
-plot(as(t( bg ), "graphNEL"))
+plot(as(t(amat), "graphNEL")); box(col="gray")
+plot(as(t( bg ), "graphNEL")); box(col="gray")
 @
   \caption{Left: Original CPDAG. Right: After adding the background knowledge $a \to b$ the edge $b \to c$ is automatically directed by applying the orientation rules from \cite{Meek95}. The result is a maximally oriented PDAG.}
   \label{fig:addBgKnowledge}
@@ -798,8 +798,8 @@ pc.fit <- pc(suffStat, indepTest = gaussCItest, p=p, alpha = 0.01)
 if (require(Rgraphviz)) {
   ## plot the true and estimated graphs
   par(mfrow = c(1,2))
-  plot(myDAG, main = "True DAG")
-  plot(pc.fit, main = "Estimated CPDAG")
+  plot(myDAG, main = "True DAG"); box(col="gray")
+  plot(pc.fit, main = "Estimated CPDAG"); box(col="gray")
 }
 @
   \caption{The true DAG (left) and the true CPDAG (right) in the example
@@ -896,8 +896,8 @@ In this example, the multisets contain three elements. The first and the third c
   \centering
 <<jointIdaPlot, fig=TRUE>>=
 par(mfrow = c(1,2))
-plot(myDAG)  ; box(lty=3)
-plot(myCPDAG); box(lty=3)
+plot(myDAG)  ; box(col="gray")
+plot(myCPDAG); box(col="gray")
 @
   \caption{The true DAG (left) and the true CPDAG (right) in the example
     illustrating \texttt{jointIda()}.}
@@ -1023,8 +1023,8 @@ The DAG \texttt{g} and the CPDAG \texttt{myCPDAG} are shown in Fig.~\ref{fig:bac
   \centering
 <<backdoorExpl, fig=TRUE, echo=FALSE>>=
 par(mfrow = c(1,2))
-plot(g, main = "")
-plot(myCPDAG, main = "")
+plot(g, main = ""); box(col="gray")
+plot(myCPDAG, main = ""); box(col="gray")
 @
 \caption{True DAG (left) and estimated CPDAG (right).}
 \label{fig:backdoor}
@@ -1103,8 +1103,8 @@ if (require(Rgraphviz)) {
   g2 <- as(t(mFig3a), "graphNEL")
   ## plot the true and estimated graphs
   par(mfrow = c(1,2))
-  plot(g1, main = "(a)")
-  plot(g2, main = "(b)")
+  plot(g1, main = "(a)"); box(col="gray")
+  plot(g2, main = "(b)"); box(col="gray")
 }
 @
   \caption{A CPDAG (left) and the PDAG from Example 4.7 (right) from \cite{emaBackground17} used in the example
@@ -1277,8 +1277,8 @@ fci.fit <- fci(suffStat, indepTest=gaussCItest,
                alpha = 0.9999, p=p, doPdsep = FALSE)
 if (require(Rgraphviz)) {
   par(mfrow = c(1,2))
-  plot(myCPDAG) ## CPDAG
-  plot(fci.fit) ## PAG
+  plot(myCPDAG); box(col="gray") ## CPDAG
+  plot(fci.fit); box(col="gray") ## PAG
 }
 @
 \caption{True causal DAG (left) and the corresponding PAG (right) visualized using package \texttt{Rgraphviz}.}
