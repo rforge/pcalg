@@ -1303,7 +1303,7 @@ if (require(igraph)) {
   iplotPC(pc.fit)
 }
 @
-\caption{Visualizing with the \pkg{ipgraph} package: True CPDAG (left) and the corresponding PAG (right).}
+\caption{Visualizing with the \pkg{igraph} package: The Estimated CPDAG.}
 \label{fig:igraph}
 \end{figure}
 
