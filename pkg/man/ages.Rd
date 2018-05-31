@@ -8,7 +8,9 @@ Estimate an APDAG within the Markov equivalence class of a DAG using AGES
 Estimate an APDAG (a particular PDAG) using the aggregative greedy equivalence search (AGES) algorithm, which uses the solution path of the greedy equivalence search (GES) algorithm of Chickering (2002).
 }
 \usage{
-ages(data, lambda_min = 0.5 * log(nrow(data)), labels = NULL, fixedGaps = NULL, adaptive = c("none", "vstructures", "triples"), maxDegree = integer(0), verbose = FALSE, ...)
+ages(data, lambda_min = 0.5 * log(nrow(data)), labels = NULL,
+     fixedGaps = NULL, adaptive = c("none", "vstructures", "triples"),
+     maxDegree = integer(0), verbose = FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -136,7 +138,8 @@ ages.fit <- ages(data = data)
 
 ## Estimate the essential graph with ges
 ## We specify the phases in order to have a fair comparison of the algorithms
-## Without the phases specified it would be easy to find examples where each algorithm outperforms the other
+## Without the phases specified it would be easy to find examples
+## where each algorithm outperforms the other
 score <- new("GaussL0penObsScore", data)
 ges.fit <- ges(score, phase = c("forward","backward"), iterate = FALSE)
 
