@@ -169,7 +169,8 @@ ages.fit <- ages(data = data)
 
 ## Estimate the essential graph with ges
 ## We specify the phases in order to have a fair comparison of the algorithms
-## Without the phases specified it would be easy to find examples where each algorithm outperforms the other
+## Without the phases specified it would be easy to find examples
+## where each algorithm outperforms the other
 score <- new("GaussL0penObsScore", data)
 ges.fit <- ges(score, phase = c("forward","backward"), iterate = FALSE)
 
