@@ -1,5 +1,32 @@
 ## Test file ages
 library(pcalg)
+(doExtras <- pcalg:::doExtras())
+
+## Known example where ges and ages output a different result
+bool3 <- TRUE
+set.seed(77)
+
+p <- 8
+n <- 5000
+## true DAG:
+vars <- c("Author", "Bar", "Ctrl", "Goal", paste0("V",5:8))
+gGtrue <- randomDAG(p, prob = 0.3, V = vars)
+data = rmvDAG(n, gGtrue)
+
+## Estimate the aggregated PDAG with ages
+ages.fit <- ages(data = data)
+
+
+## Estimate the essential graph with ges
+score <- new("GaussL0penObsScore", data)
+ges.fit <- ges(score)
+
+diff <- as(ges.fit$essgraph,"matrix") - as(ages.fit$essgraph,"matrix")
+
+bool3 <- ( bool3 & (diff[6,2]==1) * (diff[8,2]==1) *(sum(abs( as(ges.fit$essgraph,"matrix") - as(ages.fit$essgraph,"matrix") ))==2) )
+stopifnot(bool3)
+
+if (doExtras) {
 ## Test 1: Need to make sure that the skeleton of ges and ages are the same
 
 bool1 <- TRUE
@@ -43,26 +70,4 @@ for(i in 1:10){
 }
 stopifnot(bool2)
 
-## Known example where ges and ages output a different result
-bool3 <- TRUE
-set.seed(77)
-
-p <- 8
-n <- 5000
-## true DAG:
-vars <- c("Author", "Bar", "Ctrl", "Goal", paste0("V",5:8))
-gGtrue <- randomDAG(p, prob = 0.3, V = vars)
-data = rmvDAG(n, gGtrue)
-
-## Estimate the aggregated PDAG with ages
-ages.fit <- ages(data = data)
-
-
-## Estimate the essential graph with ges
-score <- new("GaussL0penObsScore", data)
-ges.fit <- ges(score)
-
-diff <- as(ges.fit$essgraph,"matrix") - as(ages.fit$essgraph,"matrix")
-
-bool3 <- ( bool3 & (diff[6,2]==1) * (diff[8,2]==1) *(sum(abs( as(ges.fit$essgraph,"matrix") - as(ages.fit$essgraph,"matrix") ))==2) )
-stopifnot(bool3)
+}

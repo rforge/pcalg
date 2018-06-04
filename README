@@ -1,5 +1,11 @@
 R CMD build pcalg/pkg
 R=R-devel R-pkg-check pcalg_2.0-10.tar.gz > stdout.txt 2> stderr.txt
+(siehe /u/maechler/bin/R-pkg-check als Vorlage)
+
+Geht wg. Rgraphviz nicht so gut; daher
+pcalg-checking
+
+doExtras wird dort im Aufruf gesetzt
 
 == 
 Output in 
