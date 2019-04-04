@@ -356,7 +356,12 @@ ges <- function(
   }
   phase <- match.arg(phase, several.ok = TRUE)
   # TODO extend...
-  
+
+  if(min(score$pp.dat$data.count) <= score$pp.dat$vertex.count){
+      warning("The data set is high-dimensional, ges might not be
+able to terminate")
+  }
+
   caus.inf(
       "GIES", 
       score = score, 

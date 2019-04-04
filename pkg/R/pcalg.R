@@ -3793,15 +3793,16 @@ minDiscrPath <- function(pag, a,b,c, verbose = FALSE)
       ## else :
       pred <- mpath[m-1]
       path.list[[1]] <- NULL
-      visited[d] <- TRUE
+      
 
       ## d is connected to c -----> search iteratively
       if (pag[d,c] == 2 && pag[c,d] == 3 && pag[pred,d] == 2) {
+        visited[d] <- TRUE
         ## find all neighbours of d not visited yet
         indR <- which(pag[d,] != 0 & pag[,d] == 2 & !visited) ## r *-> d
         if (length(indR) > 0)
           ## update the queues
-          path.list <- updateList(mpath, indR, path.list)
+          path.list <- updateList(mpath[-1], indR, path.list)
       }
     } ## {while}
   }
