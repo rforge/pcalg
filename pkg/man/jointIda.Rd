@@ -145,7 +145,6 @@ covTrue <- trueCov(myDAG) ## true covariance matrix
 n <- 1000
 ## simulate Gaussian data from the true DAG
 dat <- if (require("mvtnorm")) {
-suppressWarnings(RNGversion("3.5.0"))
   set.seed(123)
   rmvnorm(n, mean=rep(0,p), sigma=covTrue)
 } else readRDS(system.file(package="pcalg", "external", "N_6_1000.rds"))
