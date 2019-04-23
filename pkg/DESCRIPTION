@@ -40,3 +40,4 @@ NeedsCompilation: yes
 Encoding: UTF-8
 License: GPL (>= 2)
 URL: http://pcalg.r-forge.r-project.org/
+RoxygenNote: 6.1.1
