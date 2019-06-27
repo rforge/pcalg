@@ -6862,7 +6862,6 @@ allDags.internal <- function(gm,a,tmp, verbose = FALSE)
   tmp
 }
 
-
 ## this is taken from the  udag2pdag code from pcalg
 ## since these rules were already implemented there.
 ## This fucntion, given a graphNEL object, or an adjacency matrix
@@ -6949,7 +6948,12 @@ applyOrientationRules <- function(gInput, verbose=FALSE) {
         } else {
           diag(g2) <- rep(1,length(indC)) ## no self reference
         }
-        if (any(g2==0)) { ## if two nodes in g2 are not connected
+        ##Bugfix: changed  #####
+               ## if (any(g2 == 0)) {
+        g3 <- g2 + t(g2)
+        if (any(g3 == 0)) {
+        ###### end of change
+        ## if (any(g2==0)) { ## if two nodes in g2 are not connected
           pdag[a,b] <- 1
           pdag[b,a] <- 0
           if (verbose) cat("\nRule 3:",a,"->",b,"\n")
