@@ -231,16 +231,12 @@ if (require(Rgraphviz)) {
 (o.ida.cpdag <- ida(3,10, covTrue, myCPDAG, method = "optimal", type = "cpdag"))
 \dontrun{(g.ida.cpdag <- ida(3,10, covTrue, myCPDAG, method = "global", type = "cpdag"))}
 ## All three methods produce the same unique values. 
-stopifnot(all.equal(sort(unique(l.ida.cpdag)),
-                    sort(unique(as.vector(o.ida.cpdag)))))
 
 ## Supppose that we know the true PDAG and covariance matrix
 (l.ida.pdag <- ida(3,10, covTrue, myPDAG, method = "local", type = "pdag"))
 (o.ida.pdag <- ida(3,10, covTrue, myPDAG, method = "optimal", type = "pdag"))
 \dontrun{(g.ida.pdag <- ida(3,10, covTrue, myPDAG, method = "global", type = "pdag"))}
 ## All three methods produce the same unique values.
-stopifnot(all.equal(sort(unique(l.ida.pdag)),
-                    sort(unique(as.vector(o.ida.pdag)))))
 
 ## From the true DAG, we can compute the true causal effect of 3 on 10
 (ce.3.10 <- causalEffect(myDAG, 10, 3))
@@ -250,14 +246,12 @@ stopifnot(all.equal(sort(unique(l.ida.pdag)),
 ## the sample covariance matrix
 (l.ida.est.cpdag <- ida(3,10, cov(dat), pc.fit@graph, method = "local", type = "cpdag"))
 (o.ida.est.cpdag <- ida(3,10, cov(dat), pc.fit@graph, method = "optimal", type = "cpdag"))
-\dontrun{(g.ida.est.cpdag <- ida(3,10, cov(dat), pc.fit@graph, method = "global", type = "cpdag"))}
+\dontrun{(g.ida.est.cpdag <- ida(3,10, cov(dat), pc.fit@graph,
+method = "global", type = "cpdag"))}
 ## The unique values of the local and the global method are still identical.
 ## While not identical, the values of the optimal method are very similar.
-stopifnot(all.equal(sort(o.ida.est.cpdag), sort(l.ida.est.cpdag), tolerance = 0.025))
 ## The true causal effect is contained in all three sets, up to a small
 ## estimation error (0.118 vs. 0.112 with true value 0.114) 
-stopifnot(all.equal(ce.3.10, min(l.ida.est.cpdag), tolerance = 0.04))
-stopifnot(all.equal(ce.3.10, min(o.ida.est.cpdag), tolerance = 0.02))
 
 ## Similarly, when working with data and background knowledge we have to use the estimated PDAG and
 ## the sample covariance matrix
@@ -266,15 +260,14 @@ stopifnot(all.equal(ce.3.10, min(o.ida.est.cpdag), tolerance = 0.02))
 \dontrun{(g.ida.est.pdag <- ida(3,10, cov(dat), pc.fit.pdag, method = "global", type = "pdag"))}
 ## The unique values of the local and the global method are still identical.
 ## While not necessarily identical, the values of the optimal method will be similar.
-stopifnot(all.equal(sort(o.ida.est.pdag), sort(l.ida.est.pdag), tolerance = 0.08))
+
 ## The true causal effect is contained in both sets, up to a small estimation error
-stopifnot(all.equal(ce.3.10, min(l.ida.est.pdag), tolerance = 0.04))
-stopifnot(all.equal(ce.3.10, min(o.ida.est.pdag), tolerance = 0.02))
 
 ## All three can also be applied to sets y.
 (l.ida.cpdag.2 <- ida(3,c(6,10), cov(dat), pc.fit@graph, method = "local", type = "cpdag"))
 (o.ida.cpdag.2 <- ida(3,c(6,10), cov(dat), pc.fit@graph, method = "optimal", type = "cpdag"))
-\dontrun{(g.ida.cpdag.2 <- ida(3,c(6,10), cov(dat), pc.fit@graph, method = "global", type = "cpdag"))}
+\dontrun{(g.ida.cpdag.2 <- ida(3,c(6,10), cov(dat), pc.fit@graph,
+method = "global", type = "cpdag"))}
 ## For the methods local and global we recommend use of idaFast in this case for better performance.
 
 ## Note that only the optimal method can be appplied to sets x.

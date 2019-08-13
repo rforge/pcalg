@@ -7,6 +7,7 @@ res.local <- logical(nreps)
 res.opt <- logical(nreps)
 all.eff.true <- res.local
 Rnd <- function(e) round(e, 14)## get 14 digits accuracy, as we use true (DAG, cov)
+Rnd7 <- function(e) round(e, 7)## get 14 digits accuracy, as we use true (DAG, cov)
 for (i in 1:nreps) {
   p <- 2 + rpois(1, lambda = 8) # ==>  p >= 2, E[p] = 10
   ## generate and draw random DAG :
@@ -101,21 +102,21 @@ pc.fit.pdag <- addBgKnowledge(pc.fit@graph,2,3)
 (l.ida.cpdag <- ida(3,10, covTrue, myCPDAG, method = "local", type = "cpdag"))
 (o.ida.cpdag <- ida(3,10, covTrue, myCPDAG, method = "optimal", type = "cpdag"))
 (g.ida.cpdag <- ida(3,10, covTrue, myCPDAG, method = "global", type = "cpdag"))
-## All three methods produce the same unique values. 
-stopifnot(all.equal(sort(unique(g.ida.cpdag)),
-                    sort(unique(l.ida.cpdag))))
-stopifnot(all.equal(sort(unique(g.ida.cpdag)),
-                    sort(unique(as.vector(o.ida.cpdag)))))
+## All three methods produce the same unique values.
+stopifnot(all.equal(sort(unique(Rnd7(g.ida.cpdag))),
+                    sort(unique(Rnd7(l.ida.cpdag)))))
+stopifnot(all.equal(sort(unique(Rnd7(g.ida.cpdag))),
+                    sort(unique(Rnd7(as.vector(o.ida.cpdag))))))
 
 ## Supppose that we know the true PDAG and covariance matrix
 (l.ida.pdag <- ida(3,10, covTrue, myPDAG, method = "local", type = "pdag"))
 (o.ida.pdag <- ida(3,10, covTrue, myPDAG, method = "optimal", type = "pdag"))
 (g.ida.pdag <- ida(3,10, covTrue, myPDAG, method = "global", type = "pdag"))
 ## All three methods produce the same unique values.
-stopifnot(all.equal(sort(unique(g.ida.pdag)),
-                    sort(unique(l.ida.pdag))))
-stopifnot(all.equal(sort(unique(g.ida.pdag)),
-                    sort(unique(as.vector(o.ida.pdag)))))
+stopifnot(all.equal(sort(unique(Rnd7(g.ida.pdag))),
+                    sort(unique(Rnd7(l.ida.pdag)))))
+stopifnot(all.equal(sort(unique(Rnd7(g.ida.pdag))),
+                    sort(unique(Rnd7(as.vector(o.ida.pdag))))))
 
 ## From the true DAG, we can compute the true causal effect of 3 on 10
 (ce.3.10 <- causalEffect(myDAG, 10, 3))
@@ -127,7 +128,7 @@ stopifnot(all.equal(sort(unique(g.ida.pdag)),
 (o.ida.est.cpdag <- ida(3,10, cov(dat), pc.fit@graph, method = "optimal", type = "cpdag"))
 (g.ida.est.cpdag <- ida(3,10, cov(dat), pc.fit@graph, method = "global", type = "cpdag"))
 ## The unique values of the local and the global method are still identical.
-stopifnot(all.equal(sort(unique(g.ida.est.cpdag)), sort(unique(l.ida.est.cpdag))))
+stopifnot(all.equal(sort(unique(Rnd7(g.ida.est.cpdag))), sort(unique(Rnd7(l.ida.est.cpdag)))))
 ## While not identical, the values of the optimal method are very similar.
 stopifnot(all.equal(sort(o.ida.est.cpdag), sort(l.ida.est.cpdag), tolerance = 0.025))
 ## The true causal effect is contained in all three sets, up to a small
@@ -141,9 +142,9 @@ stopifnot(all.equal(ce.3.10, min(o.ida.est.cpdag), tolerance = 0.02))
 (o.ida.est.pdag <- ida(3,10, cov(dat), pc.fit.pdag, method = "optimal", type = "pdag"))
 (g.ida.est.pdag <- ida(3,10, cov(dat), pc.fit.pdag, method = "global", type = "pdag"))
 ## The unique values of the local and the global method are still identical.
-stopifnot(all.equal(sort(unique(g.ida.est.pdag)), sort(unique(l.ida.est.pdag))))
+stopifnot(all.equal(sort(unique(Rnd7(g.ida.est.pdag))), sort(unique(Rnd7(l.ida.est.pdag)))))
 ## While not necessarily identical, the values of the optimal method will be similar.
-stopifnot(all.equal(sort(o.ida.est.pdag), sort(l.ida.est.pdag), tolerance = 0.08))
+stopifnot(all.equal(sort(Rnd7(o.ida.est.pdag)), sort(Rnd7(l.ida.est.pdag)), tolerance = 0.08))
 ## The true causal effect is contained in both sets, up to a small estimation error
 stopifnot(all.equal(ce.3.10, min(l.ida.est.pdag), tolerance = 0.04))
 stopifnot(all.equal(ce.3.10, min(o.ida.est.pdag), tolerance = 0.02))
