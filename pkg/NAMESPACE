@@ -156,7 +156,8 @@ export(trueCov,
        addBgKnowledge,
        adjustment,
        isValidGraph,
-       ages)
+       ages,
+       optAdjSet)
 
 ## These are "internal" i.e., in man/pcalg-internal.Rd
 ## _FIXME ?_                     ---------------------
