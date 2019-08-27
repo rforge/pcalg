@@ -1,6 +1,6 @@
 Package: pcalg
-Version: 2.6-4
-Date: 2019-08-13
+Version: 2.6-5
+Date: 2019-08-26
 Title: Methods for Graphical Models and Causal Inference
 Description: Functions for causal structure
   learning and causal inference using graphical models. The main algorithms
@@ -33,8 +33,8 @@ Depends: R (>= 3.0.2)
 LinkingTo: Rcpp (>= 0.11.0), RcppArmadillo, BH
 Imports: stats, graphics, utils, methods, abind, graph, RBGL, igraph, ggm,
   corpcor, robustbase, vcd, Rcpp, bdsmatrix, sfsmisc (>= 1.0-26), fastICA,
-  clue, dagitty
-Suggests: MASS, Matrix, Rgraphviz, mvtnorm, huge, ggplot2
+  clue
+Suggests: MASS, Matrix, Rgraphviz, mvtnorm, huge, ggplot2, dagitty
 ByteCompile: yes
 NeedsCompilation: yes
 Encoding: UTF-8
