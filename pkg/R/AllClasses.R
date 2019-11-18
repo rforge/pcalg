@@ -931,7 +931,7 @@ setRefClass("GaussL0penObsScore", contains = "GaussL0penIntScore",
         initialize = function(data = matrix(1, 1, 1),
             nodes = colnames(data),
             lambda = 0.5*log(nrow(data)),
-            intercept = FALSE,
+            intercept = TRUE,
             format = c("raw", "scatter"),
             use.cpp = TRUE,
             ...) {
