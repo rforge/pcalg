@@ -1361,16 +1361,16 @@ bool EssentialGraph::greedyForward(const ForwardAdaptiveFlag adaptive)
 			// arrow insertion for all vertices for which an insertion with new
 			// parent u or v is proposed by the cache
 			if (getDegree(u_opt) >= _maxVertexDegree[u_opt])
-				for (int a = 0; a < getVertexCount(); ++a)
+				for (uint a = 0; a < getVertexCount(); ++a)
 					if (_scoreCache[a].source == u_opt)
 						refreshCache.set(a);
 			if (getDegree(v_opt) >= _maxVertexDegree[v_opt])
-				for (int a = 0; a < getVertexCount(); ++a)
+				for (uint a = 0; a < getVertexCount(); ++a)
 					if (_scoreCache[a].source == v_opt)
 						refreshCache.set(a);
 
 			// Refresh cache: recalculate arrow insertions
-			for (int a = refreshCache.find_first(); a < getVertexCount(); a = refreshCache.find_next(a))
+			for (uint a = refreshCache.find_first(); a < getVertexCount(); a = refreshCache.find_next(a))
 				_scoreCache[a] = getOptimalArrowInsertion(a);
 
 			// Unregister logger
