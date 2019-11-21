@@ -413,7 +413,7 @@ RcppExport SEXP causalInference(
 		int phaseCount(1);
 		do {
 			cont = false;
-			for (int i = 0; i < phases.size(); ++i) {
+			for (uint i = 0; i < phases.size(); ++i) {
 				for (steps.push_back(0);
 						graph.greedyDAGStepDir(phases[i]);
 						steps.back()++) {
