@@ -7150,8 +7150,9 @@ fciPlus <- function(suffStat, indepTest, alpha, labels, p, verbose=TRUE)
   fit1 <- udag2pdagRelaxed(gInput = skel, orientCollider = FALSE)
   fcip <- fciplus.intern(pc.fit = fit1, alpha=alpha, suffStat=suffStat,
                          indepTest=indepTest, verbose=verbose)
+  fcip$mat <- (fcip$mat != 0) + 0 # forget orientations in augmented graph: FCI orientation rules seem more accurate  
   fciplus.amat <- udag2pag(pag = fcip$mat, sepset = fcip$sepset,
-                           orientCollider = FALSE)
+                           orientCollider = TRUE, verbose = verbose)
   colnames(fciplus.amat) <- rownames(fciplus.amat) <- labels
   new("fciAlgo", amat = fciplus.amat, call = cl, n = integer(0),
       max.ord = integer(0),
